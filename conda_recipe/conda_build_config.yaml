@@ -1,0 +1,5 @@
+python:
+  - 3.9
+
+target_platform:
+  - osx-64
