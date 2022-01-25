@@ -5,7 +5,7 @@ VALIS, which stands for Virtual Alignment of pathoLogy Image Series, is a fully 
 
 The registration pipeline is fully automated and goes as follows:
 
-   .. image:: ./_images/pipeline.png
+   .. image:: docs/source/_images/pipeline.png
 
    #. Images/slides are converted to numpy arrays. As WSI are often too large to fit into memory, these images are usually lower resolution images from different pyramid levels.
 
