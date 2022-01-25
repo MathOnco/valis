@@ -12,7 +12,7 @@
 #
 import os
 import sys
-import valis
+# import valis
 sys.path.insert(0, os.path.abspath('../..'))
 # sys.path.insert(0, os.path.abspath('../../src/valis'))
 # sys.path.append("../valis")
@@ -25,7 +25,8 @@ copyright = '2022, Chandler Gatenbee'
 author = 'Chandler Gatenbee'
 
 # The full version, including alpha/beta/rc tags
-release = valis.__version__
+# release = valis.__version__
+release = "1.0.0rc0"
 
 
 # -- General configuration ---------------------------------------------------
