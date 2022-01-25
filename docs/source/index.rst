@@ -6,7 +6,7 @@
 VALIS
 *****
 
-.. include:: ../../README.rst
+.. include:: README.rst
 
 Docmentation
 ============
