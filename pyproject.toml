@@ -1,3 +1,11 @@
+[project]
+name = "valis"
+authors = [
+    {name = "Chandler Gatenbee", email = "Chandler.Gatenbee@moffitt.org"},
+]
+
+readme = "docs/source/README.rst"
+
 [build-system]
 requires = [
     "setuptools>=42",
