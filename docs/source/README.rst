@@ -1,4 +1,4 @@
-.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/banner.*
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/banner.gif
 
 
 VALIS, which stands for Virtual Alignment of pathoLogy Image Series, is a fully automaated pipeline to register whole slide images (WSI) using rigid and/or non-rigid transformtions. A full description of the method is descriped in the paper by `Gatenbee et al. 2021 <https://www.biorxiv.org/content/10.1101/2021.11.09.467917v1>`_. VALIS uses `Bio-Formats <https://www.openmicroscopy.org/bio-formats/>`_, `OpenSlide <https://openslide.org/>`__, `libvips <https://www.libvips.org/>`_, and `scikit-image <https://scikit-image.org/>`_ to read images and slides, and so is able to work with a wide variety of formats. Registered images can be saved as `ome.tiff <https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/>`_ slides that can be used in downstream analyses. ome.tiff format is opensource and widely supported, being readable in several different programming languages (Python, Java, Matlab, etc...) and software, such as `QuPath <https://qupath.github.io/>`_, `HALO by Idica Labs <https://indicalab.com/halo/>`_, etc...
@@ -126,7 +126,7 @@ Examples
 Slide registration
 ------------------
 
-.. image:: ./_images/challenging_dataset_adincar33.png
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/challenging_dataset_adincar33.png
 
 .. important::
     One of the most imporant parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. If registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values will be needed so that the tissue is at a high enough resolution.
@@ -179,8 +179,7 @@ If the results look good, then one can warp and save all of the slides as ome.ti
 
 The ome.tiff images can subsequently be used for downstream analysis, such as `QuPath <https://qupath.github.io/>`_
 
-.. image:: ./_images/ome_tiff_zoom.png
-
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/ome_tiff_zoom.png
 
 One can also choose to save individual slides. This is accomplished by accessing the Slide object associated with a particular file, :code:`slide_f` and then "telling" it to save the slide aas :code:`out_f.ome.tiff`.
 
@@ -232,8 +231,7 @@ Check the results in :code:`results_dst_dir`, and if the look good merge and sav
 
     registration.kill_jvm() # Kill the JVM
 
-
-.. image:: ./_images/merge_ome_tiff.png
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/merge_ome_tiff.png
 
 Warping points
 --------------
@@ -290,7 +288,7 @@ Once the registration parameters have been found, VALIS can be used to warp poin
 
 Here is a comparison of before and after applying registration to cell positions found in the original un-aligned images:
 
-.. image:: ./_images/point_warping.png
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/point_warping.png
 
 Converting slides to ome.tiff
 -----------------------------
@@ -307,7 +305,7 @@ In addition to registering slide, VALIS can convert slides to ome.tiff, maintain
                                 perceputally_uniform_channel_colors=True)
     slide_io.kill_jvm()
 
-.. image:: ./_images/pu_color_mplex.png
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/pu_color_mplex.png
 
 Using non-defaults
 ------------------
