@@ -1,16 +1,6 @@
-[project]
-name = "valis"
-version = "1.0.0rc0"
-authors = [
-    {name = "Chandler Gatenbee", email = "Chandler.Gatenbee@moffitt.org"},
-]
-
-readme = "docs/source/README.rst"
-
 [build-system]
 requires = [
     "setuptools>=42",
-    "wheel",
-    "flit_core >=3.2,<4"
+    "wheel"
 ]
-build-backend = "flit_core.buildapi"
+build-backend = "setuptools.build_meta"
