@@ -1,4 +1,4 @@
-.. image::  https://raw.githubusercontent.com/MathOnco/valis/main/docs/source/_images/banner.gif?sanitize=true
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/banner.gif
 
 
 VALIS, which stands for Virtual Alignment of pathoLogy Image Series, is a fully automaated pipeline to register whole slide images (WSI) using rigid and/or non-rigid transformtions. A full description of the method is descriped in the paper by `Gatenbee et al. 2021 <https://www.biorxiv.org/content/10.1101/2021.11.09.467917v1>`_. VALIS uses `Bio-Formats <https://www.openmicroscopy.org/bio-formats/>`_, `OpenSlide <https://openslide.org/>`__, `libvips <https://www.libvips.org/>`_, and `scikit-image <https://scikit-image.org/>`_ to read images and slides, and so is able to work with a wide variety of formats. Registered images can be saved as `ome.tiff <https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/>`_ slides that can be used in downstream analyses. ome.tiff format is opensource and widely supported, being readable in several different programming languages (Python, Java, Matlab, etc...) and software, such as `QuPath <https://qupath.github.io/>`_, `HALO by Idica Labs <https://indicalab.com/halo/>`_, etc...
@@ -26,6 +26,8 @@ The registration pipeline is fully automated and goes as follows:
 The transformations found by VALIS can then be used to warp the full resolution slides. It is also possible to merge non-RGB registered slides to create a highly multiplexed image. These aligned and/or merged slides can then be saved as ome.tiff images using pyvips.
 
 In addition to warping images and slides, VALIS can also warp point data, such as cell centoids or ROI coordinates.
+
+Full documentation can be found at `ReadTheDocs <https://valis.readthedocs.io/en/latest/>`_ and `GitHub Pages <https://mathonco.github.io/valis/html/index.html>`_.
 
 .. contents:: Table of Contents
    :local:
@@ -63,6 +65,7 @@ Finally, install using conda
 
 pip
 ---
+VALIS can be downloaded from `PyPI <https://pypi.org/project/valis-wsi/#description>`_ using the pip command. However, VALIS requires several system level packages, which will need to be installed first.
 Prerequisites
 ~~~~~~~~~~~~~
 
