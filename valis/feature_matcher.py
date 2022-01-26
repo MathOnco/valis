@@ -213,10 +213,12 @@ def filter_matches(kp1_xy, kp2_xy, method=DEFAULT_MATCH_FILTER,
 
     filtering_kwargs: dict
         Extra arguments passed to filtering function
+
         If `method` == "GMS", these need to include: img1_shape, img2_shape,
-            scaling, thresholdFactor. See filter_matches_gms for details
+        scaling, thresholdFactor. See filter_matches_gms for details
+
         If `method` == "RANSAC", this can be None, since the ransac value is
-            a class attribute
+        a class attribute
 
     Returns
     -------
