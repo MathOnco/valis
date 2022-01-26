@@ -1,5 +1,6 @@
 [project]
 name = "valis"
+version = attr: valis.__version__
 authors = [
     {name = "Chandler Gatenbee", email = "Chandler.Gatenbee@moffitt.org"},
 ]
