@@ -1,6 +1,6 @@
 [project]
 name = "valis"
-version = attr: valis.__version__
+version = "1.0.0rc0"
 authors = [
     {name = "Chandler Gatenbee", email = "Chandler.Gatenbee@moffitt.org"},
 ]
