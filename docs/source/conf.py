@@ -43,7 +43,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.ifconfig',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
-              'rst2pdf.pdfbuilder'
+            #   'rst2pdf.pdfbuilder',
+              'sphinx.ext.githubpages'
             #   "myst_parser"
               ]
 
@@ -71,7 +72,7 @@ StandaloneHTMLBuilder.supported_image_types = [
 ]
 
 from sphinx.builders.latex import LaTeXBuilder
-StandaloneHTMLBuilder.supported_image_types = [
+LaTeXBuilder.supported_image_types = [
     'image/png',
     'image/pdf'
     'image/jpeg'
