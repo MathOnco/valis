@@ -8,7 +8,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Serial non-rigid registration &mdash; valis 1.0.0rc0 documentation</title>
+  <title>Serial non-rigid registration &mdash; valis &#34;1.0.0rc0&#34;
+ documentation</title>
   
 
   
@@ -188,7 +189,7 @@
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>src</strong> (<a class="reference internal" href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar" title="valis.serial_rigid.SerialRigidRegistrar"><em>SerialRigidRegistrar</em></a><em>, </em><em>str</em>) – Either a SerialRigidRegistrar object that was used to optimally
+<li><p><strong>src</strong> (<a class="reference internal" href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar" title="valis.serial_rigid.SerialRigidRegistrar"><em>SerialRigidRegistrar</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Either a SerialRigidRegistrar object that was used to optimally
 align a series of images, or a string indicating where the images
 to be aligned are located. If src is a string, the images should be
 named such that they are read in the correct order, i.e. each
@@ -202,12 +203,12 @@ the NonRigidRegistrar.
 In the case where simple ITK is used by the, params should be
 a SimpleITK.ParameterMap. Note that numeric values nedd to be
 converted to strings.</p></li>
-<li><p><strong>dst_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Top directory where aliged images should be save. SerialNonRigidRegistrar will
+<li><p><strong>dst_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Top directory where aliged images should be save. SerialNonRigidRegistrar will
 be in this folder, and aligned images in the “registered_images”
 sub-directory. If None, the images will not be written to file</p></li>
-<li><p><strong>ref_img_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of image that will be treated as the center of the stack.
+<li><p><strong>ref_img_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Name of image that will be treated as the center of the stack.
 If None, the index of the middle image will be returned.</p></li>
-<li><p><strong>moving_to_fixed_xy</strong> (<em>dict of list</em><em>, or </em><em>bool</em>) – <p>If <cite>moving_to_fixed_xy</cite> is a dict of list, then
+<li><p><strong>moving_to_fixed_xy</strong> (<em>dict of list</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – <p>If <cite>moving_to_fixed_xy</cite> is a dict of list, then
 Key = image name, value = list of matched keypoints between
 each moving image and the fixed image.
 Each element in the list contains 2 arrays:</p>
@@ -223,7 +224,7 @@ to the indices retuned by <cite>get_alignment_indices</cite>.</p>
 True, then the matching features in the SerialRigidRegistrar will
 be used. If False, then matching features will not be used.</p>
 </p></li>
-<li><p><strong>mask</strong> (<em>ndarray</em><em>, </em><em>bool</em><em>, </em><em>optional</em>) – <p>Mask used in non-rigid alignments.</p>
+<li><p><strong>mask</strong> (<em>ndarray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Mask used in non-rigid alignments.</p>
 <p>If an ndarray, it must have the same size as the other images.</p>
 <p>If True, then the <cite>overlap_mask</cite> in the SerialRigidRegistrar
 will be used.</p>
@@ -269,7 +270,7 @@ rigid and non-rigid registration parameters</p>
 <dd><p>Name of image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -280,7 +281,7 @@ rigid and non-rigid registration parameters</p>
 <dd><p>Position of image in the stack</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -354,8 +355,8 @@ Used to warp points</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image</strong> (<em>ndarray</em>) – Original, unwarped image with shape (P, Q)</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Name of image.</p></li>
-<li><p><strong>stack_idx</strong> (<em>int</em>) – Position of image in the stack</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of image.</p></li>
+<li><p><strong>stack_idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Position of image in the stack</p></li>
 <li><p><strong>moving_xy</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – (V, 2) array containing points in the moving image that correspond
 to those in the fixed image. If these are provided, non_rigid_reg_class
 should be a subclass of non_rigid_registrars.NonRigidRegistrarXY</p></li>
@@ -397,7 +398,7 @@ transformation matrices, and the calculated deformation fields.</p>
 <dd><p>Optional name of this SerialNonRigidRegistrar</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str, optional</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>, optional</p>
 </dd>
 </dl>
 </dd></dl>
@@ -409,7 +410,7 @@ transformation matrices, and the calculated deformation fields.</p>
 the images will be extracted from a SerialRigidRegistrar</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -422,7 +423,7 @@ For example, this may be associated with an H+E image that is
 the 2nd image in a stack of 7 images.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -433,7 +434,7 @@ the 2nd image in a stack of 7 images.</p>
 <dd><p>Number of images to align</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -456,7 +457,7 @@ the 2nd image in a stack of 7 images.</p>
 the value is the assocatiated NonRigidZImage</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -516,14 +517,14 @@ features before and after registration.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>src</strong> (<a class="reference internal" href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar" title="valis.serial_rigid.SerialRigidRegistrar"><em>SerialRigidRegistrar</em></a><em>, </em><em>str</em>) – Either a SerialRigidRegistrar object that was used to optimally
+<li><p><strong>src</strong> (<a class="reference internal" href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar" title="valis.serial_rigid.SerialRigidRegistrar"><em>SerialRigidRegistrar</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Either a SerialRigidRegistrar object that was used to optimally
 align a series of images, or a string indicating where the images
 to be aligned are located. If src is a string, the images should be
 named such that they are read in the correct order, i.e. each
 starting with a number.</p></li>
-<li><p><strong>ref_img_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of image that will be treated as the center of the stack.
+<li><p><strong>ref_img_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Name of image that will be treated as the center of the stack.
 If None, the index of the middle image will be returned.</p></li>
-<li><p><strong>moving_to_fixed_xy</strong> (<em>dict of list</em><em>, or </em><em>bool</em>) – <p>If <cite>moving_to_fixed_xy</cite> is a dict of list, then
+<li><p><strong>moving_to_fixed_xy</strong> (<em>dict of list</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – <p>If <cite>moving_to_fixed_xy</cite> is a dict of list, then
 Key = image name, value = list of matched keypoints between
 each moving image and the fixed image.
 Each element in the list contains 2 arrays:</p>
@@ -539,7 +540,7 @@ to the indices retuned by <cite>get_alignment_indices</cite>.</p>
 True, then the matching features in the SerialRigidRegistrar will
 be used. If False, then matching features will not be used.</p>
 </p></li>
-<li><p><strong>mask</strong> (<em>ndarray</em><em>, </em><em>bool</em><em>, </em><em>optional</em>) – <p>Mask used in non-rigid alignments.</p>
+<li><p><strong>mask</strong> (<em>ndarray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Mask used in non-rigid alignments.</p>
 <p>If an ndarray, it must have the same size as the other images.</p>
 <p>If True, then the <cite>overlap_mask</cite> in the SerialRigidRegistrar
 will be used.</p>

@@ -8,7 +8,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Slide I/O &mdash; valis 1.0.0rc0 documentation</title>
+  <title>Slide I/O &mdash; valis &#34;1.0.0rc0&#34;
+ documentation</title>
   
 
   
@@ -195,18 +196,18 @@ Uses pyvips to save the image. Currently only writes a single series.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>src_f</strong> (<em>str</em>) – Path to image to be converted</p></li>
-<li><p><strong>dst_f</strong> (<em>str</em>) – Path indicating where the image should be saved.</p></li>
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level to be converted.</p></li>
-<li><p><strong>series</strong> (<em>str</em>) – Series to be converted.</p></li>
+<li><p><strong>src_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Path to image to be converted</p></li>
+<li><p><strong>dst_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Path indicating where the image should be saved.</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level to be converted.</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Series to be converted.</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region of the slide to be converted. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
 the region to be sliced.</p></li>
-<li><p><strong>perceputally_uniform_channel_colors</strong> (<em>bool</em>) – Whether or not to add perceptually uniform channel colors</p></li>
-<li><p><strong>tile_wh</strong> (<em>int</em>) – Tile shape used to save the image. Used to create a square tile,
+<li><p><strong>perceputally_uniform_channel_colors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether or not to add perceptually uniform channel colors</p></li>
+<li><p><strong>tile_wh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Tile shape used to save the image. Used to create a square tile,
 so <cite>tile_wh</cite> is both the width and height.</p></li>
-<li><p><strong>compression</strong> (<em>str</em>) – Compression method used to save ome.tiff . Default is lzw, but can also
+<li><p><strong>compression</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Compression method used to save ome.tiff . Default is lzw, but can also
 be jpeg or jp2k. See pyips for more details.</p></li>
 </ul>
 </dd>
@@ -221,11 +222,11 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shape_xyzct</strong> (<em>tuple of int</em>) – XYZCT shape of image</p></li>
-<li><p><strong>bf_dtype</strong> (<em>str</em>) – String format of Bioformats datatype</p></li>
-<li><p><strong>is_rgb</strong> (<em>bool</em>) – Whether or not the image is RGB</p></li>
-<li><p><strong>pixel_physical_size_xyu</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Physical size per pixel and the unit.</p></li>
-<li><p><strong>channel_names</strong> (<em>list</em><em>, </em><em>optional</em>) – List of channel names.</p></li>
-<li><p><strong>perceputally_uniform_channel_colors</strong> (<em>bool</em>) – Whether or not to add perceptually uniform channel colors.</p></li>
+<li><p><strong>bf_dtype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – String format of Bioformats datatype</p></li>
+<li><p><strong>is_rgb</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether or not the image is RGB</p></li>
+<li><p><strong>pixel_physical_size_xyu</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – Physical size per pixel and the unit.</p></li>
+<li><p><strong>channel_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – List of channel names.</p></li>
+<li><p><strong>perceputally_uniform_channel_colors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether or not to add perceptually uniform channel colors.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -248,8 +249,8 @@ Bioformats.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>src_f</strong> (<em>str</em>) – Path to slide</p></li>
-<li><p><strong>series</strong> (<em>int</em>) – The series to be read. If <cite>series</cite> is None, the the <cite>series</cite>
+<li><p><strong>src_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Path to slide</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The series to be read. If <cite>series</cite> is None, the the <cite>series</cite>
 will be set to the series associated with the largest image.
 In cases where there is only 1 image in the file, <cite>series</cite>
 will be 0.</p></li>
@@ -290,10 +291,10 @@ the slide, like dimensions at each level, physical units, etc…</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>img</strong> (<em>pyvips.Image</em><em>, </em><em>ndarray</em>) – Image to be saved. If a numpy array is provided, it will be converted
 to a pyvips.Image.</p></li>
-<li><p><strong>ome_xml</strong> (<em>str</em><em>, </em><em>optional</em>) – ome-xml string describing image’s metadata. If None, it will be createdd</p></li>
-<li><p><strong>tile_wh</strong> (<em>int</em>) – Tile shape used to save <cite>img</cite>. Used to create a square tile, so <cite>tile_wh</cite>
+<li><p><strong>ome_xml</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – ome-xml string describing image’s metadata. If None, it will be createdd</p></li>
+<li><p><strong>tile_wh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Tile shape used to save <cite>img</cite>. Used to create a square tile, so <cite>tile_wh</cite>
 is both the width and height.</p></li>
-<li><p><strong>compression</strong> (<em>str</em>) – Compression method used to save ome.tiff . Default is lzw, but can also
+<li><p><strong>compression</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Compression method used to save ome.tiff . Default is lzw, but can also
 be jpeg or jp2k. See pyips for more details.</p></li>
 </ul>
 </dd>
@@ -309,13 +310,13 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>current_ome_xml_str</strong> (<em>str</em>) – ome-xml string that needs to be updated</p></li>
+<li><p><strong>current_ome_xml_str</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – ome-xml string that needs to be updated</p></li>
 <li><p><strong>new_xyzct</strong> (<em>tuple of int</em>) – XYZCT shape of image</p></li>
-<li><p><strong>bf_dtype</strong> (<em>str</em>) – String format of Bioformats datatype</p></li>
-<li><p><strong>is_rgb</strong> (<em>bool</em>) – Whether or not the image is RGB</p></li>
-<li><p><strong>pixel_physical_size_xyu</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Physical size per pixel and the unit.</p></li>
-<li><p><strong>channel_names</strong> (<em>list</em><em>, </em><em>optional</em>) – List of channel names.</p></li>
-<li><p><strong>perceputally_uniform_channel_colors</strong> (<em>bool</em>) – Whether or not to add perceptually uniform channel colors</p></li>
+<li><p><strong>bf_dtype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – String format of Bioformats datatype</p></li>
+<li><p><strong>is_rgb</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether or not the image is RGB</p></li>
+<li><p><strong>pixel_physical_size_xyu</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – Physical size per pixel and the unit.</p></li>
+<li><p><strong>channel_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – List of channel names.</p></li>
+<li><p><strong>perceputally_uniform_channel_colors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether or not to add perceptually uniform channel colors</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -343,7 +344,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Name of slide.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -354,7 +355,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Series number.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -365,7 +366,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>String indicating what was used to read the metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -382,7 +383,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Whether or not the image is RGB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -399,7 +400,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>List of channel names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -410,7 +411,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Number of channels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -421,7 +422,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Xml string created by bio-formats</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -432,7 +433,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>String indicating bioformats image datatype</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -443,7 +444,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Tile width and height used to open and/or save image</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -454,9 +455,9 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Name of slide.</p></li>
-<li><p><strong>server</strong> (<em>str</em><em>, </em><em>optional</em>) – String indicating what was used to read the metadata.</p></li>
-<li><p><strong>series</strong> (<em>int</em><em>, </em><em>optional</em>) – Series number.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of slide.</p></li>
+<li><p><strong>server</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – String indicating what was used to read the metadata.</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Series number.</p></li>
 </ul>
 </dd>
 </dl>
@@ -477,7 +478,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Path to slide</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -499,7 +500,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dd><p>Image series</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -509,7 +510,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_f</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/slide_io.html#SlideReader.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.slide_io.SlideReader.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>src_f</strong> (<em>str</em>) – Path to slide</p>
+<dd class="field-odd"><p><strong>src_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Path to slide</p>
 </dd>
 </dl>
 </dd></dl>
@@ -535,7 +536,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -558,7 +559,7 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -606,9 +607,9 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
-<li><p><strong>series</strong> (<em>int</em>) – Series number</p></li>
-<li><p><strong>channel</strong> (<em>str</em><em>, </em><em>int</em>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Series number</p></li>
+<li><p><strong>channel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -633,13 +634,13 @@ the region to be sliced.</p></li>
 <p>Scale resolution to be for requested pyramid level</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>level</strong> (<em>int</em>) – Pyramid level</p>
+<dd class="field-odd"><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>level_xy_per_px</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -657,8 +658,8 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
-<li><p><strong>series</strong> (<em>int</em><em>, </em><em>optional</em>) – Series number. Defaults to 1</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Series number. Defaults to 1</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -683,13 +684,13 @@ stitch them together using pyvips.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
-<li><p><strong>series</strong> (<em>int</em><em>, </em><em>optional</em>) – Series number. Defaults to 0</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Series number. Defaults to 0</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
 the region to be sliced.</p></li>
-<li><p><strong>tile_wh</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of tiles used to contstruct <cite>vips_slide</cite></p></li>
+<li><p><strong>tile_wh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Size of tiles used to contstruct <cite>vips_slide</cite></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -718,7 +719,7 @@ Pyvips includes OpenSlide and so can read those formats as well.</p>
 <dd><p>Whether or not openslide can be used to read this slide.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -729,7 +730,7 @@ Pyvips includes OpenSlide and so can read those formats as well.</p>
 <dd><p>Whether ot not the side is an ome.tiff.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -761,9 +762,9 @@ when installing from source.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
-<li><p><strong>series</strong> (<em>int</em>) – Series number</p></li>
-<li><p><strong>channel</strong> (<em>str</em><em>, </em><em>int</em>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Series number</p></li>
+<li><p><strong>channel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -782,13 +783,13 @@ when installing from source.</p>
 <p>Scale resolution to be for requested pyramid level</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>level</strong> (<em>int</em>) – Pyramid level</p>
+<dd class="field-odd"><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>level_xy_per_px</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -800,7 +801,7 @@ when installing from source.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level.</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level.</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -823,7 +824,7 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -876,9 +877,9 @@ does not recognize these as pyramid images.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
-<li><p><strong>series</strong> (<em>int</em>) – Series number</p></li>
-<li><p><strong>channel</strong> (<em>str</em><em>, </em><em>int</em>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Series number</p></li>
+<li><p><strong>channel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -897,13 +898,13 @@ does not recognize these as pyramid images.</p>
 <p>Scale resolution to be for requested pyramid level</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>level</strong> (<em>int</em>) – Pyramid level</p>
+<dd class="field-odd"><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>level_xy_per_px</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -915,7 +916,7 @@ does not recognize these as pyramid images.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level.</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level.</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -938,7 +939,7 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -985,9 +986,9 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
-<li><p><strong>series</strong> (<em>int</em>) – Series number</p></li>
-<li><p><strong>channel</strong> (<em>str</em><em>, </em><em>int</em>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Series number</p></li>
+<li><p><strong>channel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Either the name of the channel (string), or the index of the channel (int)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1006,13 +1007,13 @@ the region to be sliced.</p></li>
 <p>Scale resolution to be for requested pyramid level</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>level</strong> (<em>int</em>) – Pyramid level</p>
+<dd class="field-odd"><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>level_xy_per_px</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1024,7 +1025,7 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of
@@ -1047,7 +1048,7 @@ the region to be sliced.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Pyramid level</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Pyramid level</p></li>
 <li><p><strong>xywh</strong> (<em>tuple of int</em><em>, </em><em>optional</em>) – The region to be sliced from the slide. If None,
 then the entire slide will be converted. Otherwise
 xywh is the (top left x, top left y, width, height) of

@@ -8,7 +8,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Serial rigid registration &mdash; valis 1.0.0rc0 documentation</title>
+  <title>Serial rigid registration &mdash; valis &#34;1.0.0rc0&#34;
+ documentation</title>
   
 
   
@@ -189,24 +190,24 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>img_dir</strong> (<em>str</em>) – Path to directory containing the images that the user would like
+<li><p><strong>img_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Path to directory containing the images that the user would like
 to be registered. These images need to be single channel, uint8 images</p></li>
-<li><p><strong>dst_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Top directory where aliged images should be save. SerialRigidRegistrar will
+<li><p><strong>dst_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Top directory where aliged images should be save. SerialRigidRegistrar will
 be in this folder, and aligned images in the “registered_images”
 sub-directory. If None, the images will not be written to file</p></li>
-<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Descriptive name of registrar, such as the sample’s name</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Descriptive name of registrar, such as the sample’s name</p></li>
 <li><p><strong>feature_detector</strong> (<a class="reference internal" href="feature_detectors.html#valis.feature_detectors.FeatureDD" title="valis.feature_detectors.FeatureDD"><em>FeatureDD</em></a>) – FeatureDD object that detects and computes image features.</p></li>
 <li><p><strong>matcher</strong> (<a class="reference internal" href="feature_matcher.html#valis.feature_matcher.Matcher" title="valis.feature_matcher.Matcher"><em>Matcher</em></a>) – Matcher object that will be used to match image features</p></li>
 <li><p><strong>transformer</strong> (<em>scikit-image Transform object</em>) – Transformer used to find transformation matrix that will warp each
 image to the target image.</p></li>
 <li><p><strong>affine_optimizer</strong> (<em>AffineOptimzer object</em>) – Object that will minimize a cost function to find the
 optimal affine transoformations</p></li>
-<li><p><strong>imgs_ordered</strong> (<em>bool</em>) – Boolean defining whether or not the order of images in img_dir
+<li><p><strong>imgs_ordered</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Boolean defining whether or not the order of images in img_dir
 are already in the correct order. If True, then each filename should
 begin with the number that indicates its position in the z-stack. If
 False, then the images will be sorted by ordering a feature distance
 matix.</p></li>
-<li><p><strong>similarity_metric</strong> (<em>str</em>) – Metric used to calculate similarity between images, which is in turn
+<li><p><strong>similarity_metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Metric used to calculate similarity between images, which is in turn
 used to build the distance matrix used to sort the images.</p></li>
 <li><p><strong>summary</strong> (<em>Dataframe</em>) – Pandas dataframe containing the median distance between matched features
 before and after registration.</p></li>
@@ -255,7 +256,7 @@ make them look as similar as possible.</p>
 <dd><p>full path to the image</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -266,7 +267,7 @@ make them look as similar as possible.</p>
 <dd><p>ID of the image, based on its ordering <cite>processed_src_dir</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -277,7 +278,7 @@ make them look as similar as possible.</p>
 <dd><p>Name of the image. Usually <cite>img_f</cite> but with the extension removed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -315,7 +316,7 @@ number of matches, etc… The MatchInfo objects in this dictionary
 contain only the info for matches that were considered “good”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -330,7 +331,7 @@ number of matches, etc… The MatchInfo objects in this dictionary
 contain info for all matches that were cross-checked.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -341,7 +342,7 @@ contain info for all matches that were cross-checked.</p>
 <dd><p>Position of image in sorted Z-stack</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -432,7 +433,7 @@ the Z-stack.</p>
 <dd><p>Shape of padded image. All other images will have this shape</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -454,9 +455,9 @@ the Z-stack.</p>
 images should be single channel uint8 images, and may need to
 have undergone preprocessing and/or normalization to make them
 look as similar as possible.</p></li>
-<li><p><strong>img_f</strong> (<em>str</em>) – full path to <cite>image</cite></p></li>
-<li><p><strong>img_id</strong> (<em>int</em>) – ID of the image, based on its ordering in the image source directory</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Name of the image. Usually img_f but with the extension removed.</p></li>
+<li><p><strong>img_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – full path to <cite>image</cite></p></li>
+<li><p><strong>img_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – ID of the image, based on its ordering in the image source directory</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of the image. Usually img_f but with the extension removed.</p></li>
 </ul>
 </dd>
 </dl>
@@ -492,7 +493,7 @@ contains methods for this, but the user may want/need to use other
 methods.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -507,7 +508,7 @@ number. If False (the default), the order of images will be determined
 by ordering a distance matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool, optional</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a>, optional</p>
 </dd>
 </dl>
 </dd></dl>
@@ -518,7 +519,7 @@ by ordering a distance matrix.</p>
 <dd><p>Descriptive name of registrar, such as the sample’s name</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -529,7 +530,7 @@ by ordering a distance matrix.</p>
 <dd><p>List of full paths to single channel uint8 images</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -540,7 +541,7 @@ by ordering a distance matrix.</p>
 <dd><p>Number of images to align</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -552,7 +553,7 @@ by ordering a distance matrix.</p>
 each pair of images</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -566,7 +567,7 @@ if the Matcher object compares image feautres using a similarity
 metric. In that case, similarities are converted to distances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -578,7 +579,7 @@ metric. In that case, similarities are converted to distances.</p>
 eventually be sorted</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -590,7 +591,7 @@ eventually be sorted</p>
 access ZIimages. Key = ZImage.name, value= ZImage</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -661,7 +662,7 @@ image similarity</p>
 <dd><p>Name of feature detector and descriptor used</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -672,7 +673,7 @@ image similarity</p>
 <dd><p>Name of scikit-image transformer class that was used</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -718,18 +719,18 @@ alignment between each image and the previous one in the stack.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>img_dir</strong> (<em>str</em>) – Path to directory containing the images that will be registered.
+<li><p><strong>img_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Path to directory containing the images that will be registered.
 The images in this folder should be single channel uint8 images.
 For the best registration results, they have undergone some sort
 of pre-processing and normalization. The preprocessing module
 contains methods for this, but the user may want/need to use other
 methods.</p></li>
-<li><p><strong>imgs_ordered</strong> (<em>bool</em>) – Whether or not the order of images already known. If True, the file
+<li><p><strong>imgs_ordered</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether or not the order of images already known. If True, the file
 names should start with ascending numbers, with the first image
 file having the smallest number, and the last image file having
 the largest number. If False (the default), the order of images
 will be determined by sorting a distance matrix.</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Descriptive name of registrar, such as the sample’s name</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Descriptive name of registrar, such as the sample’s name</p></li>
 </ul>
 </dd>
 </dl>

@@ -8,7 +8,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Visualization &mdash; valis 1.0.0rc0 documentation</title>
+  <title>Visualization &mdash; valis &#34;1.0.0rc0&#34;
+ documentation</title>
   
 
   
@@ -178,9 +179,9 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>luminosity</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
-<li><p><strong>colorfulness</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
-<li><p><strong>max_h</strong> (<em>int</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>luminosity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>colorfulness</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>max_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -232,17 +233,17 @@ and, if scale_l=True,  brighter.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>multichannel_img</strong> (<em>ndarray</em>) – Image to color</p></li>
 <li><p><strong>marker_colors</strong> (<em>ndarray</em>) – RGB colors for each channel. These RGB values are between 0-1, not 0-255</p></li>
-<li><p><strong>rescale_channels</strong> (<em>bool</em>) – If True, then each channel will be scaled between 0 and 1 before building the composite RGB image. This will
+<li><p><strong>rescale_channels</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, then each channel will be scaled between 0 and 1 before building the composite RGB image. This will
 allow markers to ‘pop’ in areas where they are expressed in isolation, but can also make it appear more marker
 is expressed than there really is.</p></li>
-<li><p><strong>normalize_by</strong> (<em>str</em><em>, </em><em>optionaal</em>) – <p>“image” will produce an image where all values are scaled between 0 and the highest intensity in the composite image.
+<li><p><strong>normalize_by</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optionaal</em>) – <p>“image” will produce an image where all values are scaled between 0 and the highest intensity in the composite image.
 This will produce an image where one can see the expression of each marker relative to the others, making it easier to
 compare marker expression levels.</p>
 <p>”channel” will first scale the intensity of each channel, and then blend all of the channels together. This will allow
 one to see the relative expression of each marker, but won’t allow one to directly compare the expression of markers
 across channels.</p>
 </p></li>
-<li><p><strong>cspace</strong> (<em>str</em>) – Colorspace in which <cite>marker_colors</cite> will be blended.
+<li><p><strong>cspace</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Colorspace in which <cite>marker_colors</cite> will be blended.
 See the “color-science” package for details.</p></li>
 </ul>
 </dd>
@@ -290,9 +291,9 @@ Already preceptually uniform.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>luminosity</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
-<li><p><strong>colorfulness</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
-<li><p><strong>max_h</strong> (<em>int</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>luminosity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>colorfulness</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>max_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – </p></li>
 </ul>
 </dd>
 </dl>

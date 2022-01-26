@@ -8,7 +8,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Feature matching &mdash; valis 1.0.0rc0 documentation</title>
+  <title>Feature matching &mdash; valis &#34;1.0.0rc0&#34;
+ documentation</title>
   
 
   
@@ -191,18 +192,14 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>kp1_xy</strong> (<em>ndarray</em>) – (N, 2) array containing image 1s keypoint positions, in xy coordinates.</p></li>
 <li><p><strong>kp2_xy</strong> (<em>ndarray</em>) – (N, 2) array containing image 2s keypoint positions, in xy coordinates.</p></li>
-<li><p><strong>method</strong> (<em>str</em>) – <cite>method</cite> = “GMS” will use filter_matches_gms() to remove poor matches.
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – <cite>method</cite> = “GMS” will use filter_matches_gms() to remove poor matches.
 This uses the Grid-based Motion Statistics.
 <cite>method</cite> = “RANSAC” will use RANSAC to remove poor matches</p></li>
-<li><p><strong>filtering_kwargs</strong> (<em>dict</em>) – <p>Extra arguments passed to filtering function
-If <cite>method</cite> == “GMS”, these need to include: img1_shape, img2_shape,</p>
-<blockquote>
-<div><p>scaling, thresholdFactor. See filter_matches_gms for details</p>
-</div></blockquote>
-<dl class="simple">
-<dt>If <cite>method</cite> == “RANSAC”, this can be None, since the ransac value is</dt><dd><p>a class attribute</p>
-</dd>
-</dl>
+<li><p><strong>filtering_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – <p>Extra arguments passed to filtering function</p>
+<p>If <cite>method</cite> == “GMS”, these need to include: img1_shape, img2_shape,
+scaling, thresholdFactor. See filter_matches_gms for details</p>
+<p>If <cite>method</cite> == “RANSAC”, this can be None, since the ransac value is
+a class attribute</p>
 </p></li>
 </ul>
 </dd>
@@ -235,11 +232,11 @@ which each keypoint having P features</p></li>
 <li><p><strong>metric</strong> (<em>string</em><em>, or </em><em>callable</em>) – Metric to calculate distance between each pair of features
 in desc1 and desc2. Can be a string to use as distance in
 spatial.distance.cdist, or a custom distance function</p></li>
-<li><p><strong>metric_kwargs</strong> (<em>dict</em>) – Optionl keyword arguments to be passed into pairwise_distances()
+<li><p><strong>metric_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Optionl keyword arguments to be passed into pairwise_distances()
 or pairwise_kernels() from the sklearn.metrics.pairwise module</p></li>
-<li><p><strong>filter_method</strong> (<em>str</em>) – “GMS” will use uses the Grid-based Motion Statistics
+<li><p><strong>filter_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – “GMS” will use uses the Grid-based Motion Statistics
 “RANSAC” will use RANSAC</p></li>
-<li><p><strong>filtering_kwargs</strong> (<em>dict</em>) – <p>Dictionary containing extra arguments for the filtering method.
+<li><p><strong>filtering_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – <p>Dictionary containing extra arguments for the filtering method.
 kp1_xy, kp2_xy, feature_d are calculated here, and don’t need to
 be in filtering_kwargs. If filter_method == “GMS”, then the
 required arguments are: img1_shape, img2_shape, scaling,
@@ -290,13 +287,13 @@ good matches</p></li>
 <li><p><strong>matched_desc2</strong> (<em>ndarray</em>) – (Q, P) containing Q matched descriptors for image 2, each of which has P features</p></li>
 <li><p><strong>matches21</strong> (<em>ndarray</em>) – (1, Q) containing indices of featiures in image 2 that matched those in image 1</p></li>
 <li><p><strong>match_distances</strong> (<em>ndarray</em>) – Distances between each of the Q pairs of matched descriptors</p></li>
-<li><p><strong>n_matches</strong> (<em>int</em>) – Number of good matches (i.e. the number of inlier keypoints)</p></li>
-<li><p><strong>distance</strong> (<em>float</em>) – Mean distance of features</p></li>
-<li><p><strong>similarity</strong> (<em>float</em>) – Mean similarity of features</p></li>
-<li><p><strong>metric_name</strong> (<em>str</em>) – Name of metric</p></li>
-<li><p><strong>metric_type</strong> (<em>str</em>) – “distsnce” or “similarity”</p></li>
-<li><p><strong>img1_name</strong> (<em>str</em>) – Name of the image that kp1 and desc1 belong to</p></li>
-<li><p><strong>img2_name</strong> (<em>str</em>) – Name of the image that kp2 and desc2 belong to</p></li>
+<li><p><strong>n_matches</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Number of good matches (i.e. the number of inlier keypoints)</p></li>
+<li><p><strong>distance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Mean distance of features</p></li>
+<li><p><strong>similarity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Mean similarity of features</p></li>
+<li><p><strong>metric_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of metric</p></li>
+<li><p><strong>metric_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – “distsnce” or “similarity”</p></li>
+<li><p><strong>img1_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of the image that kp1 and desc1 belong to</p></li>
+<li><p><strong>img2_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of the image that kp2 and desc2 belong to</p></li>
 </ul>
 </dd>
 </dl>
@@ -320,7 +317,7 @@ desc1 and desc2. Can be a string to use as distance in
 spatial.distance.cdist, or a custom distance function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str, or callable</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>, or callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -332,7 +329,7 @@ spatial.distance.cdist, or a custom distance function</p>
 If metric is function, this will be the name of the function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -349,7 +346,7 @@ metric_type=’distance’ In the case of similarity, the number of
 features will be used to convert distances</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str, or callable</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>, or callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -361,7 +358,7 @@ features will be used to convert distances</p>
 Only used if filter_method == {RANSAC_NAME}. Default is “RANSAC”</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -373,7 +370,7 @@ Only used if filter_method == {RANSAC_NAME}. Default is “RANSAC”</p>
 The higher, the fewer matches.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -385,7 +382,7 @@ The higher, the fewer matches.</p>
 filter_method is “GMS”</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -397,7 +394,7 @@ filter_method is “GMS”</p>
 spatial.distance.cdist</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -409,7 +406,7 @@ spatial.distance.cdist</p>
 This uses the Grid-based Motion Statistics (GMS) or RANSAC.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -420,25 +417,25 @@ This uses the Grid-based Motion Statistics (GMS) or RANSAC.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>metric</strong> (<em>str</em><em>, or </em><em>callable</em>) – Metric to calculate distance between each pair of features in
+<li><p><strong>metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, or </em><em>callable</em>) – Metric to calculate distance between each pair of features in
 desc1 and desc2. Can be a string to use as distance in
 spatial.distance.cdist, or a custom distance function</p></li>
-<li><p><strong>metric_type</strong> (<em>str</em><em>, or </em><em>callable</em>) – String describing what the custom metric function returns, e.g.
+<li><p><strong>metric_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, or </em><em>callable</em>) – String describing what the custom metric function returns, e.g.
 ‘similarity’ or ‘distance’. If None, and metric is a function it
 is assumed to be a distance, but there will be a warning that this
 variable should be provided to either define that it is a
 similarity, or to avoid the warning by having
 metric_type=’distance’ In the case of similarity, the number of
 features will be used to convert distances</p></li>
-<li><p><strong>metric_kwargs</strong> (<em>dict</em>) – Keyword arguments passed into the metric when calling
+<li><p><strong>metric_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Keyword arguments passed into the metric when calling
 spatial.distance.cdist</p></li>
-<li><p><strong>filter_method</strong> (<em>str</em>) – “GMS” will use filter_matches_gms() to remove poor matches.
+<li><p><strong>filter_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – “GMS” will use filter_matches_gms() to remove poor matches.
 This uses the Grid-based Motion Statistics (GMS) or RANSAC.</p></li>
-<li><p><strong>ransac_val</strong> (<em>int</em>) – The residual threshold to determine if a match is an inlier.
+<li><p><strong>ransac_val</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The residual threshold to determine if a match is an inlier.
 Only used if filter_method is “RANSAC”.</p></li>
-<li><p><strong>gms_threshold</strong> (<em>int</em>) – Used when filter_method is “GMS”.
+<li><p><strong>gms_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Used when filter_method is “GMS”.
 The higher, the fewer matches.</p></li>
-<li><p><strong>scaling</strong> (<em>bool</em>) – Whether or not image scaling should be considered when
+<li><p><strong>scaling</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether or not image scaling should be considered when
 filter_method is “GMS”.</p></li>
 </ul>
 </dd>
@@ -463,7 +460,7 @@ N descriptors in desc1</p></li>
 P features</p></li>
 <li><p><strong>kp2_xy</strong> (<em>(</em><em>M</em><em>, </em><em>2</em><em>) </em><em>array</em>) – Image 1s keypoint positions, in xy coordinates, for each of
 the M descriptors in desc2</p></li>
-<li><p><strong>additional_filtering_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments passed to filtering function
+<li><p><strong>additional_filtering_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>, </em><em>optional</em>) – Extra arguments passed to filtering function
 If self.match_filter_method == “GMS”, these need to
 include: img1_shape, img2_shape. See filter_matches_gms for details
 If If self.match_filter_method == “RANSAC”, this can be None,

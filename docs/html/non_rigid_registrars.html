@@ -8,7 +8,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Non-rigid registration &mdash; valis 1.0.0rc0 documentation</title>
+  <title>Non-rigid registration &mdash; valis &#34;1.0.0rc0&#34;
+ documentation</title>
   
 
   
@@ -233,7 +234,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Number of rows and columns in each image. Will be (N,M).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -244,7 +245,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Number of pixels between deformation grid points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -299,7 +300,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Name of registration method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -372,7 +373,7 @@ warp_tools.warp_xy</p>
 <li><p><strong>mask</strong> (<em>ndarray</em>) – 2D array with shape (N,M) where non-zero pixel values are foreground,
 and 0 is background, which is ignnored during registration. If None,
 then all non-zero pixels in images will be used to create the mask.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Additional keyword arguments passed to NonRigidRegistrar.calc</p></li>
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional keyword arguments passed to NonRigidRegistrar.calc</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -440,7 +441,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Number of rows and columns in each image. Will be (N,M).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -451,7 +452,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Number of pixels between deformation grid points/</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -506,7 +507,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Name of registration method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -716,7 +717,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Number of pixels between deformation grid points</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -727,7 +728,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Name of registration method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -738,7 +739,7 @@ then all non-zero pixels in images will be used to create the mask.</p>
 <dd><p>Number of images that are being registered as a group</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -803,21 +804,21 @@ this class provides options to smooth displacement fields.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>params</strong> (<em>dictionary</em>) – Keyword: value dictionary of parameters to be used in reigstration.
 Will get used in the calc() method.</p></li>
-<li><p><strong>optical_flow_obj</strong> (<em>object</em>) – Object that will perform dense optical flow.</p></li>
-<li><p><strong>n_grid_pts</strong> (<em>int</em>) – Number of gridpoints used to detect folds. Also the number
+<li><p><strong>optical_flow_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><em>object</em></a>) – Object that will perform dense optical flow.</p></li>
+<li><p><strong>n_grid_pts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Number of gridpoints used to detect folds. Also the number
 of gridpoints to use when regularizing he mesh when
 <cite>method</cite> = “regularize”.</p></li>
-<li><p><strong>paint_size</strong> (<em>int</em>) – Used to determine how much to resize the image to have
+<li><p><strong>paint_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Used to determine how much to resize the image to have
 efficient inpainting. Larger values = longer processing time.
 Only used if <cite>smoothing_method</cite> = “inpaint”.</p></li>
-<li><p><strong>fold_penalty</strong> (<em>float</em>) – How much to penalize folding/stretching. Larger values will make
+<li><p><strong>fold_penalty</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – How much to penalize folding/stretching. Larger values will make
 the deformation field more uniform, which may or may not be
 desired, as too much can remove all displacements.
 Only used if <cite>smoothing_method</cite> = “regularize”</p></li>
-<li><p><strong>sigma_ratio</strong> (<em>float</em>) – Determines the amount of Gaussian smoothing, as
+<li><p><strong>sigma_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Determines the amount of Gaussian smoothing, as
 sigma = max(shape) <a href="#id1"><span class="problematic" id="id2">*</span></a>sigma_ratio. Larger values do more
 smoothing. Only used if <cite>smoothing_method</cite> is “gauss”.</p></li>
-<li><p><strong>smoothing</strong> (<em>str</em>) – <p>If “gauss”, then a Gaussian blur will be applied to the
+<li><p><strong>smoothing</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – <p>If “gauss”, then a Gaussian blur will be applied to the
 deformation fields, using sigma defined by sigma_ratio.</p>
 <p>If “inpaint”, folded regions will be detected and removed.
 Folded regions will then be removed using inpainting.</p>
@@ -873,9 +874,9 @@ the x and y directions. dx = bk_dxdy[0], and dy=bk_dxdy[1].</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ammi_weight</strong> (<em>float</em>) – Weight given to the AdvancedMattesMutualInformation metric.</p></li>
-<li><p><strong>bending_penalty_weight</strong> (<em>float</em>) – Weight given to the TransformBendingEnergyPenalty metric.</p></li>
-<li><p><strong>kp_weight</strong> (<em>float</em>) – Weight given to the CorrespondingPointsEuclideanDistanceMetric
+<li><p><strong>ammi_weight</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Weight given to the AdvancedMattesMutualInformation metric.</p></li>
+<li><p><strong>bending_penalty_weight</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Weight given to the TransformBendingEnergyPenalty metric.</p></li>
+<li><p><strong>kp_weight</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Weight given to the CorrespondingPointsEuclideanDistanceMetric
 metric. Only used if moving_xy and fixed_xy are provided as
 arguments to the <cite>register()</cite> method.</p></li>
 </ul>
@@ -917,7 +918,7 @@ and so is not limited to pairs of images.</p>
 <dd><p>List of images, each with shape (N,M) that are to be co-registered.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -997,7 +998,7 @@ Will have shaape (N,M).</p>
 <dd><p>Number of pixels between deformation grid points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1008,7 +1009,7 @@ Will have shaape (N,M).</p>
 <dd><p>Name of registration method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
 </dd>
 </dl>
 </dd></dl>

@@ -12,21 +12,25 @@
 #
 import os
 import sys
+import re
 # import valis
 sys.path.insert(0, os.path.abspath('../..'))
-# sys.path.insert(0, os.path.abspath('../../src/valis'))
-# sys.path.append("../valis")
 sys.setrecursionlimit(1500)
-# add_module_names = False
-# -- Project information -----------------------------------------------------
 
+# -- Project information -----------------------------------------------------
 project = 'valis'
 copyright = '2022, Chandler Gatenbee'
 author = 'Chandler Gatenbee'
 
-# The full version, including alpha/beta/rc tags
-# release = valis.__version__
-release = "1.0.0rc0"
+# Get full version, including alpha/beta/rc tags
+with open("../../valis/__init__.py") as fp:
+    Lines = fp.readlines()
+    for line in Lines:
+      if re.search("__version__", line):
+        release = line.split("= " )[1]
+
+
+
 
 
 # -- General configuration ---------------------------------------------------
