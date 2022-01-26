@@ -482,9 +482,8 @@ def color_dxdy(dx, dy, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE, cspace=DXDY_CSP
    Color displacement, where larger displacements are more colorful,
    and, if scale_l=True,  brighter.
 
-    Params
-    ------
-
+    Parameters
+    ----------
     dx: array
         1D Array containing the displacement in the X (column) direction
 
@@ -504,6 +503,7 @@ def color_dxdy(dx, dy, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE, cspace=DXDY_CSP
     -------
     displacement_rgb : array
         RGB (0, 255) color for each displacement, with the same shape as dx and dy
+
     """
 
     initial_shape = dx.shape

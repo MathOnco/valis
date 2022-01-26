@@ -1181,7 +1181,7 @@ class Valis(object):
             The type of image, either "brightfield", "fluorescence",
             or "multi". If None, VALIS will guess `img_type`
             of each image, based on the number of channels and datatype.
-             Will assume that RGB = "brightfield",
+            Will assume that RGB = "brightfield",
             otherwise `img_type` will be set to "fluorescence".
 
         feature_detector_cls : FeatureDD, optional
@@ -1197,10 +1197,10 @@ class Valis(object):
             image. Default is SimilarityTransform
 
         affine_optimizer_cls : AffineOptimzer class, optional
-                Uninstantiated AffineOptimzer that will minimize a
-                cost function to find the optimal affine transformations.
-                If a desired affine optimization is not available,
-                one can be created by subclassing `affine_optimizer.AffineOptimizer`.
+            Uninstantiated AffineOptimzer that will minimize a
+            cost function to find the optimal affine transformations.
+            If a desired affine optimization is not available,
+            one can be created by subclassing `affine_optimizer.AffineOptimizer`.
 
         similarity_metric : str, optional
             Metric used to calculate similarity between images, which is in
