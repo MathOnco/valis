@@ -9,10 +9,10 @@
 ..     :alt: build status
 ..     :target: https://circleci.com/gh/readthedocs/readthedocs.org
 
-.. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
-    :alt: Documentation Status
-    :scale: 100%
-    :target: https://valis.readthedocs.io/en/latest/
+.. image:: https://readthedocs.org/projects/valis/badge/?version=latest
+:target: https://valis.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
+
 
 .. .. |coverage| image:: https://codecov.io/gh/readthedocs/readthedocs.org/branch/master/graph/badge.svg
 ..     :alt: Test coverage
@@ -365,3 +365,10 @@ The defaults used by VALIS work well, but one may wish to try some other values/
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
     registration.kill_jvm() # Kill the JVM
+
+License
+-------
+
+`MIT`_ © 2021-2022 Chandler Gatenbee
+
+.. _MIT: LICENSE
