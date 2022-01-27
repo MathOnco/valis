@@ -1,3 +1,6 @@
+.. |Upload Python Package| image:: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml/badge.svg
+    target: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml
+
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/banner.gif
 
 
