@@ -12,14 +12,14 @@ jobs:
     # Standard drop-in approach that should work for most people.
     - uses: ammaraskar/sphinx-action@master
       with:
-        docs-folder: "docs/"
+        docs-folder: "docs/source"
     # Example of using a custom build-command.
     - uses: ammaraskar/sphinx-action@master
       with:
-        build-command: "sphinx-build -b html . _build"
-        docs-folder: "docs/"
+        build-command: "sphinx-build -b html . build"
+        docs-folder: "docs/source"
     # Create an artifact of the html output.
     - uses: actions/upload-artifact@v1
       with:
         name: DocumentationHTML
-        path: docs/_build/html/
+        path: docs/build/html/
