@@ -1,10 +1,9 @@
 name: Pull Request Docs Check
 
-on: [push]
+on: [pull]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
