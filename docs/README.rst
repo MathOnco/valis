@@ -12,6 +12,10 @@
     :target: https://valis.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
+.. image:: https://github.com/MathOnco/valis/workflows/CI/badge.svg?branch=main
+     :target: https://github.com/MathOnco/valis/actions?workflow=CI
+     :alt: CI Status
+
 .. .. |coverage| image:: https://codecov.io/gh/readthedocs/readthedocs.org/branch/master/graph/badge.svg
 ..     :alt: Test coverage
 ..     :scale: 100%

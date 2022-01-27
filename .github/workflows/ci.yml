@@ -10,7 +10,7 @@ on:
 jobs:
   tests:
     name: "Python ${{ matrix.python-version }}"
-    runs-on: "ubuntu-latest"
+    runs-on: “macOS-10.15"
     env:
       USING_COVERAGE: '3.7,3.8,3.9'
 
