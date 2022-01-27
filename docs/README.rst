@@ -47,7 +47,7 @@ The transformations found by VALIS can then be used to warp the full resolution 
 
 In addition to warping images and slides, VALIS can also warp point data, such as cell centoids or ROI coordinates.
 
-Full documentation can be found at `ReadTheDocs <https://valis.readthedocs.io/en/latest/>`_ and `GitHub Pages <https://mathonco.github.io/valis/html/index.html>`_.
+Full documentation can be found at `ReadTheDocs <https://valis.readthedocs.io/en/latest/>`_.
 
 .. contents:: Table of Contents
    :local:
