@@ -1,5 +1,5 @@
 
-|docs| |Upload Python Package|
+|docs| |Upload Python Package| |CI|
 
 .. |Upload Python Package| image:: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml/badge.svg
     :target: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml
@@ -12,7 +12,7 @@
     :target: https://valis.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. |mac CI| image:: https://github.com/MathOnco/valis/workflows/CI/badge.svg?branch=main
+.. |CI| image:: https://github.com/MathOnco/valis/workflows/CI/badge.svg?branch=main
      :target: https://github.com/MathOnco/valis/actions?workflow=CI
      :alt: CI Status
 
