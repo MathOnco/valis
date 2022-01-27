@@ -2,17 +2,15 @@
 |docs| |Upload Python Package|
 
 .. |Upload Python Package| image:: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml/badge.svg
-    :alt: PyPi
-    target: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml
+    :target: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml
 
 .. .. |build-status| image:: https://circleci.com/gh/readthedocs/readthedocs.org.svg?style=svg
 ..     :alt: build status
 ..     :target: https://circleci.com/gh/readthedocs/readthedocs.org
 
-.. image:: https://readthedocs.org/projects/valis/badge/?version=latest
-:target: https://valis.readthedocs.io/en/latest/?badge=latest
-:alt: Documentation Status
-
+.. |docs| image:: https://readthedocs.org/projects/valis/badge/?version=latest
+    :target: https://valis.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 .. .. |coverage| image:: https://codecov.io/gh/readthedocs/readthedocs.org/branch/master/graph/badge.svg
 ..     :alt: Test coverage

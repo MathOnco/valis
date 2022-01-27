@@ -8,7 +8,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    # Standard drop-in approach that should work for most people.
     - uses: MathOnco/valis@main
       with:
         docs-folder: "docs/"
