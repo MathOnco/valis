@@ -1,7 +1,23 @@
+
+
 .. |Upload Python Package| image:: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml/badge.svg
+    :alt: PyPi
     target: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml
 
-|build-status| |docs| |coverage|
+.. |build-status| image:: https://circleci.com/gh/readthedocs/readthedocs.org.svg?style=svg
+    :alt: build status
+    :target: https://circleci.com/gh/readthedocs/readthedocs.org
+
+.. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://valis.readthedocs.io/en/latest/
+
+.. |coverage| image:: https://codecov.io/gh/readthedocs/readthedocs.org/branch/master/graph/badge.svg
+    :alt: Test coverage
+    :scale: 100%
+    :target: https://codecov.io/gh/readthedocs/readthedocs.org
+
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/source/_images/banner.gif
 
