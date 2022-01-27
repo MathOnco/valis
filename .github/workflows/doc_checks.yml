@@ -1,18 +1,25 @@
 name: Pull Request Docs Check
 
-on: [push]
+on: [pull_request]
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v1
-    - uses: MathOnco/valis@main
+    # Standard drop-in approach that should work for most people.
+    - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs/"
-        build-command: "sphinx-build -b html . build"
+    # Example of using a custom build-command.
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        build-command: "sphinx-build -b html . _build"
+        docs-folder: "docs/"
+    # Create an artifact of the html output.
     - uses: actions/upload-artifact@v1
       with:
         name: DocumentationHTML
-        path: docs/build/html/
+        path: docs/_build/html/
