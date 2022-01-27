@@ -31,6 +31,7 @@ requirements:
   host:
     - python >=3.7
     - libvips  >=8.11,<8.12
+    - pip
 
   run:
     - python >=3.7

@@ -98,16 +98,11 @@ class ChannelGetter(ImageProcesser):
         reader_cls = slide_io.get_slide_reader(self.src_f, series=self.series)
         reader = reader_cls(self.src_f)
         chnl = reader.get_channel(channel=channel, level=self.level, series=self.series).astype(float)
-        print(f"got {channel}")
         chnl /= chnl.max()
-        print(f"scaled {channel}")
         if adaptive_eq:
-            print(f"eqing {channel}")
             chnl = exposure.equalize_adapthist(chnl)
-            print(f"eqed {channel}")
 
         chnl = exposure.rescale_intensity(chnl, in_range="image", out_range=(0, 255)).astype(np.uint8)
-        print(f"eqed {channel}")
 
         return chnl
 

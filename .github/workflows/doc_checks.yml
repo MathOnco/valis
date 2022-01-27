@@ -1,0 +1,20 @@
+name: Pull Request Docs Check
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    # Standard drop-in approach that should work for most people.
+    - uses: cdgatenbee/valis@main
+      with:
+        docs-folder: "docs/"
+        build-command: "sphinx-build -b html . build"
+    - uses: actions/upload-artifact@v1
+      with:
+        name: DocumentationHTML
+        path: docs/build/html/

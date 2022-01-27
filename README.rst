@@ -61,11 +61,12 @@ Finally, install using conda
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge wsi_valis
+    $ conda install -c conda-forge valis_wsi
 
 pip
 ---
-VALIS can be downloaded from `PyPI <https://pypi.org/project/valis-wsi/#description>`_ using the pip command. However, VALIS requires several system level packages, which will need to be installed first.
+VALIS can be downloaded from PyPI as the `valis-wsi <https://pypi.org/project/valis-wsi/#description>`_ package using the pip command. However, VALIS requires several system level packages, which will need to be installed first.
+
 Prerequisites
 ~~~~~~~~~~~~~
 
@@ -98,14 +99,14 @@ VALIS uses Bioforamts to read many slide formats. Bioformats is written in Java,
 Install
 ~~~~~~~
 
-Once the above prerequisites have been satistifed, valis can be installed using pip, preferably within a virtual environment
+Once the above prerequisites have been satistifed, valis can be installed using pip, idealy within a virtual environment
 
 .. code-block:: bash
 
     $ python3 -m venv venv_valis
     $ source ./venv_valis/bin/activate
     $ python3 -m pip install --upgrade pip
-    $ python3 pip install valis
+    $ python3 pip install valis-wsi
 
 SimpleElastix (optional)
 ------------------------
