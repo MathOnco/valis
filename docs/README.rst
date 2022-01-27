@@ -1,5 +1,5 @@
 
-|docs| |Upload Python Package| |CI|
+|docs| |CI| |pypi| |conda| |Upload Python Package|
 
 .. |Upload Python Package| image:: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml/badge.svg
     :target: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml
@@ -13,8 +13,14 @@
     :alt: Documentation Status
 
 .. |CI| image:: https://github.com/MathOnco/valis/workflows/CI/badge.svg?branch=main
-     :target: https://github.com/MathOnco/valis/actions?workflow=CI
-     :alt: CI Status
+    :target: https://github.com/MathOnco/valis/actions?workflow=CI
+    :alt: CI Status
+
+.. |conda| image:: https://img.shields.io/conda/vn/conda-forge/valis_wsi
+    :alt: Conda (channel only)
+
+.. |pypi| image:: https://badge.fury.io/py/valis-wsi.svg
+    :target: https://badge.fury.io/py/valis-wsi
 
 .. .. |coverage| image:: https://codecov.io/gh/readthedocs/readthedocs.org/branch/master/graph/badge.svg
 ..     :alt: Test coverage
@@ -373,4 +379,4 @@ License
 
 `MIT`_ © 2021-2022 Chandler Gatenbee
 
-.. _MIT: LICENSE
+.. _MIT: LICENSE.txt
