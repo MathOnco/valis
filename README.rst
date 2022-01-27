@@ -1,5 +1,5 @@
 
-|docs| |PyPi|
+|docs| |Upload Python Package|
 
 .. |Upload Python Package| image:: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml/badge.svg
     :alt: PyPi
