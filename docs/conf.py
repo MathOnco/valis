@@ -23,7 +23,7 @@ copyright = '2022, Chandler Gatenbee'
 author = 'Chandler Gatenbee'
 
 # Get full version, including alpha/beta/rc tags
-with open("../../valis/__init__.py") as fp:
+with open("../valis/__init__.py") as fp:
     Lines = fp.readlines()
     for line in Lines:
       if re.search("__version__", line):
