@@ -10,13 +10,15 @@ on:
 jobs:
   tests:
     name: "Python ${{ matrix.python-version }}"
-    runs-on: “macOS-10.15"
+    runs-on: "ubuntu-latest"
     env:
       USING_COVERAGE: '3.7,3.8,3.9'
+
 
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
 
     steps:
       - uses: "actions/checkout@v2"
