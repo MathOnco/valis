@@ -31,39 +31,39 @@ jobs:
         os: [macOS-latest, ubuntu-latest, windows-latest]
         python-version: [3.7, 3.8, 3.9]
     steps:
-    - uses: actions/checkout@v1
-    - name: Additional info about the build
-      shell: bash
-      run: |
-        uname -a
-        df -h
-        ulimit -a
+      - uses: actions/checkout@v1
+      - name: Additional info about the build
+        shell: bash
+        run: |
+          uname -a
+          df -h
+          ulimit -a
 
-    # More info on options: https://github.com/conda-incubator/setup-miniconda
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        environment-file: devtools/conda-envs/test_env.yaml
+      # More info on options: https://github.com/conda-incubator/setup-miniconda
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          environment-file: devtools/conda-envs/test_env.yaml
 
-        channels: conda-forge,defaults
+          channels: conda-forge,defaults
 
-        activate-environment: test
-        auto-update-conda: false
-        auto-activate-base: false
-        show-channel-urls: true
+          activate-environment: test
+          auto-update-conda: false
+          auto-activate-base: false
+          show-channel-urls: true
 
-- name: Install package
+        - name: Install package
 
-      # conda setup requires this special shell
-      shell: bash -l {0}
-      run: |
-        python -m pip install . --no-deps
-        conda list
+              # conda setup requires this special shell
+              shell: bash -l {0}
+              run: |
+                python -m pip install . --no-deps
+                conda list
 
- - name: Run tests
+        - name: Run tests
 
-   # conda setup requires this special shell
-   shell: bash -l {0}
+          # conda setup requires this special shell
+          shell: bash -l {0}
 
-    run: |
-      pytest -v --cov=molecool --cov-report=xml --color=yes molecool/tests/
+            run: |
+              pytest -v --cov=molecool --cov-report=xml --color=yes molecool/tests/
