@@ -72,27 +72,27 @@ Installation
 
 conda (recommened for non-Windows users)
 ----------------------------------------
-VALIS is available in the conda-forge channel of conda. However, unfortunately `libvips <https://www.libvips.org/>`_, a  core dependency, is not yet available for Windows users on conda-forge.
+VALIS will soon be available in the conda-forge channel of conda. However, unfortunately `libvips <https://www.libvips.org/>`_, a  core dependency, is not yet available for Windows users on conda-forge.
 
-Before proceeding, make sure the conda-forge is on the conda channel list:
+.. Before proceeding, make sure the conda-forge is on the conda channel list:
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ conda config --append channels conda-forge
+..    $ conda config --append channels conda-forge
 
-Next, create and activate a virtual environment. This example use "valis_conda_env" for the virtual environment name, but it could be anything you'd like.
+.. Next, create and activate a virtual environment. This example use "valis_conda_env" for the virtual environment name, but it could be anything you'd like.
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ conda update conda
-   $ conda create -n valis_conda_env python
-   $ conda activate valis_conda_env
+..    $ conda update conda
+..    $ conda create -n valis_conda_env python
+..    $ conda activate valis_conda_env
 
-Finally, install using conda
+.. Finally, install using conda
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-    $ conda install -c conda-forge valis_wsi
+..     $ conda install -c conda-forge valis_wsi
 
 pip
 ---
