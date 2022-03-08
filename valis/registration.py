@@ -279,7 +279,6 @@ from time import time
 import tqdm
 import pandas as pd
 import pickle
-import pyvips
 from . import feature_matcher
 from . import serial_rigid
 from . import affine_optimizer
@@ -604,56 +603,17 @@ class Slide(object):
         else:
             dxdy = None
 
-        # Get output shape #
-        img_sy, img_sx = np.array(img.shape[0:2])/(np.array(self.processed_img_shape_rc))
-        aligned_img_s = 0
-        for slide_obj in self.val_obj.slide_dict.values():
-            M = warp_tools.scale_M(slide_obj.M, img_sx, img_sy)
-            img_shape_rc = np.array(slide_obj.processed_img_shape_rc)*(img_sy, img_sx)
-
-            img_corners_rc = warp_tools.get_corners_of_image(img_shape_rc)
-            warped_corners_xy = warp_tools.warp_xy(img_corners_rc[:, ::-1], M)
-
-            img_w = int(np.ceil(np.max(warped_corners_xy[:, 0]) - np.min(warped_corners_xy[:, 0])))
-            img_h = int(np.ceil(np.max(warped_corners_xy[:, 1]) - np.min(warped_corners_xy[:, 1])))
-
-            slide_sysx = np.array([img_h, img_w])/np.array(slide_obj.reg_img_shape_rc)
-
-            aligned_img_s = max(aligned_img_s, max(slide_sysx))
-
-        aligned_out_shape_rc = np.ceil(np.array(self.reg_img_shape_rc)*aligned_img_s).astype(int)
-        warp_map = warp_tools.get_warp_map(M=self.M, dxdy=dxdy,
-                                           out_shape_rc=self.reg_img_shape_rc,
-                                           scaled_out_shape_rc=aligned_out_shape_rc,
-                                           in_shape_rc=self.processed_img_shape_rc,
-                                           scaled_in_shape_rc=img.shape[0:2],
-                                           return_xy=False)
-
-        # if not np.all(aligned_out_shape_rc == self.reg_img_shape_rc):
-        #     # Scale warp map #
-        #     vips_new_y = warp_tools.numpy2vips(np.ascontiguousarray(warp_map[0]))
-        #     vips_new_x = warp_tools.numpy2vips(np.ascontiguousarray(warp_map[1]))
-        #     interpolator = pyvips.Interpolate.new("bicubic")
-        #     sim_tform = transform.SimilarityTransform(scale=(slide_sysx[0], slide_sysx[1]))
-        #     S = sim_tform.params
-        #     h, w = aligned_out_shape_rc
-        #     scaled_new_c = vips_new_x.affine(S[0:2, 0:2].reshape(-1).tolist(),
-        #                                      oarea=[0, 0, w, h],
-        #                                      interpolate=interpolator)
-
-        #     scaled_new_r = vips_new_y.affine(S[0:2, 0:2].reshape(-1).tolist(),
-        #                                      oarea=[0, 0, w, h],
-        #                                      interpolate=interpolator)
-
-        #     warp_map = np.array([warp_tools.vips2numpy(scaled_new_r),
-        #                          warp_tools.vips2numpy(scaled_new_c)])
-
-        if img.ndim > 2:
-            warped_img = np.dstack([transform.warp(img[..., i], warp_map, output_shape=aligned_out_shape_rc, preserve_range=True)
-                                    for i in range(img.shape[2])])
-
+        if not np.all(img.shape[0:2] == self.processed_img_shape_rc):
+            img_scale_rc = np.array(img.shape[0:2])/(np.array(self.processed_img_shape_rc))
+            out_shape_rc = np.ceil(np.array(self.reg_img_shape_rc)*img_scale_rc).astype(int)
         else:
-            warped_img = transform.warp(img, warp_map, output_shape=aligned_out_shape_rc, preserve_range=True)
+            out_shape_rc = self.reg_img_shape_rc
+
+        warped_img = warp_tools.warp_img(img, M=self.M,
+                                         bk_dxdy=dxdy,
+                                         out_shape_rc=out_shape_rc,
+                                         transformation_src_shape_rc=self.processed_img_shape_rc,
+                                         transformation_dst_shape_rc=self.reg_img_shape_rc)
 
         return warped_img
 
@@ -880,10 +840,10 @@ class Slide(object):
             fwd_dxdy = None
 
         warped_xy = warp_tools.warp_xy(xy, M=M,
-                                       src_shape_rc=self.processed_img_shape_rc,
-                                       dst_shape_rc=self.reg_img_shape_rc,
-                                       scaled_src_shape_rc=pt_dim_rc,
-                                       scaled_dst_shape_rc=aligned_slide_shape,
+                                       transformation_src_shape_rc=self.processed_img_shape_rc,
+                                       transformation_dst_shape_rc=self.reg_img_shape_rc,
+                                       src_shape_rc=pt_dim_rc,
+                                       dst_shape_rc=aligned_slide_shape,
                                        fwd_dxdy=fwd_dxdy)
 
         return warped_xy
@@ -950,12 +910,12 @@ class Slide(object):
             warp_tools.warp_xy_from_to(xy=xy,
                                        from_M=self.M,
                                        registered_img_shape_rc=self.reg_img_shape_rc,
-                                       from_src_shape_rc=self.processed_img_shape_rc,
-                                       from_scaled_src_shape_rc=src_pt_dim_rc,
+                                       from_transformation_src_shape_rc=self.processed_img_shape_rc,
+                                       from_src_shape_rc=src_pt_dim_rc,
                                        from_fwd_dxdy=src_fwd_dxdy,
                                        to_M=to_slide_obj.M,
-                                       to_src_shape_rc=to_slide_obj.processed_img_shape_rc,
-                                       to_scaled_src_shape_rc=dst_shape_rc,
+                                       to_transformation_src_shape_rc=to_slide_obj.processed_img_shape_rc,
+                                       to_src_shape_rc=dst_shape_rc,
                                        to_bk_dxdy=dst_bk_dxdy
                                        )
 
@@ -1868,7 +1828,7 @@ class Valis(object):
 
         self.non_rigid_reg_kwargs["mask"] = rigid_registrar.overlap_mask
         non_rigid_registrar = serial_non_rigid.register_images(src=rigid_registrar,
-                                                                            **self.non_rigid_reg_kwargs)
+                                                               **self.non_rigid_reg_kwargs)
         self.end_non_rigid_time = time()
 
         for d in  [self.non_rigid_dst_dir, self.deformation_field_dir]:
@@ -2364,6 +2324,7 @@ class Valis(object):
         * Warp an image of the slide (Slide.warp_img)
         * Warp points (Slide.warp_xy)
         * Warp points in one slide to their position in another unwarped slide (Slide.warp_xy_from_to)
+        * Access slide ome-xml (Slide.original_xml)
 
         See Slide for more details.
 

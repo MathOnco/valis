@@ -21,7 +21,7 @@ from . import valtils
 from . import warp_tools
 from .feature_detectors import VggFD
 from .feature_matcher import Matcher, convert_distance_to_similarity, GMS_NAME
-from .affine_optimizer import AffineOptimizerMattesMI
+# from .affine_optimizer import AffineOptimizerMattesMI
 
 
 def get_image_files(img_dir, imgs_ordered=False):
@@ -854,9 +854,9 @@ class SerialRigidRegistrar(object):
         for i in tqdm(range(self.size)):
             img_obj = self.img_obj_list[i]
             M = img_obj.T @ img_obj.to_prev_A
-            warped_img = transform.warp(img_obj.image, M,
-                                        output_shape=img_obj.padded_shape_rc,
-                                        order=3)
+            warped_img = warp_tools.warp_img(img_obj.image,
+                                             M=M,
+                                             out_shape_rc=img_obj.padded_shape_rc)
 
             if i == 0:
                 img_obj.optimal_M = np.identity(3)
@@ -875,13 +875,14 @@ class SerialRigidRegistrar(object):
                                                                 warped_img.shape)
 
             img_mask = np.ones(img_obj.image.shape[0:2], dtype=np.uint8)
-            warped_img_mask = transform.warp(img_mask, M, preserve_range=True,
-                                             output_shape=img_obj.padded_shape_rc).astype(np.uint8)
+            warped_img_mask = warp_tools.warp_img(img_mask,
+                                                  M=M,
+                                                  out_shape_rc=img_obj.padded_shape_rc)
 
             prev_img_mask = np.ones(prev_img_obj.image.shape[0:2], dtype=np.uint8)
-            warped_prev_img_mask = transform.warp(prev_img_mask, prev_M,
-                                                  preserve_range=True,
-                                                  output_shape=prev_img_obj.padded_shape_rc).astype(np.uint8)
+            warped_prev_img_mask = warp_tools.warp_img(prev_img_mask,
+                                                       M=prev_M,
+                                                       out_shape_rc=prev_img_obj.padded_shape_rc)
 
             mask = np.zeros(warped_img_mask.shape, dtype=np.uint8)
             mask[(warped_img_mask != 0) & (warped_prev_img_mask != 0)] = 255
@@ -903,7 +904,9 @@ class SerialRigidRegistrar(object):
             after_src_xy = warp_tools.warp_xy(to_prev_match_info.matched_kp1_xy, M @ optimal_M)
             after_dst_xy = warp_tools.warp_xy(to_prev_match_info.matched_kp2_xy, prev_M)
 
-            optimal_reg_img = transform.warp(warped_img, optimal_M, output_shape= img_obj.padded_shape_rc, order=3)
+            optimal_reg_img = warp_tools.warp_img(warped_img,
+                                                  M=optimal_M,
+                                                  out_shape_rc=img_obj.padded_shape_rc)
 
             after_cst = affine_optimizer.cost_fxn(optimal_reg_img, prev_img, mask)
 
@@ -941,9 +944,9 @@ class SerialRigidRegistrar(object):
         overlap_mask = np.zeros(self.img_obj_list[0].registered_img.shape[0:2], dtype=np.int)
         for img_obj in self.img_obj_list:
             img_mask = np.ones(img_obj.image.shape[0:2], dtype=np.int)
-            warped_img_mask = transform.warp(img_mask, img_obj.M,
-                                             preserve_range=True,
-                                             output_shape=img_obj.registered_img.shape).astype(np.int)
+            warped_img_mask = warp_tools.warp_img(img_mask,
+                                                  M=img_obj.M,
+                                                  out_shape_rc=img_obj.registered_img.shape)
 
             overlap_mask += warped_img_mask
 
@@ -1009,11 +1012,9 @@ class SerialRigidRegistrar(object):
             img_obj.crop_T = crop_T
             img_obj.M = M_list[i] @ crop_T
             img_obj.M_inv = np.linalg.inv(img_obj.M)
-
-            img_obj.registered_img = transform.warp(img_obj.image, img_obj.M,
-                                                    output_shape=(h, w),
-                                                    order=3,
-                                                    preserve_range=True).astype(np.uint8)
+            img_obj.registered_img = warp_tools.warp_img(img_obj.image,
+                                                         M=img_obj.M,
+                                                         out_shape_rc=(h, w))
 
             img_obj.registered_shape_rc = img_obj.registered_img.shape[0:2]
 
@@ -1117,7 +1118,7 @@ class SerialRigidRegistrar(object):
 def register_images(img_dir, dst_dir=None, name="registrar",
                     feature_detector=VggFD(),
                     matcher=Matcher(), transformer=EuclideanTransform(),
-                    affine_optimizer=AffineOptimizerMattesMI(),
+                    affine_optimizer=None,
                     imgs_ordered=False, similarity_metric="n_matches",
                     max_scaling=3.0, qt_emitter=None):
     """

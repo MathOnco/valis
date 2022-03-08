@@ -265,7 +265,11 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
         return vips_slide
 
     slide_shape_rc = np.array((vips_slide.height,  vips_slide.width))
-    slide_warp_map = warp_tools.get_warp_map(M=M, dxdy=dxdy, out_shape_rc=aligned_img_shape_rc, scaled_out_shape_rc = aligned_slide_shape_rc, in_shape_rc=in_shape_rc, scaled_in_shape_rc=slide_shape_rc, return_xy=True)
+    slide_warp_map = warp_tools.get_warp_map(M=M, dxdy=dxdy,
+                                             transformation_dst_shape_rc=aligned_img_shape_rc,
+                                             dst_shape_rc=aligned_slide_shape_rc,
+                                             transformation_src_shape_rc=in_shape_rc,
+                                             src_shape_rc=slide_shape_rc, return_xy=True)
 
     vips_new_x = numpy2vips(np.ascontiguousarray(slide_warp_map[0]))
     vips_new_y = numpy2vips(np.ascontiguousarray(slide_warp_map[1]))
@@ -275,8 +279,14 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
     sim_tform = transform.SimilarityTransform(scale=(scale_x, scale_y))
     S = sim_tform.params
     interpolator = pyvips.Interpolate.new(interp_method)
-    scaled_new_x = vips_new_x.affine(S[0:2, 0:2].reshape(-1).tolist(), oarea=[0, 0, w, h], interpolate=interpolator)
-    scaled_new_y = vips_new_y.affine(S[0:2, 0:2].reshape(-1).tolist(), oarea=[0, 0, w, h], interpolate=interpolator)
+    scaled_new_x = vips_new_x.affine(S[0:2, 0:2].reshape(-1).tolist(),
+                                     oarea=[0, 0, w, h],
+                                     interpolate=interpolator)
+
+    scaled_new_y = vips_new_y.affine(S[0:2, 0:2].reshape(-1).tolist(),
+                                     oarea=[0, 0, w, h],
+                                     interpolate=interpolator)
+
     warp_index = scaled_new_x.bandjoin(scaled_new_y)
     vips_warped = vips_slide.mapim(warp_index, interpolate=interpolator)
 
