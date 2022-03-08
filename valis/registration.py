@@ -279,6 +279,7 @@ from time import time
 import tqdm
 import pandas as pd
 import pickle
+import pyvips
 from . import feature_matcher
 from . import serial_rigid
 from . import affine_optimizer
@@ -628,9 +629,29 @@ class Slide(object):
                                            scaled_in_shape_rc=img.shape[0:2],
                                            return_xy=False)
 
+        # if not np.all(aligned_out_shape_rc == self.reg_img_shape_rc):
+        #     # Scale warp map #
+        #     vips_new_y = warp_tools.numpy2vips(np.ascontiguousarray(warp_map[0]))
+        #     vips_new_x = warp_tools.numpy2vips(np.ascontiguousarray(warp_map[1]))
+        #     interpolator = pyvips.Interpolate.new("bicubic")
+        #     sim_tform = transform.SimilarityTransform(scale=(slide_sysx[0], slide_sysx[1]))
+        #     S = sim_tform.params
+        #     h, w = aligned_out_shape_rc
+        #     scaled_new_c = vips_new_x.affine(S[0:2, 0:2].reshape(-1).tolist(),
+        #                                      oarea=[0, 0, w, h],
+        #                                      interpolate=interpolator)
+
+        #     scaled_new_r = vips_new_y.affine(S[0:2, 0:2].reshape(-1).tolist(),
+        #                                      oarea=[0, 0, w, h],
+        #                                      interpolate=interpolator)
+
+        #     warp_map = np.array([warp_tools.vips2numpy(scaled_new_r),
+        #                          warp_tools.vips2numpy(scaled_new_c)])
+
         if img.ndim > 2:
             warped_img = np.dstack([transform.warp(img[..., i], warp_map, output_shape=aligned_out_shape_rc, preserve_range=True)
                                     for i in range(img.shape[2])])
+
         else:
             warped_img = transform.warp(img, warp_map, output_shape=aligned_out_shape_rc, preserve_range=True)
 

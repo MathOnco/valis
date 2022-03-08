@@ -189,7 +189,7 @@ def init_jvm():
         BF_READABLE_FORMATS = get_bf_readable_formats()
         OPENSLIDE_ONLY = list(set(ALL_OPENSLIDE_READABLE_FORMATS).difference(set(BF_READABLE_FORMATS)))
 
-        msg = "JVM has been initialize. Be sure to call registration.kill_jvm() or slide_io.kill_jvm() at the end of your script"
+        msg = "JVM has been initialized. Be sure to call registration.kill_jvm() or slide_io.kill_jvm() at the end of your script"
         valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
 
 
