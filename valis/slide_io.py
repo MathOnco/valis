@@ -2207,16 +2207,15 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
 
     # Write image #
     tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
-    if tile_wh < 16:
-        tile_wh = 16
     if np.any(np.array(xyzct[0:2]) < tile_wh):
         # Image is smaller than the tile #
-        tile_img = False
-    else:
-        tile_img = True
+        min_dim = min(xyzct[0:2])
+        tile_wh = int((min_dim - min_dim %16))
+    if tile_wh < 16:
+        tile_wh = 16
 
     print("")
-    img.tiffsave(dst_f, compression=compression, tile=tile_img,
+    img.tiffsave(dst_f, compression=compression, tile=True,
                  tile_width=tile_wh, tile_height=tile_wh,
                  pyramid=True, subifd=True, bigtiff=True, lossless=True)
 
@@ -2288,7 +2287,12 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
         px_phys_size = None
     else:
-        px_phys_size = slide_meta.pixel_physical_size_xyu
+        if level == 0:
+            px_phys_size = slide_meta.pixel_physical_size_xyu
+        else:
+            sxy = slide_meta.slide_dimensions[0]/slide_meta.slide_dimensions[level]
+            scaled_units = np.array(slide_meta.pixel_physical_size_xyu[0:2])*sxy
+            px_phys_size = (scaled_units[0], scaled_units[1], slide_meta.pixel_physical_size_xyu[2])
 
     ome_xml = update_xml_for_new_img(slide_meta.original_xml,
                                      new_xyzct=out_xyczt,

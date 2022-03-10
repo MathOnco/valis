@@ -281,7 +281,6 @@ import pandas as pd
 import pickle
 from . import feature_matcher
 from . import serial_rigid
-from . import affine_optimizer
 from . import feature_detectors
 from . import non_rigid_registrars
 from . import valtils
@@ -314,6 +313,10 @@ DEFAULT_TRANSFORM_CLASS = transform.SimilarityTransform
 DEFAULT_MATCH_FILTER = feature_matcher.RANSAC_NAME
 DEFAULT_SIMILARITY_METRIC = "n_matches"
 DEFAULT_AFFINE_OPTIMIZER_CLASS = None  # affine_optimizer.AffineOptimizerMattesMI
+DEFAULT_MAX_PROCESSED_IMG_SIZE = 850
+DEFAULT_MAX_IMG_DIM = 850
+DEFAULT_THUMBNAIL_SIZE = 500
+
 
 # Rigid registration kwarg keys #
 AFFINE_OPTIMIZER_KEY = "affine_optimizer"
@@ -1142,8 +1145,10 @@ class Valis(object):
                  non_rigid_registrar_cls=DEFAULT_NON_RIGID_CLASS,
                  non_rigid_reg_params=DEFAULT_NON_RIGID_KWARGS, img_list=None,
                  resolution_xyu=None, slide_dims_dict_wh=None,
-                 max_image_dim_px=1500, max_processed_image_dim_px=1500,
-                 thumbnail_size=500, norm_method=DEFAULT_NORM_METHOD, qt_emitter=None):
+                 max_image_dim_px=DEFAULT_MAX_IMG_DIM,
+                 max_processed_image_dim_px=DEFAULT_MAX_PROCESSED_IMG_SIZE,
+                 thumbnail_size=DEFAULT_THUMBNAIL_SIZE,
+                 norm_method=DEFAULT_NORM_METHOD, qt_emitter=None):
 
         """
         src_dir: str
