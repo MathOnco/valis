@@ -1665,7 +1665,7 @@ class Valis(object):
             Target statistics used to normalize images
 
         """
-        print("======== Normalizing images ========")
+        print("\n==== Normalizing images\n")
         for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
             img = io.imread(slide_obj.processed_img_f, True)
             if self.norm_method == "histo_match":
@@ -2231,27 +2231,27 @@ class Valis(object):
 
         self.start_time = time()
         try:
-            print("\n======== Converting images ========\n")
+            print("\n==== Converting images\n")
             self.convert_imgs(series=self.series, reader_cls=reader_cls)
 
-            print("\n======== Processing images ========\n")
+            print("\n==== Processing images\n")
             self.brightfield_procsseing_fxn_str = brightfield_processing_cls.__name__
             self.if_processing_fxn_str = if_processing_cls.__name__
             self.process_imgs(brightfield_processing_cls, brightfield_processing_kwargs,
                             if_processing_cls, if_processing_kwargs)
 
-            print("\n======== Rigid registraration ========\n")
+            print("\n==== Rigid registraration\n")
             rigid_registrar = self.rigid_register()
             if rigid_registrar is False:
                 return None, None, None
 
             if self.non_rigid_registrar_cls is not None:
-                print("\n======== Non-rigid registraration ========\n")
+                print("\n==== Non-rigid registraration\n")
                 non_rigid_registrar = self.non_rigid_register(rigid_registrar)
             else:
                 non_rigid_registrar = None
 
-            print("\n======== Measuring error ========\n")
+            print("\n==== Measuring error\n")
             aligned_slide_shape_rc = self.get_aligned_slide_shape()
             self.aligned_slide_shape_rc = aligned_slide_shape_rc
             for slide_obj in self.slide_dict.values():
