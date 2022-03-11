@@ -1201,10 +1201,10 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         matcher.scaling = True
 
     registrar = SerialRigidRegistrar(img_dir, imgs_ordered=imgs_ordered, name=name)
-    print("====== Detecting features ======")
+    print("\n======== Detecting features\n")
     registrar.generate_img_obj_list(feature_detector, qt_emitter=qt_emitter)
 
-    print("====== Matching images ======")
+    print("\n======== Matching images\n")
     if registrar.aleady_sorted:
         registrar.match_sorted_imgs(matcher, keep_unfiltered=False,
                                     qt_emitter=qt_emitter)
@@ -1216,13 +1216,13 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         registrar.match_imgs(matcher, keep_unfiltered=False,
                              qt_emitter=qt_emitter)
 
-        print("====== Sorting images ======")
+        print("\n======== Sorting images\n")
         registrar.build_metric_matrix(metric=similarity_metric)
         registrar.sort()
 
     registrar.distance_metric_name = matcher.metric_name
     registrar.distance_metric_type = matcher.metric_type
-    print("====== Aligning down stack ======")
+    print("\n======== Aligning down stack\n")
     if registrar.size > 2:
         registrar.update_match_dicts_with_neighbor_filter(transformer, matcher)
 
@@ -1239,7 +1239,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         return False
 
     if affine_optimizer is not None:
-        print("====== Optimizing alignments ======")
+        print("\n======== Optimizing alignments\n")
         registrar.optimize(affine_optimizer, qt_emitter=qt_emitter)
 
     registrar.finalize()
@@ -1250,14 +1250,14 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         for d in [registered_img_dir, registered_data_dir]:
             pathlib.Path(d).mkdir(exist_ok=True, parents=True)
 
-        print("====== Summarizing alignments ======")
+        print("\n======== Summarizing alignments\n")
         summary_df = registrar.summarize()
         summary_file = os.path.join(registered_data_dir, name + "_results.csv")
         summary_df.to_csv(summary_file, index=False)
 
         registrar.summary = summary_df
 
-        print("====== Saving results ======")
+        print("\n======== Saving results\n")
         pickle_file = os.path.join(registered_data_dir, name + "_registrar.pickle")
         pickle.dump(registrar, open(pickle_file, 'wb'))
 
@@ -1274,6 +1274,6 @@ def register_images(img_dir, dst_dir=None, name="registrar",
     elapsed = toc - tic
     time_string, time_units = valtils.get_elapsed_time_string(elapsed)
 
-    print(f"====== Rigid registration complete in {time_string} {time_units} ======")
+    print(f"\n======== Rigid registration complete in {time_string} {time_units}\n")
 
     return registrar

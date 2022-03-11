@@ -659,7 +659,7 @@ class SerialNonRigidRegistrar(object):
         img_list = [nr_img_obj.image for nr_img_obj in self.non_rigid_obj_list]
         non_rigid_reg = non_rigid_reg_class(params=non_rigid_reg_params)
 
-        print("====== Registering images (non-rigid) ======")
+        print("\n======== Registering images (non-rigid)\n")
         warped_imgs, warped_grids, backward_deformations = non_rigid_reg.register(img_list, self.mask)
         for i, nr_img_obj in enumerate(self.non_rigid_obj_list):
             nr_img_obj.registered_img = warped_imgs[i]
@@ -722,7 +722,7 @@ class SerialNonRigidRegistrar(object):
         shape_list[self.ref_img_idx] = self.non_rigid_obj_list[self.ref_img_idx].image.shape
 
         iter_order = get_alignment_indices(self.size, self.ref_img_idx)
-        print("====== Summarizing registration ======")
+        print("\n======== Summarizing registration\n")
         for moving_idx, fixed_idx in tqdm(iter_order):
             moving_obj = self.non_rigid_obj_list[moving_idx]
             fixed_obj = self.non_rigid_obj_list[fixed_idx]
@@ -857,7 +857,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         for d in [registered_img_dir, registered_data_dir, registered_grids_dir]:
             pathlib.Path(d).mkdir(exist_ok=True, parents=True)
 
-        print("====== Saving results ======")
+        print("\n======== Saving results\n")
         if moving_to_fixed_xy is not None:
             summary_df = nr_reg.summarize()
             summary_file = os.path.join(registered_data_dir, name + "_results.csv")
@@ -880,6 +880,6 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
     toc = time()
     elapsed = toc - tic
     time_string, time_units = valtils.get_elapsed_time_string(elapsed)
-    print(f"====== Non-rigid registration complete in {time_string} {time_units} ======")
+    print(f"\n======== Non-rigid registration complete in {time_string} {time_units}\n")
 
     return nr_reg

@@ -24,9 +24,13 @@ import unicodedata
 import ome_types
 import jpype
 import bioformats_jar
+from tqdm import tqdm
 from . import valtils
 from . import slide_tools
 from . import warp_tools
+
+MAX_TILE_SIZE = 2**10
+"""int: maximum tile used to read or write images"""
 
 BF_RDR = "bioformats"
 """str: Name of Bioformats reader."""
@@ -860,7 +864,7 @@ class BioFormatsSlideReader(SlideReader):
 
         n_cpu = multiprocessing.cpu_count() - 1
         with parallel_backend("threading", n_jobs=n_cpu):
-            Parallel()(delayed(tile2vips_threaded)(i) for i in range(n_tiles))
+            Parallel()(delayed(tile2vips_threaded)(i) for i in tqdm(range(n_tiles)))
 
         return tile_array
 
@@ -909,11 +913,15 @@ class BioFormatsSlideReader(SlideReader):
             tile_wh = rdr.getOptimalTileWidth()
         rdr.close()
 
-        if np.any(slide_shape_wh > tile_wh):
+        # if tile_wh > MAX_TILE_SIZE:
+        #     tile_wh = MAX_TILE_SIZE
+
+        tile_wh = MAX_TILE_SIZE
+        if np.any(slide_shape_wh < tile_wh):
             tile_wh = min(slide_shape_wh)
 
         tile_bbox = warp_tools.get_grid_bboxes(slide_shape_wh[::-1],
-                                                tile_wh, tile_wh, inclusive=True)
+                                               tile_wh, tile_wh, inclusive=True)
 
         n_across = len(np.unique(tile_bbox[:, 0]))
 
@@ -1246,6 +1254,9 @@ class VipsSlideReader(SlideReader):
 
         meta_name = f"{os.path.split(self.src_f)[1]}_Series(0)".strip("_")
         f_extension = slide_tools.get_slide_extension(self.src_f)
+        if f_extension in BF_READABLE_FORMATS:
+            bf_reader = BioFormatsSlideReader(self.src_f)
+            self.is_ome = re.search("ome-tiff", bf_reader.metadata.server.lower()) is not None
 
         slide_meta = MetaData(meta_name, server)
         vips_img = pyvips.Image.new_from_file(self.src_f)
@@ -1260,7 +1271,6 @@ class VipsSlideReader(SlideReader):
         slide_meta.slide_dimensions = self._get_slide_dimensions(vips_img)
         if f_extension in BF_READABLE_FORMATS:
             bf_reader = BioFormatsSlideReader(self.src_f)
-            self.is_ome = re.search("ome-tiff", bf_reader.metadata.server.lower()) is not None
             slide_meta.channel_names = bf_reader.metadata.channel_names
             slide_meta.pixel_physical_size_xyu = bf_reader.metadata.pixel_physical_size_xyu
             slide_meta.bf_pixel_type = bf_reader.metadata.bf_pixel_type
@@ -1271,8 +1281,9 @@ class VipsSlideReader(SlideReader):
         else:
             slide_meta.pixel_physical_size_xyu = self._get_pixel_physical_size(vips_img)
 
+
         if slide_meta.is_rgb:
-                slide_meta.channel_names = None
+            slide_meta.channel_names = None
 
         return slide_meta
 
@@ -1405,10 +1416,18 @@ class VipsSlideReader(SlideReader):
 
         if self.use_openslide:
             slide_dimensions = self._get_slide_dimensions_openslide(vips_img)
+
+        elif self.is_ome:
+            slide_dimensions = self._get_slide_dimensions_ometiff(vips_img)
+
         else:
             slide_dimensions = self._get_slide_dimensions_vips(vips_img)
 
         return slide_dimensions
+
+    def _get_slide_dimensions_ometiff(self, *args):
+        bf_reader = BioFormatsSlideReader(self.src_f)
+        return bf_reader.metadata.slide_dimensions
 
     def _get_slide_dimensions_openslide(self, vips_img):
         """Get dimensions of slide at all pyramid levels using openslide
@@ -1807,7 +1826,7 @@ def get_slide_reader(src_f, series=None):
     if can_only_use_openslide and not can_use_openslide:
         msg = (f"file {os.path.split(src_f)[1]} can only be read by OpenSlide, "
                f"which is required to open files with the follwing extensions: {', '.join(OPENSLIDE_ONLY)}."
-               f" However, OpenSlide cannot be found. Unable to read this slide."
+               f"However, OpenSlide cannot be found. Unable to read this slide."
                )
 
         valtils.print_warning(msg)
@@ -1851,8 +1870,8 @@ def get_slide_reader(src_f, series=None):
         reader = VipsSlideReader
 
     elif can_use_bf:
-        if can_use_openslide and series == 0:
-            # E.g. .svs
+        if (can_use_openslide and series == 0) or (is_ometiff and series == 0):
+            # E.g. .svs or 1st series in an ome.tiff
             reader = VipsSlideReader
         else:
             reader = BioFormatsSlideReader
@@ -2307,5 +2326,8 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     ome_xml_str = ome_xml.to_xml()
     if tile_wh is None:
         tile_wh = slide_meta.optimal_tile_wh
+
+    if tile_wh > MAX_TILE_SIZE:
+            tile_wh = MAX_TILE_SIZE
 
     save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression)
