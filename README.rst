@@ -166,6 +166,9 @@ Slide registration
 .. important::
     One of the most imporant parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. If registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values will be needed so that the tissue is at a high enough resolution.
 
+.. important::
+    If the order of slices is known and needs to be preserved, such as building a 3d image, set  :code:`imgs_ordered=True` when intialzing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, be sure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff...10.tiff, etc...
+
 In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process simply involves the creation of a Valis object, which is what conducts the registration.
 
 .. code-block:: python
