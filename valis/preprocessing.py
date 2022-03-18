@@ -290,7 +290,7 @@ def get_channel_stats(img):
     return np.array(img_stats)
 
 
-def norm_img_stats(img, target_stats):
+def norm_img_stats(img, target):
     """Normalize an image
 
     Image will be normalized to have same stats as `target_stats`
@@ -299,24 +299,30 @@ def norm_img_stats(img, target_stats):
     "A nonlinear mapping approach to stain normalization in digital histopathology
     images using image-specific color deconvolution.", Khan et al. 2014
 
+    Assumes that `img` values range between 0-255
+
     """
 
-    eps = np.finfo(float).resolution
-    target_stats = get_channel_stats(target_stats)
+    target_stats = get_channel_stats(target)
     src_stats_flat = get_channel_stats(img)
-    eps_array = np.arange(1, len(src_stats_flat)+1)*eps
 
     # Avoid duplicates and keep in ascending order
     lower_knots = np.array([0])
     upper_knots = np.array([300, 350, 400, 450])
-    src_stats_flat = np.hstack([lower_knots, src_stats_flat, upper_knots])
-    target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots])
+    src_stats_flat = np.hstack([lower_knots, src_stats_flat, upper_knots]).astype(float)
+    target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots]).astype(float)
 
+    # Add epsilon to avoid duplicate values
+    eps = 10*np.finfo(float).resolution
     eps_array = np.arange(len(src_stats_flat)) * eps
-    src_stats_flat = np.sort(src_stats_flat + eps_array)
-    target_stats_flat = np.sort(target_stats_flat + eps_array)
+    src_stats_flat = src_stats_flat + eps_array
+    target_stats_flat = target_stats_flat + eps_array
 
-    # sp = csaps.CubicSmoothingSpline(src_stats_flat, target_stats_flat, smooth=0.995)
+    # Make sure src stats are in ascending order
+    src_order = np.argsort(src_stats_flat)
+    src_stats_flat = src_stats_flat[src_order]
+    target_stats_flat = target_stats_flat[src_order]
+
     cs = Akima1DInterpolator(src_stats_flat, target_stats_flat)
     normed_img = cs(img.reshape(-1)).reshape(img.shape)
 
@@ -324,4 +330,40 @@ def norm_img_stats(img, target_stats):
         normed_img = np.clip(normed_img, 0, 255)
 
     return normed_img
+
+
+
+# def norm_img_stats(img, target_stats):
+#     """Normalize an image
+
+#     Image will be normalized to have same stats as `target_stats`
+
+#     Based on method in
+#     "A nonlinear mapping approach to stain normalization in digital histopathology
+#     images using image-specific color deconvolution.", Khan et al. 2014
+
+#     """
+
+#     eps = np.finfo(float).resolution
+#     target_stats = get_channel_stats(target_stats)
+#     src_stats_flat = get_channel_stats(img)
+
+#     # Avoid duplicates and keep in ascending order
+#     lower_knots = np.array([0])
+#     upper_knots = np.array([300, 350, 400, 450])
+#     src_stats_flat = np.hstack([lower_knots, src_stats_flat, upper_knots])
+#     target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots])
+
+#     eps_array = np.arange(len(src_stats_flat)) * eps
+#     src_stats_flat = np.sort(src_stats_flat + eps_array)
+#     target_stats_flat = np.sort(target_stats_flat + eps_array)
+
+#     # sp = csaps.CubicSmoothingSpline(src_stats_flat, target_stats_flat, smooth=0.995)
+#     cs = Akima1DInterpolator(src_stats_flat, target_stats_flat)
+#     normed_img = cs(img.reshape(-1)).reshape(img.shape)
+
+#     if img.dtype == np.uint8:
+#         normed_img = np.clip(normed_img, 0, 255)
+
+#     return normed_img
 

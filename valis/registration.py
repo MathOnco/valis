@@ -269,6 +269,7 @@ DEFAULT_NON_RIGID_KWARGS : dict
 
 """
 
+from ctypes import util
 import traceback
 import re
 import os
@@ -497,7 +498,7 @@ class Slide(object):
         self.img_type = reader.guess_image_type()
         self.is_rgb = reader.metadata.is_rgb
         self.slide_shape_rc = reader.metadata.slide_dimensions[0][::-1]
-        self.series = reader.metadata.series
+        self.series = reader.series
         self.slide_dimensions_wh = reader.metadata.slide_dimensions
         self.resolution = np.mean(reader.metadata.pixel_physical_size_xyu[0:2])
         self.units = reader.metadata.pixel_physical_size_xyu[2]
@@ -1280,8 +1281,8 @@ class Valis(object):
         self.image_type = img_type
 
         # Results fields #
-        if series is None:
-            series = 0
+        # if series is None:
+            # series = 0
         self.series = series
         self.size = 0
         self.aligned_slide_shape_rc = None
@@ -1431,8 +1432,8 @@ class Valis(object):
     def convert_imgs(self, series=None, reader_cls=None):
         """Convert slides to images and create dictionary of Slides.
 
-        series : int
-            Slide series to be read.
+        series : int, optional
+            Slide series to be read. If None, the series with largest image will be read
 
         reader_cls : SlideReader, optional
             Uninstantiated SlideReader class that will convert
@@ -1440,15 +1441,13 @@ class Valis(object):
 
         """
 
-        if series is None:
-            series = 0
-
         img_types = []
         self.size = 0
         for f in tqdm.tqdm(self.original_img_list):
             if reader_cls is None:
                 reader_cls = slide_io.get_slide_reader(f, series=series)
             reader = reader_cls(f, series=series)
+
             slide_dims = reader.metadata.slide_dimensions
             levels_in_range = np.where(slide_dims.max(axis=1) < self.max_image_dim_px)[0]
             if len(levels_in_range) > 0:
@@ -1456,7 +1455,7 @@ class Valis(object):
             else:
                 level = len(slide_dims) - 1
 
-            img = reader.slide2image(level=level, series=series)
+            img = reader.slide2image(level=level)
 
             scaling = np.min(self.max_image_dim_px/np.array(img.shape[0:2]))
             if scaling < 1:
@@ -1860,28 +1859,36 @@ class Valis(object):
             slide_obj.fwd_dxdy = slide_nr_reg_obj.fwd_dxdy
             slide_obj.nr_rigid_reg_img_f = os.path.join(self.non_rigid_dst_dir, img_save_id + "_" + slide_obj.name + ".png")
 
-            scaling = np.min(self.thumbnail_size/np.array(slide_obj.reg_img_shape_rc[:2]))
-            thumbnail_bk_dxdy = self.create_thumbnail(np.dstack(slide_obj.bk_dxdy), rescale=False)
-
-            thumbnail_bk_dxdy *= scaling
-            thumbanil_deform_grid = viz.color_displacement_tri_grid(thumbnail_bk_dxdy[..., 0],
-                                                                    thumbnail_bk_dxdy[..., 1], n_grid_pts=20)
-
-            deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
-
-            io.imsave(deform_img_f, thumbanil_deform_grid)
-
-
-        for slide_name, slide_obj in self.slide_dict.items():
-            slide_nr_reg_obj = non_rigid_registrar.non_rigid_obj_dict[slide_name]
-            img_save_id = str.zfill(str(slide_obj.stack_idx), n_digits)
             if not slide_obj.is_rgb:
                 img_to_warp = rigid_registrar.img_obj_dict[slide_name].image
             else:
                 img_to_warp = slide_obj.image
 
-
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=True)
+
+            # Save deformation grid
+            scaling = np.min(self.thumbnail_size/np.array(slide_obj.reg_img_shape_rc[:2]))
+            thumbnail_bk_dxdy = self.create_thumbnail(np.dstack(slide_obj.bk_dxdy)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c], rescale=False)
+            thumbnail_bk_dxdy *= scaling
+
+            temp_draw = slide_obj.warp_img(rigid_registrar.img_obj_dict[slide_name].image, non_rigid=True)
+            draw_img = transform.resize(temp_draw[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c],
+                                        thumbnail_bk_dxdy[..., 0].shape,
+                                        preserve_range=True).astype(temp_draw.dtype)
+
+            if draw_img.ndim == 2:
+                draw_img = np.dstack([draw_img] * 3)
+
+            thumbanil_deform_grid = viz.color_displacement_tri_grid(thumbnail_bk_dxdy[..., 0],
+                                                                    thumbnail_bk_dxdy[..., 1],
+                                                                    img=draw_img,
+                                                                    n_grid_pts=25)
+
+            deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
+
+            io.imsave(deform_img_f, thumbanil_deform_grid)
+
+            # Save warped image
             if warped_img.ndim == 2:
                 warped_img[slide_obj.overlap_mask == 0] = 0
             else:
@@ -1891,7 +1898,6 @@ class Valis(object):
 
             warped_img = self.create_thumbnail(warped_img, self.thumbnail_size)
             io.imsave(slide_obj.nr_rigid_reg_img_f, warped_img.astype(np.uint8))
-
 
         return non_rigid_registrar
 
