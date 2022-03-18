@@ -9,7 +9,7 @@ from scipy.spatial import distance
 import numpy as np
 import numba as nb
 from . import warp_tools
-
+import cv2
 # JzAzBz #
 DXDY_CSPACE = "JzAzBz"
 DXDY_CRANGE = (0, 0.025)
@@ -95,13 +95,11 @@ def draw_clusterd_D(D, optimal_Z):
     axdendro_top.set_yticks([])
     axdendro_top.axis('off')
 
-    # axmatrix = fig.add_axes([0.2, 0.1, 0.6, 0.8])
     axmatrix = fig.add_axes([0.115, 0.05, 0.6, 0.798])
     im = axmatrix.matshow(D, aspect='auto', cmap="plasma_r")
     axmatrix.set_xticks([])
     axmatrix.set_yticks([])
 
-    # axcolor = fig.add_axes([0.82, 0.05, 0.02, 0.8])
     axcolor = fig.add_axes([0.75, 0.05, 0.03, 0.798])
     plt.colorbar(im, cax=axcolor)
 
@@ -131,10 +129,8 @@ def get_grid(shape, grid_spacing, thickness=1):
 
     all_rows =[]
     all_cols = []
-    # thickness = 2
     row_add_idx = 0
     for k in range(thickness):
-        # for i in np.arange(thickness//2, shape[0] + grid_spacing, grid_spacing):
         for i in np.arange(grid_spacing - thickness, shape[0] + thickness, grid_spacing):
             for j in np.arange(0, shape[1]):
                 if k%2 == 0:
@@ -151,7 +147,6 @@ def get_grid(shape, grid_spacing, thickness=1):
 
     col_add_idx = 0
     for k in range(thickness):
-        # for j in np.arange(thickness//2, shape[1] + grid_spacing, grid_spacing):
         for j in np.arange(grid_spacing - thickness, shape[1], grid_spacing):
             for i in np.arange(0, shape[0]):
                 if k%2 == 0:
@@ -367,10 +362,9 @@ def get_n_colors(rgb, n):
         else:
             cam = colour.convert(rgb, 'sRGB', 'CAM16UCS')
 
-    # sq_D = distance.cdist(cam, cam, metric=colour.difference.delta_E_CAM16UCS)
     sq_D = distance.cdist(cam, cam)
     max_D = sq_D.max()
-    most_dif_2Didx = np.where(sq_D == max_D) ### 2 most different colors
+    most_dif_2Didx = np.where(sq_D == max_D)  # 2 most different colors
     most_dif_img1 = most_dif_2Didx[0][0]
     most_dif_img2 = most_dif_2Didx[1][0]
     rgb_idx = [most_dif_img1, most_dif_img2]
@@ -466,7 +460,7 @@ def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, 
 
     J = J/J.max()
     if cspace == "JzAzBz":
-        J*= 0.01 #0.025
+        J*= 0.01
 
     eps = np.finfo("float").eps
     with colour.utilities.suppress_warnings(colour_usage_warnings=True):
@@ -602,78 +596,27 @@ def color_displacement_grid(bk_dx, bk_dy, c_range=DXDY_CRANGE, l_range=DXDY_LRAN
     return grid_img
 
 
-def trapez(y,y0,w):
-    return np.clip(np.minimum(y+1+w/2-y0, -y+1+w/2+y0),0,1)
-
-def weighted_line(r0, c0, r1, c1, w, rmin=0, rmax=np.inf):
-    # The algorithm below works fine if c1 >= c0 and c1-c0 >= abs(r1-r0).
-    # If either of these cases are violated, do some switches.
-    if abs(c1-c0) < abs(r1-r0):
-        # Switch x and y, and switch again when returning.
-        xx, yy, val = weighted_line(c0, r0, c1, r1, w, rmin=rmin, rmax=rmax)
-        return (yy, xx, val)
-
-    # At this point we know that the distance in columns (x) is greater
-    # than that in rows (y). Possibly one more switch if c0 > c1.
-    if c0 > c1:
-        return weighted_line(r1, c1, r0, c0, w, rmin=rmin, rmax=rmax)
-
-    # The following is now always < 1 in abs
-    slope = (r1-r0) / (c1-c0)
-
-    # Adjust weight by the slope
-    w *= np.sqrt(1+np.abs(slope)) / 2
-
-    # We write y as a function of x, because the slope is always <= 1
-    # (in absolute value)
-    x = np.arange(c0, c1+1, dtype=float)
-    y = x * slope + (c1*r0-c0*r1) / (c1-c0)
-
-    # Now instead of 2 values for y, we have 2*np.ceil(w/2).
-    # All values are 1 except the upmost and bottommost.
-    thickness = np.ceil(w/2)
-    yy = (np.floor(y).reshape(-1,1) + np.arange(-thickness-1,thickness+2).reshape(1,-1))
-    xx = np.repeat(x, yy.shape[1])
-    vals = trapez(yy, y.reshape(-1,1), w).flatten()
-
-    yy = yy.flatten()
-
-    # Exclude useless parts and those outside of the interval
-    # to avoid parts outside of the picture
-    mask = np.logical_and.reduce((yy >= rmin, yy < rmax, vals > 0))
-
-    return (yy[mask].astype(int), xx[mask].astype(int), vals[mask])
-
-
 def draw_trimesh(shape_rc, tri_verts, tri_faces, thickness=2):
     """Draw a triangular mesh
     """
 
-    def draw_line(tri_img, pt1_xy, pt2_xy):
-        r, c, v = weighted_line(*pt1_xy[::-1], *pt2_xy[::-1], thickness)
-        r = np.clip(r, 0, tri_img.shape[0]-1)
-        c = np.clip(c, 0, tri_img.shape[1]-1)
-        tri_img[r, c] = v
-
     tri_img = np.zeros(shape_rc)
     for face in tri_faces:
-        l1_xy = tri_verts[face[0]]
-        l2_xy = tri_verts[face[1]]
-        l3_xy = tri_verts[face[2]]
+        verts = tri_verts[face]
+        # make sure points are clockwise
+        cx, cy = np.mean(verts, axis=0)
+        pt_order = np.argsort([np.rad2deg(np.arctan2(xy[1]-cy, xy[0]-cx))
+                               for xy in verts])
+        # draw points
+        pts = verts[pt_order, :].reshape(-1, 1, 2).astype(int)
+        tri_img = cv2.polylines(tri_img, [pts], True, 1, thickness,
+                                lineType=cv2.LINE_AA)
 
-        if not np.any(np.isnan(l1_xy)) and not np.any(np.isnan(l2_xy)):
-            draw_line(tri_img, l1_xy, l2_xy)
-
-        if not np.any(np.isnan(l2_xy)) and not np.any(np.isnan(l3_xy)):
-            draw_line(tri_img, l2_xy, l3_xy)
-
-        if not np.any(np.isnan(l3_xy)) and not np.any(np.isnan(l1_xy)):
-            draw_line(tri_img, l3_xy, l1_xy)
-
-    return tri_img
+    return tri_img.astype(float)
 
 
-def color_displacement_tri_grid(bk_dx, bk_dy, n_grid_pts=25, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE,  thickness=None, cspace=DXDY_CSPACE):
+
+def color_displacement_tri_grid(bk_dx, bk_dy, img=None, n_grid_pts=25, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE,  thickness=None, cspace=DXDY_CSPACE):
     """View how a displacement warps a triangular mesh.
     """
 
@@ -693,13 +636,11 @@ def color_displacement_tri_grid(bk_dx, bk_dy, n_grid_pts=25, c_range=DXDY_CRANGE
     padded_dx = transform.warp(bk_dx, padding_T, output_shape=padded_shape, preserve_range=True)
     padded_dy = transform.warp(bk_dy, padding_T, output_shape=padded_shape, preserve_range=True)
 
-
     min_dim = np.min(padded_dy.shape)
     if thickness is None:
         thickness = int(np.ceil((grid_spacing/min_dim)*15))
     if thickness < 1:
         thickness = 1
-
 
     tri_verts, tri_faces = warp_tools.get_triangular_mesh(sample_x, sample_y)
     warped_xy = warp_tools.warp_xy(tri_verts, bk_dxdy=[padded_dx, padded_dy])
@@ -708,7 +649,14 @@ def color_displacement_tri_grid(bk_dx, bk_dy, n_grid_pts=25, c_range=DXDY_CRANGE
     trimesh_img = draw_trimesh(padded_shape, warped_xy, tri_faces, thickness=thickness)
     trimesh_img = transform.warp(trimesh_img, inv_T, output_shape=shape, preserve_range=True)
     colored_displacement = color_dxdy(bk_dx, bk_dy, c_range=c_range, l_range=l_range, cspace=cspace)
-    colored_trimesh = trimesh_img[..., np.newaxis] * colored_displacement
 
-    return colored_trimesh.astype(np.uint8)
+    if img is not None:
+        assert img.shape[0:2] == trimesh_img.shape[0:2], print(f"mismatch in shape between `img` {img.shape[0:2]} and displacement fields {trimesh_img.shape[0:2]}")
+        mesh_pos = trimesh_img > 0
+        out_img = img.copy()
+        out_img[mesh_pos] = colored_displacement[mesh_pos]
+    else:
+        out_img = trimesh_img[..., np.newaxis] * colored_displacement
+
+    return out_img
 

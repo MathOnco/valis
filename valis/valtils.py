@@ -1,7 +1,7 @@
 """Various functions used in serval modules
 
 """
-
+import sys
 import re
 import warnings
 import os
@@ -10,6 +10,14 @@ from colorama import Fore, Style
 
 color_init()
 
+class HiddenPrints:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
 
 def tryint(s):
     try:
