@@ -426,14 +426,16 @@ def check_flattened_pyramid_tiff(src_f):
 
         if is_flattended_pyramid:
             nchannels_per_each_level = np.diff(level_starts)
-            last_level_channel_count = len(all_areas) - level_starts[-1]
+            last_level_channel_count = np.sum(all_n_channels[level_starts[-1]:])
             nchannels_per_each_level = np.hstack([nchannels_per_each_level,
                                                   last_level_channel_count])
 
+            if last_level_channel_count == 3 and nchannels_per_each_level[0] != 3:
+                # last level is probably a thumbnail
+                nchannels_per_each_level = nchannels_per_each_level[:-1]
             n_channels = mode(nchannels_per_each_level)
             levels_start_idx = level_starts[np.where(nchannels_per_each_level==n_channels)[0]]
             slide_dimensions = np.array(all_dims)[levels_start_idx]
-
 
         else:
             slide_dimensions = all_dims
@@ -1325,7 +1327,11 @@ class VipsSlideReader(SlideReader):
             vips_slide = self._slide2vips_ome_one_series(level=level, *args, **kwargs)
 
         else:
-            vips_slide = pyvips.Image.new_from_file(self.src_f, subifd=level-1, access='random')
+            try:
+                vips_slide = pyvips.Image.new_from_file(self.src_f, subifd=level-1, access='random')
+            except KeyError:
+                # Regular images like png or jpeg don't have SubIFD
+                vips_slide = pyvips.Image.new_from_file(self.src_f, access='random')
 
         if xywh is not None:
             vips_slide = vips_slide.extract_area(*xywh)
@@ -1439,7 +1445,7 @@ class VipsSlideReader(SlideReader):
         with valtils.HiddenPrints():
             bf_reader = BioFormatsSlideReader(self.src_f)
 
-        return bf_reader.metadata.slide_dimensions
+        return np.array(bf_reader.metadata.slide_dimensions)
 
     def _get_slide_dimensions_openslide(self, vips_img):
         """Get dimensions of slide at all pyramid levels using openslide
@@ -1501,7 +1507,7 @@ class VipsSlideReader(SlideReader):
         else:
             slide_dims = [[vips_img.width, vips_img.height]]
 
-        return slide_dims
+        return np.array(slide_dims)
 
     def _get_pixel_physical_size(self, vips_img):
         """Get resolution of slide
@@ -1851,14 +1857,19 @@ def get_slide_reader(src_f, series=None):
     can_use_bf = f_extension in BF_READABLE_FORMATS and not can_only_use_openslide
     is_tiff = f_extension == ".tiff" or f_extension == ".tif"
     can_use_skimage = ".".join(f_extension.split(".")[1:]) == what_img and not is_tiff
+    try:
+        pyvips.Image.new_from_file(src_f)
+        can_use_pyvips = True
+    except:
+        can_use_pyvips = False
 
     fail_msg = f"Can't find reader to open {os.path.split(src_f)[1]}. May need to create a new one by subclassing SlideReader. Returning None"
-    if not can_use_openslide and not can_use_bf and not can_use_skimage:
+    if not can_use_openslide and not can_use_bf and not can_use_skimage and not can_use_pyvips:
         valtils.print_warning(fail_msg)
 
         return None
 
-    if can_use_skimage:
+    if can_use_skimage and not can_use_pyvips:
         reader = ImageReader
         return reader
 
@@ -1891,10 +1902,14 @@ def get_slide_reader(src_f, series=None):
         reader = VipsSlideReader
 
     elif can_use_bf:
-        if (can_use_openslide and series == 0) or (is_ometiff and series == 0 and n_series == 1):
-            # E.g. .svs or 1st series in an ome.tiff
-            # Seems pvips can only read ome.tiff if there is 1 series.
-            reader = VipsSlideReader
+        if series == 0 and n_series == 1:
+            if is_ometiff or can_use_pyvips:
+                # E.g. .svs or 1st series in an ome.tiff
+                # Seems pvips can only read ome.tiff if there is 1 series.
+                # Use pyvips to open regular formats, like png, jpeg, bmp, etc...
+                reader = VipsSlideReader
+            else:
+                reader = BioFormatsSlideReader
         else:
             reader = BioFormatsSlideReader
 
