@@ -6,7 +6,6 @@ import numpy as np
 from skimage import transform, io, util
 from tqdm import tqdm
 import os
-import re
 import imghdr
 from time import time
 import pathlib
@@ -17,106 +16,6 @@ from . import non_rigid_registrars
 from . import valtils
 from . import serial_rigid
 from . import viz
-
-
-def get_ref_img_idx(img_f_list, ref_img_name=None):
-    """Get index of reference image
-
-    Parameters
-    ----------
-    img_f_list : list of str
-        List of image file names
-
-    ref_img_name : str, optional
-        Name of image that will be treated as the center of the stack.
-        If None, the index of the middle image will be returned.
-
-    Returns
-    -------
-    ref_img_idx : int
-        Index of reference image in img_f_list. Warnings are raised
-        if `ref_img_name` matches either 0 or more than 1 images in `img_f_list`.
-
-    """
-
-    n_imgs = len(img_f_list)
-    if ref_img_name is None:
-        if n_imgs == 2:
-            ref_img_idx = 0
-        else:
-            ref_img_idx = n_imgs // 2
-
-    else:
-        ref_img_name = os.path.split(ref_img_name)[1]
-
-        name_matches = [re.search(ref_img_name, os.path.split(f)[1])
-                        for f in img_f_list]
-
-        ref_img_idx = [i for i in range(n_imgs) if name_matches[i] is not None]
-        n_matches = len(ref_img_idx)
-
-        if n_matches == 0:
-            warning_msg = f"No files in img_f_list match {ref_img_name}"
-            ref_img_idx = None
-            valtils.print_warning(warning_msg)
-
-        elif n_matches == 1:
-            ref_img_idx = ref_img_idx[0]
-
-        elif n_matches > 1:
-            macthing_files = ", ".join(img_f_list[i] for i in ref_img_idx)
-            warning_msg = f"More than 1 file in img_f_list matches {ref_img_name}. These files are: {macthing_files}"
-            valtils.print_warning(warning_msg)
-
-    return ref_img_idx
-
-
-def get_alignment_indices(n_imgs, ref_img_idx=None):
-    """Get indices to align in stack.
-
-    Indices go from bottom to center, then top to center. In each case,
-    the alignments go from closest to the center, to next closet, etc...
-    The reference image is exclued from this list.
-    For example, if `ref_img_idx` is 2, then the order is
-    [(1, 2), (0, 1), (3, 2), ...,  (`n_imgs`-1, `n_imgs` - 2)].
-
-    Parameters
-    ----------
-    n_imgs : int
-        Number of images in the stack
-
-    ref_img_idx : int, optional
-        Position of reference image. If None, then this will set to
-        the center of the stack
-
-    Returns
-    -------
-    matching_indices : list of tuples
-        Each element of `matching_indices` contains a tuple of stack
-        indices. The first value is the index of the moving/current/from
-        image, while the second value is the index of the moving/next/to
-        image.
-
-    """
-
-    if ref_img_idx:
-        ref_img_idx = n_imgs//2
-
-    matching_indices = [None] * (n_imgs - 1)
-    idx = 0
-    for i in reversed(range(0, ref_img_idx)):
-        current_idx = i
-        next_idx = i + 1
-        matching_indices[idx] = (current_idx, next_idx)
-        idx += 1
-
-    for i in range(ref_img_idx, n_imgs-1):
-        current_idx = i + 1
-        next_idx = i
-        matching_indices[idx] = (current_idx, next_idx)
-        idx += 1
-
-    return matching_indices
 
 
 def get_matching_xy_from_rigid_registrar(rigid_registrar, ref_img_name=None):
@@ -144,10 +43,10 @@ def get_matching_xy_from_rigid_registrar(rigid_registrar, ref_img_name=None):
     """
 
     img_f_list = [img_obj.full_img_f for img_obj in rigid_registrar.img_obj_list]
-    ref_img_idx = get_ref_img_idx(img_f_list, ref_img_name)
+    ref_img_idx = warp_tools.get_ref_img_idx(img_f_list, ref_img_name)
     n_imgs = len(img_f_list)
 
-    from_to_indices = get_alignment_indices(n_imgs, ref_img_idx)
+    from_to_indices = warp_tools.get_alignment_indices(n_imgs, ref_img_idx)
     from_to_kp_dict = {}
     for idx in from_to_indices:
 
@@ -341,6 +240,11 @@ class NonRigidZImage(object):
 
         """
 
+        ### TODO
+        """
+        make copy of bkdxdy and and set values outside image's mask to 0.
+        Makes sure that other deformations won't affect this image
+        """
         if bk_dxdy is not None:
             current_warp_map = warp_tools.get_warp_map(dxdy=bk_dxdy)
             moving_img = transform.warp(self.image, current_warp_map,
@@ -445,7 +349,7 @@ class SerialNonRigidRegistrar(object):
 
     """
 
-    def __init__(self, src, ref_img_name=None, moving_to_fixed_xy=None, mask=None, name=None):
+    def __init__(self, src, reference_img_f=None, moving_to_fixed_xy=None, mask=None, name=None):
         """
         Parameters
         ----------
@@ -511,7 +415,7 @@ class SerialNonRigidRegistrar(object):
         self.non_rigid_obj_list = None
         self.non_rigid_reg_params = None
         self.summary = None
-        self.generate_non_rigid_obj_list(ref_img_name, moving_to_fixed_xy)
+        self.generate_non_rigid_obj_list(reference_img_f, moving_to_fixed_xy)
         self.set_mask(mask)
 
     def create_mask(self):
@@ -553,11 +457,12 @@ class SerialNonRigidRegistrar(object):
 
         self.size = len(img_list)
 
-        ref_img_idx = get_ref_img_idx(img_f_list, ref_img_name)
-        if ref_img_name is None:
-            ref_img_name = img_names[ref_img_idx]
-        else:
+        if ref_img_name is not None:
             ref_img_name = valtils.get_name(ref_img_name)
+        else:
+            ref_img_name = None
+
+        ref_img_idx = warp_tools.get_ref_img_idx(img_f_list, ref_img_name)
 
         self.ref_img_name = ref_img_name
         self.ref_img_idx = ref_img_idx
@@ -626,7 +531,7 @@ class SerialNonRigidRegistrar(object):
 
         self.non_rigid_reg_params = non_rigid_reg_params
 
-        iter_order = get_alignment_indices(self.size, self.ref_img_idx)
+        iter_order = warp_tools.get_alignment_indices(self.size, self.ref_img_idx)
         for moving_idx, fixed_idx in tqdm(iter_order):
             moving_obj = self.non_rigid_obj_list[moving_idx]
             fixed_obj = self.non_rigid_obj_list[fixed_idx]
@@ -721,7 +626,7 @@ class SerialNonRigidRegistrar(object):
         src_img_names[self.ref_img_idx] = self.ref_img_name
         shape_list[self.ref_img_idx] = self.non_rigid_obj_list[self.ref_img_idx].image.shape
 
-        iter_order = get_alignment_indices(self.size, self.ref_img_idx)
+        iter_order = warp_tools.get_alignment_indices(self.size, self.ref_img_idx)
         print("\n======== Summarizing registration\n")
         for moving_idx, fixed_idx in tqdm(iter_order):
             moving_obj = self.non_rigid_obj_list[moving_idx]
@@ -769,7 +674,7 @@ class SerialNonRigidRegistrar(object):
 
 def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWarper,
                     non_rigid_reg_params=None, dst_dir=None,
-                    ref_img_name=None, moving_to_fixed_xy=None,
+                    reference_img_f=None, moving_to_fixed_xy=None,
                     mask=None, name=None, qt_emitter=None):
     """
     Parameters
@@ -799,8 +704,8 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         be in this folder, and aligned images in the "registered_images"
         sub-directory. If None, the images will not be written to file
 
-    ref_img_name : str, optional
-        Name of image that will be treated as the center of the stack.
+    reference_img_f : str, optional
+        Filename of image that will be treated as the center of the stack.
         If None, the index of the middle image will be returned.
 
     moving_to_fixed_xy :  dict of list, or bool
@@ -813,9 +718,9 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         #. Rigid registered xy in fixed/next/to image
 
         To deterime which pairs of images will be aligned, use
-        `get_alignment_indices`. Can use `get_imgs_from_dir`
+        `warp_tools.get_alignment_indices`. Can use `get_imgs_from_dir`
         to see the order inwhich the images will be read, which will correspond
-        to the indices retuned by `get_alignment_indices`.
+        to the indices retuned by `warp_tools.get_alignment_indices`.
 
         If `src` is a SerialRigidRegistrar and `moving_to_fixed_xy` is
         True, then the matching features in the SerialRigidRegistrar will
@@ -844,7 +749,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
     """
 
     tic = time()
-    nr_reg = SerialNonRigidRegistrar(src=src, ref_img_name=ref_img_name,
+    nr_reg = SerialNonRigidRegistrar(src=src, reference_img_f=reference_img_f,
                                      moving_to_fixed_xy=moving_to_fixed_xy,
                                      mask=mask, name=name)
 
