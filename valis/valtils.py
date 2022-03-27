@@ -7,8 +7,11 @@ import warnings
 import os
 from colorama import init as color_init
 from colorama import Fore, Style
+import functools
+import warnings
 
 color_init()
+
 
 class HiddenPrints:
     def __enter__(self):
@@ -18,6 +21,7 @@ class HiddenPrints:
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
         sys.stdout = self._original_stdout
+
 
 def tryint(s):
     try:
@@ -106,3 +110,31 @@ def get_elapsed_time_string(elapsed_time, rounding=3):
     processing_time = round(processing_time, rounding)
 
     return processing_time, processing_time_unit
+
+
+def deprecated_args(**aliases):
+    def deco(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            rename_kwargs(f.__name__, kwargs, aliases)
+            return f(*args, **kwargs)
+        return wrapper
+    return deco
+
+
+def rename_kwargs(func_name, kwargs, aliases):
+    for alias, new in aliases.items():
+        if alias in kwargs:
+            if new in kwargs:
+                raise TypeError('{} received both {} and {}'.format(
+                    func_name, alias, new))
+
+            msg = '{} is deprecated; use {}'.format(alias, new)
+            print_warning(msg, DeprecationWarning)
+
+            kwargs[new] = kwargs.pop(alias)
+
+# Example of using deprecated_args decoraator
+@deprecated_args(old_arg="new_arg")
+def test_dep_func(new_arg):
+    print(new_arg)

@@ -19,7 +19,116 @@ import pyvips
 from interpolation.splines import UCGrid, filter_cubic, eval_cubic
 import SimpleITK as sitk
 from colorama import Fore
+import os
+import re
 from . import valtils
+
+
+def get_ref_img_idx(img_f_list, ref_img_name=None):
+    """Get index of reference image
+
+    Parameters
+    ----------
+    img_f_list : list of str
+        List of image file names
+
+    ref_img_name : str, optional
+        Name of image that will be treated as the center of the stack.
+        If None, the index of the middle image will be returned.
+
+    Returns
+    -------
+    ref_img_idx : int
+        Index of reference image in img_f_list. Warnings are raised
+        if `ref_img_name` matches either 0 or more than 1 images in `img_f_list`.
+
+    """
+
+    n_imgs = len(img_f_list)
+    if ref_img_name is None:
+        if n_imgs == 2:
+            ref_img_idx = 0
+        else:
+            ref_img_idx = n_imgs // 2
+
+    else:
+        ref_img_name = os.path.split(ref_img_name)[1]
+
+        name_matches = [re.search(ref_img_name, os.path.split(f)[1])
+                        for f in img_f_list]
+
+        ref_img_idx = [i for i in range(n_imgs) if name_matches[i] is not None]
+        n_matches = len(ref_img_idx)
+
+        if n_matches == 0:
+            ref_img_idx = n_imgs // 2
+            warning_msg = (f"No files in img_f_list match {ref_img_name}"
+                           f"Returning middle image, which is {img_f_list[ref_img_idx]}")
+
+            valtils.print_warning(warning_msg)
+
+        elif n_matches == 1:
+            ref_img_idx = ref_img_idx[0]
+
+        elif n_matches > 1:
+            ref_img_idx = ref_img_idx[0]
+            macthing_files = ", ".join(img_f_list[i] for i in ref_img_idx)
+            warning_msg = (f"More than 1 file in img_f_list matches {ref_img_name}. "
+                           f"These files are: {macthing_files}. "
+                           f"Returning first match, which is {img_f_list[ref_img_idx]}")
+
+            valtils.print_warning(warning_msg)
+
+
+    return ref_img_idx
+
+
+def get_alignment_indices(n_imgs, ref_img_idx=None):
+    """Get indices to align in stack.
+
+    Indices go from bottom to center, then top to center. In each case,
+    the alignments go from closest to the center, to next closet, etc...
+    The reference image is exclued from this list.
+    For example, if `ref_img_idx` is 2, then the order is
+    [(1, 2), (0, 1), (3, 2), ...,  (`n_imgs`-1, `n_imgs` - 2)].
+
+    Parameters
+    ----------
+    n_imgs : int
+        Number of images in the stack
+
+    ref_img_idx : int, optional
+        Position of reference image. If None, then this will set to
+        the center of the stack
+
+    Returns
+    -------
+    matching_indices : list of tuples
+        Each element of `matching_indices` contains a tuple of stack
+        indices. The first value is the index of the moving/current/from
+        image, while the second value is the index of the moving/next/to
+        image.
+
+    """
+
+    if ref_img_idx is None:
+        ref_img_idx = n_imgs//2
+
+    matching_indices = [None] * (n_imgs - 1)
+    idx = 0
+    for i in reversed(range(0, ref_img_idx)):
+        current_idx = i
+        next_idx = i + 1
+        matching_indices[idx] = (current_idx, next_idx)
+        idx += 1
+
+    for i in range(ref_img_idx, n_imgs-1):
+        current_idx = i + 1
+        next_idx = i
+        matching_indices[idx] = (current_idx, next_idx)
+        idx += 1
+
+    return matching_indices
 
 
 def rescale_img(img, scaling):
@@ -1006,7 +1115,7 @@ def vips2numpy(vi):
 
 
 
-def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
+def warp_img_skimage(img, M=None, bk_dxdy=None, out_shape_rc=None,
              transformation_src_shape_rc=None,
              transformation_dst_shape_rc=None):
     """Warp an image using rigid and/or non-rigid transformations
@@ -1123,6 +1232,164 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
     return warped_img
 
 
+def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
+                  transformation_src_shape_rc=None,
+                  transformation_dst_shape_rc=None,
+                  bbox_xywh=None,
+                  interp_method="bicubic"):
+    """Warp an image using rigid and/or non-rigid transformations
+
+    Warp an image using the trasformations defined by `M` and the optional
+    displacement field, `bk_dxdy`. Transformations will be scaled so that
+    they can be applied to the image.
+
+    Parameters
+    ----------
+    img : ndarray, optional
+        Image to be warped
+
+    M : ndarray, optional
+        3x3 Affine transformation matrix to perform rigid warp
+
+    bk_dxdy : ndarray, optional
+        A list containing the backward x-axis (column) displacement,
+        and y-axis (row) displacement applied after the rigid transformation.
+
+    out_shape_rc : tuple of int
+        Shape of the `img` after warping.
+
+    transformation_src_shape_rc : tuple of int
+        Shape of image that was used to find the transformations M and/or `bk_dxdy`.
+        For example, this could be the original image in which features
+        were detected
+
+    transformation_dst_shape_rc : tuple of int
+        Shape of image with shape transformation_src_shape_rc after
+        being warped. Should be specified if `img` is a rescaled
+        version of the image for which the `M` and `bk_dxdy` were found.
+
+    bbox_xywh : tuple
+        Bounding box to crop warped image. Should be in refernce to the image
+        with shape = `out_shape_rc`, which may or not be the same as
+        `transformation_dst_shape_rc`. For example, to crop a region
+        from a large warped slide, `bbox_xywh` should refer to an area
+        in that slide, not an area in the image used to find the transformation.
+
+    interp_method : str, optional
+
+    Returns
+    -------
+    warped_img : ndarry
+        Warped copy of `img`
+
+    """
+    is_array = False
+    if not isinstance(img, pyvips.Image):
+        is_array = True
+        img = numpy2vips(img)
+
+
+    if M is None and bk_dxdy is None:
+        valtils.print_warning("No transformation, returning unwarped image")
+        if is_array:
+            img = vips2numpy(img)
+
+        return img
+
+    src_shape_rc = np.array([img.height, img.width])
+    if transformation_src_shape_rc is None:
+        transformation_src_shape_rc = src_shape_rc
+
+    # Determine shape of unscaled output. If not provided, find shape big enough to avoid cropping
+    if transformation_dst_shape_rc is None:
+        if bk_dxdy is not None:
+            transformation_dst_shape_rc = bk_dxdy[0].shape
+        elif out_shape_rc is not None:
+            transformation_dst_shape_rc = out_shape_rc
+        else:
+            transformation_src_corners_rc = get_corners_of_image(transformation_src_shape_rc)
+            warped_transformation_src_corners_xy = warp_xy(transformation_src_corners_rc[:, ::-1], M)
+            transformation_dst_shape_rc = np.ceil(np.max(warped_transformation_src_corners_xy[:, ::-1], axis=0)).astype(int)
+
+    # Determine shape of scaled output
+    if out_shape_rc is None:
+        if M is not None:
+            sxy = (src_shape_rc/np.array(transformation_src_shape_rc))[::-1]
+            tform_M = scale_M(M, *sxy)
+
+            img_corners_rc = get_corners_of_image(src_shape_rc)
+            warped_corners_xy = warp_xy(img_corners_rc[:, ::-1], tform_M)
+            out_shape_rc = np.ceil(np.max(warped_corners_xy[:, ::-1], axis=0)).astype(int)
+        else:
+            out_shape_rc = transformation_dst_shape_rc
+
+    src_shape_rc = np.array(src_shape_rc)
+    transformation_src_shape_rc = np.array(transformation_src_shape_rc)
+    out_shape_rc = np.array(out_shape_rc)
+    transformation_dst_shape_rc = np.array(transformation_dst_shape_rc)
+
+    dst_sxy = np.array(out_shape_rc/transformation_dst_shape_rc)
+    if bbox_xywh is not None:
+        # update transformations and dimensions
+        xy_shift = np.array(bbox_xywh[:2])*dst_sxy
+        scaled_bbox_wh =  (np.array(bbox_xywh[2:])*dst_sxy).astype(int)
+        transformation_dst_shape_rc = scaled_bbox_wh[::-1]
+        out_shape_rc = bbox_xywh[2:][::-1]
+
+        T = np.identity(3)
+        T[:2, 2] = xy_shift
+        warp_M = M @ T
+
+        if bk_dxdy is not None:
+            warp_dx = transform.warp(bk_dxdy[0], T, preserve_range=True, output_shape=scaled_bbox_wh[::-1])
+            warp_dy = transform.warp(bk_dxdy[1], T, preserve_range=True, output_shape=scaled_bbox_wh[::-1])
+            warp_dxdy = [warp_dx, warp_dy]
+
+        else:
+            warp_dxdy = None
+    else:
+        warp_M = M
+        warp_dxdy = bk_dxdy
+
+    warp_map = get_warp_map(M=warp_M, dxdy=warp_dxdy,
+                            transformation_dst_shape_rc=transformation_dst_shape_rc,
+                            dst_shape_rc=out_shape_rc,
+                            transformation_src_shape_rc=transformation_src_shape_rc,
+                            src_shape_rc=src_shape_rc,
+                            return_xy=True)
+
+    new_x = numpy2vips(np.ascontiguousarray(warp_map[0]))
+    new_y = numpy2vips(np.ascontiguousarray(warp_map[1]))
+
+    h, w = np.array(out_shape_rc)
+
+
+
+    interpolator = pyvips.Interpolate.new(interp_method)
+    if not np.all(dst_sxy==1):
+        # Scale warp map for use on image of different size
+        # sxy = (np.array(out_shape_rc)/np.array(transformation_dst_shape_rc))[::-1]
+        sim_tform = transform.SimilarityTransform(scale=dst_sxy)
+        S = sim_tform.params
+        new_x = new_x.affine(S[0:2, 0:2].reshape(-1).tolist(),
+                                    oarea=[0, 0, w, h],
+                                    interpolate=interpolator)
+
+        new_y = new_y.affine(S[0:2, 0:2].reshape(-1).tolist(),
+                                    oarea=[0, 0, w, h],
+                                    interpolate=interpolator)
+
+    warp_index = new_x.bandjoin(new_y)
+
+    warped_img = img.mapim(warp_index, interpolate=interpolator)
+
+    if is_array:
+        warped_img = vips2numpy(warped_img)
+
+    return warped_img
+
+
+
 def get_warp_map(M=None, dxdy=None, transformation_dst_shape_rc=None,
                  dst_shape_rc=None, transformation_src_shape_rc=None,
                  src_shape_rc=None, return_xy=False):
@@ -1176,7 +1443,6 @@ def get_warp_map(M=None, dxdy=None, transformation_dst_shape_rc=None,
     if dxdy is not None and transformation_dst_shape_rc is None:
         transformation_dst_shape_rc = dxdy[0].shape
 
-
     if dst_shape_rc is None:
         dst_shape_rc = transformation_dst_shape_rc
 
@@ -1217,7 +1483,6 @@ def get_warp_map(M=None, dxdy=None, transformation_dst_shape_rc=None,
         in_S = transform.SimilarityTransform(scale=(in_scale_x, in_scale_y))
         xy_pos_in_src = in_S(np.dstack([xy_pos_in_src[0].reshape(-1), xy_pos_in_src[1].reshape(-1)])[0])
         xy_pos_in_src = [xy_pos_in_src[:, 0].reshape(transformation_dst_shape_rc), xy_pos_in_src[:, 1].reshape(transformation_dst_shape_rc)]
-
 
     if return_xy:
         c1, c2 = 0, 1
@@ -1904,7 +2169,6 @@ def measure_error(src_xy, dst_xy, shape, feature_similarity=None):
     med_tre = np.median(rtre)
 
     if feature_similarity is not None:
-        # print(d, feature_similarity)
         med_d = weightedstats.weighted_median(d.tolist(), feature_similarity.tolist())
     else:
         med_d = np.median(d)

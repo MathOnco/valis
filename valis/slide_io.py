@@ -173,8 +173,13 @@ Keeping the code just in case need to use javabridge again.
 
 # Bioformats + Jpype #
 #--------------------#
-def init_jvm():
+def init_jvm(mem_gb=10):
     """Initialize JVM for BioFormats
+
+    Parameters
+    ----------
+    mem_gb : int
+        Amount of memory, in GB, for JVM
     """
 
     if not jpype.isJVMStarted():
@@ -185,7 +190,7 @@ def init_jvm():
         global ome
         global loci
 
-        bioformats_jar.start_jvm(memory="10G")
+        bioformats_jar.start_jvm(memory=f"{mem_gb}G")
         loci = bioformats_jar.get_loci()
         ome = bioformats_jar.get_ome()
         FormatTools = loci.formats.FormatTools
@@ -193,7 +198,9 @@ def init_jvm():
         BF_READABLE_FORMATS = get_bf_readable_formats()
         OPENSLIDE_ONLY = list(set(ALL_OPENSLIDE_READABLE_FORMATS).difference(set(BF_READABLE_FORMATS)))
 
-        msg = "JVM has been initialized. Be sure to call registration.kill_jvm() or slide_io.kill_jvm() at the end of your script"
+        msg = (f"JVM has been initialized with {mem_gb} GB of memory. "
+               f"Be sure to call registration.kill_jvm() "
+               f"or slide_io.kill_jvm() at the end of your script.")
         valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
 
 
@@ -1894,27 +1901,30 @@ def get_slide_reader(src_f, series=None):
     else:
         is_flattened_tiff = False
 
-    if is_flattened_tiff and not bf_reads_flat:
-        reader = FlattenedPyramidReader
+    if is_flattened_tiff:
+        if not bf_reads_flat:
+            reader = FlattenedPyramidReader
+        else:
+            reader = BioFormatsSlideReader
 
     elif can_only_use_openslide:
         # E.g. .mrxs
         reader = VipsSlideReader
 
-    elif can_use_bf:
+    elif is_ometiff:
         if series == 0 and n_series == 1:
-            if is_ometiff or can_use_pyvips:
-                # E.g. .svs or 1st series in an ome.tiff
-                # Seems pvips can only read ome.tiff if there is 1 series.
-                # Use pyvips to open regular formats, like png, jpeg, bmp, etc...
-                reader = VipsSlideReader
-            else:
-                reader = BioFormatsSlideReader
+            # Seems pvips can only read ome.tiff if there is 1 series.
+            reader = VipsSlideReader
         else:
             reader = BioFormatsSlideReader
 
-    elif is_tiff:
+    elif can_use_pyvips:
+        # Use pyvips to open regular formats, like png, jpeg, bmp, etc...
         reader = VipsSlideReader
+
+    elif can_use_bf:
+        # Use Bioformats for images that can't be read by pyvips or skimage
+        reader = BioFormatsSlideReader
 
     else:
         valtils.print_warning(fail_msg)
