@@ -86,6 +86,8 @@ def get_imgs_from_dir(src_dir):
     img_names : list of str
         List of names for each image. Created by removing the extension
 
+    mask_list : list of ndarray
+        List of masks used for registration
     """
 
     img_f_list = [f for f in os.listdir(src_dir) if
@@ -94,11 +96,12 @@ def get_imgs_from_dir(src_dir):
     valtils.sort_nicely(img_f_list)
 
     img_list = [io.imread(os.path.join(src_dir, f)) for f in img_f_list]
-    # assert(img_list[0].dtype == np.uint8), valtils.print_warning("images must be uint8")
 
     img_names = [valtils.get_name(f) for f in img_f_list]
 
-    return img_list, img_f_list, img_names
+    mask_list = [None] * len(img_f_list)
+
+    return img_list, img_f_list, img_names, mask_list
 
 
 def get_imgs_rigid_reg(serial_rigid_reg):
@@ -120,14 +123,25 @@ def get_imgs_rigid_reg(serial_rigid_reg):
     img_names : list of str
         List of names for each image. Created by removing the extension
 
+    mask_list : list of ndarray
+        List of masks used for registration
+
     """
+    img_list = [None] * serial_rigid_reg.size
+    img_names = [None] * serial_rigid_reg.size
+    img_f_list = [None] * serial_rigid_reg.size
+    mask_list = [None] * serial_rigid_reg.size
 
-    img_obj_list = serial_rigid_reg.img_obj_list
-    img_list = [img_obj.registered_img for img_obj in img_obj_list]
-    img_names = [img_obj.name for img_obj in img_obj_list]
-    img_f_list = [img_obj.full_img_f for img_obj in img_obj_list]
+    for i, img_obj in enumerate(serial_rigid_reg.img_obj_list):
+        img_list[i] = img_obj.registered_img
+        img_names[i] = img_obj.name
+        img_f_list[i] = img_obj.full_img_f
 
-    return img_list, img_f_list, img_names
+        temp_mask = np.full_like(img_obj.image, 255)
+        img_mask = warp_tools.warp_img(temp_mask, M=img_obj.M, out_shape_rc=img_obj.registered_img.shape)
+        mask_list[i] = img_mask
+
+    return img_list, img_f_list, img_names, mask_list
 
 
 class NonRigidZImage(object):
@@ -170,7 +184,7 @@ class NonRigidZImage(object):
 
     """
 
-    def __init__(self, image, name, stack_idx, moving_xy=None, fixed_xy=None):
+    def __init__(self, image, name, stack_idx, moving_xy=None, fixed_xy=None, mask=None):
         """
         Parameters
         ----------
@@ -193,8 +207,10 @@ class NonRigidZImage(object):
             (V, 2) array containing points in the fixed image that correspond
             to those in the moving image
 
-        """
+        mask : ndarray, optional
+            Mask covering area to be registered.
 
+        """
         self.image = image
         self.name = name
         self.stack_idx = stack_idx
@@ -204,6 +220,7 @@ class NonRigidZImage(object):
         self.warped_grid = None
         self.bk_dxdy = None
         self.fwd_dxdy = None
+        self.mask = mask
 
     def calc_deformation(self, registered_fixed_image, non_rigid_reg_class, bk_dxdy, params=None, mask=None):
         """
@@ -220,6 +237,11 @@ class NonRigidZImage(object):
             Uninstantiated NonRigidRegistrar class that will be used to
             calculate the deformation fields between images
 
+        bk_dxdy : ndarray, optional
+            (2, P, Q) numpy array of pixel displacements in
+            the x and y directions. dx = dxdy[0], and dy=dxdy[1].
+            Used to warp the registered_img before finding deformation fields.
+
         params : dictionary, optional
             Keyword: value dictionary of parameters to be used in reigstration.
             Passed to the non_rigid_reg_class' calc() method.
@@ -233,33 +255,53 @@ class NonRigidZImage(object):
             and 0 is background, which is ignnored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
-        dxdy : ndarray, optional
-            (2, P, Q) numpy array of pixel displacements in
-            the x and y directions. dx = dxdy[0], and dy=dxdy[1].
-            Used to warp the registered_img before finding deformation fields.
-
         """
 
         ### TODO
         """
-        make copy of bkdxdy and and set values outside image's mask to 0.
-        Makes sure that other deformations won't affect this image
+        * make copy of bkdxdy and and set values outside image's mask to 0.
+        * Makes sure that other deformations won't affect this image
         """
         if bk_dxdy is not None:
-            current_warp_map = warp_tools.get_warp_map(dxdy=bk_dxdy)
+            if self.mask is not None:
+                for_reg_dx, for_reg_dy = bk_dxdy.copy()
+                for_reg_dx[self.mask==0] = 0
+                for_reg_dy[self.mask==0] = 0
+                for_reg_dxdy = [for_reg_dx, for_reg_dy]
+            else:
+                for_reg_dxdy = bk_dxdy
+
+            current_warp_map = warp_tools.get_warp_map(dxdy=for_reg_dxdy)
             moving_img = transform.warp(self.image, current_warp_map,
                                         preserve_range=True).astype(np.uint8)
         else:
             moving_img = self.image.copy()
+            for_reg_dxdy = None
 
         non_rigid_reg = non_rigid_reg_class(params=params)
 
+        if mask is not None:
+            if self.mask is not None:
+                reg_mask = np.zeros(mask.shape, dtype=np.uint8)
+                reg_mask[(mask > 0 ) & (self.mask > 0)] = 255
+            else:
+                reg_mask = mask
+        else:
+            if self.mask is not None:
+                reg_mask = self.mask
+            else:
+                reg_mask = None
+
         if self.moving_xy is not None and self.fixed_xy is not None and \
            issubclass(non_rigid_reg_class, non_rigid_registrars.NonRigidRegistrarXY):
-            # Update positions #
-            fwd_dxdy = warp_tools.get_inverse_field(bk_dxdy)
-            fixed_xy = warp_tools.warp_xy(self.fixed_xy, M=None, fwd_dxdy=fwd_dxdy)
-            moving_xy = warp_tools.warp_xy(self.moving_xy, M=None, fwd_dxdy=fwd_dxdy)
+            if for_reg_dxdy is not None:
+                # Update positions #
+                fwd_dxdy = warp_tools.get_inverse_field(for_reg_dxdy)
+                fixed_xy = warp_tools.warp_xy(self.fixed_xy, M=None, fwd_dxdy=fwd_dxdy)
+                moving_xy = warp_tools.warp_xy(self.moving_xy, M=None, fwd_dxdy=fwd_dxdy)
+            else:
+                fixed_xy = self.fixed_xy
+                moving_xy = self.moving_xy
         else:
             fixed_xy = None
             moving_xy = None
@@ -268,7 +310,7 @@ class NonRigidZImage(object):
         warped_moving, moving_grid_img, moving_bk_dxdy = \
             non_rigid_reg.register(moving_img=moving_img,
                                    fixed_img=registered_fixed_image,
-                                   mask=mask,
+                                   mask=reg_mask,
                                    **xy_args)
 
         bk_dxdy_from_ref = [bk_dxdy[0] + moving_bk_dxdy[0],
@@ -277,10 +319,11 @@ class NonRigidZImage(object):
         self.bk_dxdy = bk_dxdy_from_ref
         self.fwd_dxdy = warp_tools.get_inverse_field(bk_dxdy_from_ref)
 
-        warp_map = warp_tools.get_warp_map(dxdy=bk_dxdy_from_ref)
 
         self.warped_grid = viz.color_displacement_grid(*bk_dxdy_from_ref)
-        self.registered_img = transform.warp(self.image, warp_map, preserve_range=True).astype(np.uint8)
+        self.registered_img = warp_tools.warp_img(self.image,
+                                                  bk_dxdy=self.bk_dxdy,
+                                                  out_shape_rc=self.image.shape[0:2])
 
 
 class SerialNonRigidRegistrar(object):
@@ -416,7 +459,8 @@ class SerialNonRigidRegistrar(object):
         self.non_rigid_reg_params = None
         self.summary = None
         self.generate_non_rigid_obj_list(reference_img_f, moving_to_fixed_xy)
-        self.set_mask(mask)
+        self.mask = mask
+        # self.set_mask(mask)
 
     def create_mask(self):
         temp_mask = np.zeros(self.shape, dtype=np.uint8)
@@ -450,10 +494,12 @@ class SerialNonRigidRegistrar(object):
         """
 
         if self.from_dir:
-            img_list, img_f_list, img_names = get_imgs_from_dir(self.src)
+            img_list, img_f_list, img_names, mask_list = \
+                get_imgs_from_dir(self.src)
 
         else:
-            img_list, img_f_list, img_names = get_imgs_rigid_reg(self.src)
+            img_list, img_f_list, img_names, mask_list = \
+                get_imgs_rigid_reg(self.src)
 
         self.size = len(img_list)
 
@@ -488,6 +534,7 @@ class SerialNonRigidRegistrar(object):
                 valtils.print_warning("Images must all have the shape")
 
             img_name = img_names[i]
+            mask = mask_list[i]
             moving_xy = None
             fixed_xy = None
             if moving_to_fixed_xy is not None and img_name != ref_img_name:
@@ -500,7 +547,9 @@ class SerialNonRigidRegistrar(object):
                     valtils.print_warning(msg)
 
             nr_obj = NonRigidZImage(img, img_name, stack_idx=i,
-                                    moving_xy=moving_xy, fixed_xy=fixed_xy)
+                                    moving_xy=moving_xy,
+                                    fixed_xy=fixed_xy,
+                                    mask=mask)
 
             if i == ref_img_idx:
                 # Set reference image attributes #

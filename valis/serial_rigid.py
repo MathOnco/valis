@@ -886,10 +886,12 @@ class SerialRigidRegistrar(object):
 
         """
         ref_img_obj = self.img_obj_list[self.reference_img_idx]
-        ref_warped = transform.warp(ref_img_obj.image, ref_img_obj.T,
-                                    output_shape=ref_img_obj.padded_shape_rc,
-                                    preserve_range=True).astype(ref_img_obj.image.dtype)
+        # ref_warped = transform.warp(ref_img_obj.image, ref_img_obj.T,
+        #                             output_shape=ref_img_obj.padded_shape_rc,
+        #                             preserve_range=True).astype(ref_img_obj.image.dtype)
 
+        ref_warped = warp_tools.warp_img(ref_img_obj.image, M=ref_img_obj.T,
+                                         out_shape_rc=ref_img_obj.padded_shape_rc)
         if qt_emitter is not None:
             qt_emitter.emit(1)
 

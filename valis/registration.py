@@ -2117,7 +2117,6 @@ class Valis(object):
         mask_dict = {}
         mask_dict[CROP_REF] =  self.get_ref_img_mask(rigid_registrar)
         mask_dict[CROP_OVERLAP] = self.get_all_overlap_mask(rigid_registrar)
-        # mask_dict[CROP_NONE] =  self.get_all_mask(rigid_registrar)
 
         self.mask_dict = mask_dict
 
@@ -2270,8 +2269,8 @@ class Valis(object):
         """
 
 
-        nr_overlap_mask, _ = self.get_overlap_mask(self.non_rigid_roi)
-        self.non_rigid_reg_kwargs["mask"] = nr_overlap_mask
+        # nr_overlap_mask, _ = self.get_overlap_mask(self.non_rigid_roi)
+        # self.non_rigid_reg_kwargs["mask"] = nr_overlap_mask
 
         non_rigid_registrar = serial_non_rigid.register_images(src=rigid_registrar,
                                                                **self.non_rigid_reg_kwargs)
