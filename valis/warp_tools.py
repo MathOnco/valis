@@ -1236,6 +1236,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
              transformation_src_shape_rc=None,
              transformation_dst_shape_rc=None,
              bbox_xywh=None,
+             bg_px_pos_rc=None,
              interp_method="bicubic"):
     """Warp an image using rigid and/or non-rigid transformations
 
@@ -1267,6 +1268,10 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         Shape of image with shape transformation_src_shape_rc after
         being warped. Should be specified if `img` is a rescaled
         version of the image for which the `M` and `bk_dxdy` were found.
+
+    bg_px_pos_rc : optional, tuple
+        Pixel in `img` which contains the background color.
+        If `None`, then the background color will be black
 
     bbox_xywh : tuple
         Bounding box to crop warped image. Should be in reference to the image
@@ -1352,10 +1357,12 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         new_x = crop_img(new_x, bbox_xywh)
         new_y = crop_img(new_y, bbox_xywh)
 
-    new_x = (new_x < 0).bandand().ifthenelse(0, new_x)
-    new_x = (new_x >= src_shape_rc[1]).bandand().ifthenelse(0, new_x)
-    new_y = (new_y < 0).bandand().ifthenelse(0, new_y)
-    new_y = (new_y >= src_shape_rc[0]).bandand().ifthenelse(0, new_y)
+    if bg_px_pos_rc is not None:
+        bg_y, bg_x = bg_px_pos_rc
+        new_x = (new_x < 0).bandand().ifthenelse(bg_x, new_x)
+        new_x = (new_x >= src_shape_rc[1]).bandand().ifthenelse(bg_x, new_x)
+        new_y = (new_y < 0).bandand().ifthenelse(bg_y, new_y)
+        new_y = (new_y >= src_shape_rc[0]).bandand().ifthenelse(bg_y, new_y)
 
     warp_index = new_x.bandjoin(new_y)
     if bbox_xywh is not None:

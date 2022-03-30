@@ -269,8 +269,6 @@ DEFAULT_NON_RIGID_KWARGS : dict
 
 """
 
-from atexit import register
-from ctypes import util
 import traceback
 import re
 import os
@@ -281,6 +279,8 @@ from time import time
 import tqdm
 import pandas as pd
 import pickle
+import colour
+
 from . import feature_matcher
 from . import serial_rigid
 from . import feature_detectors
@@ -470,6 +470,9 @@ class Slide(object):
     crop : str
         Crop method
 
+    bg_px_pos_rc : tuple
+        Position of pixel that has the background color
+
     """
 
     def __init__(self, src_f, image, val_obj, reader):
@@ -529,6 +532,7 @@ class Slide(object):
         self.xy_in_prev_in_bbox = None
 
         self.crop = None
+        self.bg_px_pos_rc = (0, 0)
 
     def slide2image(self, level, series=None, xywh=None):
         """Convert slide to image
@@ -604,7 +608,6 @@ class Slide(object):
     #         mask, mask_bbox_xywh = self.val_obj.get_overlap_mask(crop)
 
     #     return mask, mask_bbox_xywh
-
 
     def get_aligned_to_ref_slide_crop_xywh(self, ref_img_shape_rc, ref_M, scaled_ref_img_shape_rc=None):
         """Get bounding box used to crop slide to fit in reference image
@@ -751,6 +754,28 @@ class Slide(object):
 
     #     return np.array(crop_xywh), mask
 
+    def get_bg_color_px_pos(self):
+        """Get position of pixel that has color used for background
+        """
+        dir(self)
+        if self.img_type == slide_tools.IHC_NAME:
+            #RGB. Get brightest pixel
+            eps = np.finfo("float").eps
+            with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+                if 1 < self.image.max() <= 255 and np.issubdtype(self.image.dtype, np.integer):
+                    cam = colour.convert(self.image/255 + eps, 'sRGB', 'CAM16UCS')
+                else:
+                    cam = colour.convert(self.image + eps, 'sRGB', 'CAM16UCS')
+
+            lum = cam[..., 0]
+            bg_px = np.unravel_index(np.argmax(lum, axis=None), lum.shape)
+        else:
+            # IF. Get darkest pixel
+            sum_img = self.image.sum(axis=2)
+            bg_px = np.unravel_index(np.argmin(sum_img, axis=None), sum_img.shape)
+
+        self.bg_px_pos_rc = bg_px
+
 
     def warp_img(self, img=None, non_rigid=True, crop=True):
         """Warp an image using the registration parameters
@@ -827,7 +852,8 @@ class Slide(object):
                                 out_shape_rc=out_shape_rc,
                                 transformation_src_shape_rc=self.processed_img_shape_rc,
                                 transformation_dst_shape_rc=self.reg_img_shape_rc,
-                                bbox_xywh=bbox_xywh)
+                                bbox_xywh=bbox_xywh,
+                                bg_px_pos_rc=self.bg_px_pos_rc)
 
         return warped_img
 
@@ -904,13 +930,17 @@ class Slide(object):
         else:
             slide_bbox_xywh = None
 
+        slide_shape = self.slide_dimensions_wh[level]
+        scale_rc = slide_shape[::-1]/self.processed_img_shape_rc
+        slide_bg_px_rc = np.round(np.array(self.bg_px_pos_rc)*scale_rc).astype(int)
         warped_slide = slide_tools.warp_slide(src_f, M=self.M,
                                               in_shape_rc=self.processed_img_shape_rc,
                                               aligned_img_shape_rc=self.reg_img_shape_rc,
                                               aligned_slide_shape_rc=aligned_slide_shape,
                                               dxdy=bk_dxdy, level=level, series=self.series,
-                                              interp_method=interp_method, bg_color=bg_color,
-                                              bbox_xywh=slide_bbox_xywh)
+                                              interp_method=interp_method,
+                                              bbox_xywh=slide_bbox_xywh,
+                                              bg_px_pos_rc=slide_bg_px_rc)
         return warped_slide
 
     @valtils.deprecated_args(crop_to_overlap="crop")
@@ -1929,7 +1959,6 @@ class Valis(object):
                 processing_cls = if_processing_cls
                 processing_kwargs = if_processing_kwargs
 
-
             levels_in_range = np.where(slide_obj.slide_dimensions_wh.max(axis=1) < self.max_processed_image_dim_px)[0]
             if len(levels_in_range) > 0:
                 level = levels_in_range[0]
@@ -2133,8 +2162,6 @@ class Valis(object):
 
         return mask, mask_bbox_xywh
 
-
-
     def create_masks(self, rigid_registrar):
         """Create masks based on rigid registration
 
@@ -2224,7 +2251,11 @@ class Valis(object):
             slide_obj.reg_img_shape_rc = slide_reg_obj.registered_img.shape
             slide_obj.rigid_reg_img_f = os.path.join(self.reg_dst_dir,
                                                      str.zfill(str(slide_obj.stack_idx), n_digits) + "_" + slide_obj.name + ".png")
-
+            slide_obj.get_bg_color_px_pos()
+            # Get position of pixel that will have background color
+            # processed_img = io.imread(slide_obj.processed_img_f)
+            # min_px =np.unravel_index(np.argmin(processed_img, axis=None), processed_img.shape)
+            # slide_obj.bg_px_pos_rc = np.array(min_px)
 
             if slide_reg_obj.stack_idx == self.reference_img_idx:
                 continue
@@ -2920,7 +2951,7 @@ class Valis(object):
             self.brightfield_procsseing_fxn_str = brightfield_processing_cls.__name__
             self.if_processing_fxn_str = if_processing_cls.__name__
             self.process_imgs(brightfield_processing_cls, brightfield_processing_kwargs,
-                            if_processing_cls, if_processing_kwargs)
+                              if_processing_cls, if_processing_kwargs)
 
             print("\n==== Rigid registraration\n")
             rigid_registrar = self.rigid_register()

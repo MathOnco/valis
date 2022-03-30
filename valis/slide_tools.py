@@ -343,7 +343,7 @@ def um_to_px(um, um_per_px):
 
 def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
                M=None, dxdy=None, level=0, series=None, interp_method="bicubic",
-               bbox_xywh=None, bg_color=None):
+               bbox_xywh=None, bg_px_pos_rc=(0, 0)):
     """ Warp a slide
 
     Warp slide according to `M` and/or `non_rigid_dxdy`
@@ -385,8 +385,9 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
         Bounding box to crop warped slide. Should be in refernce the
         warped slide
 
-    bg_color : ndarray, background
-        RGB color to fill background with.
+    bg_color : tuple
+        RGB color to fill background with. If `None`, the background
+        will be black
 
     Returns
     -------
@@ -408,6 +409,7 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
                                       out_shape_rc=aligned_slide_shape_rc,
                                       transformation_src_shape_rc=in_shape_rc,
                                       bbox_xywh=bbox_xywh,
+                                      bg_px_pos_rc=bg_px_pos_rc,
                                       interp_method=interp_method)
 
     # slide_shape_rc = np.array((vips_slide.height,  vips_slide.width))
@@ -436,25 +438,25 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
     # warp_index = scaled_new_x.bandjoin(scaled_new_y)
     # vips_warped = vips_slide.mapim(warp_index, interpolate=interpolator)
 
-    if bg_color is not None:
-        if bg_color.lower() == BG_AUTO_FILL_STR:
-            small_img_level = len(reader.metadata.slide_dimensions) - 1
-            small_img = reader.slide2image(level=small_img_level, series=series)
-            small_img = util.img_as_ubyte(small_img)
-            with colour.utilities.suppress_warnings(colour_usage_warnings=True):
-                if 1 < small_img.max() <= 255 and np.issubdtype(small_img.dtype, np.integer):
-                    cam16 = colour.convert(small_img/255, 'sRGB', "CAM16UCS")
-                else:
-                    cam16 = colour.convert(small_img, 'sRGB', "CAM16UCS")
+    # if bg_color is not None:
+    #     if bg_color.lower() == BG_AUTO_FILL_STR:
+    #         small_img_level = len(reader.metadata.slide_dimensions) - 1
+    #         small_img = reader.slide2image(level=small_img_level, series=series)
+    #         small_img = util.img_as_ubyte(small_img)
+    #         with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+    #             if 1 < small_img.max() <= 255 and np.issubdtype(small_img.dtype, np.integer):
+    #                 cam16 = colour.convert(small_img/255, 'sRGB', "CAM16UCS")
+    #             else:
+    #                 cam16 = colour.convert(small_img, 'sRGB', "CAM16UCS")
 
-            lum = cam16[..., 0]
-            _, lt = filters.threshold_multiotsu(lum[lum > 0])
-            thresholded_idx = np.where(lum > lt)
-            bg_color = np.round(np.mean(small_img[thresholded_idx], axis=0)).astype(np.int)
-            bg_color = np.clip(bg_color, 0, 255).tolist()
-            print("bg color is", bg_color)
+    #         lum = cam16[..., 0]
+    #         _, lt = filters.threshold_multiotsu(lum[lum > 0])
+    #         thresholded_idx = np.where(lum > lt)
+    #         bg_color = np.round(np.mean(small_img[thresholded_idx], axis=0)).astype(np.int)
+    #         bg_color = np.clip(bg_color, 0, 255).tolist()
+    #         print("bg color is", bg_color)
 
-        vips_warped = (vips_warped == [0, 0, 0]).bandand().ifthenelse(bg_color, vips_warped)
+    #     vips_warped = (vips_warped == [0, 0, 0]).bandand().ifthenelse(bg_color, vips_warped)
 
     return vips_warped
 
