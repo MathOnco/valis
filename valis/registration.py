@@ -269,6 +269,7 @@ DEFAULT_NON_RIGID_KWARGS : dict
 
 """
 
+from atexit import register
 from ctypes import util
 import traceback
 import re
@@ -333,18 +334,14 @@ QT_EMMITER_KEY = "qt_emitter"
 NON_RIGID_REG_CLASS_KEY = "non_rigid_reg_class"
 NON_RIGID_REG_PARAMS_KEY = "non_rigid_reg_params"
 NON_RIGID_USE_XY_KEY = "moving_to_fixed_xy"
-NON_RIGID_ROI_ALL = "all"
-NON_RIGID_ROI_OVERLAP = "overlap"
-NON_RIGID_ROI_REF = "reference"
 
 # Default non-rigid registration parameters #
 DEFAULT_NON_RIGID_CLASS = non_rigid_registrars.OpticalFlowWarper
 DEFAULT_NON_RIGID_KWARGS = {}
 
 # Cropping options
-CROP_OVERLAP = NON_RIGID_ROI_OVERLAP
-CROP_REF = NON_RIGID_ROI_REF
-CROP_NONE = NON_RIGID_ROI_ALL
+CROP_OVERLAP = "overlap"
+CROP_REF = "reference"
 
 
 def init_jvm():
@@ -451,6 +448,9 @@ class Slide(object):
     fwd_dxdy : ndarray
         Inverse of `bk_dxdy`. Used to warp points.
 
+    fixed_slide : Slide
+        Slide object to which this one was aligned.
+
     xy_matched_to_prev : ndarray
         Coordinates (x, y) of features in `image` that had matches in the
         previous image. Will have shape (N, 2)
@@ -522,6 +522,7 @@ class Slide(object):
         self.bk_dxdy = None
         self.fwd_dxdy = None
 
+        self.fixed_slide = None
         self.xy_matched_to_prev = None
         self.xy_in_prev = None
         self.xy_matched_to_prev_in_bbox = None
@@ -585,24 +586,24 @@ class Slide(object):
 
         return vips_img
 
-    def get_overlap_mask(self, crop):
-        """Get mask and bbox
+    # def get_overlap_mask(self, crop):
+    #     """Get mask and bbox
 
-        Returns
-        -------
-        mask : ndarray
-            Mask that covers ROI.
+    #     Returns
+    #     -------
+    #     mask : ndarray
+    #         Mask that covers ROI.
 
-        mask_bbox_xywh : tuple of int
-            XYWH of mask in reference image
+    #     mask_bbox_xywh : tuple of int
+    #         XYWH of mask in reference image
 
-        """
-        if isinstance(crop, bool):
-            mask, mask_bbox_xywh = self.val_obj.get_overlap_mask(self.val_obj.crop)
-        else:
-            mask, mask_bbox_xywh = self.val_obj.get_overlap_mask(crop)
+    #     """
+    #     if isinstance(crop, bool):
+    #         mask, mask_bbox_xywh = self.val_obj.get_overlap_mask(self.val_obj.crop)
+    #     else:
+    #         mask, mask_bbox_xywh = self.val_obj.get_overlap_mask(crop)
 
-        return mask, mask_bbox_xywh
+    #     return mask, mask_bbox_xywh
 
 
     def get_aligned_to_ref_slide_crop_xywh(self, ref_img_shape_rc, ref_M, scaled_ref_img_shape_rc=None):
@@ -625,7 +626,13 @@ class Slide(object):
         crop_xywh : tuple of int
             Bounding box of crop area (XYWH)
 
+        mask : ndarray
+            Mask covering reference image
+
         """
+
+        mask , _ = self.val_obj.get_mask(CROP_REF)
+
         if scaled_ref_img_shape_rc is not None:
             sxy = np.array([*scaled_ref_img_shape_rc[::-1]]) / np.array([*ref_img_shape_rc[::-1]])
         else:
@@ -633,12 +640,9 @@ class Slide(object):
             sxy = np.ones(2)
 
         reg_txy = -ref_M[0:2, 2]
-        # scaled_T = np.eye(3)
-        # scaled_T[:2, 2] = reg_txy*sxy
         slide_xywh = (*reg_txy*sxy, *scaled_ref_img_shape_rc[::-1])
 
-        return slide_xywh
-
+        return slide_xywh, mask
 
     def get_overlap_crop_xywh(self, warped_img_shape_rc, scaled_warped_img_shape_rc=None):
         """Get bounding box used to crop slide to where all slides overlap
@@ -657,7 +661,7 @@ class Slide(object):
             Bounding box of crop area (XYWH)
 
         """
-        _ , overlap_mask_bbox_xywh = self.get_overlap_mask(CROP_OVERLAP)
+        mask , mask_bbox_xywh = self.val_obj.get_mask(CROP_OVERLAP)
 
         if scaled_warped_img_shape_rc is not None:
             sxy = np.array([*scaled_warped_img_shape_rc[::-1]]) / np.array([*warped_img_shape_rc[::-1]])
@@ -665,27 +669,22 @@ class Slide(object):
             sxy = np.ones(2)
 
         to_slide_transformer = transform.SimilarityTransform(scale=sxy)
-        overlap_bbox = warp_tools.bbox2xy(overlap_mask_bbox_xywh)
+        overlap_bbox = warp_tools.bbox2xy(mask_bbox_xywh)
         scaled_overlap_bbox = to_slide_transformer(overlap_bbox)
         scaled_overlap_xywh = warp_tools.xy2bbox(scaled_overlap_bbox)
 
-        # scaled_T = np.eye(3)
-        # scaled_T[:2, 2] = scaled_overlap_xywh[0:2]
-
-        # Round output shape
         scaled_overlap_xywh[2:] = np.ceil(scaled_overlap_xywh[2:])
         scaled_overlap_xywh = tuple(scaled_overlap_xywh.astype(int))
 
-        return scaled_overlap_xywh
+        return scaled_overlap_xywh, mask
 
-
-    def get_aligned_crop_xywh(self, crop, scaled_img_shape_rc=None):
-        """Get bounding box used to crop slide
+    def get_crop_xywh(self, crop, out_shape_rc=None):
+        """Get bounding box used to crop aligned slide
 
         Parameters
         ----------
 
-        scaled_img_shape_rc : tuple of int, optional
+        out_shape_rc : tuple of int, optional
             If crop is "reference", this should be the shape of scaled reference image, such
             as the unwarped slide that corresponds to the unwarped processed reference image.
 
@@ -697,18 +696,61 @@ class Slide(object):
         crop_xywh : tuple of int
             Bounding box of crop area (XYWH)
 
+        mask : ndarray
+            Mask, before crop
         """
+
+        ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
         if crop == CROP_REF:
-            ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
-            crop_xywh = self.get_aligned_to_ref_slide_crop_xywh(ref_img_shape_rc=ref_slide.processed_img_shape_rc,
-                                                                ref_M=ref_slide.M,
-                                                                scaled_ref_img_shape_rc=scaled_img_shape_rc)
-
+            transformation_shape_rc = np.array(ref_slide.processed_img_shape_rc)
+            crop_xywh, mask = self.get_aligned_to_ref_slide_crop_xywh(ref_img_shape_rc=transformation_shape_rc,
+                                                                      ref_M=ref_slide.M,
+                                                                      scaled_ref_img_shape_rc=out_shape_rc)
         elif crop == CROP_OVERLAP:
-            crop_xywh = self.get_overlap_crop_xywh(warped_img_shape_rc=self.reg_img_shape_rc,
-                                                   scaled_warped_img_shape_rc=scaled_img_shape_rc)
+            transformation_shape_rc = np.array(ref_slide.reg_img_shape_rc)
+            crop_xywh, mask = self.get_overlap_crop_xywh(warped_img_shape_rc=transformation_shape_rc,
+                                                         scaled_warped_img_shape_rc=out_shape_rc)
 
-        return np.array(crop_xywh)
+        return crop_xywh, mask
+
+
+    # def get_crop_xywh(self, crop, out_shape_rc=None):
+    #     """Get bounding box used to crop aligned slide
+
+    #     Parameters
+    #     ----------
+
+    #     out_shape_rc : tuple of int, optional
+    #         If crop is "reference", this should be the shape of scaled reference image, such
+    #         as the unwarped slide that corresponds to the unwarped processed reference image.
+
+    #         If crop is "overlap", this should be the shape of the registered slides.
+
+
+    #     Returns
+    #     -------
+    #     crop_xywh : tuple of int
+    #         Bounding box of crop area (XYWH)
+
+    #     mask : ndarray
+    #         Mask, before crop
+    #     """
+    #     mask, crop_xywh = self.val_obj.get_mask(crop)
+    #     if out_shape_rc is not None:
+    #         ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+    #         if crop == CROP_REF:
+    #             sxy = np.array(out_shape_rc)/np.array(ref_slide.processed_img_shape_rc)
+    #         else:
+    #             sxy = np.array(out_shape_rc)/np.array(ref_slide.reg_img_shape_rc)
+
+    #         to_slide_transformer = transform.SimilarityTransform(scale=sxy)
+    #         bbox_xy = warp_tools.bbox2xy(crop_xywh)
+    #         scaled_overlap_bbox = to_slide_transformer(bbox_xy)
+    #         crop_xywh = warp_tools.xy2bbox(scaled_overlap_bbox)
+    #         crop_xywh[2:] = np.ceil(crop_xywh[2:])
+
+    #     return np.array(crop_xywh), mask
+
 
     def warp_img(self, img=None, non_rigid=True, crop=True):
         """Warp an image using the registration parameters
@@ -723,7 +765,7 @@ class Slide(object):
 
         crop: bool, str
             How to crop the registered images. If `True`, then the same crop used
-            when initializing the `Valis` object will be used. If `False` or "all", the
+            when initializing the `Valis` object will be used. If `False`, the
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
@@ -760,7 +802,7 @@ class Slide(object):
             out_shape_rc = self.reg_img_shape_rc
             img_scale_rc = np.ones(2)
 
-        if crop is not False and crop != CROP_NONE:
+        if crop is not False:
             if crop is True:
                 crop_method = self.crop
             else:
@@ -768,14 +810,14 @@ class Slide(object):
 
             if crop_method == CROP_REF:
                 ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
-                if same_shape:
-                    scaled_shape_rc = ref_slide.processed_img_shape_rc
-                else:
+                if not same_shape:
                     scaled_shape_rc = np.array(ref_slide.processed_img_shape_rc)*img_scale_rc
-            else:
+                else:
+                    scaled_shape_rc = ref_slide.processed_img_shape_rc
+            elif crop_method == CROP_OVERLAP:
                 scaled_shape_rc = out_shape_rc
 
-            bbox_xywh = self.get_aligned_crop_xywh(crop_method, scaled_shape_rc)
+            bbox_xywh, _ = self.get_crop_xywh(crop_method, scaled_shape_rc)
         else:
             bbox_xywh = None
 
@@ -786,7 +828,6 @@ class Slide(object):
                                 transformation_src_shape_rc=self.processed_img_shape_rc,
                                 transformation_dst_shape_rc=self.reg_img_shape_rc,
                                 bbox_xywh=bbox_xywh)
-
 
         return warped_img
 
@@ -806,7 +847,7 @@ class Slide(object):
 
         crop: bool, str
             How to crop the registered images. If `True`, then the same crop used
-            when initializing the `Valis` object will be used. If `False` or "all", the
+            when initializing the `Valis` object will be used. If `False`, the
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
@@ -844,15 +885,7 @@ class Slide(object):
         else:
             aligned_slide_shape = self.aligned_slide_shape_rc
 
-        warped_slide = slide_tools.warp_slide(src_f, M=self.M,
-                                              in_shape_rc=self.processed_img_shape_rc,
-                                              aligned_img_shape_rc=self.reg_img_shape_rc,
-                                              aligned_slide_shape_rc=aligned_slide_shape,
-                                              dxdy=bk_dxdy, level=level, series=self.series,
-                                              interp_method=interp_method, bg_color=bg_color)
-
-        if crop is not False and crop != CROP_NONE:
-
+        if crop is not False:
             if crop is True:
                 crop_method = self.crop
             else:
@@ -864,20 +897,20 @@ class Slide(object):
             elif crop_method == CROP_OVERLAP:
                 scaled_aligned_shape_rc = aligned_slide_shape
 
-            slide_overlap_xywh = self.get_aligned_crop_xywh(crop=crop_method, scaled_img_shape_rc=scaled_aligned_shape_rc)
+            slide_bbox_xywh, _ = self.get_crop_xywh(crop=crop_method,
+                                                    out_shape_rc=scaled_aligned_shape_rc)
+            if crop_method == CROP_REF:
+                assert np.all(slide_bbox_xywh[2:]==scaled_aligned_shape_rc[::-1])
+        else:
+            slide_bbox_xywh = None
 
-            # mask, overlap_mask_bbox_xywh = self.get_overlap_mask(crop)
-            # to_slide_scaling = np.array([warped_slide.width, warped_slide.height]) / np.array(self.reg_img_shape_rc[::-1])
-            # to_slide_transformer = transform.SimilarityTransform(scale=to_slide_scaling)
-            # overlap_bbox = warp_tools.bbox2xy(overlap_mask_bbox_xywh)
-            # slide_overlap_bbox = to_slide_transformer(overlap_bbox)
-            # slide_overlap_xywh = warp_tools.xy2bbox(slide_overlap_bbox)
-            # slide_overlap_xywh[0:2] = np.floor(slide_overlap_xywh[0:2])
-            # slide_overlap_xywh[2:] = np.ceil(slide_overlap_xywh[2:])
-            # slide_overlap_xywh = tuple(slide_overlap_xywh.astype(int))
-
-            warped_slide = warped_slide.crop(*slide_overlap_xywh)
-
+        warped_slide = slide_tools.warp_slide(src_f, M=self.M,
+                                              in_shape_rc=self.processed_img_shape_rc,
+                                              aligned_img_shape_rc=self.reg_img_shape_rc,
+                                              aligned_slide_shape_rc=aligned_slide_shape,
+                                              dxdy=bk_dxdy, level=level, series=self.series,
+                                              interp_method=interp_method, bg_color=bg_color,
+                                              bbox_xywh=slide_bbox_xywh)
         return warped_slide
 
     @valtils.deprecated_args(crop_to_overlap="crop")
@@ -906,7 +939,7 @@ class Slide(object):
 
         crop: bool, str
             How to crop the registered images. If `True`, then the same crop used
-            when initializing the `Valis` object will be used. If `False` or "all", the
+            when initializing the `Valis` object will be used. If `False`, the
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
@@ -1022,14 +1055,13 @@ class Slide(object):
             annotation coordinates.
 
             If `True`, then the same crop used
-            when initializing the `Valis` object will be used. If `False` or "all", the
+            when initializing the `Valis` object will be used. If `False`, the
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
             defined by `reference_img_f` when initialzing the `Valis object`.
 
         """
-
         if M is None:
             M = self.M
 
@@ -1059,8 +1091,7 @@ class Slide(object):
                                        dst_shape_rc=aligned_slide_shape,
                                        fwd_dxdy=fwd_dxdy)
 
-        if crop is not False and crop != CROP_NONE:
-
+        if crop is not False:
             if crop is True:
                 crop_method = self.crop
             else:
@@ -1076,7 +1107,7 @@ class Slide(object):
             elif crop_method == CROP_OVERLAP:
                 scaled_aligned_shape_rc = aligned_slide_shape
 
-            crop_bbox_xywh = self.get_aligned_crop_xywh(crop_method, scaled_aligned_shape_rc)
+            crop_bbox_xywh, _ = self.get_crop_xywh(crop_method, scaled_aligned_shape_rc)
             warped_xy -= crop_bbox_xywh[0:2]
 
         return warped_xy
@@ -1305,9 +1336,6 @@ class Valis(object):
     non_rigid_reg_class_str : str
         Name of the of class `non_rigid_registrar_cls` belongs to.
 
-    non_rigid_roi: str, optional
-        Where to perform non-rigid registration.
-
     thumbnail_size : int
         Maximum width or height of thumbnails that show results
 
@@ -1385,13 +1413,14 @@ class Valis(object):
     """
 
     def __init__(self, src_dir, dst_dir, series=None, name=None, img_type=None,
-                 feature_detector_cls=DEFAULT_FD, transformer_cls=DEFAULT_TRANSFORM_CLASS,
+                 feature_detector_cls=DEFAULT_FD,
+                 transformer_cls=DEFAULT_TRANSFORM_CLASS,
                  affine_optimizer_cls=DEFAULT_AFFINE_OPTIMIZER_CLASS,
                  similarity_metric=DEFAULT_SIMILARITY_METRIC,
-                 match_filter_method=DEFAULT_MATCH_FILTER, imgs_ordered=False,
+                 match_filter_method=DEFAULT_MATCH_FILTER,
+                 imgs_ordered=False,
                  non_rigid_registrar_cls=DEFAULT_NON_RIGID_CLASS,
                  non_rigid_reg_params=DEFAULT_NON_RIGID_KWARGS,
-                 non_rigid_roi=None,
                  img_list=None,
                  reference_img_f=None,
                  crop=None,
@@ -1478,27 +1507,13 @@ class Valis(object):
             `non_rigid_registrars` for the available non-rigid registration
             methods and arguments.
 
-        non_rigid_roi: str, optional
-            Where to perform non-rigid registration.
-            "overlap" will limit the non-rigid transformations to those areas
-            where all of the images overlap. "reference" limits transformations
-            to areas that overlap with a reference image, defined by
-            `reference_img_f`. This option can be used even if `reference_img_f`
-            is `None` because the reference image will be the one at the center
-            of the stack. Finally, setting `non_rigid_roi` to "all" will perform
-            non-rigid registration across the whole image.
-
-            If both `non_rigid_roi` and `reference_img_f` are `None`, `non_rigid_roi`
-            will be set to "overlap". If `non_rigid_roi` is None, but `reference_img_f`
-            is defined, then `non_rigid_roi` will be set to "reference".
-
         crop: str, optional
             How to crop the registered images. "overlap" will crop to include
             only areas where all images overlapped. "reference" crops to the
             area that overlaps with a reference image, defined by
             `reference_img_f`. This option can be used even if `reference_img_f`
             is `None` because the reference image will be set as the one at the center
-            of the stack. "all" will not crop the image.
+            of the stack.
 
             If both `crop` and `reference_img_f` are `None`, `crop`
             will be set to "overlap". If `crop` is None, but `reference_img_f`
@@ -1600,16 +1615,6 @@ class Valis(object):
         # Setup non-rigid registration #
         self.non_rigid_registrar = None
         self.non_rigid_registrar_cls = non_rigid_registrar_cls
-        if non_rigid_roi is None:
-            if crop is not None:
-                self.non_rigid_roi = crop
-            else:
-                if reference_img_f is None:
-                    self.non_rigid_roi = NON_RIGID_ROI_OVERLAP
-                else:
-                    self.non_rigid_roi = NON_RIGID_ROI_REF
-        else:
-            self.non_rigid_roi = non_rigid_roi
 
         if crop is None:
             if reference_img_f is None:
@@ -2014,7 +2019,7 @@ class Valis(object):
         return overlap_img
 
 
-    # def get_ref_img_mask(self, rigid_registrar):
+    # def get_ref_img_mask(self):
     #     """Create mask that covers reference image
 
     #     Returns
@@ -2025,16 +2030,55 @@ class Valis(object):
     #         XYWH of mask in reference image
 
     #     """
-    #     ref_img_obj = rigid_registrar.img_obj_list[rigid_registrar.reference_img_idx]
-    #     ref_shape = ref_img_obj.image.shape[0:2]
-    #     ref_mask = np.full(ref_shape, 255, dtype=np.uint8)
-    #     mask = warp_tools.warp_img(ref_mask,
-    #                                M=ref_img_obj.M,
-    #                                out_shape_rc=ref_img_obj.registered_img.shape)
+    #     ref_slide = self.slide_dict[valtils.get_name(self.reference_img_f)]
+    #     ref_shape_wh = ref_slide.processed_img_shape_rc[::-1]
+
+    #     uw_mask = np.full(ref_shape_wh[::-1], 255, dtype=np.uint8)
+    #     mask = warp_tools.warp_img(uw_mask, ref_slide.M,
+    #                                out_shape_rc=ref_slide.reg_img_shape_rc)
+
+    #     reg_txy = -ref_slide.M[0:2, 2]
+    #     mask_bbox_xywh = np.array([*reg_txy, *ref_shape_wh])
+
+    #     return mask, mask_bbox_xywh
+
+
+    # def get_all_overlap_mask(self, rigid_registrar):
+    #     """Create mask that covers intersection of all images
+
+    #     Parameters
+    #     ----------
+    #     out_shape_rc : tuple, optional
+    #         shape of registered image that will be cropped. If None,
+    #         then assumed to have same shape as the processed images
+
+    #     Returns
+    #     -------
+    #     mask : ndarray
+    #         Mask that covers reference image in registered images
+    #     mask_bbox_xywh : tuple of int
+    #         XYWH of mask in reference image
+
+    #     """
+
+    #     ref_slide = self.slide_dict[valtils.get_name(self.reference_img_f)]
+    #     mask = np.zeros(ref_slide.reg_img_shape_rc, dtype=int)
+    #     for slide_obj in self.slide_dict.values():
+    #         img_mask = np.ones(slide_obj.processed_img_shape_rc, dtype=np.uint8)
+    #         warped_img_mask = warp_tools.warp_img(img_mask,
+    #                                               M=slide_obj.M,
+    #                                               out_shape_rc=slide_obj.reg_img_shape_rc)
+
+    #         mask += warped_img_mask
+
+    #     mask[mask != self.size] = 0
+    #     mask[mask != 0] = 255
+    #     mask = mask.astype(np.uint8)
 
     #     mask_bbox_xywh = warp_tools.xy2bbox(warp_tools.mask2xy(mask))
 
     #     return mask, mask_bbox_xywh
+
 
     def get_ref_img_mask(self, rigid_registrar):
         """Create mask that covers reference image
@@ -2047,23 +2091,21 @@ class Valis(object):
             XYWH of mask in reference image
 
         """
-        ref_img_obj = rigid_registrar.img_obj_list[rigid_registrar.reference_img_idx]
-        reg_txy = -ref_img_obj.M[0:2, 2]
-        ref_shape_wh = ref_img_obj.image.shape[0:2][::-1]
-        # mask_bbox_xywh = np.array([*np.round(reg_txy), *ref_shape_wh])
+        ref_slide = rigid_registrar.img_obj_dict[valtils.get_name(self.reference_img_f)]
+        ref_shape_wh = ref_slide.image.shape[0:2][::-1]
+
+        uw_mask = np.full(ref_shape_wh[::-1], 255, dtype=np.uint8)
+        mask = warp_tools.warp_img(uw_mask, ref_slide.M,
+                                   out_shape_rc=ref_slide.registered_shape_rc)
+
+        reg_txy = -ref_slide.M[0:2, 2]
         mask_bbox_xywh = np.array([*reg_txy, *ref_shape_wh])
-
-        uw_mask = np.full(ref_img_obj.image.shape[0:2], 255, dtype=np.uint8)
-        mask = warp_tools.warp_img(uw_mask, ref_img_obj.M,
-                                #    transformation_dst_shape_rc= np.array(ref_img_obj.registered_shape_rc),
-                                   out_shape_rc=ref_img_obj.registered_shape_rc)
-
 
         return mask, mask_bbox_xywh
 
-
     def get_all_overlap_mask(self, rigid_registrar):
         """Create mask that covers intersection of all images
+
 
         Returns
         -------
@@ -2073,41 +2115,24 @@ class Valis(object):
             XYWH of mask in reference image
 
         """
-        mask = np.zeros(rigid_registrar.img_obj_list[0].registered_img.shape[0:2], dtype=int)
-        for img_obj in rigid_registrar.img_obj_list:
-            img_mask = np.ones(img_obj.image.shape[0:2], dtype=np.uint8)
+        ref_slide = rigid_registrar.img_obj_dict[valtils.get_name(self.reference_img_f)]
+        mask = np.zeros(ref_slide.registered_shape_rc, dtype=int)
+        for slide_obj in rigid_registrar.img_obj_list:
+            img_mask = np.ones(slide_obj.image.shape[0:2], dtype=np.uint8)
             warped_img_mask = warp_tools.warp_img(img_mask,
-                                                  M=img_obj.M,
-                                                  out_shape_rc=img_obj.registered_img.shape)
+                                                  M=slide_obj.M,
+                                                  out_shape_rc=slide_obj.registered_shape_rc)
 
             mask += warped_img_mask
 
         mask[mask != self.size] = 0
         mask[mask != 0] = 255
         mask = mask.astype(np.uint8)
+
         mask_bbox_xywh = warp_tools.xy2bbox(warp_tools.mask2xy(mask))
 
         return mask, mask_bbox_xywh
 
-
-    # def get_all_mask(self, rigid_registrar):
-    #     """Get mask that covers whole image
-
-    #     Returns
-    #     -------
-    #     mask : ndarray
-    #         Mask that covers entirety registered images
-
-    #     mask_bbox_xywh : tuple of int
-    #         XYWH of mask in reference image
-
-    #     """
-    #     img_obj0 = rigid_registrar.img_obj_list[0]
-    #     reg_shape = img_obj0.registered_shape_rc[0:2]
-    #     mask = np.full(reg_shape, 255, dtype=np.uint8)
-    #     mask_bbox_xywh = np.array([0, 0, reg_shape[1], reg_shape[0]])
-
-    #     return mask, mask_bbox_xywh
 
 
     def create_masks(self, rigid_registrar):
@@ -2117,10 +2142,9 @@ class Valis(object):
         mask_dict = {}
         mask_dict[CROP_REF] =  self.get_ref_img_mask(rigid_registrar)
         mask_dict[CROP_OVERLAP] = self.get_all_overlap_mask(rigid_registrar)
-
         self.mask_dict = mask_dict
 
-    def get_overlap_mask(self, overlap_type):
+    def get_mask(self, overlap_type):
         """Get overlap mask and bounding box
 
         Returns
@@ -2164,8 +2188,9 @@ class Valis(object):
 
         ref_slide = self.slide_dict[valtils.get_name(rigid_registrar.reference_img_f)]
         self.reference_img_f = ref_slide.src_f
+
         self.create_masks(rigid_registrar)
-        overlap_mask, overlap_mask_bbox_xywh = self.get_overlap_mask(self.crop)
+        overlap_mask, overlap_mask_bbox_xywh = self.get_mask(self.crop)
 
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
         overlap_min_r = overlap_mask_bbox_xywh[1]
@@ -2203,6 +2228,9 @@ class Valis(object):
 
             if slide_reg_obj.stack_idx == self.reference_img_idx:
                 continue
+
+            fixed_slide = self.slide_dict[slide_reg_obj.fixed_obj.name]
+            slide_obj.fixed_slide = fixed_slide
 
             match_dict = slide_reg_obj.match_dict[slide_reg_obj.fixed_obj]
             slide_obj.xy_matched_to_prev = match_dict.matched_kp1_xy
@@ -2268,10 +2296,6 @@ class Valis(object):
 
         """
 
-
-        # nr_overlap_mask, _ = self.get_overlap_mask(self.non_rigid_roi)
-        # self.non_rigid_reg_kwargs["mask"] = nr_overlap_mask
-
         non_rigid_registrar = serial_non_rigid.register_images(src=rigid_registrar,
                                                                **self.non_rigid_reg_kwargs)
         self.end_non_rigid_time = time()
@@ -2281,7 +2305,7 @@ class Valis(object):
         self.non_rigid_registrar = non_rigid_registrar
 
         # Draw overlap image #
-        overlap_mask, overlap_mask_bbox_xywh = self.get_overlap_mask(self.crop)
+        overlap_mask, overlap_mask_bbox_xywh = self.get_mask(self.crop)
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
         overlap_min_r = overlap_mask_bbox_xywh[1]
         overlap_min_c = overlap_mask_bbox_xywh[0]
@@ -2332,12 +2356,6 @@ class Valis(object):
             deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
 
             io.imsave(deform_img_f, thumbanil_deform_grid)
-
-            # Save warped image
-            # if warped_img.ndim == 2:
-            #     warped_img[slide_obj.overlap_mask == 0] = 0
-            # else:
-            #     warped_img[slide_obj.overlap_mask == 0] = [0] * warped_img.shape[2]
 
 
         return non_rigid_registrar
@@ -2419,7 +2437,7 @@ class Valis(object):
 
         slide_obj_list = [self.slide_dict[img_obj.name] for img_obj in self.rigid_registrar.img_obj_list]
         outshape = slide_obj_list[0].aligned_slide_shape_rc
-        overlap_mask, _ = self.get_overlap_mask(self.crop)
+        overlap_mask, _ = self.get_mask(self.crop)
 
         for i, slide_obj in enumerate(tqdm.tqdm(slide_obj_list)):
             slide_name = slide_obj.name
@@ -3041,7 +3059,7 @@ class Valis(object):
 
         crop: bool, str
             How to crop the registered images. If `True`, then the same crop used
-            when initializing the `Valis` object will be used. If `False` or "all", the
+            when initializing the `Valis` object will be used. If `False`, the
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
@@ -3100,7 +3118,7 @@ class Valis(object):
 
         crop: bool, str
             How to crop the registered images. If `True`, then the same crop used
-            when initializing the `Valis` object will be used. If `False` or "all", the
+            when initializing the `Valis` object will be used. If `False`, the
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
