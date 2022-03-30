@@ -12,4 +12,4 @@ Version 1.0.0rc5 (March 24, 2022)
  #. Reduced unwanted non-rigid deformations by masking displacement fields before warp
  #. Displacement fields drawn ontop of non-rigid registered image to help determine where the deformations are happening.
  #. If the slide has multiple series, and a series is not specficed, the slide reader will read the series containing the largest image.
- #.
+ #. saaaa
