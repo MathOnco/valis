@@ -385,10 +385,6 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
         Bounding box to crop warped slide. Should be in refernce the
         warped slide
 
-    bg_color : tuple
-        RGB color to fill background with. If `None`, the background
-        will be black
-
     Returns
     -------
     vips_warped : pyvips.Image

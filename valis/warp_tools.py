@@ -1359,10 +1359,13 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
 
     if bg_px_pos_rc is not None:
         bg_y, bg_x = bg_px_pos_rc
-        new_x = (new_x < 0).bandand().ifthenelse(bg_x, new_x)
-        new_x = (new_x >= src_shape_rc[1]).bandand().ifthenelse(bg_x, new_x)
-        new_y = (new_y < 0).bandand().ifthenelse(bg_y, new_y)
-        new_y = (new_y >= src_shape_rc[0]).bandand().ifthenelse(bg_y, new_y)
+        temp_oob_x_mask = (new_x < 0).ifthenelse(1, 0) + \
+                          (new_y < 0).ifthenelse(1, 0) + \
+                          (new_x >= src_shape_rc[1]).ifthenelse(1, 0) + \
+                          (new_y >= src_shape_rc[0]).ifthenelse(1, 0)
+        oob_mask = (temp_oob_x_mask > 0).bandand()
+        new_x = (oob_mask == 0).ifthenelse(new_x, bg_x)
+        new_y = (oob_mask == 0).ifthenelse(new_y, bg_y)
 
     warp_index = new_x.bandjoin(new_y)
     if bbox_xywh is not None:

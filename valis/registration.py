@@ -859,7 +859,7 @@ class Slide(object):
 
     @valtils.deprecated_args(crop_to_overlap="crop")
     def warp_slide(self, level, non_rigid=True, crop=True,
-                   src_f=None, bg_color=None, interp_method="bicubic"):
+                   src_f=None, interp_method="bicubic"):
         """Warp a slide using registration parameters
 
         Parameters
@@ -885,17 +885,10 @@ class Slide(object):
            be an alternative copy of the slide, such as one that has undergone
            processing (e.g. stain segmentation), has a mask applied, etc...
 
-        bg_color : ndarray, str, optional
-            Color used to fill in black background. If "auto",
-            the color will be the same as the most luminescent regions of the slide.
-            Alternatively, the RGB values can be provided, but should be between 0-255.
-            Default is None, which means the background will not be colored.
-
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
 
         """
-
         if src_f is None:
             src_f = self.src_f
 
@@ -948,7 +941,7 @@ class Slide(object):
                             crop=True, src_f=None,
                             channel_names=None,
                             perceputally_uniform_channel_colors=False,
-                            bg_color=None, interp_method="bicubic",
+                            interp_method="bicubic",
                             tile_wh=None, compression="lzw"):
 
         """Warp and save a slide
@@ -985,12 +978,6 @@ class Slide(object):
            be an alternative copy of the slide, such as one that has undergone
            processing (e.g. stain segmentation), has a mask applied, etc...
 
-        bg_color : ndarray, str, optional
-            Color used to fill in black background. If "auto",
-            the color will be the same as the most luminescent regions of the slide.
-            Alternatively, the RGB values can be provided, but should be between 0-255.
-            Default is None, which means the background will not be colored.
-
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
 
@@ -1005,8 +992,7 @@ class Slide(object):
 
         warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
                                        crop=crop,
-                                       interp_method=interp_method,
-                                       bg_color=bg_color)
+                                       interp_method=interp_method)
 
         # Get ome-xml #
         slide_meta = self.reader.metadata
@@ -2252,10 +2238,6 @@ class Valis(object):
             slide_obj.rigid_reg_img_f = os.path.join(self.reg_dst_dir,
                                                      str.zfill(str(slide_obj.stack_idx), n_digits) + "_" + slide_obj.name + ".png")
             slide_obj.get_bg_color_px_pos()
-            # Get position of pixel that will have background color
-            # processed_img = io.imread(slide_obj.processed_img_f)
-            # min_px =np.unravel_index(np.argmin(processed_img, axis=None), processed_img.shape)
-            # slide_obj.bg_px_pos_rc = np.array(min_px)
 
             if slide_reg_obj.stack_idx == self.reference_img_idx:
                 continue
@@ -3067,7 +3049,7 @@ class Valis(object):
     def warp_and_save_slides(self, dst_dir, level = 0, non_rigid=True,
                              crop=True,
                              perceputally_uniform_channel_colors=False,
-                             bg_color=None, interp_method="bicubic",
+                             interp_method="bicubic",
                              tile_wh=None, compression="lzw"):
 
         f"""Warp and save all slides
@@ -3096,12 +3078,6 @@ class Valis(object):
             "reference" crops to the area that overlaps with the reference image,
             defined by `reference_img_f` when initialzing the `Valis object`.
 
-        bg_color : ndarray, str, optional
-            Color used to fill in black background. If "auto",
-            the color will be the same as the most luminescent regions of the slide.
-            Alternatively, the RGB values can be provided, but should be between 0-255.
-            Default is None, which means the background will not be colored.
-
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
 
@@ -3121,7 +3097,7 @@ class Valis(object):
                                           non_rigid=non_rigid,
                                           crop=crop,
                                           perceputally_uniform_channel_colors=perceputally_uniform_channel_colors,
-                                          bg_color=bg_color, interp_method=interp_method,
+                                          interp_method=interp_method,
                                           tile_wh=tile_wh, compression=compression)
 
     @valtils.deprecated_args(crop_to_overlap="crop")
