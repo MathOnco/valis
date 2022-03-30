@@ -792,10 +792,12 @@ class SimpleElastixWarper(NonRigidRegistrarXY):
         elastix_image_filter_obj = sitk.ElastixImageFilter()
 
         if moving_xy is not None and fixed_xy is not None:
+
+            rand_id = np.random.randint(0, 10000)
             fixed_kp_fname = os.path.join(pathlib.Path(__file__).parent,
-                                          ".fixedPointSet.pts")
+                                          f".{rand_id}_fixedPointSet.pts")
             moving_kp_fname = os.path.join(pathlib.Path(__file__).parent,
-                                           ".movingPointSet.pts")
+                                           f".{rand_id}_.movingPointSet.pts")
 
             self.write_elastix_kp(fixed_xy, fixed_kp_fname)
             self.write_elastix_kp(moving_xy, moving_kp_fname)
