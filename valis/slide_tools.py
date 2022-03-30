@@ -207,6 +207,140 @@ def um_to_px(um, um_per_px):
 
 
 
+# def warp_slide_chunk(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
+#                M=None, dxdy=None, level=0, series=None, interp_method="bicubic",
+#                bbox_xywh=None, bg_color=None, tile_wh=1024):
+#     """ Warp a slide
+
+#     Warp slide according to `M` and/or `non_rigid_dxdy`
+
+#     Parameters
+#     ----------
+#     src_f : str
+#         Path to slide
+
+#     in_shape_rc : (N, M)
+#         Shape of the image used to find the transformations
+
+#     aligned_img_shape_rc : (int, int)
+#         Shape of image that was used to find the transformation. For example,
+#         this could be the original image in which features were detected
+
+#     aligned_slide_shape_rc : (int, int)
+#         Shape of the warped slide.
+
+#     scaled_out_shape_rc : optional, (int, int)
+#         Shape of scaled image (with shape out_shape_rc) after warping
+
+#     M : ndarray, optional
+#         3x3 Affine transformation matrix to perform rigid warp
+
+#     dxdy : ndarray, optional
+#         An array containing the x-axis (column) displacement,
+#         and y-axis (row) displacement applied after the rigid transformation
+
+#     level : int, optional
+#         Pyramid level
+
+#     series : int, optional
+#         Series number
+
+#     interp_method : str, optional
+
+#     bbox_xywh : tuple
+#         Bounding box to crop warped slide. Should be in refernce the
+#         warped slide
+
+#     bg_color : ndarray, background
+#         RGB color to fill background with.
+
+#     Returns
+#     -------
+#     vips_warped : pyvips.Image
+#         A warped copy of the slide specified by `src_f`
+
+#     """
+#     reader_cls = slide_io.get_slide_reader(src_f, series=series)
+#     reader = reader_cls(src_f, series=series)
+#     if series is None:
+#         series = reader.series
+
+#     vips_slide = reader.slide2vips(level=level, series=series)
+#     if M is None and dxdy is None:
+#         return vips_slide
+
+#     src_shape_rc = np.array([vips_slide.height, vips_slide.width])
+#     transformation_dst_shape_rc= np.array(aligned_img_shape_rc)
+#     out_shape_rc = np.array(aligned_slide_shape_rc)
+#     transformation_src_shape_rc = np.array(in_shape_rc)
+
+
+#     dst_sxy = np.array(out_shape_rc/transformation_dst_shape_rc)
+#     if bbox_xywh is not None:
+#         # update transformations and dimensions
+#         # remember that bbox_xywh for image with shape out_shape_rc
+#         xy_shift = np.array(bbox_xywh[:2])*1/dst_sxy
+#         scaled_bbox_wh =  (np.array(bbox_xywh[2:])*1/dst_sxy).astype(int)
+#         transformation_dst_shape_rc = scaled_bbox_wh[::-1]
+#         out_shape_rc = bbox_xywh[2:][::-1]
+
+#         T = np.identity(3)
+#         T[:2, 2] = xy_shift
+#         warp_M = M @ T
+
+#         if dxdy is not None:
+#             warp_dx = transform.warp(dxdy[0], T, preserve_range=True, output_shape=scaled_bbox_wh[::-1])
+#             warp_dy = transform.warp(dxdy[1], T, preserve_range=True, output_shape=scaled_bbox_wh[::-1])
+#             warp_dxdy = [warp_dx, warp_dy]
+
+#         else:
+#             warp_dxdy = None
+#     else:
+#         warp_M = M
+#         warp_dxdy = dxdy
+
+#     warp_map = warp_tools.get_warp_map(M=warp_M, dxdy=warp_dxdy,
+#                             transformation_dst_shape_rc=transformation_dst_shape_rc,
+#                             dst_shape_rc=out_shape_rc,
+#                             transformation_src_shape_rc=transformation_src_shape_rc,
+#                             src_shape_rc=src_shape_rc,
+#                             return_xy=True)
+
+#     vips_new_x = numpy2vips(np.ascontiguousarray(warp_map[0]))
+#     vips_new_y = numpy2vips(np.ascontiguousarray(warp_map[1]))
+
+#     # Scale warp map
+#     h, w = out_shape_rc.astype(int)
+#     scale_x, scale_y = dst_sxy
+#     sim_tform = transform.SimilarityTransform(scale=(scale_x, scale_y))
+#     S = sim_tform.params
+#     interpolator = pyvips.Interpolate.new(interp_method)
+#     scaled_new_x = vips_new_x.affine(S[0:2, 0:2].reshape(-1).tolist(),
+#                                      oarea=[0, 0, w, h],
+#                                      interpolate=interpolator)
+
+#     scaled_new_y = vips_new_y.affine(S[0:2, 0:2].reshape(-1).tolist(),
+#                                      oarea=[0, 0, w, h],
+#                                      interpolate=interpolator)
+
+#     warp_index = scaled_new_x.bandjoin(scaled_new_y)
+
+#     # Warp image in chunks to avoid memory errors associated with mapim
+#     final_out_shape_wh = np.array([warp_index.width, warp_index.height])
+#     if np.any(final_out_shape_wh < tile_wh):
+#         tile_wh = min(final_out_shape_wh)
+
+#     tile_bbox = warp_tools.get_grid_bboxes(final_out_shape_wh[::-1],
+#                                            tile_wh, tile_wh, inclusive=True)
+
+#     n_across = len(np.unique(tile_bbox[:, 0]))
+#     chunked_warp = [vips_slide.mapim(warp_index.extract_area(*xywh)) for xywh in tile_bbox]
+#     vips_warped = pyvips.Image.arrayjoin(chunked_warp,across=n_across).crop(0, 0, *final_out_shape_wh)
+
+#     return vips_warped
+
+
+
 def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
                M=None, dxdy=None, level=0, series=None, interp_method="bicubic",
                bbox_xywh=None, bg_color=None):
@@ -223,8 +357,8 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
         Shape of the image used to find the transformations
 
     aligned_img_shape_rc : (int, int)
-        Shape of image that was used to find the transformation. For example,
-        this could be the original image in which features were detected
+        Shape of image with shape `in_shape_rc`, after being warped,
+        i.e. the shape of the registered image.
 
     aligned_slide_shape_rc : (int, int)
         Shape of the warped slide.
@@ -269,16 +403,14 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
     if M is None and dxdy is None:
         return vips_slide
 
-    # slide_shape_rc = np.array((vips_slide.height,  vips_slide.width))
-
-    vips_warped = warp_tools.warp_img(vips_slide, M=M, bk_dxdy=dxdy,
+    vips_warped = warp_tools.warp_img(img=vips_slide, M=M, bk_dxdy=dxdy,
                                       transformation_dst_shape_rc=aligned_img_shape_rc,
                                       out_shape_rc=aligned_slide_shape_rc,
                                       transformation_src_shape_rc=in_shape_rc,
                                       bbox_xywh=bbox_xywh,
                                       interp_method=interp_method)
 
-
+    # slide_shape_rc = np.array((vips_slide.height,  vips_slide.width))
     # slide_warp_map = warp_tools.get_warp_map(M=M, dxdy=dxdy,
     #                                          transformation_dst_shape_rc=aligned_img_shape_rc,
     #                                          dst_shape_rc=aligned_slide_shape_rc,
@@ -328,7 +460,7 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
 
 
 
-# def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc, M=None, dxdy=None, level=0, series=None, interp_method="bicubic", bg_color=None):
+# def warp_slide_old_old(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc, M=None, dxdy=None, level=0, series=None, interp_method="bicubic", bg_color=None):
 #     """ Warp a slide
 
 #     Warp slide according to `M` and/or `non_rigid_dxdy`
