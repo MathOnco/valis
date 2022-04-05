@@ -2,9 +2,8 @@
 
 """
 
-from turtle import bk
 import numpy as np
-from skimage import transform, io, util
+from skimage import io, util
 from tqdm import tqdm
 import os
 import imghdr
@@ -138,31 +137,11 @@ def get_imgs_rigid_reg(serial_rigid_reg):
         img_names[i] = img_obj.name
         img_f_list[i] = img_obj.full_img_f
 
-        ### Moving mask
+        # Moving mask
         temp_mask = np.full_like(img_obj.image, 255)
-        img_mask = warp_tools.warp_img(temp_mask, M=img_obj.M, out_shape_rc=img_obj.registered_img.shape)
+        img_mask = warp_tools.warp_img(temp_mask, M=img_obj.M,
+                                       out_shape_rc=img_obj.registered_img.shape)
         mask_list[i] = img_mask
-
-        ### Tissue mask
-        # print("KEEP USING ADAPTIVE TISSUE MASKS in serial_non_rigid.py???")
-        # from skimage import exposure, filters, measure
-        # img = img_obj.image
-        # eq_img = exposure.equalize_adapthist(img)
-        # t = filters.threshold_otsu(eq_img)
-        # thresh_mask = eq_img > t
-
-        # labeled_img = measure.label(thresh_mask, connectivity=2)
-        # regions = measure.regionprops(labeled_img)
-        # mask = np.zeros(thresh_mask.shape, dtype=int)
-        # for region in regions:
-        #     r0, c0, r1, c1 = region.bbox
-        #     mask[r0:r1, c0:c1] += region.convex_image.astype(int)
-
-        # mask[mask > 0] = 255
-        # mask = mask.astype(np.uint8)
-        # mask = warp_tools.warp_img(mask, img_obj.M, out_shape_rc=img_obj.registered_shape_rc)
-        # mask_list[i] = mask
-
 
     return img_list, img_f_list, img_names, mask_list
 
@@ -291,26 +270,16 @@ class NonRigidZImage(object):
         else:
             reg_mask = self.mask
 
-        # import matplotlib.pyplot as plt
-        # from matplotlib.colors import SymLogNorm
-        # def plt_fig(f, im):
-        #     plt.imshow(im,  norm=SymLogNorm(linthresh=0.03))
-        #     plt.colorbar()
-        #     plt.savefig(f)
-        #     plt.close()
-
         if bk_dxdy is not None:
             if not isinstance(bk_dxdy, np.ndarray):
                 bk_dxdy = np.array(bk_dxdy)
             # Don't allow image to be crumpled/pulled out of bounds before warping
-            # for_reg_dxdy = warp_tools.filter_dxdy(bk_dxdy, self.mask)
             for_reg_dxdy = bk_dxdy.copy()
             for_reg_dxdy[0][self.mask == 0] = 0
             for_reg_dxdy[1][self.mask == 0] = 0
             moving_img = warp_tools.warp_img(self.image, bk_dxdy=for_reg_dxdy)
 
         else:
-            # print(f"{self.name} aligning to reference")
             moving_img = self.image.copy()
             for_reg_dxdy = None
             bk_dxdy = np.array([np.zeros(moving_img.shape[0:2]), np.zeros(moving_img.shape[0:2])])
@@ -497,7 +466,6 @@ class SerialNonRigidRegistrar(object):
         self.summary = None
         self.generate_non_rigid_obj_list(reference_img_f, moving_to_fixed_xy)
         self.mask = mask
-        # self.set_mask(mask)
 
     def create_mask(self):
         temp_mask = np.zeros(self.shape, dtype=np.uint8)
@@ -625,19 +593,8 @@ class SerialNonRigidRegistrar(object):
                 current_dxdy = None
             else:
                 current_dxdy = updated_dxdy
-            # current_dxdy = fixed_obj.bk_dxdy
-            print(f"aligning {moving_obj.name} to {fixed_obj.name}")
 
-            # fixed_mask = warp_tools.warp_img(fixed_obj.mask, bk_dxdy=fixed_obj.bk_dxdy)
-            # moving_mask = warp_tools.warp_img(moving_obj.mask, bk_dxdy=current_dxdy)
-            # # Aligning only to area of overlap should prevent trying to align edges of images
-            # # fixed_mask = fixed_obj.mask
-            # # moving_mask = moving_obj.mask
-            # overlap_mask = np.zeros_like(moving_obj.mask)
-            # overlap_mask[np.where((fixed_mask > 0) &
-            #                       (moving_mask > 0))] = 255
             overlap_mask = None
-            #print("using overlap non rigid mask")
             updated_dxdy = moving_obj.calc_deformation(fixed_obj.registered_img,
                                         non_rigid_reg_class,
                                         current_dxdy,
