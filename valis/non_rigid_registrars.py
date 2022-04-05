@@ -211,7 +211,6 @@ class NonRigidRegistrar(object):
         self.fixed_img = fixed_img
 
         if mask is None:
-            # mask = self.create_mask()
             mask = np.full(self.moving_img.shape[0:2], 255, dtype=np.uint8)
 
         self.mask = mask
@@ -575,7 +574,6 @@ class NonRigidRegistrarGroupwise(NonRigidRegistrar):
         self.img_list = img_list
         self.size = len(img_list)
         if mask is None:
-            # mask = self.create_mask()
             mask = np.full(self.img_list[0].shape[0:2], 255, dtype=np.uiint8)
 
         self.mask = mask
