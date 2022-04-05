@@ -342,7 +342,7 @@ DEFAULT_NON_RIGID_KWARGS = {}
 # Cropping options
 CROP_OVERLAP = "overlap"
 CROP_REF = "reference"
-
+CROP_NONE = "all"
 
 def init_jvm():
     """Initialize JVM for BioFormats
@@ -473,6 +473,9 @@ class Slide(object):
     bg_px_pos_rc : tuple
         Position of pixel that has the background color
 
+    bg_color : list, optional
+        Color of background pixels
+
     """
 
     def __init__(self, src_f, image, val_obj, reader):
@@ -533,6 +536,7 @@ class Slide(object):
 
         self.crop = None
         self.bg_px_pos_rc = (0, 0)
+        self.bg_color = None
 
     def slide2image(self, level, series=None, xywh=None):
         """Convert slide to image
@@ -754,10 +758,24 @@ class Slide(object):
 
     #     return np.array(crop_xywh), mask
 
+    def get_crop_method(self, crop):
+        """Get string or logic defining how to crop the image
+        """
+        if crop is True:
+            crop_method = self.crop
+        else:
+            crop_method = crop
+
+        do_crop = crop_method in [CROP_REF, CROP_OVERLAP]
+
+        if do_crop:
+            return crop_method
+        else:
+            return False
+
     def get_bg_color_px_pos(self):
         """Get position of pixel that has color used for background
         """
-        dir(self)
         if self.img_type == slide_tools.IHC_NAME:
             #RGB. Get brightest pixel
             eps = np.finfo("float").eps
@@ -775,7 +793,7 @@ class Slide(object):
             bg_px = np.unravel_index(np.argmin(sum_img, axis=None), sum_img.shape)
 
         self.bg_px_pos_rc = bg_px
-
+        self.bg_color = list(self.image[bg_px])
 
     def warp_img(self, img=None, non_rigid=True, crop=True):
         """Warp an image using the registration parameters
@@ -825,14 +843,9 @@ class Slide(object):
         else:
             same_shape = True
             out_shape_rc = self.reg_img_shape_rc
-            img_scale_rc = np.ones(2)
 
-        if crop is not False:
-            if crop is True:
-                crop_method = self.crop
-            else:
-                crop_method = crop
-
+        crop_method = self.get_crop_method(crop)
+        if crop_method is not False:
             if crop_method == CROP_REF:
                 ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
                 if not same_shape:
@@ -846,6 +859,11 @@ class Slide(object):
         else:
             bbox_xywh = None
 
+        if img.ndim == self.image.ndim:
+            bg_color = self.bg_color
+        else:
+            bg_color = None
+
         warped_img = \
             warp_tools.warp_img(img, M=self.M,
                                 bk_dxdy=dxdy,
@@ -853,7 +871,7 @@ class Slide(object):
                                 transformation_src_shape_rc=self.processed_img_shape_rc,
                                 transformation_dst_shape_rc=self.reg_img_shape_rc,
                                 bbox_xywh=bbox_xywh,
-                                bg_px_pos_rc=self.bg_px_pos_rc)
+                                bg_color=bg_color)
 
         return warped_img
 
@@ -904,12 +922,8 @@ class Slide(object):
         else:
             aligned_slide_shape = self.aligned_slide_shape_rc
 
-        if crop is not False:
-            if crop is True:
-                crop_method = self.crop
-            else:
-                crop_method = crop
-
+        crop_method = self.get_crop_method(crop)
+        if crop_method is not False:
             if crop_method == CROP_REF:
                 ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
                 scaled_aligned_shape_rc = ref_slide.slide_dimensions_wh[level][::-1]
@@ -923,9 +937,11 @@ class Slide(object):
         else:
             slide_bbox_xywh = None
 
-        slide_shape = self.slide_dimensions_wh[level]
-        scale_rc = slide_shape[::-1]/self.processed_img_shape_rc
-        slide_bg_px_rc = np.round(np.array(self.bg_px_pos_rc)*scale_rc).astype(int)
+        if src_f == self.src_f:
+            bg_color = self.bg_color
+        else:
+            bg_color = None
+
         warped_slide = slide_tools.warp_slide(src_f, M=self.M,
                                               in_shape_rc=self.processed_img_shape_rc,
                                               aligned_img_shape_rc=self.reg_img_shape_rc,
@@ -933,7 +949,7 @@ class Slide(object):
                                               dxdy=bk_dxdy, level=level, series=self.series,
                                               interp_method=interp_method,
                                               bbox_xywh=slide_bbox_xywh,
-                                              bg_px_pos_rc=slide_bg_px_rc)
+                                              bg_color=bg_color)
         return warped_slide
 
     @valtils.deprecated_args(crop_to_overlap="crop")
@@ -1096,7 +1112,6 @@ class Slide(object):
 
         if non_rigid:
             fwd_dxdy = self.fwd_dxdy
-
         else:
             fwd_dxdy = None
 
@@ -1107,12 +1122,9 @@ class Slide(object):
                                        dst_shape_rc=aligned_slide_shape,
                                        fwd_dxdy=fwd_dxdy)
 
-        if crop is not False:
-            if crop is True:
-                crop_method = self.crop
-            else:
-                crop_method = crop
-
+        crop_method = self.get_crop_method(crop)
+        if crop_method is not False:
+            print(f"cropping using {crop_method}")
             if crop_method == CROP_REF:
                 ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
                 if isinstance(slide_level, int):
@@ -2006,7 +2018,7 @@ class Valis(object):
             slide_obj.processed_img_shape_rc = np.array(normed_img.shape[0:2])
             io.imsave(slide_obj.processed_img_f, normed_img)
 
-    def create_thumbnail(self, img, rescale=True):
+    def create_thumbnail(self, img, rescale_color=False):
         """Create thumbnail image to view results
         """
         scaling = np.min(self.thumbnail_size/np.array(img.shape[:2]))
@@ -2014,7 +2026,8 @@ class Valis(object):
             thumbnail = warp_tools.rescale_img(img, scaling)
         else:
             thumbnail = img
-        if rescale:
+
+        if rescale_color is True:
             thumbnail = exposure.rescale_intensity(thumbnail, out_range=(0, 255)).astype(np.uint8)
 
         return thumbnail
@@ -2148,6 +2161,25 @@ class Valis(object):
 
         return mask, mask_bbox_xywh
 
+    def get_null_overlap_mask(self, rigid_registrar):
+        """Create mask that covers all of the image.
+        Not really a mask
+
+
+        Returns
+        -------
+        mask : ndarray
+            Mask that covers reference image in registered images
+        mask_bbox_xywh : tuple of int
+            XYWH of mask in reference image
+
+        """
+        reg_shape = rigid_registrar.img_obj_list[0].registered_shape_rc
+        mask = np.full(reg_shape, 255, dtype=np.uint8)
+        mask_bbox_xywh = np.array([0, 0, reg_shape[1], reg_shape[0]])
+
+        return mask, mask_bbox_xywh
+
     def create_masks(self, rigid_registrar):
         """Create masks based on rigid registration
 
@@ -2155,6 +2187,7 @@ class Valis(object):
         mask_dict = {}
         mask_dict[CROP_REF] =  self.get_ref_img_mask(rigid_registrar)
         mask_dict[CROP_OVERLAP] = self.get_all_overlap_mask(rigid_registrar)
+        mask_dict[CROP_NONE] = self.get_null_overlap_mask(rigid_registrar)
         self.mask_dict = mask_dict
 
     def get_mask(self, overlap_type):
@@ -2169,8 +2202,10 @@ class Valis(object):
             XYWH for bounding box around mask
 
         """
-        return self.mask_dict[overlap_type]
+        if overlap_type is None:
+            overlap_type = CROP_NONE
 
+        return self.mask_dict[overlap_type]
 
     def rigid_register(self):
         """Rigidly register slides
@@ -2274,12 +2309,6 @@ class Valis(object):
                 img_to_warp = slide_obj.image
 
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=self.crop)
-
-            # if warped_img.ndim == 2:
-            #     warped_img[overlap_mask == 0] = 0
-            # else:
-            #     warped_img[overlap_mask == 0] = [0] * warped_img.shape[2]
-
             warped_img = self.create_thumbnail(warped_img, self.thumbnail_size)
             io.imsave(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8))
 
@@ -2309,6 +2338,7 @@ class Valis(object):
 
         """
 
+        # rigid_registrar = self.rigid_register
         non_rigid_registrar = serial_non_rigid.register_images(src=rigid_registrar,
                                                                **self.non_rigid_reg_kwargs)
         self.end_non_rigid_time = time()
@@ -2350,7 +2380,7 @@ class Valis(object):
 
             # Save deformation grid
             scaling = np.min(self.thumbnail_size/np.array(slide_obj.reg_img_shape_rc[:2]))
-            thumbnail_bk_dxdy = self.create_thumbnail(np.dstack(slide_obj.bk_dxdy)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c], rescale=False)
+            thumbnail_bk_dxdy = self.create_thumbnail(np.dstack(slide_obj.bk_dxdy)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c])
             thumbnail_bk_dxdy *= scaling
 
             temp_draw = slide_obj.warp_img(rigid_registrar.img_obj_dict[slide_name].image, non_rigid=True, crop=self.crop)
@@ -2979,36 +3009,104 @@ class Valis(object):
         self.rigid_registrar = None
         self.non_rigid_registrar = None
 
+    # def get_aligned_slide_shape_og(self, level=0):
+    #     """Determine the shape of aligned slide at the spefified level
+    #     """
+
+    #     if level == 0:
+    #         if self.aligned_slide_shape_rc is not None:
+    #             return self.aligned_slide_shape_rc
+
+    #     aligned_slide_s = 0
+    #     for slide_obj in self.slide_dict.values():
+    #         if np.issubdtype(type(level), np.integer):
+    #             slide_shape_rc = slide_obj.slide_dimensions_wh[level][::-1]
+    #         else:
+    #             slide_shape_rc = np.array(level)
+
+    #         sy,  sx = slide_shape_rc/np.array(slide_obj.processed_img_shape_rc)
+    #         M = warp_tools.scale_M(slide_obj.M, sx, sy)
+    #         slide_corners_rc = warp_tools.get_corners_of_image(slide_shape_rc)
+    #         warped_corners_xy = warp_tools.warp_xy(slide_corners_rc[:, ::-1], M)
+
+    #         slide_w = int(np.ceil(np.max(warped_corners_xy[:, 0]) - np.min(warped_corners_xy[:, 0])))
+    #         slide_h = int(np.ceil(np.max(warped_corners_xy[:, 1]) - np.min(warped_corners_xy[:, 1])))
+
+    #         slide_sysx = np.array([slide_h, slide_w])/np.array(slide_obj.reg_img_shape_rc)
+
+    #         aligned_slide_s = max(aligned_slide_s, max(slide_sysx))
+
+    #     aligned_out_shape_rc = np.ceil(np.array(slide_obj.reg_img_shape_rc)*aligned_slide_s).astype(int)
+
+    #     return aligned_out_shape_rc
+
+
     def get_aligned_slide_shape(self, level=0):
         """Determine the shape of aligned slide at the spefified level
+        Based on shape of reference image
         """
 
         if level == 0:
             if self.aligned_slide_shape_rc is not None:
                 return self.aligned_slide_shape_rc
 
-        aligned_slide_s = 0
-        for slide_obj in self.slide_dict.values():
-            if np.issubdtype(type(level), np.integer):
-                slide_shape_rc = slide_obj.slide_dimensions_wh[level][::-1]
-            else:
-                slide_shape_rc = np.array(level)
+        #array([55241, 51739])
+        ref_slide = self.slide_dict[valtils.get_name(self.reference_img_f)]
+        if np.issubdtype(type(level), np.integer):
+            slide_shape_rc = ref_slide.slide_dimensions_wh[level][::-1]
+        else:
+            slide_shape_rc = np.array(level)
+        s_rc = (slide_shape_rc/np.array(ref_slide.processed_img_shape_rc))
+        aligned_out_shape_rc = np.ceil(ref_slide.reg_img_shape_rc*s_rc).astype(int)
 
-            sy,  sx = slide_shape_rc/np.array(slide_obj.processed_img_shape_rc)
-            M = warp_tools.scale_M(slide_obj.M, sx, sy)
-            slide_corners_rc = warp_tools.get_corners_of_image(slide_shape_rc)
-            warped_corners_xy = warp_tools.warp_xy(slide_corners_rc[:, ::-1], M)
-
-            slide_w = int(np.ceil(np.max(warped_corners_xy[:, 0]) - np.min(warped_corners_xy[:, 0])))
-            slide_h = int(np.ceil(np.max(warped_corners_xy[:, 1]) - np.min(warped_corners_xy[:, 1])))
-
-            slide_sysx = np.array([slide_h, slide_w])/np.array(slide_obj.reg_img_shape_rc)
-
-            aligned_slide_s = max(aligned_slide_s, max(slide_sysx))
-
-        aligned_out_shape_rc = np.ceil(np.array(slide_obj.reg_img_shape_rc)*aligned_slide_s).astype(int)
+        print("new shape based on ref is", aligned_out_shape_rc)
 
         return aligned_out_shape_rc
+
+
+
+    # def get_aligned_slide_shape2(self, level=0):
+    #     """Determine the shape of aligned slide at the spefified level
+    #     Seems to work ok for reference image, but not the rest
+    #     """
+
+    #     if level == 0:
+    #         if self.aligned_slide_shape_rc is not None:
+    #             return self.aligned_slide_shape_rc
+
+    #     #array([55241, 51739])
+    #     aligned_slide_s = 0
+    #     for slide_obj in self.slide_dict.values():
+    #         if np.issubdtype(type(level), np.integer):
+    #             slide_shape_rc = slide_obj.slide_dimensions_wh[level][::-1]
+    #         else:
+    #             slide_shape_rc = np.array(level)
+
+    #         sxy = (slide_shape_rc/np.array(slide_obj.processed_img_shape_rc))[::-1]
+    #         # M = warp_tools.scale_M(slide_obj.M, sx, sy)
+    #         slide_corners_rc = warp_tools.get_corners_of_image(slide_shape_rc)
+    #         warped_corners_xy = warp_tools.warp_xy(slide_corners_rc[::-1],
+    #                                                M=slide_obj.M,
+    #                                                src_shape_rc=slide_shape_rc,
+    #                                                transformation_src_shape_rc=slide_obj.processed_img_shape_rc,
+    #                                                transformation_dst_shape_rc=slide_obj.reg_img_shape_rc
+    #                                                )
+    #         warped_corners_xy *= sxy
+    #         # warped_corners_xy = warp_tools.warp_xy(slide_corners_rc[:, ::-1], M)
+
+    #         slide_w = int(np.ceil(np.max(warped_corners_xy[:, 0]) - np.min(warped_corners_xy[:, 0])))
+    #         slide_h = int(np.ceil(np.max(warped_corners_xy[:, 1]) - np.min(warped_corners_xy[:, 1])))
+
+    #         slide_sysx = np.array([slide_h, slide_w])/np.array(slide_obj.reg_img_shape_rc)
+
+    #         aligned_slide_s = max(aligned_slide_s, max(slide_sysx))
+
+    #     aligned_out_shape_rc = np.ceil(np.array(slide_obj.reg_img_shape_rc)*aligned_slide_s).astype(int)
+    #     print("new shape is", aligned_out_shape_rc)
+    #     print("use this???")
+
+    #     return aligned_out_shape_rc
+
 
     def get_slide(self, src_f):
         """Get Slide

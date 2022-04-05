@@ -2,6 +2,7 @@
 
 """
 
+from turtle import bk
 import numpy as np
 from skimage import transform, io, util
 from tqdm import tqdm
@@ -137,9 +138,31 @@ def get_imgs_rigid_reg(serial_rigid_reg):
         img_names[i] = img_obj.name
         img_f_list[i] = img_obj.full_img_f
 
+        ### Moving mask
         temp_mask = np.full_like(img_obj.image, 255)
         img_mask = warp_tools.warp_img(temp_mask, M=img_obj.M, out_shape_rc=img_obj.registered_img.shape)
         mask_list[i] = img_mask
+
+        ### Tissue mask
+        # print("KEEP USING ADAPTIVE TISSUE MASKS in serial_non_rigid.py???")
+        # from skimage import exposure, filters, measure
+        # img = img_obj.image
+        # eq_img = exposure.equalize_adapthist(img)
+        # t = filters.threshold_otsu(eq_img)
+        # thresh_mask = eq_img > t
+
+        # labeled_img = measure.label(thresh_mask, connectivity=2)
+        # regions = measure.regionprops(labeled_img)
+        # mask = np.zeros(thresh_mask.shape, dtype=int)
+        # for region in regions:
+        #     r0, c0, r1, c1 = region.bbox
+        #     mask[r0:r1, c0:c1] += region.convex_image.astype(int)
+
+        # mask[mask > 0] = 255
+        # mask = mask.astype(np.uint8)
+        # mask = warp_tools.warp_img(mask, img_obj.M, out_shape_rc=img_obj.registered_shape_rc)
+        # mask_list[i] = mask
+
 
     return img_list, img_f_list, img_names, mask_list
 
@@ -227,6 +250,8 @@ class NonRigidZImage(object):
         Finds the non-rigid deformation fields that align this ("moving") image
         to the "fixed" image
 
+
+
         Parameters
         ----------
         registered_fixed_image : ndarray
@@ -257,40 +282,40 @@ class NonRigidZImage(object):
 
         """
 
-        ### TODO
-        """
-        * make copy of bkdxdy and and set values outside image's mask to 0.
-        * Makes sure that other deformations won't affect this image
-        """
-        if bk_dxdy is not None:
-            if self.mask is not None:
-                for_reg_dx, for_reg_dy = bk_dxdy.copy()
-                for_reg_dx[self.mask==0] = 0
-                for_reg_dy[self.mask==0] = 0
-                for_reg_dxdy = [for_reg_dx, for_reg_dy]
-            else:
-                for_reg_dxdy = bk_dxdy
-
-            current_warp_map = warp_tools.get_warp_map(dxdy=for_reg_dxdy)
-            moving_img = transform.warp(self.image, current_warp_map,
-                                        preserve_range=True).astype(np.uint8)
-        else:
-            moving_img = self.image.copy()
-            for_reg_dxdy = None
-
-        non_rigid_reg = non_rigid_reg_class(params=params)
-
         if mask is not None:
             if self.mask is not None:
                 reg_mask = np.zeros(mask.shape, dtype=np.uint8)
-                reg_mask[(mask > 0 ) & (self.mask > 0)] = 255
+                reg_mask[(mask > 0) & (self.mask > 0)] = 255
             else:
                 reg_mask = mask
         else:
-            if self.mask is not None:
-                reg_mask = self.mask
-            else:
-                reg_mask = None
+            reg_mask = self.mask
+
+        # import matplotlib.pyplot as plt
+        # from matplotlib.colors import SymLogNorm
+        # def plt_fig(f, im):
+        #     plt.imshow(im,  norm=SymLogNorm(linthresh=0.03))
+        #     plt.colorbar()
+        #     plt.savefig(f)
+        #     plt.close()
+
+        if bk_dxdy is not None:
+            if not isinstance(bk_dxdy, np.ndarray):
+                bk_dxdy = np.array(bk_dxdy)
+            # Don't allow image to be crumpled/pulled out of bounds before warping
+            # for_reg_dxdy = warp_tools.filter_dxdy(bk_dxdy, self.mask)
+            for_reg_dxdy = bk_dxdy.copy()
+            for_reg_dxdy[0][self.mask == 0] = 0
+            for_reg_dxdy[1][self.mask == 0] = 0
+            moving_img = warp_tools.warp_img(self.image, bk_dxdy=for_reg_dxdy)
+
+        else:
+            # print(f"{self.name} aligning to reference")
+            moving_img = self.image.copy()
+            for_reg_dxdy = None
+            bk_dxdy = np.array([np.zeros(moving_img.shape[0:2]), np.zeros(moving_img.shape[0:2])])
+
+        non_rigid_reg = non_rigid_reg_class(params=params)
 
         if self.moving_xy is not None and self.fixed_xy is not None and \
            issubclass(non_rigid_reg_class, non_rigid_registrars.NonRigidRegistrarXY):
@@ -307,24 +332,36 @@ class NonRigidZImage(object):
             moving_xy = None
 
         xy_args = {"moving_xy": moving_xy, "fixed_xy": fixed_xy}
+
         warped_moving, moving_grid_img, moving_bk_dxdy = \
             non_rigid_reg.register(moving_img=moving_img,
                                    fixed_img=registered_fixed_image,
                                    mask=reg_mask,
                                    **xy_args)
 
-        bk_dxdy_from_ref = [bk_dxdy[0] + moving_bk_dxdy[0],
-                            bk_dxdy[1] + moving_bk_dxdy[1]]
+        if self.mask is not None:
+            # Only add new transformations
+            moving_bk_dxdy[0][reg_mask == 0] = 0
+            moving_bk_dxdy[1][reg_mask == 0] = 0
 
-        self.bk_dxdy = bk_dxdy_from_ref
-        self.fwd_dxdy = warp_tools.get_inverse_field(bk_dxdy_from_ref)
+        bk_dxdy_from_ref = np.array([bk_dxdy[0] + moving_bk_dxdy[0],
+                                     bk_dxdy[1] + moving_bk_dxdy[1]])
 
+        img_bk_dxdy = bk_dxdy_from_ref.copy()
+        if self.mask is not None:
+            # Won't want to warp outside of the image
+            img_bk_dxdy[0][self.mask == 0] = 0
+            img_bk_dxdy[1][self.mask == 0] = 0
 
-        self.warped_grid = viz.color_displacement_grid(*bk_dxdy_from_ref)
+        self.bk_dxdy = img_bk_dxdy
+        self.fwd_dxdy = warp_tools.get_inverse_field(self.bk_dxdy)
+
+        self.warped_grid = viz.color_displacement_grid(*self.bk_dxdy)
         self.registered_img = warp_tools.warp_img(self.image,
                                                   bk_dxdy=self.bk_dxdy,
                                                   out_shape_rc=self.image.shape[0:2])
 
+        return bk_dxdy_from_ref
 
 class SerialNonRigidRegistrar(object):
     """Class that performs serial non-rigid registration, based on results SerialRigidRegistrar
@@ -579,18 +616,33 @@ class SerialNonRigidRegistrar(object):
         """
 
         self.non_rigid_reg_params = non_rigid_reg_params
-
         iter_order = warp_tools.get_alignment_indices(self.size, self.ref_img_idx)
         for moving_idx, fixed_idx in tqdm(iter_order):
             moving_obj = self.non_rigid_obj_list[moving_idx]
             fixed_obj = self.non_rigid_obj_list[fixed_idx]
-            current_dxdy = fixed_obj.bk_dxdy
 
-            moving_obj.calc_deformation(fixed_obj.registered_img,
+            if fixed_obj.stack_idx == self.ref_img_idx:
+                current_dxdy = None
+            else:
+                current_dxdy = updated_dxdy
+            # current_dxdy = fixed_obj.bk_dxdy
+            print(f"aligning {moving_obj.name} to {fixed_obj.name}")
+
+            # fixed_mask = warp_tools.warp_img(fixed_obj.mask, bk_dxdy=fixed_obj.bk_dxdy)
+            # moving_mask = warp_tools.warp_img(moving_obj.mask, bk_dxdy=current_dxdy)
+            # # Aligning only to area of overlap should prevent trying to align edges of images
+            # # fixed_mask = fixed_obj.mask
+            # # moving_mask = moving_obj.mask
+            # overlap_mask = np.zeros_like(moving_obj.mask)
+            # overlap_mask[np.where((fixed_mask > 0) &
+            #                       (moving_mask > 0))] = 255
+            overlap_mask = None
+            #print("using overlap non rigid mask")
+            updated_dxdy = moving_obj.calc_deformation(fixed_obj.registered_img,
                                         non_rigid_reg_class,
                                         current_dxdy,
                                         params=non_rigid_reg_params,
-                                        mask=self.mask)
+                                        mask=overlap_mask)
 
     def register_groupwise(self, non_rigid_reg_class, non_rigid_reg_params=None):
         """Non-rigidly align images as a group
