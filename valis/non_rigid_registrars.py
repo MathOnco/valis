@@ -212,7 +212,7 @@ class NonRigidRegistrar(object):
 
         if mask is None:
             # mask = self.create_mask()
-            mask = np.full(self.moving_img.shape[0:2], 255, dtype=np.uiint8)
+            mask = np.full(self.moving_img.shape[0:2], 255, dtype=np.uint8)
 
         self.mask = mask
 
@@ -1010,7 +1010,7 @@ class OpticalFlowWarper(NonRigidRegistrar):
 
         self.optical_flow_obj = None  # Can't pickle OpenCV objects
 
-        return backward_flow
+        return np.array(backward_flow)
 
 
 class SimpleElastixGroupwiseWarper(NonRigidRegistrarGroupwise):

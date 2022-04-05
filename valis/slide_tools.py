@@ -343,7 +343,7 @@ def um_to_px(um, um_per_px):
 
 def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
                M=None, dxdy=None, level=0, series=None, interp_method="bicubic",
-               bbox_xywh=None, bg_px_pos_rc=(0, 0)):
+               bbox_xywh=None, bg_color=None):
     """ Warp a slide
 
     Warp slide according to `M` and/or `non_rigid_dxdy`
@@ -405,7 +405,7 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
                                       out_shape_rc=aligned_slide_shape_rc,
                                       transformation_src_shape_rc=in_shape_rc,
                                       bbox_xywh=bbox_xywh,
-                                      bg_px_pos_rc=bg_px_pos_rc,
+                                      bg_color=bg_color,
                                       interp_method=interp_method)
 
     # slide_shape_rc = np.array((vips_slide.height,  vips_slide.width))
