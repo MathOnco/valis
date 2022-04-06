@@ -41,3 +41,6 @@ After the registration has completed, the script also saves the registered slide
 
 ## CyCIF registration
 The `register_and_merge_cycif.py` example registers the slides in `examples/example_datasets/cycif`, with results being saved in `examples/expected_results/registration/cycif`. After registration is complete, the slides are registered and merged to create a 7 channel immunofluorescence image, which is saved in `examples/expected_results/registered_slides/cycif`. On a 2018 MacBook pro with a 2.6 GHz Intel Core i7 processor and 32Gb RAM, registration took 1.33 minutes and saving all of the slides took 4.97 seconds.
+
+## Point warping
+This example shows how warp a set of ROI coordinates and use them to slice the ROI from the registered images.

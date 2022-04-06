@@ -45,6 +45,7 @@ results to determine if they aare acceptable. If they
 are, then one can warp and save all of the slides.
 
 """
+
 import time
 import os
 from valis import registration

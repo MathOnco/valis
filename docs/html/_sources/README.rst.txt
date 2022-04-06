@@ -44,16 +44,18 @@ The registration pipeline is fully automated and goes as follows:
 
    #. If the order of images is unknown, they will be optimally ordered based on their feature similarity
 
-   #. Rigid registration is performed serially, with each image being rigidly aligned to the previous image in the stack. VALIS uses feature detection to match and align images, but one can optionally perform a final step that maximizes the mutual information betweeen each pair of images.
+   #. Images will be aligned *towards* (not to) a reference image. If the reference image was not specified, it will automatically be set to the image at the center of the stack.
+
+   #. Rigid registration is performed serially, with each image being rigidly aligned towards the reference image. That is, if the reference image is the 5th in the stack, image 4 will be aligned to 5 (the reference), and then 3 will be aligned to the now registered version of 4, and so on. VALIS uses feature detection to match and align images, but one can optionally perform a final step that maximizes the mutual information betweeen each pair of images.
 
    #. Non-rigid registration is then performed either by:
 
-        * aliging each image towards the center of the stack, composing the deformation fields along the way
-        *  using groupwise registration that non-rigidly aligns the images to a common frame of reference.
+        * aliging each image towards the reference image following the same sequence used during rigid registation.
+        * using groupwise registration that non-rigidly aligns the images to a common frame of reference. Currently this is only possible if `SimpleElastix <https://simpleelastix.github.io>`__ is installed.
 
-   #. Error is measured by calculating the distance between registered matched features in the full resolution image.
+   #. Error is measured by calculating the distance between registered matched features in the full resolution images.
 
-The transformations found by VALIS can then be used to warp the full resolution slides. It is also possible to merge non-RGB registered slides to create a highly multiplexed image. These aligned and/or merged slides can then be saved as ome.tiff images using pyvips.
+The transformations found by VALIS can then be used to warp the full resolution slides. It is also possible to merge non-RGB registered slides to create a highly multiplexed image. These aligned and/or merged slides can then be saved as ome.tiff images.
 
 In addition to warping images and slides, VALIS can also warp point data, such as cell centoids or ROI coordinates.
 
@@ -61,8 +63,7 @@ Full documentation can be found at `ReadTheDocs <https://valis.readthedocs.io/en
 
 .. contents:: Table of Contents
    :local:
-   :depth: 2
-
+   :depth: 1
 
 Installation
 ============
@@ -164,11 +165,12 @@ Slide registration
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/challenging_dataset_adincar33.png
 
 .. important::
-    One of the most imporant parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. If registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values will be needed so that the tissue is at a high enough resolution.
+    One of the most imporant parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values will be needed so that the tissue is at a high enough resolution. Finally, larger values can potentially generate more accurate registrations, but will be slower, require more memory, and won't always produce better results.
 
 
 .. important::
     If the order of slices is known and needs to be preserved, such as building a 3D image, set :code:`imgs_ordered=True` when intialzing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, be sure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff ... 10.tiff, etc...
+
 
 In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process simply involves the creation of a Valis object, which is what conducts the registration.
 
@@ -180,7 +182,7 @@ In this example, the slides that need to be registered are located in :code:`/pa
     registered_slide_dst_dir = "./slide_registration_example/registered_slides"
 
     # Create a Valis object and use it to register the slides in slide_src_dir
-    registrar = registration.Valis(slide_src_dir, results_dst_dir, max_processed_image_dim_px=1000)
+    registrar = registration.Valis(slide_src_dir, results_dst_dir)
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
 After registration is complete, one can view the results to determine if they are acceptable. In this example, the results are located in  :code:`./slide_registration_example`. Inside this folder will be 6 subfolders:
@@ -206,12 +208,19 @@ After registration is complete, one can view the results to determine if they ar
 
 #. **processed** shows thumnails of the processed images. These are thumbnails of the images that are actually used to perform the registration. The pre-processing and normalization methods should try to make these images look as similar as possible.
 
-If the results look good, then one can warp and save all of the slides as ome.tiffs.
+
+If the results look good, then one can warp and save all of the slides as ome.tiffs. When saving the images, there are three cropping options:
+
+#. :code:`crop="overlap"` will crop the images to the region where all of the images overlap.
+#. :code:`crop="reference"` will crop the images to the region where they overlap with the reference image
+#. :code:`crop="all"` will not perform any cropping. While this keep the all of the image, the dimensions of the registered image can be substantially larger than one that was cropped, as it will need to be large enough accomodate all of the other images.
+
+While the cropping setting can also be set when initializing the :code:`Valis` object, any of the above cropping methods can be used when saving the images.
 
 .. code-block:: python
 
     # Save all registered slides as ome.tiff
-    registrar.warp_and_save_slides(registered_slide_dst_dir)
+    registrar.warp_and_save_slides(registered_slide_dst_dir, crop="overlap")
 
     # Kill the JVM
     registration.kill_jvm()
@@ -272,12 +281,15 @@ Check the results in :code:`results_dst_dir`, and if the look good merge and sav
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/merge_ome_tiff.png
 
+
 Warping points
 --------------
-Once the registration parameters have been found, VALIS can be used to warp point data, such as cell coordinates, mask polygon vertices, etc... In this example, slides will be registered, and the registration parameters will then be used warp cell positions located in a separate .csv. This accomplished by accessing the :code:`Slide` object associated with each registered slide. This is accomplished by passing the slide's filename (with or without the extension) to :code:`registrar.get_slide`. This :code:`Slide` object can the be used to warp the individual slide and/or points associated with the un-registered slide. This can be useful in cases where one has already performed an analysis on the un-registered slides, but would now like to use that data for a larger spatial analysis.
+Once the registration parameters have been found, VALIS can be used to warp point data, such as cell coordinates, mask polygon vertices, etc... In this example, slides will be registered, and the registration parameters will then be used warp cell positions located in a separate .csv. This accomplished by accessing the :code:`Slide` object associated with each registered slide. This is done by passing the slide's filename (with or without the extension) to :code:`registrar.get_slide`. This :code:`Slide` object can the be used to warp the individual slide and/or points associated with the un-registered slide. This can be useful in cases where one has already performed an analysis on the un-registered slides, as one can just warp the point data, as opposed to warping each slide and re-conducting the analysis.
 
 .. important::
     It is essential that the image from which the coordinates are derived has the same aspect ratio as the image used for registration. That is, the images used for registration must be scaled up/down versions of the image from which the coordinates are taken. For example, registration may be performed on lower resolution images (an upper image pyramid level), and applied to cell coordinates found by performing cell segmenation on the full resolution (pyramid level 0) image. The default is to assume that the points came from the highest resolution image, but this can be changed by setting :code:`pt_level` to either the pyramid level of the image the points originated, or its dimensions (width, height, in pixels). Also, the coordinates need to be in pixel units, not physical units. Finally, be sure that the coordinates are X,Y (column, row), with the origin being the top left corner of the image.
+
+In this first example, cell segmentation and phenotyping has already been performed on the unregistered images. We can now use the :code:`Valis` object that performed the registration to warp the cell positions to their location in the registered images.
 
 .. code-block:: python
 
@@ -285,15 +297,16 @@ Once the registration parameters have been found, VALIS can be used to warp poin
     import numpy as np
     import pandas as pd
     import pathlib
+    import pickle
     from valis import registration
 
     slide_src_dir = "path/to/slides"
     point_data_dir = "path/to/cell_positions"
     results_dst_dir = "./point_warping_example"
 
-    # Create a Valis object and use it to register the slides in slide_src_dir
-    registrar = registration.Valis(slide_src_dir, results_dst_dir)
-    rigid_registrar, non_rigid_registrar, error_df = registrar.register()
+    # Load a Valis object that has already registered the images.
+    registrar_f = "path/to/results/data/registrar.pickle"
+    registrar = pickle.load(open(registrar_f, 'rb'))
 
     # Get .csv files containing cell coordinates
     point_data_list = list(pathlib.Path(point_data_dir).rglob("*.csv"))
@@ -328,6 +341,73 @@ Once the registration parameters have been found, VALIS can be used to warp poin
 Here is a comparison of before and after applying registration to cell positions found in the original un-aligned images:
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/point_warping.png
+
+In this second example, a region of interest (ROI) was marked in one of the unregistered images, in this case "ihc_2.ome.tiff" . Using the :code:`Slide` object associated with "ihc_2.ome.tiff", we can warp those ROI coordinates to their position in the registered images, and then use those to slice the registered ROI from each slide. Because VALIS uses pyvips to read and warp the slides, this process does not require the whole image to be loaded into memory and warped. As such, this is fast and does not require much memory. It's also worth noting that because the points are being warped to the registred coordinate system, the slide that is the source of the ROI coordinates does not have to be the same slide that was treated as the reference image during registration.
+
+.. code-block:: python
+
+    import os
+    import pickle
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import pathlib
+    from valis import registration, warp_tools
+
+    # Load a registrar that has already registered the images.
+    registrar_f = "./expected_results/registration/ihc/data/ihc_registrar.pickle"
+    registrar = pickle.load(open(registrar_f, 'rb'))
+
+    # Set the pyramid level from which the ROI coordinates originated. Usually 0 when working with slides.
+    COORD_LEVEL = 0
+
+    # ROI coordinates, in microns. These came from the unregistered slide, "ihc_2.ome.tiff"
+    bbox_xywh_um = [14314, 13601, 3000, 3000]
+    bbox_xy_um = warp_tools.bbox2xy(bbox_xywh_um)
+
+    # Get slide from which the ROI coordinates originated
+    pt_source_img_f = "ihc_2.ome.tiff"
+    pt_source_slide = registrar.get_slide(pt_source_img_f)
+
+    # Convert coordinates to pixel units
+    um_per_px = pt_source_slide.reader.scale_physical_size(COORD_LEVEL)[0:2]
+    bbox_xy_px = bbox_xy_um/np.array(um_per_px)
+
+    # Warp coordinates to position in registered slides
+    bbox_xy_in_registered_img = pt_source_slide.warp_xy(bbox_xy_px,
+                                                        slide_level=COORD_LEVEL,
+                                                        pt_level=COORD_LEVEL)
+
+    bbox_xywh_in_registered_img = warp_tools.xy2bbox(bbox_xy_in_registered_img)
+    bbox_xywh_in_registered_img = np.round(bbox_xywh_in_registered_img).astype(int)
+
+    # Create directory where images will be saved
+    dst_dir = "./expected_results/roi"
+    pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
+
+    # Warp each slide and slice the ROI from it using each pyips.Image's "extract_area" method.
+    fig, axes = plt.subplots(2, 3, figsize=(12, 8), sharex=True, sharey=True)
+    ax = axes.ravel()
+    for i, slide in enumerate(registrar.slide_dict.values()):
+        warped_slide = slide.warp_slide(level=COORD_LEVEL)
+        roi_vips = warped_slide.extract_area(*bbox_xywh_in_registered_img)
+        roi_img = warp_tools.vips2numpy(roi_vips)
+        ax[i].imshow(roi_img)
+        ax[i].set_title(slide.name)
+        ax[i].set_axis_off()
+
+    fig.delaxes(ax[5]) # Only 5 images, so remove 6th subplot
+    out_f = os.path.join(dst_dir, f"{registrar.name}_roi.png")
+    plt.tight_layout()
+    plt.savefig(out_f)
+    plt.close()
+
+    # Opening the slide initialized the JVM, so it needs to be killed
+    registration.kill_jvm()
+
+The extracted and registered ROI are shown below:
+
+.. .. image::  https://github.com/MathOnco/valis/raw/main/examples/expected_results/roi/ihc_roi.png
+.. image::  ../examples/expected_results/roi/ihc_roi.png
 
 Converting slides to ome.tiff
 -----------------------------
@@ -378,6 +458,11 @@ The defaults used by VALIS work well, but one may wish to try some other values/
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
     registration.kill_jvm() # Kill the JVM
+
+Change Log
+==========
+
+.. include:: CHANGELOG.rst
 
 License
 -------

@@ -49,6 +49,7 @@ channel names dictionary to the Valis.warp_and_merge_slides
 method.
 
 """
+
 import time
 import os
 from valis import registration, valtils
@@ -77,7 +78,6 @@ def cnames_from_filename(src_f):
     return ["DAPI"] + f.split(" ")
 
 
-
 channel_name_dict = {f: cnames_from_filename(f) for
                      f in registrar.original_img_list}
 
@@ -90,6 +90,6 @@ merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
 stop = time.time()
 elapsed = stop - start
 
-print(f"Time to merge and save slides is {elapsed/60} minutes")
+print(f"Time to warp, merge, and save slides is {elapsed/60} minutes")
 
 registration.kill_jvm()

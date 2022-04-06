@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.serial_non_rigid &mdash; valis &#34;1.0.0rc4&#34;
+  <title>valis.serial_non_rigid &mdash; valis &#34;1.0.0rc5&#34;
  documentation</title>
   
 
@@ -171,10 +171,9 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">transform</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">io</span><span class="p">,</span> <span class="n">util</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">imghdr</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
@@ -185,106 +184,6 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">valtils</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">serial_rigid</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">viz</span>
-
-
-<span class="k">def</span> <span class="nf">get_ref_img_idx</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get index of reference image</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    img_f_list : list of str</span>
-<span class="sd">        List of image file names</span>
-
-<span class="sd">    ref_img_name : str, optional</span>
-<span class="sd">        Name of image that will be treated as the center of the stack.</span>
-<span class="sd">        If None, the index of the middle image will be returned.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    ref_img_idx : int</span>
-<span class="sd">        Index of reference image in img_f_list. Warnings are raised</span>
-<span class="sd">        if `ref_img_name` matches either 0 or more than 1 images in `img_f_list`.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">n_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">ref_img_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">n_imgs</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">n_imgs</span> <span class="o">//</span> <span class="mi">2</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">ref_img_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">ref_img_name</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">name_matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">ref_img_name</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">f</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
-                        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">img_f_list</span><span class="p">]</span>
-
-        <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_imgs</span><span class="p">)</span> <span class="k">if</span> <span class="n">name_matches</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
-        <span class="n">n_matches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_img_idx</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">n_matches</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">warning_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No files in img_f_list match </span><span class="si">{</span><span class="n">ref_img_name</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">warning_msg</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="n">n_matches</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">ref_img_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="k">elif</span> <span class="n">n_matches</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">macthing_files</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ref_img_idx</span><span class="p">)</span>
-            <span class="n">warning_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;More than 1 file in img_f_list matches </span><span class="si">{</span><span class="n">ref_img_name</span><span class="si">}</span><span class="s2">. These files are: </span><span class="si">{</span><span class="n">macthing_files</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">warning_msg</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">ref_img_idx</span>
-
-
-<span class="k">def</span> <span class="nf">get_alignment_indices</span><span class="p">(</span><span class="n">n_imgs</span><span class="p">,</span> <span class="n">ref_img_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get indices to align in stack.</span>
-
-<span class="sd">    Indices go from bottom to center, then top to center. In each case,</span>
-<span class="sd">    the alignments go from closest to the center, to next closet, etc...</span>
-<span class="sd">    The reference image is exclued from this list.</span>
-<span class="sd">    For example, if `ref_img_idx` is 2, then the order is</span>
-<span class="sd">    [(1, 2), (0, 1), (3, 2), ...,  (`n_imgs`-1, `n_imgs` - 2)].</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    n_imgs : int</span>
-<span class="sd">        Number of images in the stack</span>
-
-<span class="sd">    ref_img_idx : int, optional</span>
-<span class="sd">        Position of reference image. If None, then this will set to</span>
-<span class="sd">        the center of the stack</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    matching_indices : list of tuples</span>
-<span class="sd">        Each element of `matching_indices` contains a tuple of stack</span>
-<span class="sd">        indices. The first value is the index of the moving/current/from</span>
-<span class="sd">        image, while the second value is the index of the moving/next/to</span>
-<span class="sd">        image.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="n">ref_img_idx</span><span class="p">:</span>
-        <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">n_imgs</span><span class="o">//</span><span class="mi">2</span>
-
-    <span class="n">matching_indices</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_imgs</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ref_img_idx</span><span class="p">)):</span>
-        <span class="n">current_idx</span> <span class="o">=</span> <span class="n">i</span>
-        <span class="n">next_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">matching_indices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_idx</span><span class="p">,</span> <span class="n">next_idx</span><span class="p">)</span>
-        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ref_img_idx</span><span class="p">,</span> <span class="n">n_imgs</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="n">current_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">next_idx</span> <span class="o">=</span> <span class="n">i</span>
-        <span class="n">matching_indices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_idx</span><span class="p">,</span> <span class="n">next_idx</span><span class="p">)</span>
-        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="k">return</span> <span class="n">matching_indices</span>
 
 
 <span class="k">def</span> <span class="nf">get_matching_xy_from_rigid_registrar</span><span class="p">(</span><span class="n">rigid_registrar</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -312,10 +211,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">img_f_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">full_img_f</span> <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="n">rigid_registrar</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">]</span>
-    <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">get_ref_img_idx</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="p">)</span>
+    <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_ref_img_idx</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="p">)</span>
     <span class="n">n_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">)</span>
 
-    <span class="n">from_to_indices</span> <span class="o">=</span> <span class="n">get_alignment_indices</span><span class="p">(</span><span class="n">n_imgs</span><span class="p">,</span> <span class="n">ref_img_idx</span><span class="p">)</span>
+    <span class="n">from_to_indices</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_alignment_indices</span><span class="p">(</span><span class="n">n_imgs</span><span class="p">,</span> <span class="n">ref_img_idx</span><span class="p">)</span>
     <span class="n">from_to_kp_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">from_to_indices</span><span class="p">:</span>
 
@@ -355,6 +254,8 @@
 <span class="sd">    img_names : list of str</span>
 <span class="sd">        List of names for each image. Created by removing the extension</span>
 
+<span class="sd">    mask_list : list of ndarray</span>
+<span class="sd">        List of masks used for registration</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">img_f_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">src_dir</span><span class="p">)</span> <span class="k">if</span>
@@ -363,11 +264,12 @@
     <span class="n">valtils</span><span class="o">.</span><span class="n">sort_nicely</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">)</span>
 
     <span class="n">img_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">io</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">src_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">img_f_list</span><span class="p">]</span>
-    <span class="c1"># assert(img_list[0].dtype == np.uint8), valtils.print_warning(&quot;images must be uint8&quot;)</span>
 
     <span class="n">img_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">valtils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">img_f_list</span><span class="p">]</span>
 
-    <span class="k">return</span> <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span>
+    <span class="n">mask_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span><span class="p">,</span> <span class="n">mask_list</span>
 
 
 <span class="k">def</span> <span class="nf">get_imgs_rigid_reg</span><span class="p">(</span><span class="n">serial_rigid_reg</span><span class="p">):</span>
@@ -389,14 +291,27 @@
 <span class="sd">    img_names : list of str</span>
 <span class="sd">        List of names for each image. Created by removing the extension</span>
 
+<span class="sd">    mask_list : list of ndarray</span>
+<span class="sd">        List of masks used for registration</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">serial_rigid_reg</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">img_names</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">serial_rigid_reg</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">img_f_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">serial_rigid_reg</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">mask_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">serial_rigid_reg</span><span class="o">.</span><span class="n">size</span>
 
-    <span class="n">img_obj_list</span> <span class="o">=</span> <span class="n">serial_rigid_reg</span><span class="o">.</span><span class="n">img_obj_list</span>
-    <span class="n">img_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">registered_img</span> <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="n">img_obj_list</span><span class="p">]</span>
-    <span class="n">img_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="n">img_obj_list</span><span class="p">]</span>
-    <span class="n">img_f_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">full_img_f</span> <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="n">img_obj_list</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">serial_rigid_reg</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">):</span>
+        <span class="n">img_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">registered_img</span>
+        <span class="n">img_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">img_f_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">full_img_f</span>
 
-    <span class="k">return</span> <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span>
+        <span class="c1"># Moving mask</span>
+        <span class="n">temp_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">img_obj</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+        <span class="n">img_mask</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_img</span><span class="p">(</span><span class="n">temp_mask</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">img_obj</span><span class="o">.</span><span class="n">M</span><span class="p">,</span>
+                                       <span class="n">out_shape_rc</span><span class="o">=</span><span class="n">img_obj</span><span class="o">.</span><span class="n">registered_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">mask_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_mask</span>
+
+    <span class="k">return</span> <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span><span class="p">,</span> <span class="n">mask_list</span>
 
 
 <div class="viewcode-block" id="NonRigidZImage"><a class="viewcode-back" href="../../serial_non_rigid.html#valis.serial_non_rigid.NonRigidZImage">[docs]</a><span class="k">class</span> <span class="nc">NonRigidZImage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -439,7 +354,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="NonRigidZImage.__init__"><a class="viewcode-back" href="../../serial_non_rigid.html#valis.serial_non_rigid.NonRigidZImage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">stack_idx</span><span class="p">,</span> <span class="n">moving_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="NonRigidZImage.__init__"><a class="viewcode-back" href="../../serial_non_rigid.html#valis.serial_non_rigid.NonRigidZImage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">stack_idx</span><span class="p">,</span> <span class="n">moving_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -462,8 +377,10 @@
 <span class="sd">            (V, 2) array containing points in the fixed image that correspond</span>
 <span class="sd">            to those in the moving image</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        mask : ndarray, optional</span>
+<span class="sd">            Mask covering area to be registered.</span>
 
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stack_idx</span> <span class="o">=</span> <span class="n">stack_idx</span>
@@ -472,12 +389,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">registered_img</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">warped_grid</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span></div>
 
     <span class="k">def</span> <span class="nf">calc_deformation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registered_fixed_image</span><span class="p">,</span> <span class="n">non_rigid_reg_class</span><span class="p">,</span> <span class="n">bk_dxdy</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Finds the non-rigid deformation fields that align this (&quot;moving&quot;) image</span>
 <span class="sd">        to the &quot;fixed&quot; image</span>
+
+
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -488,6 +408,11 @@
 <span class="sd">        non_rigid_reg_class : NonRigidRegistrar</span>
 <span class="sd">            Uninstantiated NonRigidRegistrar class that will be used to</span>
 <span class="sd">            calculate the deformation fields between images</span>
+
+<span class="sd">        bk_dxdy : ndarray, optional</span>
+<span class="sd">            (2, P, Q) numpy array of pixel displacements in</span>
+<span class="sd">            the x and y directions. dx = dxdy[0], and dy=dxdy[1].</span>
+<span class="sd">            Used to warp the registered_img before finding deformation fields.</span>
 
 <span class="sd">        params : dictionary, optional</span>
 <span class="sd">            Keyword: value dictionary of parameters to be used in reigstration.</span>
@@ -502,50 +427,78 @@
 <span class="sd">            and 0 is background, which is ignnored during registration. If None,</span>
 <span class="sd">            then all non-zero pixels in images will be used to create the mask.</span>
 
-<span class="sd">        dxdy : ndarray, optional</span>
-<span class="sd">            (2, P, Q) numpy array of pixel displacements in</span>
-<span class="sd">            the x and y directions. dx = dxdy[0], and dy=dxdy[1].</span>
-<span class="sd">            Used to warp the registered_img before finding deformation fields.</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">reg_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                <span class="n">reg_mask</span><span class="p">[(</span><span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">255</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reg_mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reg_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span>
+
         <span class="k">if</span> <span class="n">bk_dxdy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">current_warp_map</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_warp_map</span><span class="p">(</span><span class="n">dxdy</span><span class="o">=</span><span class="n">bk_dxdy</span><span class="p">)</span>
-            <span class="n">moving_img</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">current_warp_map</span><span class="p">,</span>
-                                        <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bk_dxdy</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bk_dxdy</span><span class="p">)</span>
+            <span class="c1"># Don&#39;t allow image to be crumpled/pulled out of bounds before warping</span>
+            <span class="n">for_reg_dxdy</span> <span class="o">=</span> <span class="n">bk_dxdy</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">for_reg_dxdy</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">for_reg_dxdy</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">moving_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_img</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">bk_dxdy</span><span class="o">=</span><span class="n">for_reg_dxdy</span><span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">moving_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">for_reg_dxdy</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">moving_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">moving_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])])</span>
 
         <span class="n">non_rigid_reg</span> <span class="o">=</span> <span class="n">non_rigid_reg_class</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moving_xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
            <span class="nb">issubclass</span><span class="p">(</span><span class="n">non_rigid_reg_class</span><span class="p">,</span> <span class="n">non_rigid_registrars</span><span class="o">.</span><span class="n">NonRigidRegistrarXY</span><span class="p">):</span>
-            <span class="c1"># Update positions #</span>
-            <span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_inverse_field</span><span class="p">(</span><span class="n">bk_dxdy</span><span class="p">)</span>
-            <span class="n">fixed_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_xy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fwd_dxdy</span><span class="o">=</span><span class="n">fwd_dxdy</span><span class="p">)</span>
-            <span class="n">moving_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moving_xy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fwd_dxdy</span><span class="o">=</span><span class="n">fwd_dxdy</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">for_reg_dxdy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Update positions #</span>
+                <span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_inverse_field</span><span class="p">(</span><span class="n">for_reg_dxdy</span><span class="p">)</span>
+                <span class="n">fixed_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_xy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fwd_dxdy</span><span class="o">=</span><span class="n">fwd_dxdy</span><span class="p">)</span>
+                <span class="n">moving_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moving_xy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fwd_dxdy</span><span class="o">=</span><span class="n">fwd_dxdy</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fixed_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_xy</span>
+                <span class="n">moving_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">moving_xy</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">fixed_xy</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">moving_xy</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">xy_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;moving_xy&quot;</span><span class="p">:</span> <span class="n">moving_xy</span><span class="p">,</span> <span class="s2">&quot;fixed_xy&quot;</span><span class="p">:</span> <span class="n">fixed_xy</span><span class="p">}</span>
+
         <span class="n">warped_moving</span><span class="p">,</span> <span class="n">moving_grid_img</span><span class="p">,</span> <span class="n">moving_bk_dxdy</span> <span class="o">=</span> \
             <span class="n">non_rigid_reg</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">moving_img</span><span class="o">=</span><span class="n">moving_img</span><span class="p">,</span>
                                    <span class="n">fixed_img</span><span class="o">=</span><span class="n">registered_fixed_image</span><span class="p">,</span>
-                                   <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+                                   <span class="n">mask</span><span class="o">=</span><span class="n">reg_mask</span><span class="p">,</span>
                                    <span class="o">**</span><span class="n">xy_args</span><span class="p">)</span>
 
-        <span class="n">bk_dxdy_from_ref</span> <span class="o">=</span> <span class="p">[</span><span class="n">bk_dxdy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">moving_bk_dxdy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                            <span class="n">bk_dxdy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">moving_bk_dxdy</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Only add new transformations</span>
+            <span class="n">moving_bk_dxdy</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">reg_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">moving_bk_dxdy</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">reg_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">bk_dxdy_from_ref</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_inverse_field</span><span class="p">(</span><span class="n">bk_dxdy_from_ref</span><span class="p">)</span>
+        <span class="n">bk_dxdy_from_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bk_dxdy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">moving_bk_dxdy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                     <span class="n">bk_dxdy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">moving_bk_dxdy</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
 
-        <span class="n">warp_map</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_warp_map</span><span class="p">(</span><span class="n">dxdy</span><span class="o">=</span><span class="n">bk_dxdy_from_ref</span><span class="p">)</span>
+        <span class="n">img_bk_dxdy</span> <span class="o">=</span> <span class="n">bk_dxdy_from_ref</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Won&#39;t want to warp outside of the image</span>
+            <span class="n">img_bk_dxdy</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">img_bk_dxdy</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">warped_grid</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">color_displacement_grid</span><span class="p">(</span><span class="o">*</span><span class="n">bk_dxdy_from_ref</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">registered_img</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">warp_map</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">img_bk_dxdy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_inverse_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">warped_grid</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">color_displacement_grid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registered_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_img</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span>
+                                                  <span class="n">bk_dxdy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span><span class="p">,</span>
+                                                  <span class="n">out_shape_rc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">bk_dxdy_from_ref</span></div>
 
 <div class="viewcode-block" id="SerialNonRigidRegistrar"><a class="viewcode-back" href="../../serial_non_rigid.html#valis.serial_non_rigid.SerialNonRigidRegistrar">[docs]</a><span class="k">class</span> <span class="nc">SerialNonRigidRegistrar</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class that performs serial non-rigid registration, based on results SerialRigidRegistrar</span>
@@ -613,7 +566,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SerialNonRigidRegistrar.__init__"><a class="viewcode-back" href="../../serial_non_rigid.html#valis.serial_non_rigid.SerialNonRigidRegistrar.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moving_to_fixed_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SerialNonRigidRegistrar.__init__"><a class="viewcode-back" href="../../serial_non_rigid.html#valis.serial_non_rigid.SerialNonRigidRegistrar.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">reference_img_f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moving_to_fixed_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -679,8 +632,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_obj_list</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_reg_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">generate_non_rigid_obj_list</span><span class="p">(</span><span class="n">ref_img_name</span><span class="p">,</span> <span class="n">moving_to_fixed_xy</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_non_rigid_obj_list</span><span class="p">(</span><span class="n">reference_img_f</span><span class="p">,</span> <span class="n">moving_to_fixed_xy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span></div>
 
     <span class="k">def</span> <span class="nf">create_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">temp_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
@@ -714,18 +667,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_dir</span><span class="p">:</span>
-            <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span> <span class="o">=</span> <span class="n">get_imgs_from_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+            <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span><span class="p">,</span> <span class="n">mask_list</span> <span class="o">=</span> \
+                <span class="n">get_imgs_from_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span> <span class="o">=</span> <span class="n">get_imgs_rigid_reg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+            <span class="n">img_list</span><span class="p">,</span> <span class="n">img_f_list</span><span class="p">,</span> <span class="n">img_names</span><span class="p">,</span> <span class="n">mask_list</span> <span class="o">=</span> \
+                <span class="n">get_imgs_rigid_reg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">img_list</span><span class="p">)</span>
 
-        <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">get_ref_img_idx</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ref_img_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">ref_img_name</span> <span class="o">=</span> <span class="n">img_names</span><span class="p">[</span><span class="n">ref_img_idx</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ref_img_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ref_img_name</span> <span class="o">=</span> <span class="n">valtils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">ref_img_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref_img_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_ref_img_idx</span><span class="p">(</span><span class="n">img_f_list</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_name</span> <span class="o">=</span> <span class="n">ref_img_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span> <span class="o">=</span> <span class="n">ref_img_idx</span>
@@ -751,6 +707,7 @@
                 <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="s2">&quot;Images must all have the shape&quot;</span><span class="p">)</span>
 
             <span class="n">img_name</span> <span class="o">=</span> <span class="n">img_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="n">moving_xy</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">fixed_xy</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">moving_to_fixed_xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">img_name</span> <span class="o">!=</span> <span class="n">ref_img_name</span><span class="p">:</span>
@@ -763,7 +720,9 @@
                     <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
             <span class="n">nr_obj</span> <span class="o">=</span> <span class="n">NonRigidZImage</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">img_name</span><span class="p">,</span> <span class="n">stack_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                                    <span class="n">moving_xy</span><span class="o">=</span><span class="n">moving_xy</span><span class="p">,</span> <span class="n">fixed_xy</span><span class="o">=</span><span class="n">fixed_xy</span><span class="p">)</span>
+                                    <span class="n">moving_xy</span><span class="o">=</span><span class="n">moving_xy</span><span class="p">,</span>
+                                    <span class="n">fixed_xy</span><span class="o">=</span><span class="n">fixed_xy</span><span class="p">,</span>
+                                    <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">ref_img_idx</span><span class="p">:</span>
                 <span class="c1"># Set reference image attributes #</span>
@@ -793,18 +752,22 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_reg_params</span> <span class="o">=</span> <span class="n">non_rigid_reg_params</span>
-
-        <span class="n">iter_order</span> <span class="o">=</span> <span class="n">get_alignment_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">)</span>
+        <span class="n">iter_order</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_alignment_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">moving_idx</span><span class="p">,</span> <span class="n">fixed_idx</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">iter_order</span><span class="p">):</span>
             <span class="n">moving_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_obj_list</span><span class="p">[</span><span class="n">moving_idx</span><span class="p">]</span>
             <span class="n">fixed_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_obj_list</span><span class="p">[</span><span class="n">fixed_idx</span><span class="p">]</span>
-            <span class="n">current_dxdy</span> <span class="o">=</span> <span class="n">fixed_obj</span><span class="o">.</span><span class="n">bk_dxdy</span>
 
-            <span class="n">moving_obj</span><span class="o">.</span><span class="n">calc_deformation</span><span class="p">(</span><span class="n">fixed_obj</span><span class="o">.</span><span class="n">registered_img</span><span class="p">,</span>
+            <span class="k">if</span> <span class="n">fixed_obj</span><span class="o">.</span><span class="n">stack_idx</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">:</span>
+                <span class="n">current_dxdy</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_dxdy</span> <span class="o">=</span> <span class="n">updated_dxdy</span>
+
+            <span class="n">overlap_mask</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">updated_dxdy</span> <span class="o">=</span> <span class="n">moving_obj</span><span class="o">.</span><span class="n">calc_deformation</span><span class="p">(</span><span class="n">fixed_obj</span><span class="o">.</span><span class="n">registered_img</span><span class="p">,</span>
                                         <span class="n">non_rigid_reg_class</span><span class="p">,</span>
                                         <span class="n">current_dxdy</span><span class="p">,</span>
                                         <span class="n">params</span><span class="o">=</span><span class="n">non_rigid_reg_params</span><span class="p">,</span>
-                                        <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+                                        <span class="n">mask</span><span class="o">=</span><span class="n">overlap_mask</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">register_groupwise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">non_rigid_reg_class</span><span class="p">,</span> <span class="n">non_rigid_reg_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Non-rigidly align images as a group</span>
@@ -889,7 +852,7 @@
         <span class="n">src_img_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_name</span>
         <span class="n">shape_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_obj_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">]</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="n">iter_order</span> <span class="o">=</span> <span class="n">get_alignment_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">)</span>
+        <span class="n">iter_order</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_alignment_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_img_idx</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">======== Summarizing registration</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">moving_idx</span><span class="p">,</span> <span class="n">fixed_idx</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">iter_order</span><span class="p">):</span>
             <span class="n">moving_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_obj_list</span><span class="p">[</span><span class="n">moving_idx</span><span class="p">]</span>
@@ -937,7 +900,7 @@
 
 <div class="viewcode-block" id="register_images"><a class="viewcode-back" href="../../serial_non_rigid.html#valis.serial_non_rigid.register_images">[docs]</a><span class="k">def</span> <span class="nf">register_images</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">non_rigid_reg_class</span><span class="o">=</span><span class="n">non_rigid_registrars</span><span class="o">.</span><span class="n">OpticalFlowWarper</span><span class="p">,</span>
                     <span class="n">non_rigid_reg_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">ref_img_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moving_to_fixed_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">reference_img_f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moving_to_fixed_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qt_emitter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parameters</span>
@@ -967,8 +930,8 @@
 <span class="sd">        be in this folder, and aligned images in the &quot;registered_images&quot;</span>
 <span class="sd">        sub-directory. If None, the images will not be written to file</span>
 
-<span class="sd">    ref_img_name : str, optional</span>
-<span class="sd">        Name of image that will be treated as the center of the stack.</span>
+<span class="sd">    reference_img_f : str, optional</span>
+<span class="sd">        Filename of image that will be treated as the center of the stack.</span>
 <span class="sd">        If None, the index of the middle image will be returned.</span>
 
 <span class="sd">    moving_to_fixed_xy :  dict of list, or bool</span>
@@ -981,9 +944,9 @@
 <span class="sd">        #. Rigid registered xy in fixed/next/to image</span>
 
 <span class="sd">        To deterime which pairs of images will be aligned, use</span>
-<span class="sd">        `get_alignment_indices`. Can use `get_imgs_from_dir`</span>
+<span class="sd">        `warp_tools.get_alignment_indices`. Can use `get_imgs_from_dir`</span>
 <span class="sd">        to see the order inwhich the images will be read, which will correspond</span>
-<span class="sd">        to the indices retuned by `get_alignment_indices`.</span>
+<span class="sd">        to the indices retuned by `warp_tools.get_alignment_indices`.</span>
 
 <span class="sd">        If `src` is a SerialRigidRegistrar and `moving_to_fixed_xy` is</span>
 <span class="sd">        True, then the matching features in the SerialRigidRegistrar will</span>
@@ -1012,7 +975,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">tic</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
-    <span class="n">nr_reg</span> <span class="o">=</span> <span class="n">SerialNonRigidRegistrar</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">ref_img_name</span><span class="o">=</span><span class="n">ref_img_name</span><span class="p">,</span>
+    <span class="n">nr_reg</span> <span class="o">=</span> <span class="n">SerialNonRigidRegistrar</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">reference_img_f</span><span class="o">=</span><span class="n">reference_img_f</span><span class="p">,</span>
                                      <span class="n">moving_to_fixed_xy</span><span class="o">=</span><span class="n">moving_to_fixed_xy</span><span class="p">,</span>
                                      <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 

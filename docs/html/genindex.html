@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Index &mdash; valis &#34;1.0.0rc4&#34;
+  <title>Index &mdash; valis &#34;1.0.0rc5&#34;
  documentation</title>
   
 
@@ -262,16 +262,18 @@
 </li>
       <li><a href="feature_detectors.html#valis.feature_detectors.AkazeFD">AkazeFD (class in valis.feature_detectors)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.aleady_sorted">aleady_sorted (valis.serial_rigid.SerialRigidRegistrar attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="affine_optimizer.html#id0">align() (valis.affine_optimizer.AffineOptimizer method)</a>, <a href="affine_optimizer.html#valis.affine_optimizer.AffineOptimizer.align">[1]</a>
 
       <ul>
         <li><a href="affine_optimizer.html#id1">(valis.affine_optimizer.AffineOptimizerMattesMI method)</a>, <a href="affine_optimizer.html#valis.affine_optimizer.AffineOptimizerMattesMI.align">[1]</a>
 </li>
       </ul></li>
+      <li><a href="registration.html#valis.registration.Valis.aligned_img_shape_rc">aligned_img_shape_rc (valis.registration.Valis attribute)</a>
+</li>
       <li><a href="registration.html#valis.registration.Slide.aligned_slide_shape_rc">aligned_slide_shape_rc (valis.registration.Slide attribute)</a>
 
       <ul>
@@ -307,6 +309,10 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="slide_io.html#valis.slide_io.MetaData.bf_datatype">bf_datatype (valis.slide_io.MetaData attribute)</a>
+</li>
+      <li><a href="registration.html#valis.registration.Slide.bg_color">bg_color (valis.registration.Slide attribute)</a>
+</li>
+      <li><a href="registration.html#valis.registration.Slide.bg_px_pos_rc">bg_px_pos_rc (valis.registration.Slide attribute)</a>
 </li>
       <li><a href="slide_io.html#valis.slide_io.BioFormatsSlideReader">BioFormatsSlideReader (class in valis.slide_io)</a>
 </li>
@@ -354,10 +360,10 @@
 </li>
       <li><a href="viz.html#valis.viz.color_dxdy">color_dxdy() (in module valis.viz)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="viz.html#valis.viz.color_multichannel">color_multichannel() (in module valis.viz)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="preprocessing.html#valis.preprocessing.ColorfulStandardizer">ColorfulStandardizer (class in valis.preprocessing)</a>
 </li>
       <li><a href="slide_io.html#valis.slide_io.convert_to_ome_tiff">convert_to_ome_tiff() (in module valis.slide_io)</a>
@@ -378,6 +384,12 @@
       </ul></li>
       <li><a href="slide_io.html#valis.slide_io.create_ome_xml">create_ome_xml() (in module valis.slide_io)</a>
 </li>
+      <li><a href="registration.html#valis.registration.Slide.crop">crop (valis.registration.Slide attribute)</a>
+
+      <ul>
+        <li><a href="registration.html#valis.registration.Valis.crop">(valis.registration.Valis attribute)</a>
+</li>
+      </ul></li>
       <li><a href="serial_rigid.html#valis.serial_rigid.ZImage.crop_T">crop_T (valis.serial_rigid.ZImage attribute)</a>
 </li>
       <li><a href="affine_optimizer.html#valis.affine_optimizer.AffineOptimizer.current_level">current_level (valis.affine_optimizer.AffineOptimizer attribute)</a>
@@ -456,9 +468,13 @@
         <li><a href="non_rigid_registrars.html#valis.non_rigid_registrars.NonRigidRegistrarXY.fixed_img">(valis.non_rigid_registrars.NonRigidRegistrarXY attribute)</a>
 </li>
       </ul></li>
+      <li><a href="affine_optimizer.html#valis.affine_optimizer.AffineOptimizerMattesMI.fixed_kp_fname">fixed_kp_fname (valis.affine_optimizer.AffineOptimizerMattesMI attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="affine_optimizer.html#valis.affine_optimizer.AffineOptimizerMattesMI.fixed_kp_fname">fixed_kp_fname (valis.affine_optimizer.AffineOptimizerMattesMI attribute)</a>
+      <li><a href="serial_rigid.html#valis.serial_rigid.ZImage.fixed_obj">fixed_obj (valis.serial_rigid.ZImage attribute)</a>
+</li>
+      <li><a href="registration.html#valis.registration.Slide.fixed_slide">fixed_slide (valis.registration.Slide attribute)</a>
 </li>
       <li><a href="non_rigid_registrars.html#valis.non_rigid_registrars.NonRigidRegistrarXY.fixed_xy">fixed_xy (valis.non_rigid_registrars.NonRigidRegistrarXY attribute)</a>
 
@@ -586,6 +602,8 @@
         <li><a href="slide_io.html#valis.slide_io.MetaData.is_rgb">(valis.slide_io.MetaData attribute)</a>
 </li>
       </ul></li>
+      <li><a href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.iter_order">iter_order (valis.serial_rigid.SerialRigidRegistrar attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -819,30 +837,18 @@
 </li>
       <li><a href="affine_optimizer.html#valis.affine_optimizer.AffineOptimizer.optimization">optimization (valis.affine_optimizer.AffineOptimizer attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="feature_detectors.html#valis.feature_detectors.OrbVggFD">OrbVggFD (class in valis.feature_detectors)</a>
 </li>
       <li><a href="registration.html#valis.registration.Valis.original_img_list">original_img_list (valis.registration.Valis attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="registration.html#valis.registration.Valis.original_overlap_img">original_overlap_img (valis.registration.Valis attribute)</a>
 </li>
       <li><a href="registration.html#valis.registration.Slide.original_xml">original_xml (valis.registration.Slide attribute)</a>
 
       <ul>
         <li><a href="slide_io.html#valis.slide_io.MetaData.original_xml">(valis.slide_io.MetaData attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="registration.html#valis.registration.Slide.overlap_mask">overlap_mask (valis.registration.Slide attribute)</a>
-
-      <ul>
-        <li><a href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.overlap_mask">(valis.serial_rigid.SerialRigidRegistrar attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="registration.html#valis.registration.Slide.overlap_mask_bbox_xywh">overlap_mask_bbox_xywh (valis.registration.Slide attribute)</a>
-
-      <ul>
-        <li><a href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.overlap_mask_bbox_xywh">(valis.serial_rigid.SerialRigidRegistrar attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -891,6 +897,18 @@
 </li>
       <li><a href="serial_non_rigid.html#valis.serial_non_rigid.SerialNonRigidRegistrar.ref_image_name">ref_image_name (valis.serial_non_rigid.SerialNonRigidRegistrar attribute)</a>
 </li>
+      <li><a href="registration.html#valis.registration.Valis.reference_img_f">reference_img_f (valis.registration.Valis attribute)</a>
+
+      <ul>
+        <li><a href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.reference_img_f">(valis.serial_rigid.SerialRigidRegistrar attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="registration.html#valis.registration.Valis.reference_img_idx">reference_img_idx (valis.registration.Valis attribute)</a>
+
+      <ul>
+        <li><a href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.reference_img_idx">(valis.serial_rigid.SerialRigidRegistrar attribute)</a>
+</li>
+      </ul></li>
       <li><a href="affine_optimizer.html#valis.affine_optimizer.AffineOptimizerMattesMI.Reg">Reg (valis.affine_optimizer.AffineOptimizerMattesMI attribute)</a>
 </li>
       <li><a href="registration.html#valis.registration.Slide.reg_img_shape_rc">reg_img_shape_rc (valis.registration.Slide attribute)</a>
