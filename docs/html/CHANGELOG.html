@@ -171,7 +171,7 @@
   <section id="version-1-0-0rc5-april-5-2022">
 <h1>Version 1.0.0rc5 (April 5, 2022)<a class="headerlink" href="#version-1-0-0rc5-april-5-2022" title="Permalink to this headline">¶</a></h1>
 <ol class="arabic simple">
-<li><p>Can provide a reference image that the others will be aligned towards. To do this, when initializinig the Valis object, set the <cite>reference_img_f</cite> argument to be the file name of the reference image. If not set by the user, the reference image will be set as the one at the center of the ordered image stack</p></li>
+<li><p>Can provide a reference image that the others will be aligned towards. To do this, when initializinig the Valis object, set the <code class="code docutils literal notranslate"><span class="pre">reference_img_f</span></code> argument to be the file name of the reference image. If not set by the user, the reference image will be set as the one at the center of the ordered image stack</p></li>
 <li><p>Both non-rigid and rigid now align <em>towards</em> a reference image, meaning that reference image will have neither rigid nor non-rigid transformations applied to it.</p></li>
 <li><p>Two cropping methods. First option is to crop seach registered slides to contain only the areas where all registered images overlap. The second option is to crop the registered slide to contain only the area that intersects with the reference image. It is also possible to not crop an image/slide.</p></li>
 <li><p>Images are now cropped during the warp, not after, and so is now faster and requires less memory. For example, on a 2018 MacBook Pro with a 2.6 GHz Intel Core i7 processor, it takes 2-3 minutes to warp and save a 41399 x 43479 RGB image.</p></li>
@@ -180,8 +180,8 @@
 <li><p>Read slides and images using pyvips whenever possible.</p></li>
 <li><p>Background color now automatically set to be same as the brightest (IHC) or darkest (IF) pixel in the image. Because of this, the “bg_color” argument in the slide warping functions was removed.</p></li>
 <li><p>Reduced accumulation of unwanted non-rigid deformations</p></li>
-<li><p>Displacement fields drawn ontop of non-rigid registered image to help determine where the deformations are happening.</p></li>
-<li><p>If the slide has multiple series, and a series is not specficed, the slide reader will read the series containing the largest image.</p></li>
+<li><p>Displacement fields drawn on top of non-rigid registered image to help determine where the deformations occured.</p></li>
+<li><p>If a slide has multiple series, and a series is not specficed, the slide reader will read the series containing the largest image.</p></li>
 </ol>
 </section>
 

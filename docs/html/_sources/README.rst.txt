@@ -31,9 +31,10 @@
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/banner.gif
 
 
-VALIS, which stands for Virtual Alignment of pathoLogy Image Series, is a fully automaated pipeline to register whole slide images (WSI) using rigid and/or non-rigid transformtions. A full description of the method is descriped in the paper by `Gatenbee et al. 2021 <https://www.biorxiv.org/content/10.1101/2021.11.09.467917v1>`_. VALIS uses `Bio-Formats <https://www.openmicroscopy.org/bio-formats/>`_, `OpenSlide <https://openslide.org/>`__, `libvips <https://www.libvips.org/>`_, and `scikit-image <https://scikit-image.org/>`_ to read images and slides, and so is able to work with a wide variety of formats. Registered images can be saved as `ome.tiff <https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/>`_ slides that can be used in downstream analyses. ome.tiff format is opensource and widely supported, being readable in several different programming languages (Python, Java, Matlab, etc...) and software, such as `QuPath <https://qupath.github.io/>`_, `HALO by Idica Labs <https://indicalab.com/halo/>`_, etc...
+VALIS, which stands for Virtual Alignment of pathoLogy Image Series, is a fully automaated pipeline to register whole slide images (WSI) using rigid and/or non-rigid transformtions. A full description of the method is descriped in the paper by `Gatenbee et al. 2021 <https://www.biorxiv.org/content/10.1101/2021.11.09.467917v1>`_. VALIS uses `Bio-Formats <https://www.openmicroscopy.org/bio-formats/>`_, `OpenSlide <https://openslide.org/>`__, `libvips <https://www.libvips.org/>`_, and `scikit-image <https://scikit-image.org/>`_ to read images and slides, and so is able to work with over 300 image formats. Registered images can be saved as `ome.tiff <https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/>`_ slides that can be used in downstream analyses. ome.tiff format is opensource and widely supported, being readable in several different programming languages (Python, Java, Matlab, etc...) and software, such as `QuPath <https://qupath.github.io/>`_, `HALO by Idica Labs <https://indicalab.com/halo/>`_, etc...
 
 The registration pipeline is fully automated and goes as follows:
+
     .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/pipeline.png
 
    #. Images/slides are converted to numpy arrays. As WSI are often too large to fit into memory, these images are usually lower resolution images from different pyramid levels.
@@ -106,11 +107,13 @@ VALIS uses Bioforamts to read many slide formats. Bioformats is written in Java,
 
 #. Download appropriate JDK from `java downloads <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_
 
+
 #.  Edit your system and environment variables to update the Java home
 
     .. code-block:: bash
 
         $ export JAVA_HOME=/usr/libexec/java_home
+
 
 #. Verify the path has been added:
 
@@ -119,6 +122,7 @@ VALIS uses Bioforamts to read many slide formats. Bioformats is written in Java,
        $ echo $JAVA_HOME
 
    should print something like :code:`usr/libexec/java_home`
+
 
 #. (optional) If you will be working with files that have extensions: '.vmu', '.mrxs' '.svslide', you will also need to install `OpenSlide <https://openslide.org>`_. Note that this is not the same as openslide-python, which contains Python wrappers for OpenSlide.
 
@@ -147,7 +151,9 @@ The defaults used by VALIS work well, but VALIS also provides optional classes t
 
 #. affine_optimizer.AffineOptimizerMattesMI, which uses sitk.ElastixImageFilter to simultaneously maximize Mattes Mutual Information and minimize the spatial distance between matched features.
 
+
 #. non_rigid_registrars.SimpleElastixWarper, which uses sitk.ElastixImageFilter to find non-rigid transformations between pairs of images.
+
 
 #. non_rigid_registrars.SimpleElastixGroupwiseWarper, which uses sitk.ElastixImageFilter to find non-rigid transformations using groupwise registration.
 
@@ -172,7 +178,7 @@ Slide registration
     If the order of slices is known and needs to be preserved, such as building a 3D image, set :code:`imgs_ordered=True` when intialzing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, be sure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff ... 10.tiff, etc...
 
 
-In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process simply involves the creation of a Valis object, which is what conducts the registration.
+In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process simply involves the creation of a Valis object, which is what conducts the registration. In this example no reference image is specfied, and so all images will be aligned towards the center. In this case, the resulting images will be cropped to the region where all of the images overlap. However, one can specify the reference image when intialzing the :code:`Valis` object, by setting :code:`reference_img_f` to the filename of the image the others should be aligned towards. When the reference image is specifed, the images will be cropped such that only the regions which overlap with the reference image will be saved. While this is the default behavior, one can also specify the cropping method by setting the :code:`crop` parameeter value when initialzing the :code:`Valis` object. The cropping method can also be changed when saving the registered images (see below).
 
 .. code-block:: python
 
@@ -189,6 +195,7 @@ After registration is complete, one can view the results to determine if they ar
 
 
 #. **data** contains 2 files:
+
    * a summary spreadsheet of the alignment results, such as the registration error between each pair of slides, their dimensions, physical units, etc...
 
    * a pickled version of the registrar. This can be reloaded (unpickled) and used later. For example, one could perfom the registration locally, but then use the pickled object to warp and save the slides on an HPC. Or, one could perform the registration and use the registrar later to warp points found in the (un-registered) slide.
@@ -206,13 +213,13 @@ After registration is complete, one can view the results to determine if they ar
 #. **deformation_fields** contains images showing what the non-rigid deformation would do to a triangular mesh. These can be used to get a sense of how the images were altered by non-rigid warping. In these images, the color indicates the direction of the displacement, while brightness indicates it's magnitude. These would be similar to those in the middle row in the figure above.
 
 
-#. **processed** shows thumnails of the processed images. These are thumbnails of the images that are actually used to perform the registration. The pre-processing and normalization methods should try to make these images look as similar as possible.
+#. **processed** shows thumnails of the processed images. These are thumbnails of the images that were actually used to perform the registration. The pre-processing and normalization methods should try to make these images look as similar as possible.
 
 
 If the results look good, then one can warp and save all of the slides as ome.tiffs. When saving the images, there are three cropping options:
 
 #. :code:`crop="overlap"` will crop the images to the region where all of the images overlap.
-#. :code:`crop="reference"` will crop the images to the region where they overlap with the reference image
+#. :code:`crop="reference"` will crop the images to the region where they overlap with the reference image.
 #. :code:`crop="all"` will not perform any cropping. While this keep the all of the image, the dimensions of the registered image can be substantially larger than one that was cropped, as it will need to be large enough accomodate all of the other images.
 
 While the cropping setting can also be set when initializing the :code:`Valis` object, any of the above cropping methods can be used when saving the images.
@@ -228,6 +235,7 @@ While the cropping setting can also be set when initializing the :code:`Valis` o
 The ome.tiff images can subsequently be used for downstream analysis, such as `QuPath <https://qupath.github.io/>`_
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/ome_tiff_zoom.png
+
 
 One can also choose to save individual slides. This is accomplished by accessing the Slide object associated with a particular file, :code:`slide_f` and then "telling" it to save the slide aas :code:`out_f.ome.tiff`.
 
@@ -406,8 +414,9 @@ In this second example, a region of interest (ROI) was marked in one of the unre
 
 The extracted and registered ROI are shown below:
 
-.. .. image::  https://github.com/MathOnco/valis/raw/main/examples/expected_results/roi/ihc_roi.png
-.. image::  ../examples/expected_results/roi/ihc_roi.png
+.. image::  https://github.com/MathOnco/valis/raw/main/examples/expected_results/roi/ihc_roi.png
+.. .. image::  ../examples/expected_results/roi/ihc_roi.png
+
 
 Converting slides to ome.tiff
 -----------------------------
@@ -425,6 +434,7 @@ In addition to registering slide, VALIS can convert slides to ome.tiff, maintain
     slide_io.kill_jvm()
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/pu_color_mplex.png
+
 
 Using non-defaults
 ------------------
@@ -450,9 +460,9 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 
     # Create a Valis object and use it to register the slides in slide_src_dir
     registrar = registration.Valis(slide_src_dir, results_dst_dir,
-                            feature_detector_cls=feature_detector_cls,
-                            affine_optimizer_cls=affine_optimizer_cls,
-                            non_rigid_registrar_cls=non_rigid_registrar_cls)
+                                   feature_detector_cls=feature_detector_cls,
+                                   affine_optimizer_cls=affine_optimizer_cls,
+                                   non_rigid_registrar_cls=non_rigid_registrar_cls)
 
 
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
