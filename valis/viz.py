@@ -1,6 +1,8 @@
 """Various functions used to visualize registration results
 
 """
+from glob import has_magic
+from linecache import cache
 import colour
 import matplotlib.pyplot as plt
 from skimage import feature, draw, color, exposure, transform
@@ -189,7 +191,6 @@ def jzazbz_cmap(luminosity=0.012, colorfulness=0.02, max_h=260):
         rgb = colour.convert(jzazbz, 'JzAzBz', 'sRGB')
 
     rgb = np.clip(rgb, 0, 1)[0]
-    max_h = 260
     if max_h != 360:
         rgb = rgb[0:max_h]
 
@@ -225,6 +226,12 @@ def cam16ucs_cmap(luminosity=0.8, colorfulness=0.5, max_h=300):
 
     return rgb
 
+
+
+def make_cbar(rgb, bar_height=30):
+    cbar = np.tile(rgb.T, bar_height).T
+
+    return cbar
 
 
 def rgb_triangle_cmap():
@@ -382,27 +389,67 @@ def get_n_colors(rgb, n):
     return rgb[rgb_idx]
 
 
-@nb.njit()
-def get_AB(img, a, b):
+# @nb.njit('double[:, :, :](float32[:, :, :],double[:, :], unicode_type)', fastmath=True, cache=True)
+@nb.njit(fastmath=True, cache=True)
+def blend_colors(img, colors, scale_by):
+    """ Color an image by blending
+
+    Parameters
+    ----------
+    img : ndarray
+        Image containing the raw data (float 32)
+
+    colors : ndarray
+        Colors for each channel in `img`
+
+    scale_by : int
+        How to scale each channel. "image" will scale the channel
+        by the maximum value in the image. "channel" will scale
+        the channel by the maximum in the channel
+
+    Returns
+    -------
+    blended_img : ndarray
+        A colored version of `img`
+
+    """
+
+
+    if len(colors) > 1:
+        n_channel_colors = colors.shape[1]
+    else:
+        n_channel_colors = len(colors)
+
+    if img.ndim > 2:
+        r, c, nc = img.shape[:3]
+    else:
+        nc = 1
+        r, c = img.shape[2]
 
     eps = 1.0000000000000001e-15
-    A = np.zeros(img.shape[0:2])
-    B = np.zeros(img.shape[0:2])
-    if img.ndim > 2:
-        sum_img = np.sum(img, axis=2) + eps  # Avoid division by 0
-        for i in range(img.shape[2]):
-            chanel_weight = img[..., i]/sum_img
-            A += a[i] * chanel_weight
-            B += b[i] * chanel_weight
-    else:
-        sum_img = img/(img.max())
-        A = a * sum_img
-        B = b * sum_img
+    sum_img = img.sum(axis=2) + eps
+    if scale_by == "image":
+        img_max = img.max()
 
-    return A, B
+    blended_img = np.zeros((r, c, n_channel_colors))
+    for i in range(nc):
+        # relative image is how bright the channel will be
+        if scale_by != "image":
+            channel_max = img[..., i].max()
+            relative_img = img[..., i] / channel_max
+        else:
+            relative_img = img[..., i]/img_max
+
+        # blending is how to weight the mix of colors, similar to an alpha channel
+        blending = img[..., i]/sum_img
+        for j in range(colors.shape[1]):
+            channel_color = colors[i, j]
+            blended_img[..., j] += channel_color * relative_img * blending
+
+    return blended_img
 
 
-def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, normalize_by="channel", cspace="CAM16UCS"):
+def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, normalize_by="image", cspace="Hunter Lab"):
     """Color a multichannel image to view as RGB
 
     Parameters
@@ -411,64 +458,67 @@ def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, 
         Image to color
 
     marker_colors : ndarray
-        RGB colors for each channel. These RGB values are between 0-1, not 0-255
+        sRGB colors for each channel.
 
     rescale_channels : bool
-        If True, then each channel will be scaled between 0 and 1 before building the composite RGB image. This will
-        allow markers to 'pop' in areas where they are expressed in isolation, but can also make it appear more marker
-        is expressed than there really is.
+        If True, then each channel will be scaled between 0 and 1 before
+        building the composite RGB image. This will allow markers to 'pop'
+        in areas where they are expressed in isolation, but can also make
+        it appear more marker is expressed than there really is.
 
     normalize_by : str, optionaal
-        "image" will produce an image where all values are scaled between 0 and the highest intensity in the composite image.
-        This will produce an image where one can see the expression of each marker relative to the others, making it easier to
-        compare marker expression levels.
+        "image" will produce an image where all values are scaled between
+        0 and the highest intensity in the composite image. This will produce
+        an image where one can see the expression of each marker relative to
+        the others, making it easier to compare marker expression levels.
 
-        "channel" will first scale the intensity of each channel, and then blend all of the channels together. This will allow
-        one to see the relative expression of each marker, but won't allow one to directly compare the expression of markers
-        across channels.
+        "channel" will first scale the intensity of each channel, and then
+        blend all of the channels together. This will allow one to see the
+        relative expression of each marker, but won't allow one to directly
+        compare the expression of markers across channels.
 
     cspace : str
         Colorspace in which `marker_colors` will be blended.
-        See the "color-science" package for details.
+        JzAzBz, Hunter Lab, and sRGB all work well. But, see
+        colour.COLOURSPACE_MODELS for other possible colorspaces
 
     Returns
     -------
     rgb : ndarray
-        An RGB version of `multichannel_img`
+        An sRGB version of `multichannel_img`
 
     """
 
     if rescale_channels:
         multichannel_img = np.dstack([exposure.rescale_intensity(multichannel_img[..., i].astype(float), in_range="image", out_range=(0, 1)) for i in range(multichannel_img.shape[2])])
 
-    with colour.utilities.suppress_warnings(colour_usage_warnings=True):
-        if 1 < marker_colors.max() <= 255 and np.issubdtype(marker_colors.dtype, np.integer):
-            jab_colors = colour.convert(marker_colors/255, 'sRGB', cspace)
-        else:
-            jab_colors = colour.convert(marker_colors, 'sRGB', cspace)
+    is_srgb = cspace.lower() == "srgb"
+    is_srgb_01 = True
+    if 1 < marker_colors.max() <= 255 and np.issubdtype(marker_colors.dtype, np.integer):
+        srgb_01 = marker_colors/255
+        is_srgb_01 = False
 
-
-    A, B = get_AB(multichannel_img, jab_colors[..., 1], jab_colors[..., 2])
-
-    if multichannel_img.ndim > 2:
-        if normalize_by == "channel":
-            J = np.max(multichannel_img, axis=2)
-        if normalize_by == "image":
-            J = np.sum(multichannel_img, axis=2)
     else:
-        J = multichannel_img.copy()
-
-    J = J/J.max()
-    if cspace == "JzAzBz":
-        J*= 0.01
-
+        srgb_01 = marker_colors
     eps = np.finfo("float").eps
-    with colour.utilities.suppress_warnings(colour_usage_warnings=True):
-        rgb = colour.convert(np.dstack([J, A+eps, B+eps]), cspace, 'sRGB')
+    if not is_srgb:
+        with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+            cspace_colors = colour.convert(srgb_01 + eps, 'sRGB', cspace)
+    else:
+        cspace_colors = srgb_01
 
-    rgb = (255*np.clip(rgb, 0, 1)).astype(np.uint8)
+    blended_img = blend_colors(multichannel_img, cspace_colors, normalize_by)
+    if not is_srgb:
+        with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+            srgb_blended = colour.convert(blended_img + eps, cspace, 'sRGB') - 2*eps
+    else:
+        srgb_blended = blended_img
 
-    return rgb
+    srgb_blended = np.clip(srgb_blended, 0, 1)
+    if not is_srgb_01:
+        srgb_blended = (255 * srgb_blended).astype(marker_colors.dtype)
+
+    return srgb_blended
 
 
 def color_dxdy(dx, dy, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE, cspace=DXDY_CSPACE):

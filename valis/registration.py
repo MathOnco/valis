@@ -1830,7 +1830,10 @@ class Valis(object):
         composite_img = np.dstack(composite_img_list)
         cmap = viz.jzazbz_cmap()
         channel_colors = viz.get_n_colors(cmap, composite_img.shape[2])
-        overlap_img = viz.color_multichannel(composite_img, channel_colors, rescale_channels=True)
+        overlap_img = viz.color_multichannel(composite_img, channel_colors,
+                                             rescale_channels=True,
+                                             normalize_by="channel",
+                                             cspace="CAM16UCS")
 
         min_r = int(min_r)
         max_r = int(np.ceil(max_r))
@@ -1981,9 +1984,12 @@ class Valis(object):
 
         composite_img = np.dstack(img_list)
         cmap = viz.jzazbz_cmap()
-
         channel_colors = viz.get_n_colors(cmap, composite_img.shape[2])
-        overlap_img = viz.color_multichannel(composite_img, channel_colors, rescale_channels=True)
+        overlap_img = viz.color_multichannel(composite_img, channel_colors,
+                                             rescale_channels=True,
+                                             normalize_by="channel",
+                                             cspace="CAM16UCS")
+
         overlap_img = exposure.equalize_adapthist(overlap_img)
         overlap_img = exposure.rescale_intensity(overlap_img, out_range=(0, 255)).astype(np.uint8)
 
