@@ -393,6 +393,8 @@ def check_flattened_pyramid_tiff(src_f):
     vips_img = pyvips.Image.new_from_file(src_f)
     vips_fields = vips_img.get_fields()
 
+    is_flattended_pyramid = False
+
     if 'n-pages' in vips_fields:
         n_pages = vips_img.get("n-pages")
         all_areas = [None] * n_pages
