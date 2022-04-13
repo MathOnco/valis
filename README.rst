@@ -477,6 +477,7 @@ April 13, 2022
 #. More accurate color mixing with fewer artifacts.
 #. Initializing  'is_flattended_pyramid' with False. Pull request #6
 #. Reformatting flattened pyramids to have same datatype as that in metadata.
+#. Save all images using pyvips. Should be faster.
 
 Version 1.0.0rc5 (April 5, 2022)
 --------------------------------

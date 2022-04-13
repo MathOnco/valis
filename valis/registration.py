@@ -269,6 +269,7 @@ DEFAULT_NON_RIGID_KWARGS : dict
 
 """
 
+from ctypes import util
 import traceback
 import re
 import os
@@ -280,6 +281,7 @@ import tqdm
 import pandas as pd
 import pickle
 import colour
+import pyvips
 from . import feature_matcher
 from . import serial_rigid
 from . import feature_detectors
@@ -1840,6 +1842,7 @@ class Valis(object):
         min_c = int(min_c)
         max_c = int(np.ceil(max_c))
         overlap_img = overlap_img[min_r:max_r, min_c:max_c]
+        overlap_img = (255*overlap_img).astype(np.uint8)
 
         return overlap_img
 
@@ -1925,7 +1928,7 @@ class Valis(object):
             slide_obj.processed_img_f = processed_f_out
             slide_obj.processed_img_shape_rc = np.array(processed_img.shape[0:2])
 
-            io.imsave(processed_f_out, processed_img)
+            warp_tools.save_img(processed_f_out, processed_img)
             if self.norm_method is not None:
                 if self.norm_method == "histo_match":
                     img_hist, _ = np.histogram(processed_img, bins=256)
@@ -1954,7 +1957,8 @@ class Valis(object):
         """
         print("\n==== Normalizing images\n")
         for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
-            img = io.imread(slide_obj.processed_img_f, True)
+            vips_img = pyvips.Image.new_from_file(slide_obj.processed_img_f)
+            img = warp_tools.vips2numpy(vips_img)
             if self.norm_method == "histo_match":
                 normed_img = preprocessing.match_histograms(img, target)
             elif self.norm_method == "img_stats":
@@ -1962,7 +1966,7 @@ class Valis(object):
             normed_img = exposure.rescale_intensity(normed_img, out_range=(0, 255)).astype(np.uint8)
 
             slide_obj.processed_img_shape_rc = np.array(normed_img.shape[0:2])
-            io.imsave(slide_obj.processed_img_f, normed_img)
+            warp_tools.save_img(slide_obj.processed_img_f, normed_img)
 
     def create_thumbnail(self, img, rescale_color=False):
         """Create thumbnail image to view results
@@ -2134,20 +2138,17 @@ class Valis(object):
         overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
 
         rigid_img_list = [img_obj.registered_img for img_obj in rigid_registrar.img_obj_list]
-        rigid_overlap_img = self.draw_overlap_img(rigid_img_list)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
-        self.rigid_overlap_img = self.create_thumbnail(rigid_overlap_img, self.thumbnail_size)
+        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
 
         pathlib.Path(self.overlap_dir).mkdir(exist_ok=True, parents=True)
         rigid_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_rigid_overlap.png")
-        io.imsave(rigid_overlap_img_fout, self.rigid_overlap_img)
+        warp_tools.save_img(rigid_overlap_img_fout, self.rigid_overlap_img, thumbnail_size=self.thumbnail_size)
 
         # Create original overlap image #
-        original_overlap_img = self.create_original_composite_img(rigid_registrar)
-        self.original_overlap_img = self.create_thumbnail(original_overlap_img, self.thumbnail_size)
+        self.original_overlap_img = self.create_original_composite_img(rigid_registrar)
 
         original_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_original_overlap.png")
-        io.imsave(original_overlap_img_fout, self.original_overlap_img)
-
+        warp_tools.save_img(original_overlap_img_fout,  self.original_overlap_img, thumbnail_size=self.thumbnail_size)
 
         pathlib.Path(self.reg_dst_dir).mkdir(exist_ok=  True, parents=  True)
         # Update attributes in slide_obj #
@@ -2196,11 +2197,10 @@ class Valis(object):
                 img_to_warp = slide_obj.image
 
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=self.crop)
-            warped_img = self.create_thumbnail(warped_img, self.thumbnail_size)
-            io.imsave(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8))
+            warp_tools.save_img(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8), thumbnail_size=self.thumbnail_size)
 
             # Replace processed image with a thumbnail #
-            io.imsave(slide_obj.processed_img_f, self.create_thumbnail(slide_reg_obj.image, self.thumbnail_size))
+            warp_tools.save_img(slide_obj.processed_img_f, slide_reg_obj.image, thumbnail_size=self.thumbnail_size)
 
         return rigid_registrar
 
@@ -2241,11 +2241,10 @@ class Valis(object):
         overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
         overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
         non_rigid_img_list = [nr_img_obj.registered_img for nr_img_obj in non_rigid_registrar.non_rigid_obj_list]
-        non_rigid_overlap_img = self.draw_overlap_img(non_rigid_img_list)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
-        self.non_rigid_overlap_img = self.create_thumbnail(non_rigid_overlap_img, self.thumbnail_size)
+        self.non_rigid_overlap_img  = self.draw_overlap_img(non_rigid_img_list)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
 
         overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_non_rigid_overlap.png")
-        io.imsave(overlap_img_fout, self.non_rigid_overlap_img)
+        warp_tools.save_img(overlap_img_fout, self.non_rigid_overlap_img, thumbnail_size=self.thumbnail_size)
 
         n_digits = len(str(self.size))
         for slide_name, slide_obj in self.slide_dict.items():
@@ -2261,8 +2260,7 @@ class Valis(object):
                 img_to_warp = slide_obj.image
 
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=True, crop=self.crop)
-            warped_img = self.create_thumbnail(warped_img, self.thumbnail_size)
-            io.imsave(slide_obj.nr_rigid_reg_img_f, warped_img.astype(np.uint8))
+            warp_tools.save_img(slide_obj.nr_rigid_reg_img_f, warped_img, thumbnail_size=self.thumbnail_size)
 
             # Save deformation grid
             scaling = np.min(self.thumbnail_size/np.array(slide_obj.reg_img_shape_rc[:2]))
@@ -2283,8 +2281,7 @@ class Valis(object):
                                                                     n_grid_pts=25)
 
             deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
-
-            io.imsave(deform_img_f, thumbanil_deform_grid)
+            warp_tools.save_img(deform_img_f, thumbanil_deform_grid, thumbnail_size=self.thumbnail_size)
 
 
         return non_rigid_registrar
