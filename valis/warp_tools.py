@@ -151,6 +151,39 @@ def rescale_img(img, scaling):
     return img
 
 
+def save_img(dst_f, img, thumbnail_size=None):
+    """Save an image using pyvips
+
+    Parameters
+    ----------
+    dst_f : str
+        Filename for saved image
+
+    img : ndarray, pyvips.Image
+        Image to be saved. Numpy arrays will be converted to pvips.Image
+
+    thumbnail_size : optional, int
+        If not None, the image will be resized to fit within this size
+
+    """
+    if not isinstance(img, pyvips.Image):
+        vips_img = numpy2vips(img)
+    else:
+        vips_img = img
+
+    if thumbnail_size is not None:
+        vips_wh = np.array([vips_img.width, vips_img.height])
+        s = np.min(thumbnail_size/vips_wh)
+        if s < 1:
+            out_img = vips_img.resize(s)
+        else:
+            out_img = vips_img
+    else:
+        out_img = vips_img
+
+    out_img.write_to_file(dst_f)
+
+
 def get_pts_in_bbox(xy, xywh):
     x0, y0 = xywh[0:2]
     x1, y1 = xywh[0:2] + xywh[2:]
