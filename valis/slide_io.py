@@ -1947,12 +1947,15 @@ def get_slide_reader(src_f, series=None):
         return reader
 
     n_series = 1
+    is_rgb = None
     if can_use_bf:
         with valtils.HiddenPrints():
             bf_reader = BioFormatsSlideReader(src_f)
 
         n_series = bf_reader.n_series
         is_ometiff = re.search("ome-tiff", bf_reader.metadata.server.lower()) is not None
+        is_rgb = bf_reader.metadata.is_rgb
+
         if series is None:
             series = bf_reader.series
     else:
@@ -1978,8 +1981,9 @@ def get_slide_reader(src_f, series=None):
         reader = VipsSlideReader
 
     elif is_ometiff:
-        if series == 0 and n_series == 1:
+        if series == 0 and n_series == 1 and is_rgb and is_rgb is not None:
             # Seems pvips can only read ome.tiff if there is 1 series.
+            # Converting a multichannel pyvips.Image is very slow, but is fast for RGB
             reader = VipsSlideReader
         else:
             reader = BioFormatsSlideReader
