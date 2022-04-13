@@ -474,7 +474,7 @@ Change Log
 
 Version 1.0.0rc6 (in progress)
 --------------------------------
-#. More accurate color mixing with fewer artifacts.
+#. More accurate color mixing with fewer artifacts. Affects overlap images and pseudo-colored multi-channel images.
 #. Initializing  'is_flattended_pyramid' with False. Pull request #6
 #. Reformatting flattened pyramids to have same datatype as that in metadata.
 #. Save all images using pyvips. Should be faster.
