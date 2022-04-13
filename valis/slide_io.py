@@ -25,6 +25,8 @@ import ome_types
 import jpype
 import bioformats_jar
 from tqdm import tqdm
+import struct
+
 from . import valtils
 from . import slide_tools
 from . import warp_tools
@@ -301,12 +303,7 @@ def vips2bf_dtype(vips_format):
     Parameters
     ----------
     vips_format : str
-        Format of the pyvips.Ima
-    bf_pixel_type : int
-        Integer indicating the Bioformats pixel type
-
-    little_endian : bool
-        Whether or not the image is little endian
+        Format of the pyvips.Image
 
     Returns
     -------
@@ -319,6 +316,27 @@ def vips2bf_dtype(vips_format):
     bf_dtype = slide_tools.NUMPY_FORMAT_BF_DTYPE[str(np_dtype().dtype)]
 
     return bf_dtype
+
+
+def bf2vips_dtype(bf_dtype):
+    """Get bioformats equivalent of the pyvips pixel type
+
+    Parameters
+    ----------
+    bf_dtype : str
+        String format of Bioformats datatype
+
+    Returns
+    -------
+    vips_format : str
+        Format of the pyvips.Image
+
+    """
+
+    np_type = slide_tools.BF_FORMAT_NUMPY_DTYPE[bf_dtype]
+    vips_format = slide_tools.NUMPY_FORMAT_VIPS_DTYPE[np_type]
+
+    return vips_format
 
 
 def check_to_use_openslide(src_f):
@@ -349,8 +367,6 @@ def check_to_use_openslide(src_f):
                 use_openslide = True
         except pyvips.error.Error as e:
             valtils.print_warning(e)
-            # msg = f"OpenSlide cannot be found. Will try to open with {BF_RDR} or {IMG_RDR}"
-            # valtils.print_warning(msg)
 
     return use_openslide
 
@@ -393,6 +409,7 @@ def check_flattened_pyramid_tiff(src_f):
     vips_img = pyvips.Image.new_from_file(src_f)
     vips_fields = vips_img.get_fields()
 
+    is_flattended_pyramid = False # From pull request
     if 'n-pages' in vips_fields:
         n_pages = vips_img.get("n-pages")
         all_areas = [None] * n_pages
@@ -1565,6 +1582,10 @@ class FlattenedPyramidReader(VipsSlideReader):
 
     def __init__(self, src_f, *args, **kwargs):
         super().__init__(src_f, *args, **kwargs)
+        # BF Datatype may not match min/max values in the image
+        # e.g. datatype is uint32, but min and max are floats
+        self.metadata.img_dtype = None
+        self.metadata.img_dtype = self._get_dtype()
 
     def create_metadata(self):
         is_flattended_pyramid, bf_reads_flat, slide_dimensions,\
@@ -1599,7 +1620,11 @@ class FlattenedPyramidReader(VipsSlideReader):
             channel_names = self._get_channel_names(vips_img, n_channels)
 
         slide_meta.channel_names = channel_names
-        slide_meta.img_dtype = self._get_dtype(vips_img)
+
+        # # BF Datatype may not match min/max values in the image
+        # # e.g. datatype is uint32, but min and max are float32
+        # # slide_meta.img_dtype = self._get_dtype(vips_img)
+        # slide_meta.img_dtype = self._get_dtype()
 
         return slide_meta
 
@@ -1641,8 +1666,17 @@ class FlattenedPyramidReader(VipsSlideReader):
         if xywh is not None:
             vips_slide = vips_slide.extract_area(*xywh)
 
-        if vips_slide.format != self.metadata.img_dtype and self.metadata.img_dtype is not None:
-            vips_slide = vips_slide.copy(format=self.metadata.img_dtype)
+        if self.metadata.bf_datatype != self.metadata.img_dtype and self.metadata.img_dtype is not None:
+            # Min/max/response datatypes in xml don't match values image.
+            # Will cast image to match values in xml
+            msg = (f"Bio-formats datatype is {self.metadata.bf_datatype}, "
+                   f"but min/max/response values in xml are {self.metadata.img_dtype}. "
+                   f"Converting to {self.metadata.img_dtype}"
+                   )
+            valtils.print_warning(msg)
+            vips_dtype = bf2vips_dtype(self.metadata.img_dtype)
+            vips_slide = vips_slide.copy(format=vips_dtype)
+            self.bf_datatype = self.metadata.img_dtype
 
         if vips_slide.bands == 1:
             vips_slide = vips_slide.copy(interpretation="b-w")
@@ -1666,7 +1700,7 @@ class FlattenedPyramidReader(VipsSlideReader):
             valtils.print_warning(msg2, None)
 
             s = np.mean(out_shape_wh/self.metadata.slide_dimensions[0])
-            l0_slide =  self.slide2vips(level=0, xywh=xywh, *args, **kwargs)
+            l0_slide = self.slide2vips(level=0, xywh=xywh, *args, **kwargs)
             resized = l0_slide.resize(s)
             vips_img = slide_tools.vips2numpy(resized)
             if not np.all(vips_img.shape[0:2][::-1] == out_shape_wh):
@@ -1703,28 +1737,43 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         return n_pages
 
-    def _get_dtype(self, vips_img):
 
+    def _get_dtype(self):
+        """Get Bio-Formats datatype from values in metadata.
+
+        For example, BF metadata may have image datatype as
+        uint32, but in the image descriiption, min/max/resppnse,
+        are floats. This will determine if the slide should be cast
+        to a different dataatype to match values in metadata.
+
+        """
+        smallest_level = len(self.metadata.slide_dimensions) - 1
+        vips_img = self.slide2vips(smallest_level)
         vips_fields = vips_img.get_fields()
+        current_bf_dtype = vips2bf_dtype(vips_img.format)
         if 'n-pages' in vips_fields:
             page = pyvips.Image.new_from_file(self.src_f, page=0)
             page_metadata = page.get("image-description")
 
             page_soup = BeautifulSoup(page_metadata, features="lxml")
             channels = page_soup.findAll("channel")
+            response = page_soup.findAll("response")
             if len(channels) > 0:
+                # Indica Labs tiff
                 dtypes = [None] * len(channels)
                 for i, chnl in enumerate(channels):
                     if chnl.has_attr("max"):
                         max_v = eval(chnl["max"])
                         dtypes[i] = max_v.__class__.__name__
+
+            elif len(response) > 0:
+                dtypes = [None] * len(response)
+                for i, r in enumerate(response):
+                    v = eval(r.getText("response"))
+                    dtypes[i] = np.array([v]).dtype
+                    dtypes[i] = v.__class__.__name__
             else:
-                response = page_soup.findAll("response")
-                if len(response) > 0:
-                    dtypes = [None] * len(response)
-                    for i, r in enumerate(response):
-                        v = eval(r.getText("response"))
-                        dtypes[i] = v.__class__.__name__
+                return current_bf_dtype
 
             unique_dtypes = set(dtypes)
             if len(unique_dtypes) > 1:
@@ -1734,7 +1783,24 @@ class FlattenedPyramidReader(VipsSlideReader):
             else:
                 img_dtype = dtypes[0]
 
-            return img_dtype
+            vals_are_floats = re.search("float", img_dtype) is not None
+            img_is_int = re.search("int", current_bf_dtype) is not None
+            if vals_are_floats and img_is_int:
+                max_v = vips_img.max()
+                bytes_object = struct.pack(">l", int(max_v))
+                float_value = struct.unpack(">f", bytes_object)[0]
+
+                if np.isclose(float_value, np.float32(float_value)):
+                    np_type = "float32"
+                else:
+                    np_type = "float64"
+
+                bf_type = slide_tools.NUMPY_FORMAT_BF_DTYPE[np_type]
+
+        else:
+            bf_type = current_bf_dtype
+
+        return bf_type
 
 
 class ImageReader(SlideReader):

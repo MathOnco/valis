@@ -472,6 +472,12 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 Change Log
 ==========
 
+April 13, 2022
+--------------------------------
+#. More accurate color mixing with fewer artifacts.
+#. Initializing  'is_flattended_pyramid' with False. Pull request #6
+#. Reformatting flattened pyramids to have same datatype as that in metadata.
+
 Version 1.0.0rc5 (April 5, 2022)
 --------------------------------
 #. Can provide a reference image that the others will be aligned towards. To do this, when initializinig the Valis object, set the :code:`reference_img_f` argument to be the file name of the reference image. If not set by the user, the reference image will be set as the one at the center of the ordered image stack

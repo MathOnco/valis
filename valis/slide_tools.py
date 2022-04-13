@@ -57,6 +57,8 @@ NUMPY_FORMAT_BF_DTYPE = {'uint8': 'uint8',
                          'float32': 'float',
                          'float64': 'double'}
 
+BF_FORMAT_NUMPY_DTYPE = {v:k for k, v in NUMPY_FORMAT_BF_DTYPE.items()}
+
 
 def vips2numpy(vi):
     """
