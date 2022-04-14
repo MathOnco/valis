@@ -1621,11 +1621,6 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         slide_meta.channel_names = channel_names
 
-        # # BF Datatype may not match min/max values in the image
-        # # e.g. datatype is uint32, but min and max are float32
-        # # slide_meta.img_dtype = self._get_dtype(vips_img)
-        # slide_meta.img_dtype = self._get_dtype()
-
         return slide_meta
 
     def slide2vips(self, level, xywh=None, *args, **kwargs):
@@ -1668,7 +1663,6 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         if self.metadata.bf_datatype != self.metadata.img_dtype and self.metadata.img_dtype is not None:
             # Min/max/response datatypes in xml don't match values image.
-            # Will cast image to match values in xml
             msg = (f"Bio-formats datatype is {self.metadata.bf_datatype}, "
                    f"but min/max/response values in xml are {self.metadata.img_dtype}. "
                    f"Converting to {self.metadata.img_dtype}"

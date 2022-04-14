@@ -721,7 +721,7 @@ class Slide(object):
         """Get position of pixel that has color used for background
         """
         if self.img_type == slide_tools.IHC_NAME:
-            #RGB. Get brightest pixel
+            # RGB. Get brightest pixel
             eps = np.finfo("float").eps
             with colour.utilities.suppress_warnings(colour_usage_warnings=True):
                 if 1 < self.image.max() <= 255 and np.issubdtype(self.image.dtype, np.integer):
@@ -2184,8 +2184,8 @@ class Valis(object):
                 warp_tools.get_pts_in_bbox(current_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
 
             matched_kp_in_bbox = np.intersect1d(prev_kp_in_bbox_idx, current_kp_in_bbox_idx)
-            slide_obj.xy_matched_to_prev_in_bbox =  slide_obj.xy_matched_to_prev[matched_kp_in_bbox] # Found using processed img
-            slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox] # Found using processed img. Image at idx=i-1
+            slide_obj.xy_matched_to_prev_in_bbox =  slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
+            slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
 
 
         # Overwrite black and white processed images #
