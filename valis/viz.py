@@ -389,7 +389,6 @@ def get_n_colors(rgb, n):
     return rgb[rgb_idx]
 
 
-# @nb.njit('double[:, :, :](float32[:, :, :],double[:, :], unicode_type)', fastmath=True, cache=True)
 @nb.njit(fastmath=True, cache=True)
 def blend_colors(img, colors, scale_by):
     """ Color an image by blending

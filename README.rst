@@ -472,11 +472,13 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 Change Log
 ==========
 
-April 13, 2022
+Version 1.0.0rc6 (in progress)
 --------------------------------
-#. More accurate color mixing with fewer artifacts.
+#. More accurate color mixing with fewer artifacts. Affects overlap images and pseudo-colored multi-channel images.
 #. Initializing  'is_flattended_pyramid' with False. Pull request #6
 #. Reformatting flattened pyramids to have same datatype as that in metadata.
+#. Saving all images using pyvips. Should be faster.
+#. Using Bio-Formats to read non-RGB ome-tiff. Addresses an issue where converting non-RGB ome-tiff read by pyvips was very slow.
 
 Version 1.0.0rc5 (April 5, 2022)
 --------------------------------

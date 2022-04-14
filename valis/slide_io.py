@@ -1621,11 +1621,6 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         slide_meta.channel_names = channel_names
 
-        # # BF Datatype may not match min/max values in the image
-        # # e.g. datatype is uint32, but min and max are float32
-        # # slide_meta.img_dtype = self._get_dtype(vips_img)
-        # slide_meta.img_dtype = self._get_dtype()
-
         return slide_meta
 
     def slide2vips(self, level, xywh=None, *args, **kwargs):
@@ -1668,7 +1663,6 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         if self.metadata.bf_datatype != self.metadata.img_dtype and self.metadata.img_dtype is not None:
             # Min/max/response datatypes in xml don't match values image.
-            # Will cast image to match values in xml
             msg = (f"Bio-formats datatype is {self.metadata.bf_datatype}, "
                    f"but min/max/response values in xml are {self.metadata.img_dtype}. "
                    f"Converting to {self.metadata.img_dtype}"
@@ -1947,12 +1941,15 @@ def get_slide_reader(src_f, series=None):
         return reader
 
     n_series = 1
+    is_rgb = None
     if can_use_bf:
         with valtils.HiddenPrints():
             bf_reader = BioFormatsSlideReader(src_f)
 
         n_series = bf_reader.n_series
         is_ometiff = re.search("ome-tiff", bf_reader.metadata.server.lower()) is not None
+        is_rgb = bf_reader.metadata.is_rgb
+
         if series is None:
             series = bf_reader.series
     else:
@@ -1978,8 +1975,9 @@ def get_slide_reader(src_f, series=None):
         reader = VipsSlideReader
 
     elif is_ometiff:
-        if series == 0 and n_series == 1:
+        if series == 0 and n_series == 1 and is_rgb and is_rgb is not None:
             # Seems pvips can only read ome.tiff if there is 1 series.
+            # Converting a multichannel pyvips.Image is very slow, but is fast for RGB
             reader = VipsSlideReader
         else:
             reader = BioFormatsSlideReader
