@@ -1587,6 +1587,7 @@ class FlattenedPyramidReader(VipsSlideReader):
         self.metadata.img_dtype = None
         self.metadata.img_dtype = self._get_dtype()
 
+
     def create_metadata(self):
         is_flattended_pyramid, bf_reads_flat, slide_dimensions,\
         levels_start_idx, n_channels = \
@@ -1761,6 +1762,7 @@ class FlattenedPyramidReader(VipsSlideReader):
                         dtypes[i] = max_v.__class__.__name__
 
             elif len(response) > 0:
+                # PerkinElmer-QPI tiff
                 dtypes = [None] * len(response)
                 for i, r in enumerate(response):
                     v = eval(r.getText("response"))
@@ -1781,16 +1783,15 @@ class FlattenedPyramidReader(VipsSlideReader):
             img_is_int = re.search("int", current_bf_dtype) is not None
             if vals_are_floats and img_is_int:
                 max_v = vips_img.max()
-                bytes_object = struct.pack(">l", int(max_v))
-                float_value = struct.unpack(">f", bytes_object)[0]
 
-                if np.isclose(float_value, np.float32(float_value)):
+                bf_px_num_type = FormatTools.pixelTypeFromString(self.metadata.bf_datatype)
+                temp_np_type, max_v_for_type = bf_to_numpy_dtype(bf_px_num_type, self.metadata.is_little_endian)
+                if temp_np_type.endswith('4'):
                     np_type = "float32"
-                else:
+                elif temp_np_type.endswith('8'):
                     np_type = "float64"
 
                 bf_type = slide_tools.NUMPY_FORMAT_BF_DTYPE[np_type]
-
         else:
             bf_type = current_bf_dtype
 
