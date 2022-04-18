@@ -1,4 +1,4 @@
-__version__ = "1.0.0rc5"
+__version__ = "1.0.0rc6"
 
 from . import affine_optimizer
 from . import feature_detectors

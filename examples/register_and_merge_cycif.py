@@ -50,6 +50,7 @@ method.
 
 """
 
+from valis import registration, slide_io, valtils, warp_tools
 import time
 import os
 from valis import registration, valtils
