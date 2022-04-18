@@ -472,7 +472,7 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 Change Log
 ==========
 
-Version 1.0.0rc6 (in progress)
+Version 1.0.0rc6 (April 18, 2022)
 --------------------------------
 #. More accurate color mixing with fewer artifacts. Affects overlap images and pseudo-colored multi-channel images.
 #. Initializing  'is_flattended_pyramid' with False. Pull request #6
