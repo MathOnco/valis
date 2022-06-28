@@ -38,6 +38,7 @@ requirements:
     - setuptools
     - beautifulsoup4
     - bioformats_jar
+    - scyjava
     - colorama
     - fastcluster
     - interpolation
