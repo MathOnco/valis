@@ -32,6 +32,7 @@ image's dimensions.
 
 """
 
+
 import os
 import pickle
 import numpy as np
@@ -41,7 +42,7 @@ from valis import registration, warp_tools
 
 # Load a registrar that has been saved
 registrar_f = "./expected_results/registration/ihc/data/ihc_registrar.pickle"
-registrar = pickle.load(open(registrar_f, 'rb'))
+registrar = registration.load_registrar(registrar_f)
 COORD_LEVEL = 0  # pyramid level from which the ROI coordinates originated. Usually 0.
 
 # ROI coordinates, in microns. These came from the unregistered slide "ihc_2.ome.tiff"
