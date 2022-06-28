@@ -2,6 +2,11 @@
 Registration
 *************
 
+Functions
+=========
+.. automodule:: valis.registration
+    :members: load_registrar, init_jvm, kill_jvm
+
 Valis
 -----
 .. autoclass:: valis.registration::Valis

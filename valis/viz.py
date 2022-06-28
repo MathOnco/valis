@@ -9,7 +9,7 @@ from scipy.spatial import distance
 import numpy as np
 import numba as nb
 from . import warp_tools
-
+import cv2
 # JzAzBz #
 DXDY_CSPACE = "JzAzBz"
 DXDY_CRANGE = (0, 0.025)
@@ -72,8 +72,6 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, alignment='horizontal'):
     plt.title(" ".join([str(len(kp1_xy)), "matches"]))
     ax.axis('off')
     plt.tight_layout()
-    # plt.close()
-
 
 def draw_clusterd_D(D, optimal_Z):
     """Draw clustered distance matrix with dendrograms along the axes
@@ -95,13 +93,11 @@ def draw_clusterd_D(D, optimal_Z):
     axdendro_top.set_yticks([])
     axdendro_top.axis('off')
 
-    # axmatrix = fig.add_axes([0.2, 0.1, 0.6, 0.8])
     axmatrix = fig.add_axes([0.115, 0.05, 0.6, 0.798])
     im = axmatrix.matshow(D, aspect='auto', cmap="plasma_r")
     axmatrix.set_xticks([])
     axmatrix.set_yticks([])
 
-    # axcolor = fig.add_axes([0.82, 0.05, 0.02, 0.8])
     axcolor = fig.add_axes([0.75, 0.05, 0.03, 0.798])
     plt.colorbar(im, cax=axcolor)
 
@@ -129,12 +125,10 @@ def get_grid(shape, grid_spacing, thickness=1):
         2, 1D arrays, which each element corresponding to a point in the grid
     """
 
-    all_rows =[]
+    all_rows = []
     all_cols = []
-    # thickness = 2
     row_add_idx = 0
     for k in range(thickness):
-        # for i in np.arange(thickness//2, shape[0] + grid_spacing, grid_spacing):
         for i in np.arange(grid_spacing - thickness, shape[0] + thickness, grid_spacing):
             for j in np.arange(0, shape[1]):
                 if k%2 == 0:
@@ -151,7 +145,6 @@ def get_grid(shape, grid_spacing, thickness=1):
 
     col_add_idx = 0
     for k in range(thickness):
-        # for j in np.arange(thickness//2, shape[1] + grid_spacing, grid_spacing):
         for j in np.arange(grid_spacing - thickness, shape[1], grid_spacing):
             for i in np.arange(0, shape[0]):
                 if k%2 == 0:
@@ -194,7 +187,6 @@ def jzazbz_cmap(luminosity=0.012, colorfulness=0.02, max_h=260):
         rgb = colour.convert(jzazbz, 'JzAzBz', 'sRGB')
 
     rgb = np.clip(rgb, 0, 1)[0]
-    max_h = 260
     if max_h != 360:
         rgb = rgb[0:max_h]
 
@@ -230,6 +222,12 @@ def cam16ucs_cmap(luminosity=0.8, colorfulness=0.5, max_h=300):
 
     return rgb
 
+
+
+def make_cbar(rgb, bar_height=30):
+    cbar = np.tile(rgb.T, bar_height).T
+
+    return cbar
 
 
 def rgb_triangle_cmap():
@@ -367,10 +365,9 @@ def get_n_colors(rgb, n):
         else:
             cam = colour.convert(rgb, 'sRGB', 'CAM16UCS')
 
-    # sq_D = distance.cdist(cam, cam, metric=colour.difference.delta_E_CAM16UCS)
     sq_D = distance.cdist(cam, cam)
     max_D = sq_D.max()
-    most_dif_2Didx = np.where(sq_D == max_D) ### 2 most different colors
+    most_dif_2Didx = np.where(sq_D == max_D)  # 2 most different colors
     most_dif_img1 = most_dif_2Didx[0][0]
     most_dif_img2 = most_dif_2Didx[1][0]
     rgb_idx = [most_dif_img1, most_dif_img2]
@@ -388,27 +385,66 @@ def get_n_colors(rgb, n):
     return rgb[rgb_idx]
 
 
-@nb.njit()
-def get_AB(img, a, b):
+@nb.njit(fastmath=True, cache=True)
+def blend_colors(img, colors, scale_by):
+    """ Color an image by blending
+
+    Parameters
+    ----------
+    img : ndarray
+        Image containing the raw data (float 32)
+
+    colors : ndarray
+        Colors for each channel in `img`
+
+    scale_by : int
+        How to scale each channel. "image" will scale the channel
+        by the maximum value in the image. "channel" will scale
+        the channel by the maximum in the channel
+
+    Returns
+    -------
+    blended_img : ndarray
+        A colored version of `img`
+
+    """
+
+
+    if len(colors) > 1:
+        n_channel_colors = colors.shape[1]
+    else:
+        n_channel_colors = len(colors)
+
+    if img.ndim > 2:
+        r, c, nc = img.shape[:3]
+    else:
+        nc = 1
+        r, c = img.shape[2]
 
     eps = 1.0000000000000001e-15
-    A = np.zeros(img.shape[0:2])
-    B = np.zeros(img.shape[0:2])
-    if img.ndim > 2:
-        sum_img = np.sum(img, axis=2) + eps  # Avoid division by 0
-        for i in range(img.shape[2]):
-            chanel_weight = img[..., i]/sum_img
-            A += a[i] * chanel_weight
-            B += b[i] * chanel_weight
-    else:
-        sum_img = img/(img.max())
-        A = a * sum_img
-        B = b * sum_img
+    sum_img = img.sum(axis=2) + eps
+    if scale_by == "image":
+        img_max = img.max()
 
-    return A, B
+    blended_img = np.zeros((r, c, n_channel_colors))
+    for i in range(nc):
+        # relative image is how bright the channel will be
+        if scale_by != "image":
+            channel_max = img[..., i].max()
+            relative_img = img[..., i] / channel_max
+        else:
+            relative_img = img[..., i]/img_max
+
+        # blending is how to weight the mix of colors, similar to an alpha channel
+        blending = img[..., i]/sum_img
+        for j in range(colors.shape[1]):
+            channel_color = colors[i, j]
+            blended_img[..., j] += channel_color * relative_img * blending
+
+    return blended_img
 
 
-def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, normalize_by="channel", cspace="CAM16UCS"):
+def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, normalize_by="image", cspace="Hunter Lab"):
     """Color a multichannel image to view as RGB
 
     Parameters
@@ -417,64 +453,67 @@ def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, 
         Image to color
 
     marker_colors : ndarray
-        RGB colors for each channel. These RGB values are between 0-1, not 0-255
+        sRGB colors for each channel.
 
     rescale_channels : bool
-        If True, then each channel will be scaled between 0 and 1 before building the composite RGB image. This will
-        allow markers to 'pop' in areas where they are expressed in isolation, but can also make it appear more marker
-        is expressed than there really is.
+        If True, then each channel will be scaled between 0 and 1 before
+        building the composite RGB image. This will allow markers to 'pop'
+        in areas where they are expressed in isolation, but can also make
+        it appear more marker is expressed than there really is.
 
     normalize_by : str, optionaal
-        "image" will produce an image where all values are scaled between 0 and the highest intensity in the composite image.
-        This will produce an image where one can see the expression of each marker relative to the others, making it easier to
-        compare marker expression levels.
+        "image" will produce an image where all values are scaled between
+        0 and the highest intensity in the composite image. This will produce
+        an image where one can see the expression of each marker relative to
+        the others, making it easier to compare marker expression levels.
 
-        "channel" will first scale the intensity of each channel, and then blend all of the channels together. This will allow
-        one to see the relative expression of each marker, but won't allow one to directly compare the expression of markers
-        across channels.
+        "channel" will first scale the intensity of each channel, and then
+        blend all of the channels together. This will allow one to see the
+        relative expression of each marker, but won't allow one to directly
+        compare the expression of markers across channels.
 
     cspace : str
         Colorspace in which `marker_colors` will be blended.
-        See the "color-science" package for details.
+        JzAzBz, Hunter Lab, and sRGB all work well. But, see
+        colour.COLOURSPACE_MODELS for other possible colorspaces
 
     Returns
     -------
     rgb : ndarray
-        An RGB version of `multichannel_img`
+        An sRGB version of `multichannel_img`
 
     """
 
     if rescale_channels:
         multichannel_img = np.dstack([exposure.rescale_intensity(multichannel_img[..., i].astype(float), in_range="image", out_range=(0, 1)) for i in range(multichannel_img.shape[2])])
 
-    with colour.utilities.suppress_warnings(colour_usage_warnings=True):
-        if 1 < marker_colors.max() <= 255 and np.issubdtype(marker_colors.dtype, np.integer):
-            jab_colors = colour.convert(marker_colors/255, 'sRGB', cspace)
-        else:
-            jab_colors = colour.convert(marker_colors, 'sRGB', cspace)
+    is_srgb = cspace.lower() == "srgb"
+    is_srgb_01 = True
+    if 1 < marker_colors.max() <= 255 and np.issubdtype(marker_colors.dtype, np.integer):
+        srgb_01 = marker_colors/255
+        is_srgb_01 = False
 
-
-    A, B = get_AB(multichannel_img, jab_colors[..., 1], jab_colors[..., 2])
-
-    if multichannel_img.ndim > 2:
-        if normalize_by == "channel":
-            J = np.max(multichannel_img, axis=2)
-        if normalize_by == "image":
-            J = np.sum(multichannel_img, axis=2)
     else:
-        J = multichannel_img.copy()
-
-    J = J/J.max()
-    if cspace == "JzAzBz":
-        J*= 0.01 #0.025
-
+        srgb_01 = marker_colors
     eps = np.finfo("float").eps
-    with colour.utilities.suppress_warnings(colour_usage_warnings=True):
-        rgb = colour.convert(np.dstack([J, A+eps, B+eps]), cspace, 'sRGB')
+    if not is_srgb:
+        with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+            cspace_colors = colour.convert(srgb_01 + eps, 'sRGB', cspace)
+    else:
+        cspace_colors = srgb_01
 
-    rgb = (255*np.clip(rgb, 0, 1)).astype(np.uint8)
+    blended_img = blend_colors(multichannel_img, cspace_colors, normalize_by)
+    if not is_srgb:
+        with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+            srgb_blended = colour.convert(blended_img + eps, cspace, 'sRGB') - 2*eps
+    else:
+        srgb_blended = blended_img
 
-    return rgb
+    srgb_blended = np.clip(srgb_blended, 0, 1)
+    if not is_srgb_01:
+        srgb_blended = (255 * srgb_blended).astype(marker_colors.dtype)
+
+    return srgb_blended
 
 
 def color_dxdy(dx, dy, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE, cspace=DXDY_CSPACE):
@@ -602,78 +641,27 @@ def color_displacement_grid(bk_dx, bk_dy, c_range=DXDY_CRANGE, l_range=DXDY_LRAN
     return grid_img
 
 
-def trapez(y,y0,w):
-    return np.clip(np.minimum(y+1+w/2-y0, -y+1+w/2+y0),0,1)
-
-def weighted_line(r0, c0, r1, c1, w, rmin=0, rmax=np.inf):
-    # The algorithm below works fine if c1 >= c0 and c1-c0 >= abs(r1-r0).
-    # If either of these cases are violated, do some switches.
-    if abs(c1-c0) < abs(r1-r0):
-        # Switch x and y, and switch again when returning.
-        xx, yy, val = weighted_line(c0, r0, c1, r1, w, rmin=rmin, rmax=rmax)
-        return (yy, xx, val)
-
-    # At this point we know that the distance in columns (x) is greater
-    # than that in rows (y). Possibly one more switch if c0 > c1.
-    if c0 > c1:
-        return weighted_line(r1, c1, r0, c0, w, rmin=rmin, rmax=rmax)
-
-    # The following is now always < 1 in abs
-    slope = (r1-r0) / (c1-c0)
-
-    # Adjust weight by the slope
-    w *= np.sqrt(1+np.abs(slope)) / 2
-
-    # We write y as a function of x, because the slope is always <= 1
-    # (in absolute value)
-    x = np.arange(c0, c1+1, dtype=float)
-    y = x * slope + (c1*r0-c0*r1) / (c1-c0)
-
-    # Now instead of 2 values for y, we have 2*np.ceil(w/2).
-    # All values are 1 except the upmost and bottommost.
-    thickness = np.ceil(w/2)
-    yy = (np.floor(y).reshape(-1,1) + np.arange(-thickness-1,thickness+2).reshape(1,-1))
-    xx = np.repeat(x, yy.shape[1])
-    vals = trapez(yy, y.reshape(-1,1), w).flatten()
-
-    yy = yy.flatten()
-
-    # Exclude useless parts and those outside of the interval
-    # to avoid parts outside of the picture
-    mask = np.logical_and.reduce((yy >= rmin, yy < rmax, vals > 0))
-
-    return (yy[mask].astype(int), xx[mask].astype(int), vals[mask])
-
-
 def draw_trimesh(shape_rc, tri_verts, tri_faces, thickness=2):
     """Draw a triangular mesh
     """
 
-    def draw_line(tri_img, pt1_xy, pt2_xy):
-        r, c, v = weighted_line(*pt1_xy[::-1], *pt2_xy[::-1], thickness)
-        r = np.clip(r, 0, tri_img.shape[0]-1)
-        c = np.clip(c, 0, tri_img.shape[1]-1)
-        tri_img[r, c] = v
-
     tri_img = np.zeros(shape_rc)
     for face in tri_faces:
-        l1_xy = tri_verts[face[0]]
-        l2_xy = tri_verts[face[1]]
-        l3_xy = tri_verts[face[2]]
+        verts = tri_verts[face]
+        # make sure points are clockwise
+        cx, cy = np.mean(verts, axis=0)
+        pt_order = np.argsort([np.rad2deg(np.arctan2(xy[1]-cy, xy[0]-cx))
+                               for xy in verts])
+        # draw points
+        pts = verts[pt_order, :].reshape(-1, 1, 2).astype(int)
+        tri_img = cv2.polylines(tri_img, [pts], True, 1, thickness,
+                                lineType=cv2.LINE_AA)
 
-        if not np.any(np.isnan(l1_xy)) and not np.any(np.isnan(l2_xy)):
-            draw_line(tri_img, l1_xy, l2_xy)
-
-        if not np.any(np.isnan(l2_xy)) and not np.any(np.isnan(l3_xy)):
-            draw_line(tri_img, l2_xy, l3_xy)
-
-        if not np.any(np.isnan(l3_xy)) and not np.any(np.isnan(l1_xy)):
-            draw_line(tri_img, l3_xy, l1_xy)
-
-    return tri_img
+    return tri_img.astype(float)
 
 
-def color_displacement_tri_grid(bk_dx, bk_dy, n_grid_pts=25, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE,  thickness=None, cspace=DXDY_CSPACE):
+
+def color_displacement_tri_grid(bk_dx, bk_dy, img=None, n_grid_pts=25, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE, thickness=None, cspace=DXDY_CSPACE):
     """View how a displacement warps a triangular mesh.
     """
 
@@ -693,13 +681,11 @@ def color_displacement_tri_grid(bk_dx, bk_dy, n_grid_pts=25, c_range=DXDY_CRANGE
     padded_dx = transform.warp(bk_dx, padding_T, output_shape=padded_shape, preserve_range=True)
     padded_dy = transform.warp(bk_dy, padding_T, output_shape=padded_shape, preserve_range=True)
 
-
     min_dim = np.min(padded_dy.shape)
     if thickness is None:
         thickness = int(np.ceil((grid_spacing/min_dim)*15))
     if thickness < 1:
         thickness = 1
-
 
     tri_verts, tri_faces = warp_tools.get_triangular_mesh(sample_x, sample_y)
     warped_xy = warp_tools.warp_xy(tri_verts, bk_dxdy=[padded_dx, padded_dy])
@@ -708,7 +694,14 @@ def color_displacement_tri_grid(bk_dx, bk_dy, n_grid_pts=25, c_range=DXDY_CRANGE
     trimesh_img = draw_trimesh(padded_shape, warped_xy, tri_faces, thickness=thickness)
     trimesh_img = transform.warp(trimesh_img, inv_T, output_shape=shape, preserve_range=True)
     colored_displacement = color_dxdy(bk_dx, bk_dy, c_range=c_range, l_range=l_range, cspace=cspace)
-    colored_trimesh = trimesh_img[..., np.newaxis] * colored_displacement
 
-    return colored_trimesh.astype(np.uint8)
+    if img is not None:
+        assert img.shape[0:2] == trimesh_img.shape[0:2], print(f"mismatch in shape between `img` {img.shape[0:2]} and displacement fields {trimesh_img.shape[0:2]}")
+        mesh_pos = trimesh_img > 0
+        out_img = img.copy()
+        out_img[mesh_pos] = colored_displacement[mesh_pos]
+    else:
+        out_img = trimesh_img[..., np.newaxis] * colored_displacement
+
+    return out_img
 
