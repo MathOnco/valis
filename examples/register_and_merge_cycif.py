@@ -50,6 +50,10 @@ method.
 
 """
 
+<<<<<<< HEAD
+=======
+from valis import registration, slide_io, valtils, warp_tools
+>>>>>>> bc6c37ab9fd217dc6b99bcdfe5f08748cb6a5758
 import time
 import os
 from valis import registration, valtils
