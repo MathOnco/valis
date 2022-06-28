@@ -9,6 +9,7 @@ from colorama import init as color_init
 from colorama import Fore, Style
 import functools
 import warnings
+import pyvips
 
 color_init()
 
@@ -138,3 +139,12 @@ def rename_kwargs(func_name, kwargs, aliases):
 @deprecated_args(old_arg="new_arg")
 def test_dep_func(new_arg):
     print(new_arg)
+
+
+def get_vips_version():
+    v = (f"{pyvips.vips_lib.VIPS_MAJOR_VERSION}."
+         f"{pyvips.vips_lib.VIPS_MINOR_VERSION}."
+         f"{pyvips.vips_lib.VIPS_MICRO_VERSION}")
+
+    return v
+

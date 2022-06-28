@@ -207,7 +207,7 @@ def um_to_px(um, um_per_px):
     return um * 1/um_per_px
 
 
-def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc,
+def warp_slide(src_f, transformation_src_shape_rc, transformation_dst_shape_rc,
                aligned_slide_shape_rc, M=None, dxdy=None,
                level=0, series=None, interp_method="bicubic",
                bbox_xywh=None, bg_color=None):
@@ -220,10 +220,10 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc,
     src_f : str
         Path to slide
 
-    in_shape_rc : (N, M)
+    transformation_src_shape_rc : (N, M)
         Shape of the image used to find the transformations
 
-    aligned_img_shape_rc : (int, int)
+    transformation_dst_shape_rc : (int, int)
         Shape of image with shape `in_shape_rc`, after being warped,
         i.e. the shape of the registered image.
 
@@ -268,9 +268,9 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc,
         return vips_slide
 
     vips_warped = warp_tools.warp_img(img=vips_slide, M=M, bk_dxdy=dxdy,
-                                      transformation_dst_shape_rc=aligned_img_shape_rc,
+                                      transformation_dst_shape_rc=transformation_dst_shape_rc,
                                       out_shape_rc=aligned_slide_shape_rc,
-                                      transformation_src_shape_rc=in_shape_rc,
+                                      transformation_src_shape_rc=transformation_src_shape_rc,
                                       bbox_xywh=bbox_xywh,
                                       bg_color=bg_color,
                                       interp_method=interp_method)

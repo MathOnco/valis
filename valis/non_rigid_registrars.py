@@ -6,11 +6,23 @@ import pathlib
 import cv2
 import numpy as np
 import SimpleITK as sitk
-from skimage import transform, color, filters
+from skimage import transform, color, filters, exposure, util
+from skimage import color as skcolor
+import pyvips
+import multiprocessing
+from joblib import Parallel, delayed, parallel_backend
+from tqdm import tqdm
+
 from . import viz
 from . import warp_tools
+from . import preprocessing
 
-
+NR_CLS_KEY = "non_rigid_registrar_cls"
+NR_PROCESSING_KW_KEY = "processing_kwargs"
+NR_PROCESSING_CLASS_KEY = "processing_cls"
+NR_STATS_KEY = "target_stats"
+NR_TILE_WH_KEY = "tile_wh"
+NR_PARAMS_KEY = "params"
 # Abstract Classes #
 class NonRigidRegistrar(object):
     """Abstract class for non-rigid registration using displacement fields
@@ -220,7 +232,7 @@ class NonRigidRegistrar(object):
             _, masked_fixed = self.apply_mask(self.mask)
             masked_moving = self.moving_img.copy()
 
-            mask_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(mask))
+            mask_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(self.mask))
             min_c, min_r = mask_bbox[0:2]
             max_c, max_r = mask_bbox[0:2] + mask_bbox[2:]
             mask = self.mask[min_r:max_r, min_c:max_c]
@@ -979,21 +991,20 @@ class OpticalFlowWarper(NonRigidRegistrar):
     def calc(self, moving_img, fixed_img, *args, **kwargs):
         if self.method in ['createOptFlow_DenseRLOF', 'createOptFlow_SimpleFlow']:
             if moving_img.ndim == 2:
-                moving_img = color.grey2rgb(moving_img)
+                moving_img = color.gray2rgb(moving_img)
 
             if fixed_img.ndim == 2:
-                fixed_img = color.grey2rgb(fixed_img)
+                fixed_img = color.gray2rgb(fixed_img)
 
         backward_flow = self.optical_flow_obj.calc(fixed_img, moving_img,
                                                    np.zeros(moving_img.shape[0:2]))
 
         backward_flow = np.array([backward_flow[..., 0], backward_flow[..., 1]])
         if self.smoothing_method == "gauss":
-                sigma = self.sigma_ratio*np.max(backward_flow[0].shape)
-                smooth_dx = filters.gaussian(backward_flow[0], sigma=sigma)
-                smooth_dy = filters.gaussian(backward_flow[1], sigma=sigma)
-                backward_flow = np.array([smooth_dx, smooth_dy])
-
+            sigma = self.sigma_ratio*np.max(backward_flow[0].shape)
+            smooth_dx = filters.gaussian(backward_flow[0], sigma=sigma)
+            smooth_dy = filters.gaussian(backward_flow[1], sigma=sigma)
+            backward_flow = np.array([smooth_dx, smooth_dy])
 
         elif self.smoothing_method == "inpaint":
             backward_flow = warp_tools.remove_folds_in_dxdy(backward_flow,
@@ -1145,3 +1156,298 @@ class SimpleElastixGroupwiseWarper(NonRigidRegistrarGroupwise):
                                       deformationField[i][...,  1]]
                                      for i in range(len(deformationField))])
         return deformationField
+
+
+class NonRigidTileRegistrar(object):
+    """Tile-wise non-rigid regisration
+
+    Slices moving and fixed images into tiles and then registers each tile.
+    Probably best for very large images.
+
+    Attributes
+    ----------
+    moving_img : pyvips.Image
+        Image with shape (N,M) thata is  warp to align with `fixed_img`.
+
+    fixed_img : pyvips.Image
+        Image with shape (N,M) that `moving_img` is warped to align with.
+
+    mask : pyvips.Image
+        2D array with shape (N,M) where non-zero pixel values are foreground,
+        and 0 is background, which is ignnored during registration. If None,
+        then all non-zero pixels in images will be used to create the mask.
+
+    shape : tuple
+        Number of rows and columns in each image. Will be (N,M).
+
+    bk_dxdy_tiles : list
+        List of bk_dxdy for each tile
+
+    bk_dxdy : pyvips.Image
+        Backwards isplacement field after stitching `bk_dxdy_tiles` together
+
+    fwd_dxdy_tiles : list
+        List of forward dxdy for each tile
+
+    fwd_dxdy : pyvips.Image
+        Displacement field after stitching `fwd_dxdy_tiles` together
+
+    pbar : tqdm
+        Progress bar to track registration time
+    """
+
+    def __init__(self, params=None, tile_wh=512, tile_buffer=100):
+        """
+        Parameters
+        ----------
+        params : dictionary
+            Keyword: value dictionary of parameters to be used in reigstration.
+            Will get used when initializing the `non_rigid_registrar_cls`
+
+            In the case where simple ITK will be used, params should be
+            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            converted to strings.
+
+        tile_wh : int
+            Width and height of tiles that will be used for registration
+
+        tile_buffer : int
+            The amount of overlap between each tile.
+
+        """
+        self.tile_wh = tile_wh
+        self.tile_buffer = tile_buffer
+        self.params = params
+        self.moving_img = None
+        self.fixed_img = None
+        self.mask = None
+        self.shape = None
+        self.warped_image = None
+
+        self.bk_dxdy_tiles = None
+        self.bk_dxdy = None
+
+        self.fwd_dxdy_tiles = None
+        self.fwd_dxdy = None
+
+        self.pbar = None
+
+
+    def norm_image(self, img):
+        """Process tiles
+        """
+        processor = self.processing_cls(image=img, src_f=None, level=None, series=None)
+        try:
+            processed_img = processor.process_image(**self.processing_kwargs)
+        except TypeError:
+            # processor.process_image doesn't take kwargs
+            processed_img = processor.process_image()
+
+        if len(np.unique(processed_img)) == 1:
+            return processed_img
+        if self.target_stats is not None:
+            try:
+                processed_img = exposure.rescale_intensity(processed_img, out_range=(0, 255)).astype(np.uint8)
+                processed_img = preprocessing.norm_img_stats(processed_img, self.target_stats)
+                processed_img = exposure.rescale_intensity(processed_img, out_range=(0, 255)).astype(np.uint8)
+            except ValueError:
+                return processed_img
+
+        return processed_img
+
+    def reg_tile(self, tile_idx, lock):
+
+        with lock:
+            # Use lock when accessing images
+            fixed_tile = self.fixed_tiles[tile_idx]
+            moving_tile = self.moving_tiles[tile_idx]
+            if self.mask is not None:
+                tile_mask = self.mask_tiles[tile_idx]
+
+                if tile_mask.max() == 0:
+                    # Nothing to register
+                    empty_dxdy = pyvips.Image.black(moving_tile.width, moving_tile.height, bands=2)
+                    self.bk_dxdy_tiles[tile_idx] = empty_dxdy
+                    self.fwd_dxdy_tiles[tile_idx] = empty_dxdy
+                    self.pbar.update(1)
+
+                    return None
+
+                # Apply mask #
+                moving_tile = (tile_mask == 0).ifthenelse(0, moving_tile)
+                fixed_tile = (tile_mask == 0).ifthenelse(0, fixed_tile)
+                np_mask = warp_tools.vips2numpy(tile_mask)
+
+            else:
+                np_mask = None
+
+            np_fixed = warp_tools.vips2numpy(fixed_tile)
+            np_moving = warp_tools.vips2numpy(moving_tile)
+
+            if self.processing_cls is not None:
+                # Process tiles #
+                fixed_normed = self.norm_image(np_fixed)
+                moving_normed = self.norm_image(np_moving)
+            else:
+
+                if np_fixed.ndim > 2:
+                    fixed_g = np.abs(1 - skcolor.rgb2gray(np_fixed))
+                    fixed_normed = util.img_as_ubyte(fixed_g)
+                else:
+                    fixed_normed = np_fixed
+
+                if np_moving.ndim > 2:
+                    moving_g = np.abs(1 - skcolor.rgb2gray(np_moving))
+                    moving_normed = util.img_as_ubyte(moving_g)
+                else:
+                    moving_normed = np_moving
+
+            # Register tiles #
+
+            tile_non_rigid_reg_obj = self.non_rigid_registrar_cls()
+            _, _, bk_dxdy = tile_non_rigid_reg_obj.register(moving_normed, fixed_normed, mask=np_mask)
+            vips_tile_bk_dxdy = warp_tools.numpy2vips(np.dstack(bk_dxdy))
+
+            fwd_dxdy = warp_tools.get_inverse_field(bk_dxdy)
+            vips_tile_fwd_dxdy = warp_tools.numpy2vips(np.dstack(fwd_dxdy))
+
+            if self.mask is not None:
+                vips_tile_bk_dxdy = (tile_mask == 0).ifthenelse(0, vips_tile_bk_dxdy)
+                vips_tile_fwd_dxdy = (tile_mask == 0).ifthenelse(0, vips_tile_fwd_dxdy)
+
+            self.bk_dxdy_tiles[tile_idx] = vips_tile_bk_dxdy
+            self.fwd_dxdy_tiles[tile_idx] = vips_tile_fwd_dxdy
+
+            self.pbar.update(1)
+
+    def calc(self, *args, **kwargs):
+        """Cacluate displacement fields
+        Each tile is registered and then stitched together
+        """
+
+        print("======== Registering tiles\n")
+        lock = multiprocessing.Lock()
+        n_cpu = multiprocessing.cpu_count() - 1
+        self.pbar = tqdm(total=self.n_tiles)
+        with parallel_backend("threading", n_jobs=n_cpu):
+            Parallel()(delayed(self.reg_tile)(i, lock) for i in range(self.n_tiles))
+
+        bk_dxdy = warp_tools.stitch_tiles(self.bk_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
+        fwd_dxdy = warp_tools.stitch_tiles(self.fwd_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
+
+        if self.mask is not None:
+            bk_dxdy = (self.mask == 0).ifthenelse(0, bk_dxdy)
+            fwd_dxdy = (self.mask == 0).ifthenelse(0, fwd_dxdy)
+
+        return bk_dxdy, fwd_dxdy
+
+    def register(self, moving_img, fixed_img, mask=None, non_rigid_registrar_cls=OpticalFlowWarper,
+                 processing_cls=None, processing_kwargs=None, target_stats=None, **kwargs):
+        """
+        Register images, warping moving_img to align with fixed_img
+
+        Uses backwards transforms to register images (i.e. aligning
+        fixed to moving), so the inverse transform needs to be used
+        to warp points from moving_img. This is automatically done in
+        warp_tools.warp_xy
+
+        Parameters
+        ----------
+        moving_img : ndarray, pyvips.Image
+            Image to warp to align with `fixed_img`.
+
+        fixed_img : ndarray, pyvips.Image
+            Image `moving_img` is warped to align with.
+
+        mask : ndarray, pyvips.Image
+            2D array with shape (N,M) where non-zero pixel values are foreground,
+            and 0 is background, which is ignnored during registration. If None,
+            then all non-zero pixels in images will be used to create the mask.
+
+        non_rigid_registrar_cls : NonRigidRegistrar, optional
+            Uninstantiated NonRigidRegistrar class that will be used
+            to calculate the deformation fields between images.
+
+        processing_cls : preprocessing.ImageProcesser, optional
+            preprocessing.ImageProcesser used to process the images
+
+        processing_kwargs : dict
+            Dictionary of keyward arguments to be passed to `processing_cls`
+
+        target_stats : ndarray
+            Target stats used to normalize each tile after being processed.
+
+        **kwargs : dict, optional
+            Additional keyword arguments passed to NonRigidRegistrar.calc
+
+        Returns
+        -------
+        warped_img : pyvips.Image
+            Moving image registered to align with fixed image.
+
+        fwd_dxdy :
+            (2, N, M)  pyvips.Image with pixel displacements in
+            the x and y directions. Found by registering `moving_img`
+            to `fixed_img`. Used for point warping
+
+        bk_dxdy : pyvips.Image
+            (2, N, M)  pyvips.Image with pixel displacements in
+            the x and y directions. Found by registering `fixed_img` to
+            `moving_img`. Used for image warping
+
+        """
+
+        self.is_array = False
+        if not isinstance(moving_img, pyvips.Image):
+            self.is_array = True
+
+        if self.is_array:
+            shape_rc = np.array(moving_img.shape)
+        else:
+            shape_rc = np.array([moving_img.height, moving_img.width])
+
+        self.shape = shape_rc
+        self.moving_img = moving_img
+        self.fixed_img = fixed_img
+        self.mask = mask
+        self.non_rigid_registrar_cls = non_rigid_registrar_cls
+        self.processing_cls = processing_cls
+        self.target_stats = target_stats
+        self.processing_kwargs = processing_kwargs
+
+        if self.is_array:
+            moving_img = warp_tools.numpy2vips(moving_img)
+            fixed_img = warp_tools.numpy2vips(fixed_img)
+            if mask is not None:
+                mask = warp_tools.numpy2vips(mask)
+
+        temp_tile_bboxes = warp_tools.get_grid_bboxes(self.shape, self.tile_wh, self.tile_wh, inclusive=True)
+        self.expanded_bboxes = np.array([warp_tools.expand_bbox(bbox_xywh, self.tile_buffer, self.shape) for bbox_xywh in temp_tile_bboxes])
+        self.moving_tiles = [moving_img.extract_area(*bbox_xywh).copy() for bbox_xywh in self.expanded_bboxes]
+        self.fixed_tiles = [fixed_img.extract_area(*bbox_xywh).copy() for bbox_xywh in self.expanded_bboxes]
+
+        self.n_tiles = len(temp_tile_bboxes)
+        self.bk_dxdy_tiles = [None] * self.n_tiles
+        self.fwd_dxdy_tiles = [None] * self.n_tiles
+        self.n_cols = len(np.unique(temp_tile_bboxes[:, 0]))
+        self.n_rows = len(np.unique(temp_tile_bboxes[:, 1]))
+
+        if mask is not None:
+            self.mask_tiles = [mask.extract_area(*bbox_xywh).copy() for bbox_xywh in self.expanded_bboxes]
+        else:
+            self.mask_tiles = None
+
+        bk_dxdy, fwd_dxdy = self.calc()
+
+        warped_img = warp_tools.warp_img(moving_img, bk_dxdy=bk_dxdy)
+        if self.is_array:
+            bk_dxdy = warp_tools.vips2numpy(bk_dxdy)
+            bk_dxdy = [bk_dxdy[..., 0], bk_dxdy[..., 1]]
+
+            warped_img = warp_tools.vips2numpy(warped_img)
+
+        self.bk_dxdy = bk_dxdy
+        self.fwd_dxdy = fwd_dxdy
+
+        return warped_img, fwd_dxdy, bk_dxdy
+

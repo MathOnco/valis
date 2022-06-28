@@ -1,6 +1,7 @@
 """Methods and classes to read and write slides in the .ome.tiff format
 
 """
+
 from csv import excel
 import os
 from skimage import util, io, transform
@@ -25,7 +26,7 @@ import ome_types
 import jpype
 import bioformats_jar
 from tqdm import tqdm
-import struct
+import scyjava
 
 from . import valtils
 from . import slide_tools
@@ -173,9 +174,11 @@ Keeping the code just in case need to use javabridge again.
 #     return readable_formats
 #---------------------------------------#
 
-# Bioformats + Jpype #
+# Bioformats/scyjava + Jpype #
 #--------------------#
-def init_jvm(mem_gb=10):
+
+
+def init_jvm(jar=None, mem_gb=10):
     """Initialize JVM for BioFormats
 
     Parameters
@@ -183,7 +186,7 @@ def init_jvm(mem_gb=10):
     mem_gb : int
         Amount of memory, in GB, for JVM
     """
-
+    import jpype
     if not jpype.isJVMStarted():
         global FormatTools
         global BF_MICROMETER
@@ -192,15 +195,29 @@ def init_jvm(mem_gb=10):
         global ome
         global loci
 
-        bioformats_jar.start_jvm(memory=f"{mem_gb}G")
-        loci = bioformats_jar.get_loci()
-        ome = bioformats_jar.get_ome()
+        if jar is not None:
+            jpype.addClassPath(jar)
+        elif jar is None and hasattr(bioformats_jar, "JAR"):
+            jpype.addClassPath(bioformats_jar.JAR)
+        else:
+            scyjava.config.endpoints.append('ome:formats-gpl')
+
+        try:
+            # jpype.startJVM(f"-Djava.awt.headless=true -Xmx{mem_gb}G", classpath=bioformats_jar.JAR)
+            scyjava.start_jvm([f"-Xmx{mem_gb}G"])
+        except ModuleNotFoundError:
+            bioformats_jar.start_jvm(memory=f"{mem_gb}G")
+
+        loci = jpype.JPackage("loci")
+        ome = jpype.JPackage("ome")
+        loci.common.DebugTools.setRootLevel("ERROR")
+
         FormatTools = loci.formats.FormatTools
         BF_MICROMETER = ome.units.UNITS.MICROMETER
         BF_READABLE_FORMATS = get_bf_readable_formats()
         OPENSLIDE_ONLY = list(set(ALL_OPENSLIDE_READABLE_FORMATS).difference(set(BF_READABLE_FORMATS)))
 
-        msg = (f"JVM has been initialized with {mem_gb} GB of memory. "
+        msg = (f"JVM has been initialized. "
                f"Be sure to call registration.kill_jvm() "
                f"or slide_io.kill_jvm() at the end of your script.")
         valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
@@ -409,7 +426,8 @@ def check_flattened_pyramid_tiff(src_f):
     vips_img = pyvips.Image.new_from_file(src_f)
     vips_fields = vips_img.get_fields()
 
-    is_flattended_pyramid = False # From pull request
+    is_flattended_pyramid = False
+
     if 'n-pages' in vips_fields:
         n_pages = vips_img.get("n-pages")
         all_areas = [None] * n_pages
@@ -634,10 +652,10 @@ class SlideReader(object):
 
         """
 
-        if not self.metadata.is_rgb or self.metadata.n_channels != 3:
-            img_type = slide_tools.IF_NAME
-        else:
+        if self.metadata.is_rgb:
             img_type = slide_tools.IHC_NAME
+        else:
+            img_type = slide_tools.IF_NAME
 
         return img_type
 
@@ -677,26 +695,8 @@ class SlideReader(object):
             MetaData object containing metadata about slide
 
         """
-    def get_channel(self, level, series, channel):
-        """Get channel from slide
 
-        Parameters
-        ----------
-        level : int
-            Pyramid level
-
-        series  : int
-            Series number
-
-        channel : str, int
-            Either the name of the channel (string), or the index of the channel (int)
-
-        Returns
-        -------
-        img_channel : ndarray
-            Specified channel sliced from the slide/image
-
-        """
+    def get_channel_index(self, channel):
 
         if isinstance(channel, int):
             matching_channel_idx = channel
@@ -720,6 +720,30 @@ class SlideReader(object):
             else:
                 matching_channel_idx = matching_channels[0]
 
+        return matching_channel_idx
+
+    def get_channel(self, level, series, channel):
+        """Get channel from slide
+
+        Parameters
+        ----------
+        level : int
+            Pyramid level
+
+        series  : int
+            Series number
+
+        channel : str, int
+            Either the name of the channel (string), or the index of the channel (int)
+
+        Returns
+        -------
+        img_channel : ndarray
+            Specified channel sliced from the slide/image
+
+        """
+
+        matching_channel_idx = self.get_channel_index(channel)
         image = self.slide2image(level=level, series=series)
         img_channel = image[..., matching_channel_idx]
 
@@ -1254,11 +1278,10 @@ class VipsSlideReader(SlideReader):
         vips_img = pyvips.Image.new_from_file(self.src_f)
 
         slide_meta.is_rgb = self._check_rgb(vips_img)
-        if self.use_openslide:
-            # Will remove alpha channel
-            slide_meta.n_channels = vips_img.bands - 1
-        else:
-            slide_meta.n_channels = vips_img.bands
+        slide_meta.n_channels = vips_img.bands
+        if (slide_meta.is_rgb and vips_img.hasalpha() >= 1) or self.use_openslide:
+            # Will remove alpha channel after reading
+            slide_meta.n_channels = vips_img.bands - vips_img.hasalpha()
 
         slide_meta.slide_dimensions = self._get_slide_dimensions(vips_img)
         if f_extension in BF_READABLE_FORMATS:
@@ -1353,9 +1376,17 @@ class VipsSlideReader(SlideReader):
         else:
             try:
                 vips_slide = pyvips.Image.new_from_file(self.src_f, subifd=level-1, access='random')
-            except KeyError:
-                # Regular images like png or jpeg don't have SubIFD
-                vips_slide = pyvips.Image.new_from_file(self.src_f, access='random')
+            except Exception as e:
+                if level > 0 and len(self.metadata.slide_dimensions) > 1:
+                    # Pyramid image but each level is a page, not a SubIFD
+                    vips_slide = pyvips.Image.new_from_file(self.src_f, page=level, access='random')
+                else:
+                    # Regular images like png or jpeg don't have SubIFD or pages
+                    vips_slide = pyvips.Image.new_from_file(self.src_f, access='random')
+
+        if self.metadata.is_rgb and vips_slide.hasalpha() >= 1:
+            # Remove alpha channel
+            vips_slide = vips_slide.flatten()
 
         if xywh is not None:
             vips_slide = vips_slide.extract_area(*xywh)
@@ -2222,6 +2253,122 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, pix
         new_ome = temp_new_ome
 
     return new_ome
+
+
+def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformation_dst_shape_rc,
+                        aligned_slide_shape_rc, M=None, dxdy=None,
+                        level=0, series=None, interp_method="bicubic",
+                        bbox_xywh=None, bg_color=None, perceputally_uniform_channel_colors=False,
+                        tile_wh=None, compression="lzw"):
+
+    """ Warp and save a slide
+
+    Warp slide according to `M` and/or `dxdy`, then save as an ome.tiff image.
+
+    Parameters
+    ----------
+    src_f : str
+        Path to slide
+
+    dst_f : str
+        Path indicating where the warped slide will be saved.
+
+    transformation_src_shape_rc : (int, int)
+        Shape of the image used to find the rigid transformations (row, col)
+
+    transformation_dst_shape_rc : (int, int)
+        Shape of image with shape `in_shape_rc`, after being warped,
+        i.e. the shape of the registered image.
+
+    aligned_slide_shape_rc : (int, int)
+        Shape of the warped slide (row, col)
+
+    M : ndarray, optional
+        3x3 Affine transformation matrix to perform rigid warp.
+        Found by aligning the target/fixed image to source/moving image.
+        If `M` was found the other way around, then `M` will need to be inverted
+        using np.linalg.inv()
+
+    dxdy : list, optional
+        A list containing the x-axis (column) displacement and y-axis (row) displacements.
+        Found by aligning the target/fixed image to source/moving image.
+        If `dxdy` was found the other way around, then `dxdy` will need to be inverted,
+        which can be done using `warp_tools.get_inverse_field`
+
+    level : int, optional
+        Pyramid level to warp an save
+
+    series : int, optional
+        Series number of image
+
+    interp_method : str, optional
+        Interpolation method
+
+    bbox_xywh : tuple
+        Bounding box to crop warped slide. Should be in reference the
+        warped slide.
+
+    bg_color : optional, list
+        Background color, if `None`, then the background color will be black
+
+    perceputally_uniform_channel_colors : bool, optional
+        Whether or not to add perceptually uniform channel colors to non-RGB images
+
+    tile_wh : int, optional
+        Tile width and height used to save image
+
+    compression : str
+        Compression method used to save ome.tiff . Default is lzw, but can also
+        be jpeg or jp2k. See pyips for more details.
+
+    """
+
+    warped_slide = slide_tools.warp_slide(src_f=src_f,
+                                          transformation_src_shape_rc=transformation_src_shape_rc,
+                                          transformation_dst_shape_rc=transformation_dst_shape_rc,
+                                          aligned_slide_shape_rc=aligned_slide_shape_rc,
+                                          M=M,
+                                          dxdy=dxdy,
+                                          level=level,
+                                          series=series,
+                                          interp_method=interp_method,
+                                          bbox_xywh=bbox_xywh,
+                                          bg_color=bg_color)
+
+    # Get OMEXML and update with new dimensions
+    reader_cls = get_slide_reader(src_f, series=series) # Get slide reader class
+    reader = reader_cls(src_f, series=series) # Get reader
+    slide_meta = reader.metadata
+    if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
+        px_phys_size = None
+    else:
+        px_phys_size = reader.scale_physical_size(level)
+
+    bf_dtype = vips2bf_dtype(warped_slide.format)
+    out_xyczt = get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
+    ome_xml_obj = update_xml_for_new_img(slide_meta.original_xml,
+                                         new_xyzct=out_xyczt,
+                                         bf_dtype=bf_dtype,
+                                         is_rgb=reader.metadata.is_rgb,
+                                         pixel_physical_size_xyu=px_phys_size,
+                                         channel_names=reader.metadata.channel_names,
+                                         perceputally_uniform_channel_colors=perceputally_uniform_channel_colors
+                                         )
+
+    ome_xml = ome_xml_obj.to_xml()
+    if tile_wh is None:
+        tile_wh = slide_meta.optimal_tile_wh
+        if level != 0:
+            down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
+            tile_wh = int(np.round(tile_wh*down_sampling))
+            tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
+            if tile_wh < 16:
+                tile_wh = 16
+            if np.any(np.array(out_xyczt[0:2]) < tile_wh):
+                tile_wh = min(out_xyczt[0:2])
+
+    save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
+                  tile_wh=tile_wh, compression=compression)
 
 
 def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):

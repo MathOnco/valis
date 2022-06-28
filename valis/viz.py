@@ -1,8 +1,6 @@
 """Various functions used to visualize registration results
 
 """
-from glob import has_magic
-from linecache import cache
 import colour
 import matplotlib.pyplot as plt
 from skimage import feature, draw, color, exposure, transform
@@ -74,8 +72,6 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, alignment='horizontal'):
     plt.title(" ".join([str(len(kp1_xy)), "matches"]))
     ax.axis('off')
     plt.tight_layout()
-    # plt.close()
-
 
 def draw_clusterd_D(D, optimal_Z):
     """Draw clustered distance matrix with dendrograms along the axes
@@ -129,7 +125,7 @@ def get_grid(shape, grid_spacing, thickness=1):
         2, 1D arrays, which each element corresponding to a point in the grid
     """
 
-    all_rows =[]
+    all_rows = []
     all_cols = []
     row_add_idx = 0
     for k in range(thickness):
@@ -665,7 +661,7 @@ def draw_trimesh(shape_rc, tri_verts, tri_faces, thickness=2):
 
 
 
-def color_displacement_tri_grid(bk_dx, bk_dy, img=None, n_grid_pts=25, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE,  thickness=None, cspace=DXDY_CSPACE):
+def color_displacement_tri_grid(bk_dx, bk_dy, img=None, n_grid_pts=25, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE, thickness=None, cspace=DXDY_CSPACE):
     """View how a displacement warps a triangular mesh.
     """
 

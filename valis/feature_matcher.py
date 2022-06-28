@@ -6,6 +6,8 @@ import cv2
 import numba as nba
 from sklearn import metrics
 from sklearn.metrics.pairwise import pairwise_kernels
+from skimage import transform
+from . import warp_tools
 
 AMBIGUOUS_METRICS = set(metrics.pairwise._VALID_METRICS).intersection(
     metrics.pairwise.PAIRWISE_KERNEL_FUNCTIONS.keys())
@@ -194,6 +196,74 @@ def filter_matches_gms(kp1_xy, kp2_xy, feature_d, img1_shape, img2_shape,
     return filtered_src_points, filtered_dst_points, good_idx
 
 
+
+def filter_matches_tukey(src_xy, dst_xy):
+    """Detect and remove outliers using Tukey's method
+    Adapted from https://towardsdatascience.com/detecting-and-treating-outliers-in-python-part-1-4ece5098b755
+
+    Parameters
+    ----------
+    src_xy : ndarray
+        (N, 2) array containing image 1s keypoint positions, in xy coordinates.
+
+    dst_xy : ndarray
+        (N, 2) array containing image 2s keypoint positions, in xy coordinates.
+
+    Returns
+    -------
+    filtered_src_points : (N, 2) array
+        Inlier keypoints from kp1_xy
+
+    filtered_dst_points : (N, 2) array
+        Inlier keypoints from kp1_xy
+
+    good_idx : (1, N) array
+        Indices of inliers
+
+    """
+
+    tform = transform.SimilarityTransform()
+    tform.estimate(src=dst_xy, dst=src_xy)
+    M = tform.params
+
+    warped_xy = warp_tools.warp_xy(src_xy, M)
+    d = warp_tools.calc_d(warped_xy,  dst_xy)
+
+    q1 = np.quantile(d, 0.25)
+    q3 = np.quantile(d, 0.75)
+    iqr = q3-q1
+    inner_fence = 1.5*iqr
+    outer_fence = 3*iqr
+
+    #inner fence lower and upper end
+    inner_fence_le = q1-inner_fence
+    inner_fence_ue = q3+inner_fence
+
+    #outer fence lower and upper end
+    outer_fence_le = q1-outer_fence
+    outer_fence_ue = q3+outer_fence
+
+    outliers_prob = []
+    outliers_poss = []
+    inliers_prob = []
+    inliers_poss = []
+    for index, v in enumerate(d):
+        if v <= outer_fence_le or v >= outer_fence_ue:
+            outliers_prob.append(index)
+        else:
+            inliers_prob.append(index)
+    for index, v in enumerate(d):
+        if v <= inner_fence_le or v >= inner_fence_ue:
+            outliers_poss.append(index)
+        else:
+            inliers_poss.append(index)
+
+    src_xy_inlier = src_xy[inliers_prob, :]
+    dst_xy_inlier = dst_xy[inliers_prob, :]
+
+    return src_xy_inlier, dst_xy_inlier, inliers_prob
+
+
 def filter_matches(kp1_xy, kp2_xy, method=DEFAULT_MATCH_FILTER,
                    filtering_kwargs=None):
     """Use RANSAC or GMS to remove poor matches
@@ -241,6 +311,9 @@ def filter_matches(kp1_xy, kp2_xy, method=DEFAULT_MATCH_FILTER,
         filter_fxn = filter_matches_ransac
 
     filtered_src_points, filtered_dst_points, good_idx = filter_fxn(**all_matching_args)
+
+    # Do additional filtering to remove other outliers that may have been missed by RANSAC
+    filtered_src_points, filtered_dst_points, good_idx = filter_matches_tukey(filtered_src_points, filtered_dst_points)
 
     return filtered_src_points, filtered_dst_points, good_idx
 
