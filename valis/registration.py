@@ -75,7 +75,7 @@ NAME_KEY = "name"
 IMAGES_ORDERD_KEY = "imgs_ordered"
 REF_IMG_KEY = "reference_img_f"
 QT_EMMITER_KEY = "qt_emitter"
-TFORM_SRC_SHAPE_KEY = "transformation_source_shape_rc"
+TFORM_SRC_SHAPE_KEY = "transformation_src_shape_rc"
 TFORM_DST_SHAPE_KEY = "transformation_dst_shape_rc"
 TFORM_MAT_KEY = "M"
 
@@ -1407,7 +1407,7 @@ class Valis(object):
                       Found by determining how to align fixed to moving.
                       If `M` was found by determining how to align moving to fixed,
                       then `M` will need to be inverted first.
-                `transformation_source_shape_rc` : (optional) shape (row, col) of image used to find the rigid transformation.
+                `transformation_src_shape_rc` : (optional) shape (row, col) of image used to find the rigid transformation.
                       If not provided, then it is assumed to be the shape of the level 0 slide
                 `transformation_dst_shape_rc` : (optional) shape of registered image.
                       If not provided, this is assumed to be the shape of the level 0 reference slide.
@@ -2108,10 +2108,10 @@ class Valis(object):
                 M: 3x3 inverse transformation matrix. Found by determining how to align fixed to moving.
                     If M was found by determining how to align moving to fixed, then it will need to be inverted
 
-                transformation_source_shape_rc: shape (row, col) of image used to find the rigid transformation. If
+                transformation_src_shape_rc: shape (row, col) of image used to find the rigid transformation. If
                     not provided, then it is assumed to be the shape of the level 0 slide
                 transformation_dst_shape_rc: shape of registered image. If not presesnt, but a reference was provided
-                    and `transformation_source_shape_rc` was not provided, this is assumed to be the shape of the reference slide
+                    and `transformation_src_shape_rc` was not provided, this is assumed to be the shape of the reference slide
 
             If None, then all rigid M will be the identity matrix
         """
