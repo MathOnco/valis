@@ -193,7 +193,6 @@ In this example, the slides that need to be registered are located in :code:`/pa
     registrar = registration.Valis(slide_src_dir, results_dst_dir)
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
-
 The next example shows how align each image to a reference image, followed up by micro-registration. The reference image the others should be aligned towards is set with the :code:`reference_img_f` argument when initialzing the :code:`Valis` object. This initial registration is followed up by micro-registration in order to better align features that were not present in the smaller images used for the first registration (The size of the images used for micro-registration can is set with the :code:`max_non_rigid_registartion_dim_px` argument in :code:`Valis.register_micro`). Setting :code:`align_to_reference` to `True` will align each image directly *to* the reference image, as opposed to *towards* it.
 
 
