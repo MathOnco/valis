@@ -312,8 +312,8 @@ class Slide(object):
         self.reader = reader
 
         # Metadata #
-        self.img_type = reader.guess_image_type()
         self.is_rgb = reader.metadata.is_rgb
+        self.img_type = reader.guess_image_type()
         self.slide_shape_rc = reader.metadata.slide_dimensions[0][::-1]
         self.series = reader.series
         self.slide_dimensions_wh = reader.metadata.slide_dimensions
@@ -1677,7 +1677,6 @@ class Valis(object):
 
         return ref_slide
 
-
     def convert_imgs(self, series=None, reader_cls=None):
         """Convert slides to images and create dictionary of Slides.
 
@@ -1732,6 +1731,7 @@ class Valis(object):
 
             self.slide_dict[slide_obj.name] = slide_obj
             self.size += 1
+
 
         if self.image_type is None:
             unique_img_types = list(set(img_types))
@@ -1864,7 +1864,6 @@ class Valis(object):
                 all_v = [None]*self.size
 
         for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
-
             is_ihc = slide_obj.img_type == slide_tools.IHC_NAME
             if is_ihc:
                 processing_cls = brightfield_processing_cls
@@ -1912,6 +1911,7 @@ class Valis(object):
             slide_obj.tissue_mask = tissue_mask
             slide_obj.rigid_reg_mask = rigid_reg_mask
             slide_obj.processed_img = processed_img
+
             processed_f_out = os.path.join(self.processed_dir, slide_obj.name + ".png")
             slide_obj.processed_img_f = processed_f_out
             slide_obj.processed_img_shape_rc = np.array(processed_img.shape[0:2])
@@ -2321,7 +2321,9 @@ class Valis(object):
             slide_obj.reg_img_shape_rc = slide_reg_obj.registered_img.shape
             slide_obj.rigid_reg_img_f = os.path.join(self.reg_dst_dir,
                                                      str.zfill(str(slide_obj.stack_idx), n_digits) + "_" + slide_obj.name + ".png")
-            slide_obj.get_bg_color_px_pos()
+            if slide_obj.image.ndim > 2:
+                # Won't know if single channel image is processed RGB (bight bg) or IF channel (dark bg)
+                slide_obj.get_bg_color_px_pos()
 
             if slide_reg_obj.stack_idx == self.reference_img_idx:
                 continue
