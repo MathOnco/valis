@@ -566,8 +566,13 @@ Change Log
 ==========
 
 
+Version 1.0.0rc8 (July 1, 2022)
+-------------------------------
+#. Now compatible with single channel images. These images are treated as immunofluorescent images, and so custom pre-processing classes and arguments should be passed to :code:`if_processing_cls` and :code:`if_processing_kwargs` of the :code:`Valis.register` method. The current method will perform adaptive histogram equalization and scales the image to 0-255 (see :code:`preprocessing.ChannelGetter`). Also, since it isn't possible to determine if the single channel image is a greyscale RGB (light background) or single channel immunofluorescence (or similar with dark background), the background color will not be estimated, meaning that in the registered image the area outside of the warped image will be black (as opposed to the estimated background color). Tissue masks will still be created, but if it seems they are not covering enough area then try setting :code:`create_masks` to `False` when initializing the :code:`Valis` object.
+
+
 Version 1.0.0rc7 (June 27, 2022)
----------------------------------
+--------------------------------
 #. Can set size of image to be used for non-rigid registration, which may help improve aligment of micro-architectural structures. However this will increase the amount of time it takes to perform non-rigid registration, and will increase amount of memory used during registration, and the size of the pickled :code: `Valis` object. To change this value, set the :code:`max_non_rigid_registartion_dim_px` parameter when initializing the :code:`Valis` object.
 #. Can now do a second non-rigid registartion on higher resolution images, including the full resolution one. This can be done with the :code:`Valis.register_micro`. If the images are large, they will be sliced into tiles, and then each tile registered with one another. The deformation fields will be saved separately as .vips images within the data folder.
 #. Added :code:`registration.load_registrar` function to open a :code:`Valis` object. This should be used instead of `pickle.load`.
