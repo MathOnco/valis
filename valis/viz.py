@@ -159,7 +159,7 @@ def get_grid(shape, grid_spacing, thickness=1):
         if k % 2 == 0:
             col_add_idx += 1
 
-    return np.array(all_rows), np.array(all_cols)
+    return np.array(all_rows, dtype=np.int32), np.array(all_cols, dtype=np.int32)
 
 
 def jzazbz_cmap(luminosity=0.012, colorfulness=0.02, max_h=260):
