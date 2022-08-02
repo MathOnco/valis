@@ -867,10 +867,13 @@ class BioFormatsSlideReader(SlideReader):
             # javabridge.detach()
             jpype.detachThreadFromJVM()
 
-            if np.issubdtype(pixel_type, np.unsignedinteger):
-                tile = util.img_as_ubyte(tile)
+            # I don't want uint16 images to be converted to uint8!
+            # commenting this out
+            # if np.issubdtype(pixel_type, np.unsignedinteger):
+            #     tile = util.img_as_ubyte(tile)
 
-            tile_array[idx] = slide_tools.numpy2vips(tile)
+            # does it matter that the pyvips interpretation in srgb, not multiband for IF images?
+            tile_array[idx] = slide_tools.numpy2vips(tile, self.metadata.pyvips_interpretation)
 
         n_cpu = multiprocessing.cpu_count() - 1
         with parallel_backend("threading", n_jobs=n_cpu):
@@ -1012,9 +1015,15 @@ class BioFormatsSlideReader(SlideReader):
 
                 series_meta.is_rgb = self._check_rgb(rdr)
                 series_meta.channel_names = self._get_channel_names(rdr, meta)
-                series_meta.slide_dimensions = self._get_slide_dimensions(rdr)
-                series_meta.pixel_physical_size_xyu = self._get_pixel_physical_size(rdr, meta)
                 series_meta.n_channels = int(rdr.getSizeC())
+                series_meta.slide_dimensions = self._get_slide_dimensions(rdr)
+                if series_meta.is_rgb:
+                    series_meta.pyvips_interpretation = 'srgb'
+                elif series_meta.n_channels == 1:
+                    series_meta.pyvips_interpretation = 'b-w'
+                else:
+                    series_meta.pyvips_interpretation = 'multiband'
+                series_meta.pixel_physical_size_xyu = self._get_pixel_physical_size(rdr, meta)
                 series_meta.bf_pixel_type = str(rdr.getPixelType())
                 series_meta.is_little_endian = rdr.isLittleEndian()
                 series_meta.original_xml = str(meta_xml)
@@ -1278,6 +1287,7 @@ class VipsSlideReader(SlideReader):
         vips_img = pyvips.Image.new_from_file(self.src_f)
 
         slide_meta.is_rgb = self._check_rgb(vips_img)
+        # Doesn't work for toilet roll images. needs to be updated based on chopping.
         slide_meta.n_channels = vips_img.bands
         if (slide_meta.is_rgb and vips_img.hasalpha() >= 1) or self.use_openslide:
             # Will remove alpha channel after reading
@@ -1289,6 +1299,9 @@ class VipsSlideReader(SlideReader):
                 bf_reader = BioFormatsSlideReader(self.src_f)
 
             slide_meta.channel_names = bf_reader.metadata.channel_names
+            # Need to update the n_channels based on bioformats metadata if toilet roll .ome.tiff
+            # Not sure if this will cause problems for other image formats...
+            slide_meta.n_channels = len(slide_meta.channel_names)
             slide_meta.pixel_physical_size_xyu = bf_reader.metadata.pixel_physical_size_xyu
             slide_meta.bf_pixel_type = bf_reader.metadata.bf_pixel_type
             slide_meta.is_little_endian = bf_reader.metadata.is_little_endian
@@ -1343,6 +1356,11 @@ class VipsSlideReader(SlideReader):
                 vips_slide = vips_slide.copy(interpretation="b-w")
             else:
                 vips_slide = vips_slide.copy(interpretation="multiband")
+                # need to modify this slide metadata, assuming that all bands are channels
+                # if it was a bioformats compatible file (which .ome.tif is), the metadata.channel_names should be correct
+                # do not know if there is a case where the channel_names would not be updated correctly
+                # This is too late as the processing script only uses the initialized slide metadata for selecting channels based on channel names...
+                self.metadata.n_channels = vips_slide.bands
 
         return vips_slide
 

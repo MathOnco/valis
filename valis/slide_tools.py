@@ -75,7 +75,7 @@ def vips2numpy(vi):
     return img
 
 
-def numpy2vips(a):
+def numpy2vips(a, pyvips_interpretation=None):
     """
 
     """
@@ -89,6 +89,9 @@ def numpy2vips(a):
     linear = a.reshape(width * height * bands)
     vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,
                                       NUMPY_FORMAT_VIPS_DTYPE[str(a.dtype)])
+    # maybe a try catch is better here, but could be slower performance-wise
+    if pyvips_interpretation is not None:
+        vi = vi.copy(interpretation=pyvips_interpretation)
     return vi
 
 
