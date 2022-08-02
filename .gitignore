@@ -160,3 +160,5 @@ examples/expected_results/registration/ihc/processed/ihc_1.png
 examples/expected_results/registration/ihc/processed/ihc_1.png
 *.png
 examples/expected_results/registration/ihc/processed/ihc_1.png
+examples/register_HER2_IF.py
+*.png
