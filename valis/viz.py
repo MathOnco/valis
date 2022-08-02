@@ -10,10 +10,17 @@ import numpy as np
 import numba as nb
 from . import warp_tools
 import cv2
+import platform
 # JzAzBz #
 DXDY_CSPACE = "JzAzBz"
 DXDY_CRANGE = (0, 0.025)
 DXDY_LRANGE = (0.004, 0.015)
+
+if platform.system() == 'Windows' or platform.system() == 'Darwin':
+    uniTupleDtype = np.int32
+else:
+    uniTupleDtype = np.int64
+
 
 # CAM16-UCS #
 # DXDY_CSPACE = "CAM16UCS"
@@ -159,7 +166,7 @@ def get_grid(shape, grid_spacing, thickness=1):
         if k % 2 == 0:
             col_add_idx += 1
 
-    return np.array(all_rows, dtype=np.int32), np.array(all_cols, dtype=np.int32)
+    return np.array(all_rows, dtype=uniTupleDtype), np.array(all_cols, dtype=uniTupleDtype)
 
 
 def jzazbz_cmap(luminosity=0.012, colorfulness=0.02, max_h=260):
