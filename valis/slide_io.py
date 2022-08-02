@@ -837,7 +837,7 @@ class BioFormatsSlideReader(SlideReader):
 
             valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
 
-        self._seris = series
+        self._series = series
         self.series = series
 
     def _set_series(self, series):
