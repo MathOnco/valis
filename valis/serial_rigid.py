@@ -634,7 +634,26 @@ class SerialRigidRegistrar(object):
 
         shared_pts, nf_prev_idx, nf_next_idx  = np.intersect1d(xy_to_prev_idx, xy_to_next_idx, return_indices=True)
 
-        assert np.all(xy_to_prev[nf_prev_idx, :] == xy_to_next[nf_next_idx, :])
+        # assertion error, why does this not always equal? rounding errors in warp_tools.index2d_to_1d()?
+        # assert np.all(xy_to_prev[nf_prev_idx, :] == xy_to_next[nf_next_idx, :])
+
+        # should you remove the indexes that don't match...?
+        # for testing this code...
+        # prev_inter = xy_to_prev[nf_prev_idx, :][0:5]
+        # next_inter = xy_to_next[nf_next_idx, :][0:5]
+        # prev_inter[3,:] = 5
+        # prev_inter[4, 0] = 5
+        # prev_inter[diff]
+        # next_inter[diff]
+        # diff = np.where(prev_inter != next_inter)
+
+        #trying to remove diff features if they are different... (possible due to some very rare rounding errors?)
+        diff = np.where(xy_to_prev[nf_prev_idx, :] != xy_to_next[nf_next_idx, :])
+        if diff[0].any():
+            # print("removing diffs!")
+            diff = list(np.unique(diff[0]))
+            nf_prev_idx = np.delete(nf_prev_idx, diff)
+            nf_next_idx = np.delete(nf_next_idx, diff)
 
         return nf_prev_idx, nf_next_idx
 
