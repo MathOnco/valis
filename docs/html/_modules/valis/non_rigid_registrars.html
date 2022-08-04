@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.non_rigid_registrars &mdash; valis &#34;1.0.0rc0&#34;
+  <title>valis.non_rigid_registrars &mdash; valis &#34;1.0.0rc5&#34;
  documentation</title>
   
 
@@ -379,7 +379,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fixed_img</span> <span class="o">=</span> <span class="n">fixed_img</span>
 
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mask</span><span class="p">()</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moving_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">255</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
 
@@ -742,7 +742,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">img_list</span> <span class="o">=</span> <span class="n">img_list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">img_list</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mask</span><span class="p">()</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">255</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uiint8</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -958,10 +958,12 @@
         <span class="n">elastix_image_filter_obj</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">ElastixImageFilter</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">moving_xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fixed_xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">rand_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
             <span class="n">fixed_kp_fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
-                                          <span class="s2">&quot;.fixedPointSet.pts&quot;</span><span class="p">)</span>
+                                          <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">rand_id</span><span class="si">}</span><span class="s2">_fixedPointSet.pts&quot;</span><span class="p">)</span>
             <span class="n">moving_kp_fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
-                                           <span class="s2">&quot;.movingPointSet.pts&quot;</span><span class="p">)</span>
+                                           <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">rand_id</span><span class="si">}</span><span class="s2">_.movingPointSet.pts&quot;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">write_elastix_kp</span><span class="p">(</span><span class="n">fixed_xy</span><span class="p">,</span> <span class="n">fixed_kp_fname</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">write_elastix_kp</span><span class="p">(</span><span class="n">moving_xy</span><span class="p">,</span> <span class="n">moving_kp_fname</span><span class="p">)</span>
@@ -1174,7 +1176,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">optical_flow_obj</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Can&#39;t pickle OpenCV objects</span>
 
-        <span class="k">return</span> <span class="n">backward_flow</span></div></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="SimpleElastixGroupwiseWarper"><a class="viewcode-back" href="../../non_rigid_registrars.html#valis.non_rigid_registrars.SimpleElastixGroupwiseWarper">[docs]</a><span class="k">class</span> <span class="nc">SimpleElastixGroupwiseWarper</span><span class="p">(</span><span class="n">NonRigidRegistrarGroupwise</span><span class="p">):</span>

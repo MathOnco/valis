@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.preprocessing &mdash; valis &#34;1.0.0rc0&#34;
+  <title>valis.preprocessing &mdash; valis &#34;1.0.0rc4&#34;
  documentation</title>
   
 
@@ -458,7 +458,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img_stats</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="norm_img_stats"><a class="viewcode-back" href="../../preprocessing.html#valis.preprocessing.norm_img_stats">[docs]</a><span class="k">def</span> <span class="nf">norm_img_stats</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">target_stats</span><span class="p">):</span>
+<div class="viewcode-block" id="norm_img_stats"><a class="viewcode-back" href="../../preprocessing.html#valis.preprocessing.norm_img_stats">[docs]</a><span class="k">def</span> <span class="nf">norm_img_stats</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Normalize an image</span>
 
 <span class="sd">    Image will be normalized to have same stats as `target_stats`</span>
@@ -467,24 +467,30 @@
 <span class="sd">    &quot;A nonlinear mapping approach to stain normalization in digital histopathology</span>
 <span class="sd">    images using image-specific color deconvolution.&quot;, Khan et al. 2014</span>
 
+<span class="sd">    Assumes that `img` values range between 0-255</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span>
-    <span class="n">target_stats</span> <span class="o">=</span> <span class="n">get_channel_stats</span><span class="p">(</span><span class="n">target_stats</span><span class="p">)</span>
+    <span class="n">target_stats</span> <span class="o">=</span> <span class="n">get_channel_stats</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
     <span class="n">src_stats_flat</span> <span class="o">=</span> <span class="n">get_channel_stats</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-    <span class="n">eps_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">src_stats_flat</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">eps</span>
 
     <span class="c1"># Avoid duplicates and keep in ascending order</span>
     <span class="n">lower_knots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">upper_knots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">300</span><span class="p">,</span> <span class="mi">350</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">450</span><span class="p">])</span>
-    <span class="n">src_stats_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">lower_knots</span><span class="p">,</span> <span class="n">src_stats_flat</span><span class="p">,</span> <span class="n">upper_knots</span><span class="p">])</span>
-    <span class="n">target_stats_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">lower_knots</span><span class="p">,</span> <span class="n">target_stats</span><span class="p">,</span> <span class="n">upper_knots</span><span class="p">])</span>
+    <span class="n">src_stats_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">lower_knots</span><span class="p">,</span> <span class="n">src_stats_flat</span><span class="p">,</span> <span class="n">upper_knots</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">target_stats_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">lower_knots</span><span class="p">,</span> <span class="n">target_stats</span><span class="p">,</span> <span class="n">upper_knots</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 
+    <span class="c1"># Add epsilon to avoid duplicate values</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span>
     <span class="n">eps_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">src_stats_flat</span><span class="p">))</span> <span class="o">*</span> <span class="n">eps</span>
-    <span class="n">src_stats_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">src_stats_flat</span> <span class="o">+</span> <span class="n">eps_array</span><span class="p">)</span>
-    <span class="n">target_stats_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">target_stats_flat</span> <span class="o">+</span> <span class="n">eps_array</span><span class="p">)</span>
+    <span class="n">src_stats_flat</span> <span class="o">=</span> <span class="n">src_stats_flat</span> <span class="o">+</span> <span class="n">eps_array</span>
+    <span class="n">target_stats_flat</span> <span class="o">=</span> <span class="n">target_stats_flat</span> <span class="o">+</span> <span class="n">eps_array</span>
 
-    <span class="c1"># sp = csaps.CubicSmoothingSpline(src_stats_flat, target_stats_flat, smooth=0.995)</span>
+    <span class="c1"># Make sure src stats are in ascending order</span>
+    <span class="n">src_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">src_stats_flat</span><span class="p">)</span>
+    <span class="n">src_stats_flat</span> <span class="o">=</span> <span class="n">src_stats_flat</span><span class="p">[</span><span class="n">src_order</span><span class="p">]</span>
+    <span class="n">target_stats_flat</span> <span class="o">=</span> <span class="n">target_stats_flat</span><span class="p">[</span><span class="n">src_order</span><span class="p">]</span>
+
     <span class="n">cs</span> <span class="o">=</span> <span class="n">Akima1DInterpolator</span><span class="p">(</span><span class="n">src_stats_flat</span><span class="p">,</span> <span class="n">target_stats_flat</span><span class="p">)</span>
     <span class="n">normed_img</span> <span class="o">=</span> <span class="n">cs</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
@@ -492,6 +498,42 @@
         <span class="n">normed_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">normed_img</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">normed_img</span></div>
+
+
+
+<span class="c1"># def norm_img_stats(img, target_stats):</span>
+<span class="c1">#     &quot;&quot;&quot;Normalize an image</span>
+
+<span class="c1">#     Image will be normalized to have same stats as `target_stats`</span>
+
+<span class="c1">#     Based on method in</span>
+<span class="c1">#     &quot;A nonlinear mapping approach to stain normalization in digital histopathology</span>
+<span class="c1">#     images using image-specific color deconvolution.&quot;, Khan et al. 2014</span>
+
+<span class="c1">#     &quot;&quot;&quot;</span>
+
+<span class="c1">#     eps = np.finfo(float).resolution</span>
+<span class="c1">#     target_stats = get_channel_stats(target_stats)</span>
+<span class="c1">#     src_stats_flat = get_channel_stats(img)</span>
+
+<span class="c1">#     # Avoid duplicates and keep in ascending order</span>
+<span class="c1">#     lower_knots = np.array([0])</span>
+<span class="c1">#     upper_knots = np.array([300, 350, 400, 450])</span>
+<span class="c1">#     src_stats_flat = np.hstack([lower_knots, src_stats_flat, upper_knots])</span>
+<span class="c1">#     target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots])</span>
+
+<span class="c1">#     eps_array = np.arange(len(src_stats_flat)) * eps</span>
+<span class="c1">#     src_stats_flat = np.sort(src_stats_flat + eps_array)</span>
+<span class="c1">#     target_stats_flat = np.sort(target_stats_flat + eps_array)</span>
+
+<span class="c1">#     # sp = csaps.CubicSmoothingSpline(src_stats_flat, target_stats_flat, smooth=0.995)</span>
+<span class="c1">#     cs = Akima1DInterpolator(src_stats_flat, target_stats_flat)</span>
+<span class="c1">#     normed_img = cs(img.reshape(-1)).reshape(img.shape)</span>
+
+<span class="c1">#     if img.dtype == np.uint8:</span>
+<span class="c1">#         normed_img = np.clip(normed_img, 0, 255)</span>
+
+<span class="c1">#     return normed_img</span>
 
 </pre></div>
 

@@ -129,6 +129,15 @@ ENV/
 env.bak/
 venv.bak/
 
+# VS code project settings
+.vscode/
+.vscode/**
+
+
+#PyCharm project settings
+.idea/
+.idea/**
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -154,4 +163,3 @@ dmypy.json
 cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
-settings.json

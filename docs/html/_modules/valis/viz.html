@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.viz &mdash; valis &#34;1.0.0rc0&#34;
+  <title>valis.viz &mdash; valis &#34;1.0.0rc4&#34;
  documentation</title>
   
 
@@ -177,7 +177,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nb</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">warp_tools</span>
-
+<span class="kn">import</span> <span class="nn">cv2</span>
 <span class="c1"># JzAzBz #</span>
 <span class="n">DXDY_CSPACE</span> <span class="o">=</span> <span class="s2">&quot;JzAzBz&quot;</span>
 <span class="n">DXDY_CRANGE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">)</span>
@@ -263,13 +263,11 @@
     <span class="n">axdendro_top</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
     <span class="n">axdendro_top</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
 
-    <span class="c1"># axmatrix = fig.add_axes([0.2, 0.1, 0.6, 0.8])</span>
     <span class="n">axmatrix</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.115</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.798</span><span class="p">])</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">axmatrix</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;plasma_r&quot;</span><span class="p">)</span>
     <span class="n">axmatrix</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
     <span class="n">axmatrix</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
 
-    <span class="c1"># axcolor = fig.add_axes([0.82, 0.05, 0.02, 0.8])</span>
     <span class="n">axcolor</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.798</span><span class="p">])</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">axcolor</span><span class="p">)</span>
 
@@ -299,10 +297,8 @@
 
     <span class="n">all_rows</span> <span class="o">=</span><span class="p">[]</span>
     <span class="n">all_cols</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="c1"># thickness = 2</span>
     <span class="n">row_add_idx</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">thickness</span><span class="p">):</span>
-        <span class="c1"># for i in np.arange(thickness//2, shape[0] + grid_spacing, grid_spacing):</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">grid_spacing</span> <span class="o">-</span> <span class="n">thickness</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">thickness</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
                 <span class="k">if</span> <span class="n">k</span><span class="o">%</span><span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -319,7 +315,6 @@
 
     <span class="n">col_add_idx</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">thickness</span><span class="p">):</span>
-        <span class="c1"># for j in np.arange(thickness//2, shape[1] + grid_spacing, grid_spacing):</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">grid_spacing</span> <span class="o">-</span> <span class="n">thickness</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid_spacing</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
                 <span class="k">if</span> <span class="n">k</span><span class="o">%</span><span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -535,10 +530,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cam</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="s1">&#39;sRGB&#39;</span><span class="p">,</span> <span class="s1">&#39;CAM16UCS&#39;</span><span class="p">)</span>
 
-    <span class="c1"># sq_D = distance.cdist(cam, cam, metric=colour.difference.delta_E_CAM16UCS)</span>
     <span class="n">sq_D</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">cam</span><span class="p">,</span> <span class="n">cam</span><span class="p">)</span>
     <span class="n">max_D</span> <span class="o">=</span> <span class="n">sq_D</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="n">most_dif_2Didx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sq_D</span> <span class="o">==</span> <span class="n">max_D</span><span class="p">)</span> <span class="c1">### 2 most different colors</span>
+    <span class="n">most_dif_2Didx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sq_D</span> <span class="o">==</span> <span class="n">max_D</span><span class="p">)</span>  <span class="c1"># 2 most different colors</span>
     <span class="n">most_dif_img1</span> <span class="o">=</span> <span class="n">most_dif_2Didx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">most_dif_img2</span> <span class="o">=</span> <span class="n">most_dif_2Didx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">rgb_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">most_dif_img1</span><span class="p">,</span> <span class="n">most_dif_img2</span><span class="p">]</span>
@@ -634,7 +628,7 @@
 
     <span class="n">J</span> <span class="o">=</span> <span class="n">J</span><span class="o">/</span><span class="n">J</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">cspace</span> <span class="o">==</span> <span class="s2">&quot;JzAzBz&quot;</span><span class="p">:</span>
-        <span class="n">J</span><span class="o">*=</span> <span class="mf">0.01</span> <span class="c1">#0.025</span>
+        <span class="n">J</span><span class="o">*=</span> <span class="mf">0.01</span>
 
     <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
     <span class="k">with</span> <span class="n">colour</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">(</span><span class="n">colour_usage_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -770,78 +764,27 @@
     <span class="k">return</span> <span class="n">grid_img</span></div>
 
 
-<span class="k">def</span> <span class="nf">trapez</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">y0</span><span class="p">,</span><span class="n">w</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="n">y0</span><span class="p">,</span> <span class="o">-</span><span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="n">y0</span><span class="p">),</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">weighted_line</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
-    <span class="c1"># The algorithm below works fine if c1 &gt;= c0 and c1-c0 &gt;= abs(r1-r0).</span>
-    <span class="c1"># If either of these cases are violated, do some switches.</span>
-    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">c1</span><span class="o">-</span><span class="n">c0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">r1</span><span class="o">-</span><span class="n">r0</span><span class="p">):</span>
-        <span class="c1"># Switch x and y, and switch again when returning.</span>
-        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">weighted_line</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=</span><span class="n">rmin</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="n">rmax</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
-
-    <span class="c1"># At this point we know that the distance in columns (x) is greater</span>
-    <span class="c1"># than that in rows (y). Possibly one more switch if c0 &gt; c1.</span>
-    <span class="k">if</span> <span class="n">c0</span> <span class="o">&gt;</span> <span class="n">c1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">weighted_line</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=</span><span class="n">rmin</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="n">rmax</span><span class="p">)</span>
-
-    <span class="c1"># The following is now always &lt; 1 in abs</span>
-    <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="n">r1</span><span class="o">-</span><span class="n">r0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">c1</span><span class="o">-</span><span class="n">c0</span><span class="p">)</span>
-
-    <span class="c1"># Adjust weight by the slope</span>
-    <span class="n">w</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">slope</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
-
-    <span class="c1"># We write y as a function of x, because the slope is always &lt;= 1</span>
-    <span class="c1"># (in absolute value)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span> <span class="n">c1</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">slope</span> <span class="o">+</span> <span class="p">(</span><span class="n">c1</span><span class="o">*</span><span class="n">r0</span><span class="o">-</span><span class="n">c0</span><span class="o">*</span><span class="n">r1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">c1</span><span class="o">-</span><span class="n">c0</span><span class="p">)</span>
-
-    <span class="c1"># Now instead of 2 values for y, we have 2*np.ceil(w/2).</span>
-    <span class="c1"># All values are 1 except the upmost and bottommost.</span>
-    <span class="n">thickness</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">yy</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">thickness</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">thickness</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-    <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">yy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">vals</span> <span class="o">=</span> <span class="n">trapez</span><span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-
-    <span class="n">yy</span> <span class="o">=</span> <span class="n">yy</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-
-    <span class="c1"># Exclude useless parts and those outside of the interval</span>
-    <span class="c1"># to avoid parts outside of the picture</span>
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="o">.</span><span class="n">reduce</span><span class="p">((</span><span class="n">yy</span> <span class="o">&gt;=</span> <span class="n">rmin</span><span class="p">,</span> <span class="n">yy</span> <span class="o">&lt;</span> <span class="n">rmax</span><span class="p">,</span> <span class="n">vals</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">yy</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">xx</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">vals</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
-
-
 <span class="k">def</span> <span class="nf">draw_trimesh</span><span class="p">(</span><span class="n">shape_rc</span><span class="p">,</span> <span class="n">tri_verts</span><span class="p">,</span> <span class="n">tri_faces</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Draw a triangular mesh</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">draw_line</span><span class="p">(</span><span class="n">tri_img</span><span class="p">,</span> <span class="n">pt1_xy</span><span class="p">,</span> <span class="n">pt2_xy</span><span class="p">):</span>
-        <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">weighted_line</span><span class="p">(</span><span class="o">*</span><span class="n">pt1_xy</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">pt2_xy</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">thickness</span><span class="p">)</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tri_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tri_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">tri_img</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-
     <span class="n">tri_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape_rc</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">tri_faces</span><span class="p">:</span>
-        <span class="n">l1_xy</span> <span class="o">=</span> <span class="n">tri_verts</span><span class="p">[</span><span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="n">l2_xy</span> <span class="o">=</span> <span class="n">tri_verts</span><span class="p">[</span><span class="n">face</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-        <span class="n">l3_xy</span> <span class="o">=</span> <span class="n">tri_verts</span><span class="p">[</span><span class="n">face</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">verts</span> <span class="o">=</span> <span class="n">tri_verts</span><span class="p">[</span><span class="n">face</span><span class="p">]</span>
+        <span class="c1"># make sure points are clockwise</span>
+        <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">verts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">pt_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">cy</span><span class="p">,</span> <span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cx</span><span class="p">))</span>
+                               <span class="k">for</span> <span class="n">xy</span> <span class="ow">in</span> <span class="n">verts</span><span class="p">])</span>
+        <span class="c1"># draw points</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">verts</span><span class="p">[</span><span class="n">pt_order</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">tri_img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">polylines</span><span class="p">(</span><span class="n">tri_img</span><span class="p">,</span> <span class="p">[</span><span class="n">pts</span><span class="p">],</span> <span class="kc">True</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">thickness</span><span class="p">,</span>
+                                <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">l1_xy</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">l2_xy</span><span class="p">)):</span>
-            <span class="n">draw_line</span><span class="p">(</span><span class="n">tri_img</span><span class="p">,</span> <span class="n">l1_xy</span><span class="p">,</span> <span class="n">l2_xy</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">l2_xy</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">l3_xy</span><span class="p">)):</span>
-            <span class="n">draw_line</span><span class="p">(</span><span class="n">tri_img</span><span class="p">,</span> <span class="n">l2_xy</span><span class="p">,</span> <span class="n">l3_xy</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">l3_xy</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">l1_xy</span><span class="p">)):</span>
-            <span class="n">draw_line</span><span class="p">(</span><span class="n">tri_img</span><span class="p">,</span> <span class="n">l3_xy</span><span class="p">,</span> <span class="n">l1_xy</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">tri_img</span>
+    <span class="k">return</span> <span class="n">tri_img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="color_displacement_tri_grid"><a class="viewcode-back" href="../../viz.html#valis.viz.color_displacement_tri_grid">[docs]</a><span class="k">def</span> <span class="nf">color_displacement_tri_grid</span><span class="p">(</span><span class="n">bk_dx</span><span class="p">,</span> <span class="n">bk_dy</span><span class="p">,</span> <span class="n">n_grid_pts</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">c_range</span><span class="o">=</span><span class="n">DXDY_CRANGE</span><span class="p">,</span> <span class="n">l_range</span><span class="o">=</span><span class="n">DXDY_LRANGE</span><span class="p">,</span>  <span class="n">thickness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="n">DXDY_CSPACE</span><span class="p">):</span>
+
+<div class="viewcode-block" id="color_displacement_tri_grid"><a class="viewcode-back" href="../../viz.html#valis.viz.color_displacement_tri_grid">[docs]</a><span class="k">def</span> <span class="nf">color_displacement_tri_grid</span><span class="p">(</span><span class="n">bk_dx</span><span class="p">,</span> <span class="n">bk_dy</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_grid_pts</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">c_range</span><span class="o">=</span><span class="n">DXDY_CRANGE</span><span class="p">,</span> <span class="n">l_range</span><span class="o">=</span><span class="n">DXDY_LRANGE</span><span class="p">,</span>  <span class="n">thickness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="n">DXDY_CSPACE</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;View how a displacement warps a triangular mesh.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -861,13 +804,11 @@
     <span class="n">padded_dx</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="n">bk_dx</span><span class="p">,</span> <span class="n">padding_T</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="n">padded_shape</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">padded_dy</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="n">bk_dy</span><span class="p">,</span> <span class="n">padding_T</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="n">padded_shape</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-
     <span class="n">min_dim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">padded_dy</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">thickness</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">thickness</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">grid_spacing</span><span class="o">/</span><span class="n">min_dim</span><span class="p">)</span><span class="o">*</span><span class="mi">15</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">thickness</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">thickness</span> <span class="o">=</span> <span class="mi">1</span>
-
 
     <span class="n">tri_verts</span><span class="p">,</span> <span class="n">tri_faces</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_triangular_mesh</span><span class="p">(</span><span class="n">sample_x</span><span class="p">,</span> <span class="n">sample_y</span><span class="p">)</span>
     <span class="n">warped_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">tri_verts</span><span class="p">,</span> <span class="n">bk_dxdy</span><span class="o">=</span><span class="p">[</span><span class="n">padded_dx</span><span class="p">,</span> <span class="n">padded_dy</span><span class="p">])</span>
@@ -876,9 +817,16 @@
     <span class="n">trimesh_img</span> <span class="o">=</span> <span class="n">draw_trimesh</span><span class="p">(</span><span class="n">padded_shape</span><span class="p">,</span> <span class="n">warped_xy</span><span class="p">,</span> <span class="n">tri_faces</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="n">thickness</span><span class="p">)</span>
     <span class="n">trimesh_img</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">warp</span><span class="p">(</span><span class="n">trimesh_img</span><span class="p">,</span> <span class="n">inv_T</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">colored_displacement</span> <span class="o">=</span> <span class="n">color_dxdy</span><span class="p">(</span><span class="n">bk_dx</span><span class="p">,</span> <span class="n">bk_dy</span><span class="p">,</span> <span class="n">c_range</span><span class="o">=</span><span class="n">c_range</span><span class="p">,</span> <span class="n">l_range</span><span class="o">=</span><span class="n">l_range</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="n">cspace</span><span class="p">)</span>
-    <span class="n">colored_trimesh</span> <span class="o">=</span> <span class="n">trimesh_img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">colored_displacement</span>
 
-    <span class="k">return</span> <span class="n">colored_trimesh</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">img</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">trimesh_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mismatch in shape between `img` </span><span class="si">{</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2"> and displacement fields </span><span class="si">{</span><span class="n">trimesh_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">mesh_pos</span> <span class="o">=</span> <span class="n">trimesh_img</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">out_img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">out_img</span><span class="p">[</span><span class="n">mesh_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">colored_displacement</span><span class="p">[</span><span class="n">mesh_pos</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out_img</span> <span class="o">=</span> <span class="n">trimesh_img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">colored_displacement</span>
+
+    <span class="k">return</span> <span class="n">out_img</span></div>
 
 </pre></div>
 

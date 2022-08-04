@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Slide I/O &mdash; valis &#34;1.0.0rc0&#34;
+  <title>Slide I/O &mdash; valis &#34;1.0.0rc5&#34;
  documentation</title>
   
 
@@ -250,7 +250,7 @@ Bioformats.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>src_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Path to slide</p></li>
-<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The series to be read. If <cite>series</cite> is None, the the <cite>series</cite>
+<li><p><strong>series</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – The series to be read. If <cite>series</cite> is None, the the <cite>series</cite>
 will be set to the series associated with the largest image.
 In cases where there is only 1 image in the file, <cite>series</cite>
 will be 0.</p></li>
@@ -272,8 +272,13 @@ the slide, like dimensions at each level, physical units, etc…</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valis.slide_io.init_jvm">
-<span class="sig-prename descclassname"><span class="pre">valis.slide_io.</span></span><span class="sig-name descname"><span class="pre">init_jvm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/slide_io.html#init_jvm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.slide_io.init_jvm" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">valis.slide_io.</span></span><span class="sig-name descname"><span class="pre">init_jvm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mem_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/slide_io.html#init_jvm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.slide_io.init_jvm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize JVM for BioFormats</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mem_gb</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Amount of memory, in GB, for JVM</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -653,7 +658,7 @@ the region to be sliced.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.slide_io.BioFormatsSlideReader.slide2image">
-<span class="sig-name descname"><span class="pre">slide2image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xywh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/slide_io.html#BioFormatsSlideReader.slide2image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.slide_io.BioFormatsSlideReader.slide2image" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">slide2image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xywh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/slide_io.html#BioFormatsSlideReader.slide2image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.slide_io.BioFormatsSlideReader.slide2image" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert slide to image</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
