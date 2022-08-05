@@ -568,7 +568,7 @@ Change Log
 ==========
 
 Version 1.0.0rc9 (August 4, 2022)
--------------------------------
+---------------------------------
 #. Reduced memory usage for micro-registration and warping. No longer copying memory before warping, and large displacement fields saved as .tiff images instead of .vips images.
 #. Reduced unwanted accumulation of displacements
 #. :code:`viz.draw_matches` now returns an image instead of a matplotlib pyplot
