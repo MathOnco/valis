@@ -617,7 +617,7 @@ class Slide(object):
                         fset=set_fwd_dxdy,
                         doc="Get forward displacements")
 
-    def warp_img(self, img=None, non_rigid=True, crop=True):
+    def warp_img(self, img=None, non_rigid=True, crop=True, interp_method="bicubic"):
         """Warp an image using the registration parameters
 
         img : ndarray, optional
@@ -635,6 +635,9 @@ class Slide(object):
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
             defined by `reference_img_f` when initialzing the `Valis object`.
+
+        interp_method : str
+            Interpolation method used when warping slide. Default is "bicubic"
 
         Returns
         -------
@@ -697,7 +700,8 @@ class Slide(object):
                                 transformation_src_shape_rc=self.processed_img_shape_rc,
                                 transformation_dst_shape_rc=self.reg_img_shape_rc,
                                 bbox_xywh=bbox_xywh,
-                                bg_color=bg_color)
+                                bg_color=bg_color,
+                                interp_method=interp_method)
 
         return warped_img
 
@@ -2396,7 +2400,7 @@ class Valis(object):
         ref_slide = self.get_ref_slide()
         temp_non_rigid_mask = np.zeros(ref_slide.reg_img_shape_rc, dtype=np.uint8)
         for slide_obj in self.slide_dict.values():
-            rigid_mask = slide_obj.warp_img(slide_obj.rigid_reg_mask, non_rigid=False, crop=False)
+            rigid_mask = slide_obj.warp_img(slide_obj.rigid_reg_mask, non_rigid=False, crop=False, interp_method="nearest")
             temp_non_rigid_mask = cv2.bitwise_or(temp_non_rigid_mask, rigid_mask)
 
         # Draw convex hull around each region
