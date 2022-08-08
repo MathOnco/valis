@@ -1747,7 +1747,6 @@ class Valis(object):
             self.slide_dict[slide_obj.name] = slide_obj
             self.size += 1
 
-
         if self.image_type is None:
             unique_img_types = list(set(img_types))
             if len(unique_img_types) > 1:
@@ -1755,7 +1754,8 @@ class Valis(object):
             else:
                 self.image_type = unique_img_types[0]
 
-        self.check_img_max_dims()
+        print("not checking image dimensions")
+        # self.check_img_max_dims()
 
     def check_img_max_dims(self):
         """Ensure that all images have similar sizes.
@@ -1910,18 +1910,18 @@ class Valis(object):
                 else:
                     tissue_mask, rigid_reg_mask = preprocessing.create_tissue_mask(processed_img, is_ihc)
 
-                scaling = np.min(self.max_processed_image_dim_px/np.array(processed_img.shape[0:2]))
-                if scaling < 1:
-                    processed_img = warp_tools.rescale_img(processed_img, scaling)
-                    if rigid_reg_mask is not None:
-                        rigid_reg_mask = warp_tools.rescale_img(rigid_reg_mask, scaling)
-                        tissue_mask = warp_tools.rescale_img(tissue_mask, scaling)
-
                 processed_img[rigid_reg_mask == 0] = 0
 
             else:
                 tissue_mask = None
                 rigid_reg_mask = np.full_like(processed_img, 255)
+
+            scaling = np.min(self.max_processed_image_dim_px/np.array(processed_img.shape[0:2]))
+            if scaling < 1:
+                processed_img = warp_tools.rescale_img(processed_img, scaling)
+                if rigid_reg_mask is not None:
+                    rigid_reg_mask = warp_tools.rescale_img(rigid_reg_mask, scaling)
+                    tissue_mask = warp_tools.rescale_img(tissue_mask, scaling)
 
             slide_obj.tissue_mask = tissue_mask
             slide_obj.rigid_reg_mask = rigid_reg_mask
