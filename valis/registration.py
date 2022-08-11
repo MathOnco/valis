@@ -2085,7 +2085,8 @@ class Valis(object):
             img_mask = np.ones(slide_obj.image.shape[0:2], dtype=np.uint8)
             warped_img_mask = warp_tools.warp_img(img_mask,
                                                   M=slide_obj.M,
-                                                  out_shape_rc=slide_obj.registered_shape_rc)
+                                                  out_shape_rc=slide_obj.registered_shape_rc,
+                                                  interp_method="nearest")
 
             mask += warped_img_mask
 
@@ -2345,10 +2346,10 @@ class Valis(object):
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
 
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
-        overlap_min_r = overlap_mask_bbox_xywh[1]
-        overlap_min_c = overlap_mask_bbox_xywh[0]
-        overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
-        overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
+        # overlap_min_r = overlap_mask_bbox_xywh[1]
+        # overlap_min_c = overlap_mask_bbox_xywh[0]
+        # overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
+        # overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
 
         # Create original overlap image #
         self.original_overlap_img = self.create_original_composite_img(rigid_registrar)
@@ -2406,7 +2407,8 @@ class Valis(object):
                 img_obj.image = matching_slide.processed_img
 
         rigid_img_list = [img_obj.registered_img for img_obj in rigid_registrar.img_obj_list]
-        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
+        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)#[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
+        self.rigid_overlap_img = warp_tools.crop_img(self.rigid_overlap_img, overlap_mask_bbox_xywh)
 
         rigid_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_rigid_overlap.png")
         warp_tools.save_img(rigid_overlap_img_fout, self.rigid_overlap_img, thumbnail_size=self.thumbnail_size)
@@ -2658,6 +2660,7 @@ class Valis(object):
 
         if is_array:
             full_dxdy = warp_tools.vips2numpy(full_dxdy)
+            full_dxdy = np.array([full_dxdy[..., 0], full_dxdy[..., 1]])
 
         return full_dxdy
 
@@ -2734,9 +2737,9 @@ class Valis(object):
 
         ref_slide = self.get_ref_slide()
 
-        if mask is None:
-            if ref_slide.non_rigid_reg_mask is not None:
-                mask = ref_slide.non_rigid_reg_mask.copy()
+        # if mask is None:
+        #     if ref_slide.non_rigid_reg_mask is not None:
+        #         mask = ref_slide.non_rigid_reg_mask.copy()
 
         if mask is not None:
             if isinstance(mask, pyvips.Image):
@@ -2810,6 +2813,7 @@ class Valis(object):
         img_names_list = [None] * self.size
         img_f_list = [None] * self.size
 
+        print("\n======== Preparing images for non-rigid registraration\n")
         for slide_obj in tqdm.tqdm(self.slide_dict.values()):
 
             # Get image to warp. Likely a larger image scaled down to specified shape #
@@ -2899,8 +2903,6 @@ class Valis(object):
                 vips_mask = vips_mask.extract_area(*mask_bbox_xywh)
                 vips_mask = (vips_micro_reg_mask==0).ifthenelse(0, vips_mask)
 
-            ### TODO crop mask here
-
             if use_tiler:
                 slide_mask = vips_mask
             else:
@@ -2967,11 +2969,18 @@ class Valis(object):
         if any_rigid_reg_masks:
             self.create_non_rigid_reg_mask()
             non_rigid_reg_mask = ref_slide.non_rigid_reg_mask
+            cropped_mask_shape_rc = warp_tools.xy2bbox(warp_tools.mask2xy(non_rigid_reg_mask))[2:][::-1]
         else:
             non_rigid_reg_mask = None
+            cropped_mask_shape_rc = ref_slide.reg_img_shape_rc
 
-        if self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px:
-        # if self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px or non_rigid_reg_mask is not None:
+        # if self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px:
+        nr_on_scaled_img = self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px or \
+            (non_rigid_reg_mask is not None and np.any(cropped_mask_shape_rc != ref_slide.reg_img_shape_rc))
+
+        if nr_on_scaled_img:
+
+            # Use higher resolution and/or roi for non-rigid
             nr_reg_src, max_img_dim, non_rigid_reg_mask, full_out_shape_rc, mask_bbox_xywh = \
                 self.prep_images_for_large_non_rigid_registration(max_img_dim=self.max_non_rigid_registartion_dim_px,
                                                                   brightfield_processing_cls=brightfield_processing_cls,
@@ -3000,21 +3009,22 @@ class Valis(object):
 
         # Clean up displacements and expand if mask was used
         for nr_name, nr_obj in non_rigid_registrar.non_rigid_obj_dict.items():
+            if nr_on_scaled_img:
+                # If a mask was used, the displacement fields will be smaller
+                # So need to insert them in the full image
+
+                bk_dxdy = self.pad_displacement(nr_obj.bk_dxdy, full_out_shape_rc, mask_bbox_xywh)
+                # cleaned_fwd_dxdy = self.pad_displacement(cleaned_fwd_dxdy, full_out_shape_rc, mask_bbox_xywh)
+            else:
+                bk_dxdy = nr_obj.bk_dxdy
 
             rigid_obj = self.rigid_registrar.img_obj_dict[nr_name]
-            cleaned_bk_dxdy = warp_tools.remove_invasive_displacements(nr_obj.bk_dxdy,
+            cleaned_bk_dxdy = warp_tools.remove_invasive_displacements(bk_dxdy,
                                                                     M=rigid_obj.M,
                                                                     src_shape_rc=rigid_obj.image.shape[0:2],
                                                                     out_shape_rc=rigid_obj.registered_shape_rc)
 
             cleaned_fwd_dxdy = warp_tools.get_inverse_field(cleaned_bk_dxdy)
-
-            if np.any(non_rigid_registrar.shape != full_out_shape_rc):
-                # If a mask was used, the displacement fields will be smaller
-                # So need to insert them in the full image
-
-                cleaned_bk_dxdy = self.pad_displacement(cleaned_bk_dxdy, full_out_shape_rc, mask_bbox_xywh)
-                cleaned_fwd_dxdy = self.pad_displacement(cleaned_fwd_dxdy, full_out_shape_rc, mask_bbox_xywh)
 
             nr_obj.bk_dxdy = cleaned_bk_dxdy
             nr_obj.fwd_dxdy = cleaned_fwd_dxdy
@@ -3022,12 +3032,13 @@ class Valis(object):
         # Draw overlap image #
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
-        overlap_min_r = overlap_mask_bbox_xywh[1]
-        overlap_min_c = overlap_mask_bbox_xywh[0]
-        overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
-        overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
+        # overlap_min_r = overlap_mask_bbox_xywh[1]
+        # overlap_min_c = overlap_mask_bbox_xywh[0]
+        # overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
+        # overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
 
-        if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px:
+        if not nr_on_scaled_img:
+        # if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px:
             non_rigid_img_list = [nr_img_obj.registered_img for nr_img_obj in non_rigid_registrar.non_rigid_obj_list]
         else:
             non_rigid_img_list = [warp_tools.warp_img(img=o.image,
@@ -3038,7 +3049,8 @@ class Valis(object):
                                                     transformation_dst_shape_rc=o.registered_img.shape[0:2])
                                                 for o in rigid_registrar.img_obj_list]
 
-        self.non_rigid_overlap_img  = self.draw_overlap_img(non_rigid_img_list)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
+        self.non_rigid_overlap_img  = self.draw_overlap_img(non_rigid_img_list)#[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
+        self.non_rigid_overlap_img = warp_tools.crop_img(self.non_rigid_overlap_img, overlap_mask_bbox_xywh)
 
         overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_non_rigid_overlap.png")
         warp_tools.save_img(overlap_img_fout, self.non_rigid_overlap_img, thumbnail_size=self.thumbnail_size)
@@ -3061,7 +3073,8 @@ class Valis(object):
 
             # Save deformation grid
 
-            if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px:
+            # if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px and non_rigid_reg_mask is None:
+            if not nr_on_scaled_img:
                 draw_dxdy = np.dstack(slide_obj.bk_dxdy)
             else:
                 dxdy_scaling = (np.array(slide_obj.reg_img_shape_rc)/np.array(slide_obj.bk_dxdy[0].shape))[::-1]
@@ -3069,8 +3082,9 @@ class Valis(object):
                 draw_dxdy = warp_tools.rescale_img(np.dstack(slide_obj.bk_dxdy), dxdy_scaling_for_resize)
                 draw_dxdy *= dxdy_scaling
 
+            draw_dxdy = warp_tools.crop_img(draw_dxdy, overlap_mask_bbox_xywh)
             thumbnail_scaling = np.min(self.thumbnail_size/np.array(draw_dxdy.shape[0:2]))
-            thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c])
+            thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy)
             thumbnail_bk_dxdy *= thumbnail_scaling
 
             temp_draw = slide_obj.warp_img(rigid_registrar.img_obj_dict[slide_name].image, non_rigid=True, crop=self.crop)
@@ -3918,7 +3932,12 @@ class Valis(object):
             methods and arguments.
 
         """
-        print("\n==== Preparing images for microregistration\n")
+        # print("\n==== Preparing images for microregistration\n")
+        ref_slide = self.get_ref_slide()
+        if mask is None:
+            if ref_slide.non_rigid_reg_mask is not None:
+                mask = ref_slide.non_rigid_reg_mask.copy()
+
         nr_reg_src, max_img_dim, non_rigid_reg_mask, full_out_shape_rc, mask_bbox_xywh = \
             self.prep_images_for_large_non_rigid_registration(max_img_dim=max_non_rigid_registartion_dim_px,
                                                                 brightfield_processing_cls=brightfield_processing_cls,
