@@ -259,7 +259,7 @@ def get_luminosity(img, **kwargs):
     return lum
 
 
-def calc_background_color_dist(img, brightness_q=0.99):
+def calc_background_color_dist(img, brightness_q=0.99, mask=None):
     """Create mask that only covers tissue
 
     #. Find background pixel (most luminescent)
@@ -282,7 +282,11 @@ def calc_background_color_dist(img, brightness_q=0.99):
         else:
             cam = colour.convert(img + eps, 'sRGB', 'CAM16UCS')
 
-    brightest_thresh = np.quantile(cam[..., 0], brightness_q)
+    if mask is None:
+        brightest_thresh = np.quantile(cam[..., 0], brightness_q)
+    else:
+        brightest_thresh = np.quantile(cam[..., 0][mask > 0], brightness_q)
+
     brightest_idx = np.where(cam[..., 0] >= brightest_thresh)
     brightest_pixels = cam[brightest_idx]
     bright_cam = brightest_pixels.mean(axis=0)
@@ -291,10 +295,242 @@ def calc_background_color_dist(img, brightness_q=0.99):
     return cam_d, cam
 
 
-def create_tissue_mask_from_rgb(img, brightness_q=0.99):
+# def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3):
+#     """Create mask that only covers tissue
+
+#     Also remove dark regions on the edge of the slide, which could be artifacts
+
+#     Returns
+#     -------
+#     tissue_mask : ndarray
+#         Mask covering tissue
+
+#     concave_tissue_mask : ndarray
+#         Similar to `tissue_mask`,  but each region is replaced by a concave hull.
+#         Covers more area
+
+#     """
+
+#     cam_d, cam = calc_background_color_dist(img, brightness_q)
+
+#     # Find and exclude dark regions on the edge of the image -> possible artifacts
+#     cam_black = colour.convert(np.repeat(0, 3), 'sRGB', 'CAM16UCS')
+#     black_dist = np.sqrt(np.sum((cam - cam_black)**2, axis=2))
+#     dark_regions = 255*(black_dist < 0.2).astype(np.uint8)
+#     dark_contours, _ = cv2.findContours(dark_regions, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#     edge_artifact_mask = np.zeros_like(dark_regions)
+
+#     for cnt in dark_contours:
+#         cnt_xy = np.squeeze(cnt, 1)
+#         on_border_idx = np.where((cnt_xy[:, 0] == 0) |
+#                                  (cnt_xy[:, 0] == dark_regions.shape[1]-1) |
+#                                  (cnt_xy[:, 1] == 0) |
+#                                  (cnt_xy[:, 1] == dark_regions.shape[0]-1)
+#                                 )[0]
+
+#         if len(on_border_idx) > 0:
+#             cv2.drawContours(edge_artifact_mask, [cnt], 0, 255, -1)
+
+#     cam_d_t, _ = filters.threshold_multiotsu(cam_d[edge_artifact_mask == 0])
+#     tissue_mask = np.zeros(cam_d.shape, dtype=np.uint8)
+#     tissue_mask[cam_d >= cam_d_t] = 255
+#     tissue_mask = 255*ndimage.binary_fill_holes(tissue_mask).astype(np.uint8)
+
+#     concave_tissue_mask = mask2contours(tissue_mask, kernel_size=kernel_size)
+
+#     return tissue_mask, concave_tissue_mask
+
+
+def rgb2jab(rgb, cspace='CAM16UCS'):
+    eps = np.finfo("float").eps
+    if np.issubdtype(rgb.dtype, np.integer) and rgb.max() > 1:
+        rgb01 = rgb/255.0
+    else:
+        rgb01 = rgb
+
+    with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+        jab = colour.convert(rgb01+eps, 'sRGB', cspace)
+
+    return jab
+
+
+def jab2rgb(jab, cspace='CAM16UCS'):
+    eps = np.finfo("float").eps
+    with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+        rgb = colour.convert(jab+eps, cspace, 'sRGB')
+
+    rgb.max()
+
+    return rgb
+
+
+def rgb2jch(rgb, cspace='CAM16UCS', h_rotation=0):
+    jab = rgb2jab(rgb, cspace)
+    jch = colour.models.Jab_to_JCh(jab)
+    jch[..., 2] += h_rotation
+
+    above_360 = np.where(jch[..., 2] > 360)
+    if len(above_360[0]) > 0:
+        jch[..., 2][above_360] = jch[..., 2][above_360] - 360
+
+    return jch
+
+
+def rgb255_to_rgb1(rgb_img):
+    if np.issubdtype(rgb_img.dtype, np.integer) or rgb_img.max() > 1:
+        rgb01 = rgb_img/255.0
+    else:
+        rgb01 = rgb_img
+
+    return rgb01
+
+
+def rgb2od(rgb_img):
+    eps = np.finfo("float").eps
+    rgb01 = rgb255_to_rgb1(rgb_img)
+
+    od = -np.log10(rgb01 + eps)
+    od[od < 0] = 0
+
+    return od
+
+
+def stainmat2decon(stain_mat_srgb255):
+
+    od_mat = rgb2od(stain_mat_srgb255)
+
+    M = od_mat / np.linalg.norm(od_mat, axis=1, keepdims=True)
+    M[np.isnan(M)] = 0
+    D = np.linalg.pinv(M)
+
+    return D
+
+
+def deconvolve_img(rgb_img, D):
+    od_img = rgb2od(rgb_img)
+    deconvolved_img = np.dot(od_img, D)
+    deconvolved_img[deconvolved_img < 0] = 0
+
+    return deconvolved_img
+
+
+def combine_masks_by_hysteresis(mask_list):
+    """
+    Combine masks. Keeps areas where they overlap _and_ touch
+    """
+    to_hyst_mask = np.zeros_like(mask_list[0])
+    for m in mask_list:
+        to_hyst_mask[ m > 0] += 1
+
+    hyst_mask = 255*filters.apply_hysteresis_threshold(to_hyst_mask, 0.5, len(mask_list) - 0.5).astype(np.uint8)
+
+    return hyst_mask
+
+
+def remove_small_obj_and_lines_by_dist(mask):
+    """
+    Will remove smaller objects and thin lines that
+    do not interesct with larger objects
+    """
+
+    dist_transform = cv2.distanceTransform(mask, cv2.DIST_L2, 5)
+    dst_t = filters.threshold_li(dist_transform[mask > 0])
+    temp_sure_fg = 255*(dist_transform >= dst_t).astype(np.uint8)
+    sure_mask = combine_masks_by_hysteresis([mask, temp_sure_fg])
+
+    return sure_mask
+
+
+def create_edges_mask(labeled_img):
+    """
+    Create two masks, one with objects not touching image borders,
+    and a second with objects that do touch the border
+
+    """
+    unique_v = np.unique(labeled_img)
+    unique_v = unique_v[unique_v != 0]
+    if len(unique_v) == 1:
+        labeled_img = measure.label(labeled_img)
+
+    img_regions = measure.regionprops(labeled_img)
+    inner_mask = np.zeros(labeled_img.shape, dtype=np.uint8)
+    edges_mask = np.zeros(labeled_img.shape, dtype=np.uint8)
+    for regn in img_regions:
+        on_border_idx = np.where((regn.coords[:, 0] == 0) |
+                        (regn.coords[:, 0] == labeled_img.shape[0]-1) |
+                        (regn.coords[:, 1] == 0) |
+                        (regn.coords[:, 1] == labeled_img.shape[1]-1)
+                        )[0]
+        if len(on_border_idx) == 0:
+            inner_mask[regn.coords[:, 0], regn.coords[:, 1]] = 255
+        else:
+            edges_mask[regn.coords[:, 0], regn.coords[:, 1]] = 255
+
+    return inner_mask, edges_mask
+
+
+# def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thresh=0.075, light_gray_thresh=0.875, dark_gray_thresh=0.7):
+#     """Create mask that only covers tissue
+
+#     Also remove dark regions on the edge of the slide, which could be artifacts
+
+#     Parameters
+#     ----------
+#     grey_thresh : float
+#         Colorfulness values (from JCH) below this are considered "grey", and thus possibly dirt, hair, coverslip edges, etc...
+
+#     light_gray_thresh : float
+#         Upper limit for light gray
+
+#     dark_gray_thresh : float
+#         Upper limit for dark gray
+
+#     Returns
+#     -------
+#     tissue_mask : ndarray
+#         Mask covering tissue
+
+#     concave_tissue_mask : ndarray
+#         Similar to `tissue_mask`,  but each region is replaced by a concave hull.
+#         Covers more area
+
+#     """
+#     # Ignore artifacts that could throw off thresholding. These are often greyish in color
+#     jch = rgb2jch(img)
+#     light_greys = 255*((jch[..., 1] < gray_thresh) & (jch[..., 0] < light_gray_thresh)).astype(np.uint8)
+#     dark_greys = 255*((jch[..., 1] < gray_thresh) & (jch[..., 0] < dark_gray_thresh)).astype(np.uint8)
+#     grey_mask = combine_masks_by_hysteresis([light_greys, dark_greys])
+
+#     cam_d, cam = calc_background_color_dist(img, brightness_q)
+
+#     cam_d_t, _ = filters.threshold_multiotsu(cam_d[grey_mask == 0])
+#     tissue_mask = np.zeros(cam_d.shape, dtype=np.uint8)
+#     tissue_mask[cam_d >= cam_d_t] = 255
+
+#     tissue_mask = mask2contours(tissue_mask, 0)
+#     tissue_mask = remove_small_obj_and_lines_by_dist(tissue_mask)
+
+#     concave_tissue_mask = mask2contours(tissue_mask, kernel_size)
+
+#     return tissue_mask, concave_tissue_mask
+
+
+
+def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thresh=0.075, light_gray_thresh=0.875, dark_gray_thresh=0.7):
     """Create mask that only covers tissue
 
     Also remove dark regions on the edge of the slide, which could be artifacts
+
+    Parameters
+    ----------
+    grey_thresh : float
+        Colorfulness values (from JCH) below this are considered "grey", and thus possibly dirt, hair, coverslip edges, etc...
+
+    light_gray_thresh : float
+        Upper limit for light gray
+
+    dark_gray_thresh : float
+        Upper limit for dark gray
 
     Returns
     -------
@@ -306,38 +542,40 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99):
         Covers more area
 
     """
+    # Ignore artifacts that could throw off thresholding. These are often greyish in color
 
-    cam_d, cam = calc_background_color_dist(img, brightness_q)
+    jch = rgb2jch(img)
+    light_greys = 255*((jch[..., 1] < gray_thresh) & (jch[..., 0] < light_gray_thresh)).astype(np.uint8)
+    dark_greys = 255*((jch[..., 1] < gray_thresh) & (jch[..., 0] < dark_gray_thresh)).astype(np.uint8)
+    grey_mask = combine_masks_by_hysteresis([light_greys, dark_greys])
 
-    # Find and exclude dark regions on the edge of the image -> possible artifacts
-    cam_black = colour.convert(np.repeat(0, 3), 'sRGB', 'CAM16UCS')
-    black_dist = np.sqrt(np.sum((cam - cam_black)**2, axis=2))
-    dark_regions = 255*(black_dist < 0.2).astype(np.uint8)
-    dark_contours, _ = cv2.findContours(dark_regions, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    edge_artifact_mask = np.zeros_like(dark_regions)
+    color_mask = 255 - grey_mask
 
-    for cnt in dark_contours:
-        cnt_xy = np.squeeze(cnt, 1)
-        on_border_idx = np.where((cnt_xy[:, 0] == 0) |
-                                 (cnt_xy[:, 0] == dark_regions.shape[1]-1) |
-                                 (cnt_xy[:, 1] == 0) |
-                                 (cnt_xy[:, 1] == dark_regions.shape[0]-1)
-                                )[0]
+    cam_d, cam = calc_background_color_dist(img, brightness_q=brightness_q, mask=color_mask)
 
-        if len(on_border_idx) > 0:
-            cv2.drawContours(edge_artifact_mask, [cnt], 0, 255, -1)
 
-    cam_d_t, _ = filters.threshold_multiotsu(cam_d[edge_artifact_mask == 0])
-    tissue_mask = np.zeros(cam_d.shape, dtype=np.uint8)
-    tissue_mask[cam_d >= cam_d_t] = 255
-    tissue_mask = 255*ndimage.binary_fill_holes(tissue_mask).astype(np.uint8)
+    # Reduce intensity of think horizontal and vertial lines, usually artifacts like edges, streaks, folds, etc...
+    vert_knl = np.ones((1, 5))
+    no_v_lines = morphology.opening(cam_d, vert_knl)
 
-    concave_tissue_mask = mask2contours(tissue_mask)
+    horiz_knl = np.ones((5, 1))
+    no_h_lines = morphology.opening(cam_d, horiz_knl)
+    cam_d_no_lines = np.dstack([no_v_lines, no_h_lines]).min(axis=2)
+
+    # Foreground is where color is different than backaground color
+    cam_d_t, _ = filters.threshold_multiotsu(cam_d_no_lines[grey_mask == 0])
+    tissue_mask = np.zeros(cam_d_no_lines.shape, dtype=np.uint8)
+    tissue_mask[cam_d_no_lines >= cam_d_t] = 255
+
+    tissue_mask = mask2contours(tissue_mask, 0)
+    tissue_mask = remove_small_obj_and_lines_by_dist(tissue_mask)
+
+    concave_tissue_mask = mask2contours(tissue_mask, kernel_size)
 
     return tissue_mask, concave_tissue_mask
 
 
-def create_tissue_mask_from_multichannel(img):
+def create_tissue_mask_from_multichannel(img, kernel_size=3):
     """
     Get foreground of multichannel imaage
     """
@@ -352,7 +590,7 @@ def create_tissue_mask_from_multichannel(img):
         t = np.quantile(img, 0.01)
         tissue_mask[img > t] = 255
     tissue_mask = 255*ndimage.binary_fill_holes(tissue_mask).astype(np.uint8)
-    concave_tissue_mask = mask2contours(tissue_mask)
+    concave_tissue_mask = mask2contours(tissue_mask, kernel_size=kernel_size)
 
     return tissue_mask, concave_tissue_mask
 

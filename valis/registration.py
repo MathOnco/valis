@@ -1607,6 +1607,7 @@ class Valis(object):
         self.original_overlap_img = None
         self.rigid_overlap_img = None
         self.non_rigid_overlap_img = None
+        self.micro_reg_overlap_img = None
 
         self.has_rounds = False
         self.norm_method = norm_method
@@ -1761,6 +1762,7 @@ class Valis(object):
             slide_obj = Slide(f, img, self, reader)
             slide_obj.crop = self.crop
             img_types.append(slide_obj.img_type)
+
             # Will overwrite data if provided. Can occur if reading images, not the actual slides #
             if self.slide_dims_dict_wh is not None:
                 matching_slide = [k for k in self.slide_dims_dict_wh.keys()
@@ -1785,7 +1787,7 @@ class Valis(object):
             else:
                 self.image_type = unique_img_types[0]
 
-        print("not checking image dimensions")
+        # print("not checking image dimensions")
         # self.check_img_max_dims()
 
     def check_img_max_dims(self):
@@ -1943,16 +1945,15 @@ class Valis(object):
 
                 processed_img[rigid_reg_mask == 0] = 0
 
+                scaling = np.min(self.max_processed_image_dim_px/np.array(processed_img.shape[0:2]))
+                if scaling < 1:
+                    processed_img = warp_tools.rescale_img(processed_img, scaling)
+                    if rigid_reg_mask is not None:
+                        rigid_reg_mask = warp_tools.rescale_img(rigid_reg_mask, scaling)
+                        tissue_mask = warp_tools.rescale_img(tissue_mask, scaling)
             else:
                 tissue_mask = None
-                rigid_reg_mask = np.full_like(processed_img, 255)
-
-            scaling = np.min(self.max_processed_image_dim_px/np.array(processed_img.shape[0:2]))
-            if scaling < 1:
-                processed_img = warp_tools.rescale_img(processed_img, scaling)
-                if rigid_reg_mask is not None:
-                    rigid_reg_mask = warp_tools.rescale_img(rigid_reg_mask, scaling)
-                    tissue_mask = warp_tools.rescale_img(tissue_mask, scaling)
+                rigid_reg_mask = None # np.full_like(processed_img, 255)
 
             slide_obj.tissue_mask = tissue_mask
             slide_obj.rigid_reg_mask = rigid_reg_mask
@@ -1981,9 +1982,27 @@ class Valis(object):
 
             self.normalize_images(target_stats)
 
+    # def denoise_images(self):
+    #     for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
+    #         denoised = preprocessing.denoise_img(slide_obj.processed_img, mask=slide_obj.rigid_reg_mask)
+    #         warp_tools.save_img(slide_obj.processed_img_f, denoised)
+
+
+
     def denoise_images(self):
         for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
-            denoised = preprocessing.denoise_img(slide_obj.processed_img, mask=slide_obj.rigid_reg_mask)
+            if slide_obj.rigid_reg_mask is None:
+                is_ihc = slide_obj.img_type == slide_tools.IHC_NAME
+                _, tissue_mask = preprocessing.create_tissue_mask(slide_obj.image, is_ihc)
+                mask_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(tissue_mask))
+                c0, r0 = mask_bbox[:2]
+                c1, r1 = mask_bbox[:2] + mask_bbox[2:]
+                denoise_mask = np.zeros_like(tissue_mask)
+                denoise_mask[r0:r1, c0:c1] = 255
+            else:
+                denoise_mask = slide_obj.rigid_reg_mask
+
+            denoised = preprocessing.denoise_img(slide_obj.processed_img, mask=denoise_mask)
             warp_tools.save_img(slide_obj.processed_img_f, denoised)
 
     def normalize_images(self, target):
@@ -2346,10 +2365,7 @@ class Valis(object):
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
 
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
-        # overlap_min_r = overlap_mask_bbox_xywh[1]
-        # overlap_min_c = overlap_mask_bbox_xywh[0]
-        # overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
-        # overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
+
 
         # Create original overlap image #
         self.original_overlap_img = self.create_original_composite_img(rigid_registrar)
@@ -2444,8 +2460,44 @@ class Valis(object):
 
     def create_non_rigid_reg_mask(self):
         """
+        Get mask for non-rigid registration
+        """
+        any_rigid_reg_masks = np.any([slide_obj.rigid_reg_mask is not None for slide_obj in self.slide_dict.values()])
+        if any_rigid_reg_masks:
+            non_rigid_mask = self._create_non_rigid_reg_mask_from_rigid_masks()
+        else:
+            non_rigid_mask = self._create_non_rigid_reg_mask_from_bbox()
+
+        for slide_obj in self.slide_dict.values():
+            slide_obj.non_rigid_reg_mask = non_rigid_mask
+
+    def _create_non_rigid_reg_mask_from_bbox(self):
+        """Mask will be bounding box of image overlaps
+
+        """
+        ref_slide = self.get_ref_slide()
+        combo_mask = np.zeros(ref_slide.reg_img_shape_rc, dtype=int)
+        for slide_obj in self.slide_dict.values():
+            img_bbox = np.full(slide_obj.processed_img_shape_rc, 255, dtype=np.uint8)
+            rigid_mask = slide_obj.warp_img(img_bbox, non_rigid=False, crop=False, interp_method="nearest")
+            combo_mask[rigid_mask > 0] += 1
+
+        overlap_mask = (combo_mask == self.size).astype(np.uint8)
+        overlap_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(overlap_mask))
+        c0, r0 = overlap_bbox[:2]
+        c1, r1 = overlap_bbox[:2] + overlap_bbox[2:]
+
+        non_rigid_mask = np.zeros_like(overlap_mask)
+        non_rigid_mask[r0:r1, c0:c1] = 255
+
+        return non_rigid_mask
+
+
+    def _create_non_rigid_reg_mask_from_rigid_masks(self):
+        """
         Get mask that will cover all tissue. Use hysteresis thresholding to ignore
         masked regions found in only 1 image.
+
         """
         ref_slide = self.get_ref_slide()
         combo_mask = np.zeros(ref_slide.reg_img_shape_rc, dtype=int)
@@ -2458,9 +2510,8 @@ class Valis(object):
         # Draw convex hull around each region
         non_rigid_mask = 255*ndimage.binary_fill_holes(temp_non_rigid_mask).astype(np.uint8)
         non_rigid_mask = preprocessing.mask2contours(non_rigid_mask)
-        for slide_obj in self.slide_dict.values():
-            slide_obj.non_rigid_reg_mask = non_rigid_mask
 
+        return non_rigid_mask
 
     # def prep_images_for_large_non_rigid_registration(self, max_img_dim,
     #      brightfield_processing_cls, brightfield_processing_kwargs,
@@ -2965,16 +3016,28 @@ class Valis(object):
         """
 
         ref_slide = self.get_ref_slide()
-        any_rigid_reg_masks = np.any([slide_obj.rigid_reg_mask is not None for slide_obj in self.slide_dict.values()])
-        if any_rigid_reg_masks:
-            self.create_non_rigid_reg_mask()
-            non_rigid_reg_mask = ref_slide.non_rigid_reg_mask
-            cropped_mask_shape_rc = warp_tools.xy2bbox(warp_tools.mask2xy(non_rigid_reg_mask))[2:][::-1]
-        else:
-            non_rigid_reg_mask = None
-            cropped_mask_shape_rc = ref_slide.reg_img_shape_rc
+        # any_rigid_reg_masks = np.any([slide_obj.rigid_reg_mask is not None for slide_obj in self.slide_dict.values()])
 
-        # if self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px:
+        # if self.reference_img_mask is not None:
+        #     non_rigid_reg_mask = warp_tools.warp_img(self.reference_img_mask,
+        #                                              M=ref_slide.M,
+        #                                              out_shape_rc=ref_slide.reg_img_shape_rc,
+        #                                              interp_method="nearest"
+        #                                              )
+
+        # if any_rigid_reg_masks:
+        self.create_non_rigid_reg_mask()
+        non_rigid_reg_mask = ref_slide.non_rigid_reg_mask
+        cropped_mask_shape_rc = warp_tools.xy2bbox(warp_tools.mask2xy(non_rigid_reg_mask))[2:][::-1]
+        # else:
+            # non_rigid_reg_mask = None
+            # cropped_mask_shape_rc = ref_slide.reg_img_shape_rc
+
+        # if non_rigid_reg_mask is not None:
+        #     cropped_mask_shape_rc = warp_tools.xy2bbox(warp_tools.mask2xy(non_rigid_reg_mask))[2:][::-1]
+        # else:
+        #     cropped_mask_shape_rc = ref_slide.reg_img_shape_rc
+
         nr_on_scaled_img = self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px or \
             (non_rigid_reg_mask is not None and np.any(cropped_mask_shape_rc != ref_slide.reg_img_shape_rc))
 
@@ -4102,6 +4165,7 @@ class Valis(object):
         pickle.dump(self, open(self.reg_f, 'wb'))
 
         micro_overlap = self.draw_overlap_img(micro_reg_imgs)
+        self.micro_reg_overlap_img = micro_overlap
         overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_micro_reg.png")
         warp_tools.save_img(overlap_img_fout, micro_overlap, thumbnail_size=self.thumbnail_size)
 

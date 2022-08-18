@@ -2328,7 +2328,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
 
     compression : str
         Compression method used to save ome.tiff . Default is lzw, but can also
-        be jpeg or jp2k. See pyips for more details.
+        be jpeg or jp2k. See https://libvips.github.io/pyvips/enums.html#pyvips.enums.ForeignTiffCompression for more details.
 
     """
 
