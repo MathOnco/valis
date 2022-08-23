@@ -70,6 +70,9 @@ class ImageProcesser(object):
         self.level = level
         self.series = series
 
+    def create_mask(self):
+        return np.full(self.image.shape[0:2], 255, dtype=np.uint8)
+
     def process_image(self,  *args, **kwargs):
         """Pre-process image for registration
 
@@ -92,6 +95,11 @@ class ChannelGetter(ImageProcesser):
     def __init__(self, image, src_f, level, series, *args, **kwargs):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
+
+    def create_mask(self):
+        _, tissue_mask = create_tissue_mask_from_multichannel(self.image)
+
+        return tissue_mask
 
     def process_image(self, channel="dapi", adaptive_eq=True, *args, **kwaargs):
         reader_cls = slide_io.get_slide_reader(self.src_f, series=self.series)
@@ -123,6 +131,11 @@ class ColorfulStandardizer(ImageProcesser):
     def __init__(self, image, src_f, level, series, *args, **kwargs):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
+
+    def create_mask(self):
+        _, tissue_mask = create_tissue_mask_from_rgb(self.image)
+
+        return tissue_mask
 
     def process_image(self, c=DEFAULT_COLOR_STD_C, invert=True, *args, **kwargs):
         std_rgb = standardize_colorfulness(self.image, c)
@@ -626,6 +639,40 @@ def mask2covexhull(mask):
     concave_mask = 255*ndimage.binary_fill_holes(concave_mask).astype(np.uint8)
 
     return concave_mask
+
+
+def mask2bbox_mask(mask, merge_bbox=True):
+    """
+    Replace objects in mask with bounding boxes. If `combine_bbox`
+    is True, then bounding boxes will merged if they are touching,
+    and the bounding box will be drawn around those overlapping boxes.
+    """
+
+    n_regions = -1
+    n_prev_regions = 0
+    max_iter = 10000
+    i = 0
+    updated_mask = mask.copy()
+    while n_regions != n_prev_regions:
+        n_prev_regions = n_regions
+        labeled_mask = measure.label(updated_mask)
+        bbox_mask = np.zeros_like(updated_mask)
+        regions = measure.regionprops(labeled_mask)
+        for r in regions:
+            r0, c0, r1, c1 = r.bbox
+            bbox_mask[r0:r1, c0:c1] = 255
+
+        n_regions = len(regions)
+        updated_mask = bbox_mask
+
+        if not merge_bbox:
+            break
+
+        i += 1
+        if i > max_iter:
+            break
+
+    return updated_mask
 
 
 def mask2contours(mask, kernel_size=3):
