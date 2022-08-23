@@ -2283,19 +2283,24 @@ class Valis(object):
             else:
                 og_src_shape_rc = matching_slide_obj.slide_dimensions_wh[0][::-1]
 
-            to_reg_sxy = (np.array(matching_rigid_obj.image.shape)/np.array(og_src_shape_rc))[::-1]
             temp_M = img_tforms[TFORM_MAT_KEY]
             if temp_M.shape[0] == 2:
                 temp_M = np.vstack([temp_M, [0, 0, 1]])
 
-            if TFORM_SRC_SHAPE_KEY in img_tforms:
-                og_src_shape_rc = img_tforms[TFORM_SRC_SHAPE_KEY]
+            if TFORM_DST_SHAPE_KEY in img_tforms:
+                og_dst_shape_rc = img_tforms[TFORM_DST_SHAPE_KEY]
             else:
-                og_src_shape_rc = matching_slide_obj.slide_dimensions_wh[0][::-1]
+                og_dst_shape_rc = ref_slide_obj.slide_dimensions_wh[0][::-1]
 
-            to_reg_sxy = (np.array(matching_rigid_obj.image.shape)/np.array(og_src_shape_rc))[::-1]
-            for_reg_M = warp_tools.scale_M(temp_M, *to_reg_sxy)
-
+            img_corners_xy = warp_tools.get_corners_of_image(matching_rigid_obj.image.shape)[::-1]
+            warped_corners = warp_tools.warp_xy(img_corners_xy, M=temp_M,
+                                    transformation_src_shape_rc=og_src_shape_rc,
+                                    transformation_dst_shape_rc=og_dst_shape_rc,
+                                    src_shape_rc=matching_rigid_obj.image.shape,
+                                    dst_shape_rc=out_rc)
+            M_tform = transform.ProjectiveTransform()
+            M_tform.estimate(warped_corners, img_corners_xy)
+            for_reg_M = M_tform.params
             scaled_M_dict[matching_rigid_obj.name] = for_reg_M
             matching_rigid_obj.M = for_reg_M
 
@@ -2359,7 +2364,7 @@ class Valis(object):
                 # Skip rigid registration
                 rigid_tforms = None
 
-            rigid_registrar = self.rigid_register_partial(rigid_tforms)
+            rigid_registrar = self.rigid_register_partial(tform_dict=rigid_tforms)
 
         self.end_rigid_time = time()
         self.rigid_registrar = rigid_registrar
