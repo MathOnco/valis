@@ -41,6 +41,7 @@ OVERLAP_IMG_DIR = "overlaps"
 REG_RESULTS_DATA_DIR = "data"
 MICRO_REG_DIR = "micro_registration"
 DISPLACEMENT_DIRS = os.path.join(REG_RESULTS_DATA_DIR, "displacements")
+MASK_DIR = "masks"
 
 # Default image processing #
 DEFAULT_BRIGHTFIELD_CLASS = preprocessing.ColorfulStandardizer
@@ -1718,6 +1719,7 @@ class Valis(object):
         self.data_dir = os.path.join(self.dst_dir, REG_RESULTS_DATA_DIR)
         self.displacements_dir = os.path.join(self.dst_dir, DISPLACEMENT_DIRS)
         self.micro_reg_dir = os.path.join(self.dst_dir, MICRO_REG_DIR)
+        self.mask_dir = os.path.join(self.dst_dir, MASK_DIR)
 
     def get_ref_slide(self):
         ref_slide = self.slide_dict[valtils.get_name(self.reference_img_f)]
@@ -1788,7 +1790,7 @@ class Valis(object):
                 self.image_type = unique_img_types[0]
 
         # print("not checking image dimensions")
-        # self.check_img_max_dims()
+        self.check_img_max_dims()
 
     def check_img_max_dims(self):
         """Ensure that all images have similar sizes.
@@ -1935,28 +1937,40 @@ class Valis(object):
                 processed_img = processor.process_image()
 
             processed_img = exposure.rescale_intensity(processed_img, out_range=(0, 255)).astype(np.uint8)
+            scaling = np.min(self.max_processed_image_dim_px/np.array(processed_img.shape[0:2]))
+            if scaling < 1:
+                processed_img = warp_tools.rescale_img(processed_img, scaling)
 
             if self.create_masks:
                 # Get masks #
-                if is_ihc:
-                    tissue_mask, rigid_reg_mask = preprocessing.create_tissue_mask(slide_obj.image, is_ihc)
+                pathlib.Path(self.mask_dir).mkdir(exist_ok=True, parents=True)
+
+                # Slice region from slide and process too
+                mask = processor.create_mask()
+                if not np.all(mask.shape == processed_img.shape[0:2]):
+                    mask = warp_tools.resize_img(mask, processed_img.shape[0:2], interp_method="nearest")
+
+                slide_obj.rigid_reg_mask = mask
+                processed_img[mask == 0] = 0
+
+                # Save image with mask drawn on top of it
+                # draw_mask = warp_tools.resize_img(mask, slide_obj.image.shape[0:2], interp_method="nearest")
+                thumbnail_mask = self.create_thumbnail(mask)
+                if slide_obj.img_type == slide_tools.IHC_NAME:
+                    thumbnail_img = self.create_thumbnail(slide_obj.image)
                 else:
-                    tissue_mask, rigid_reg_mask = preprocessing.create_tissue_mask(processed_img, is_ihc)
+                    thumbnail_img = self.create_thumbnail(processed_img)
 
-                processed_img[rigid_reg_mask == 0] = 0
+                thumbnail_mask_outline = viz.draw_outline(thumbnail_img, thumbnail_mask)
+                outline_f_out = os.path.join(self.mask_dir, f'{slide_obj.name}.png')
+                warp_tools.save_img(outline_f_out, thumbnail_mask_outline)
 
-                scaling = np.min(self.max_processed_image_dim_px/np.array(processed_img.shape[0:2]))
-                if scaling < 1:
-                    processed_img = warp_tools.rescale_img(processed_img, scaling)
-                    if rigid_reg_mask is not None:
-                        rigid_reg_mask = warp_tools.rescale_img(rigid_reg_mask, scaling)
-                        tissue_mask = warp_tools.rescale_img(tissue_mask, scaling)
             else:
-                tissue_mask = None
-                rigid_reg_mask = None # np.full_like(processed_img, 255)
+                # tissue_mask = None
+                mask = None # np.full_like(processed_img, 255)
 
-            slide_obj.tissue_mask = tissue_mask
-            slide_obj.rigid_reg_mask = rigid_reg_mask
+            # slide_obj.tissue_mask = tissue_mask
+            slide_obj.rigid_reg_mask = mask
             slide_obj.processed_img = processed_img
 
             processed_f_out = os.path.join(self.processed_dir, slide_obj.name + ".png")
@@ -2470,6 +2484,23 @@ class Valis(object):
 
         for slide_obj in self.slide_dict.values():
             slide_obj.non_rigid_reg_mask = non_rigid_mask
+
+        # Save thumbnail of mask
+        ref_slide = self.get_ref_slide()
+        if ref_slide.img_type == slide_tools.IHC_NAME:
+            warped_ref_img = ref_slide.warp_img(non_rigid=False, crop=False)
+        else:
+            warped_ref_img = ref_slide.warp_img(ref_slide.processed_img, non_rigid=False, crop=False)
+
+        pathlib.Path(self.mask_dir).mkdir(exist_ok=True, parents=True)
+        thumbnail_img = self.create_thumbnail(warped_ref_img)
+        draw_mask = warp_tools.resize_img(non_rigid_mask, warped_ref_img.shape[0:2], interp_method="nearest")
+        thumbnail_mask = self.create_thumbnail(draw_mask)
+
+        thumbnail_mask_outline = viz.draw_outline(thumbnail_img, thumbnail_mask)
+        outline_f_out = os.path.join(self.mask_dir, f'{self.name}_non_rigid_mask.png')
+        warp_tools.save_img(outline_f_out, thumbnail_mask_outline)
+
 
     def _create_non_rigid_reg_mask_from_bbox(self):
         """Mask will be bounding box of image overlaps

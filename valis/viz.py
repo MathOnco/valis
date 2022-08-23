@@ -28,7 +28,7 @@ else:
 # DXDY_LRANGE = (0.5, 0.9)
 
 
-def draw_outline(img, mask, clr, thickness=2):
+def draw_outline(img, mask, clr=(100, 240, 39), thickness=2):
     """Draw mask outline around an image
 
     Parameters
@@ -54,7 +54,10 @@ def draw_outline(img, mask, clr, thickness=2):
     """
 
     outline_img = img.copy()
+    if outline_img.ndim == 2:
+        outline_img = np.dstack([outline_img for i in range(3)])
 
+    outline_img = outline_img.astype(np.uint8)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     int_color = [int(i) for i in clr]
     for cnt in contours:
