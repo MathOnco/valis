@@ -2937,6 +2937,8 @@ class Valis(object):
                     bbox_xywh=mask_bbox_xywh,
                     bg_color=slide_obj.bg_color)
 
+                warp_tools.save_img(os.path.join(self.dst_dir, f"roi_{slide_obj.name}.png"), unprocessed_warped_img)
+
                 temp_processing_mask = pyvips.Image.black(img_to_warp.width, img_to_warp.height).invert()
                 processing_mask = warp_tools.warp_img(img=temp_processing_mask, M=slide_obj.M,
                     bk_dxdy=dxdy,
@@ -3106,6 +3108,7 @@ class Valis(object):
             pathlib.Path(d).mkdir(exist_ok=True, parents=True)
         self.non_rigid_registrar = non_rigid_registrar
 
+
         # Clean up displacements and expand if mask was used
         for nr_name, nr_obj in non_rigid_registrar.non_rigid_obj_dict.items():
             if nr_on_scaled_img:
@@ -3173,26 +3176,44 @@ class Valis(object):
             # Save deformation grid
 
             # if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px and non_rigid_reg_mask is None:
-            if not nr_on_scaled_img:
-                draw_dxdy = np.dstack(slide_obj.bk_dxdy)
-            else:
-                dxdy_scaling = (np.array(slide_obj.reg_img_shape_rc)/np.array(slide_obj.bk_dxdy[0].shape))[::-1]
-                dxdy_scaling_for_resize = np.min(dxdy_scaling)
-                draw_dxdy = warp_tools.rescale_img(np.dstack(slide_obj.bk_dxdy), dxdy_scaling_for_resize)
-                draw_dxdy *= dxdy_scaling
+            # if not nr_on_scaled_img:
+            #     draw_dxdy = np.dstack(slide_obj.bk_dxdy)
+            # else:
+            #     dxdy_scaling = (np.array(slide_obj.reg_img_shape_rc)/np.array(slide_obj.bk_dxdy[0].shape))[::-1]
+            #     # dxdy_scaling_for_resize = np.min(dxdy_scaling)
+            #     # draw_dxdy = warp_tools.rescale_img(np.dstack(slide_obj.bk_dxdy), dxdy_scaling_for_resize)
+            #     draw_dxdy = warp_tools.resize_img(np.dstack(slide_obj.bk_dxdy), slide_obj.reg_img_shape_rc)
+            #     draw_dxdy *= dxdy_scaling
 
-            draw_dxdy = warp_tools.crop_img(draw_dxdy, overlap_mask_bbox_xywh)
+
+            # draw_dxdy = warp_tools.crop_img(draw_dxdy, overlap_mask_bbox_xywh)
+            # thumbnail_scaling = np.min(self.thumbnail_size/np.array(draw_dxdy.shape[0:2]))
+            # thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy)
+            # thumbnail_bk_dxdy *= thumbnail_scaling
+
+            # temp_draw = slide_obj.warp_img(rigid_registrar.img_obj_dict[slide_name].image, non_rigid=True, crop=self.crop)
+            # draw_img = transform.resize(temp_draw,
+            #                             thumbnail_bk_dxdy[..., 0].shape,
+            #                             preserve_range=True).astype(temp_draw.dtype)
+
+            # if draw_img.ndim == 2:
+            #     draw_img = np.dstack([draw_img] * 3)
+
+
+            ### Draw displacements on image actually used in non-rigid
+            draw_dxdy = np.dstack(slide_nr_reg_obj.bk_dxdy)
             thumbnail_scaling = np.min(self.thumbnail_size/np.array(draw_dxdy.shape[0:2]))
             thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy)
             thumbnail_bk_dxdy *= thumbnail_scaling
 
-            temp_draw = slide_obj.warp_img(rigid_registrar.img_obj_dict[slide_name].image, non_rigid=True, crop=self.crop)
-            draw_img = transform.resize(temp_draw,
-                                        thumbnail_bk_dxdy[..., 0].shape,
-                                        preserve_range=True).astype(temp_draw.dtype)
+            draw_img = transform.resize(slide_nr_reg_obj.registered_img,
+                            thumbnail_bk_dxdy[..., 0].shape,
+                            preserve_range=True).astype(slide_nr_reg_obj.image.dtype)
 
+            draw_img = exposure.rescale_intensity(draw_img, out_range=(0, 255))
             if draw_img.ndim == 2:
                 draw_img = np.dstack([draw_img] * 3)
+
 
             thumbanil_deform_grid = viz.color_displacement_tri_grid(bk_dx=thumbnail_bk_dxdy[..., 0],
                                                                     bk_dy=thumbnail_bk_dxdy[..., 1],
