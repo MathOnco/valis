@@ -725,6 +725,71 @@ class Slide(object):
         return warped_img
 
 
+    def warp_img_from_to(self, img, to_slide_obj,
+                        dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
+
+        """Warp an image from this slide onto another unwarped slide
+
+        Note that if `img` is a labeled image then it is recommended to set `interp_method` to "nearest"
+
+        Parameters
+        ----------
+        img : ndarray, pyvips.Image
+            Image to warp. Should be a scaled version of the same one used for registration
+
+        to_slide_obj : Slide
+            Slide to which the points will be warped. I.e. `xy`
+            will be warped from this Slide to their position in
+            the unwarped slide associated with `to_slide_obj`.
+
+        dst_slide_level: int, tuple, optional
+            Pyramid level of the slide/image that `img` will be warped on to
+
+        non_rigid : bool, optional
+            Whether or not to conduct non-rigid warping. If False,
+            then only a rigid transformation will be applied.
+
+        """
+
+        if np.issubdtype(type(dst_slide_level), np.integer):
+            to_slide_src_shape_rc = to_slide_obj.slide_dimensions_wh[dst_slide_level][::-1]
+            aligned_slide_shape = self.val_obj.get_aligned_slide_shape(dst_slide_level)
+        else:
+
+            to_slide_src_shape_rc = np.array(dst_slide_level)
+
+            dst_scale_rc = (to_slide_src_shape_rc/np.array(to_slide_obj.processed_img_shape_rc))
+            # dst_scale_rc = (img_shape_rc/np.array(self.processed_img_shape_rc))
+            aligned_slide_shape = np.round(dst_scale_rc*np.array(to_slide_obj.reg_img_shape_rc)).astype(int)
+
+        if non_rigid:
+            from_bk_dxdy = self.bk_dxdy
+            to_fwd_dxdy = to_slide_obj.fwd_dxdy
+
+        else:
+            from_bk_dxdy = None
+            to_fwd_dxdy = None
+
+        warped_img = \
+            warp_tools.warp_img_from_to(img,
+                                        from_M=self.M,
+                                        from_transformation_src_shape_rc=self.processed_img_shape_rc,
+                                        from_transformation_dst_shape_rc=self.reg_img_shape_rc,
+                                        from_dst_shape_rc=aligned_slide_shape,
+                                        from_bk_dxdy=from_bk_dxdy,
+                                        to_M=to_slide_obj.M,
+                                        to_transformation_src_shape_rc=to_slide_obj.processed_img_shape_rc,
+                                        to_transformation_dst_shape_rc=to_slide_obj.reg_img_shape_rc,
+                                        to_src_shape_rc=to_slide_src_shape_rc,
+                                        to_fwd_dxdy=to_fwd_dxdy,
+                                        bg_color=bg_color,
+                                        interp_method=interp_method
+                                        )
+
+        return warped_img
+
+
+
     @valtils.deprecated_args(crop_to_overlap="crop")
     def warp_slide(self, level, non_rigid=True, crop=True,
                    src_f=None, interp_method="bicubic"):
