@@ -49,18 +49,18 @@ The registration pipeline is fully automated and goes as follows:
 
    #. Rigid registration is performed serially, with each image being rigidly aligned towards the reference image. That is, if the reference image is the 5th in the stack, image 4 will be aligned to 5 (the reference), and then 3 will be aligned to the now registered version of 4, and so on. Only features found in both neighboring slides are used to align the image to the next one in the stack. VALIS uses feature detection to match and align images, but one can optionally perform a final step that maximizes the mutual information betweeen each pair of images.
 
-   #. Non-rigid registration is then performed either by:
+   #. The registered rigid masks are combined to create a non-rigid registration mask. The bounding box of this mask is then used to extract higher resolution versions of the tissue from each slide. These higher resolution images are then processed as above and used for non-rigid registration, which is performed either by:
 
         * aliging each image towards the reference image following the same sequence used during rigid registation.
         * using groupwise registration that non-rigidly aligns the images to a common frame of reference. Currently this is only possible if `SimpleElastix <https://simpleelastix.github.io>`__ is installed.
 
-   #. One can optionally perform a second non-rigid registration using higher resolution versions of each image. This is intended to better align micro-features not visible in the original images, and so is referred to as micro-registration
+   #. One can optionally perform a second non-rigid registration using an even higher resolution versions of each image. This is intended to better align micro-features not visible in the original images, and so is referred to as micro-registration. A mask can also be used to indicate where registration should take place.
 
    #. Error is estimated by calculating the distance between registered matched features in the full resolution images.
 
 The transformations found by VALIS can then be used to warp the full resolution slides. It is also possible to merge non-RGB registered slides to create a highly multiplexed image. These aligned and/or merged slides can then be saved as ome.tiff images. The transformations can also be use to warp point data, such as cell centroids, polygon vertices, etc...
 
-In addition to registering images, VALIS provides tools to read slides using Bio-Formats and OpenSlide, which can be read at multiple resolutions and converted to numpy arrays or pyvips.Image objects. One can also slice regions of interest from these slides. VALIS also provides functions to convert slides to the ome.tiff format, preserving the original metadata. Please see examples and documentation for more details.
+In addition to registering images, VALIS provides tools to read slides using Bio-Formats and OpenSlide, which can be read at multiple resolutions and converted to numpy arrays or pyvips.Image objects. One can also slice regions of interest from these slides and warp annotated images. VALIS also provides functions to convert slides to the ome.tiff format, preserving the original metadata. Please see examples and documentation for more details.
 
 
 
@@ -237,6 +237,9 @@ After registration is complete, one can view the results to determine if they ar
 
 
 #. **processed** shows thumnails of the processed images. These are thumbnails of the images that were actually used to perform the registration. The pre-processing and normalization methods should try to make these images look as similar as possible.
+
+
+#. **masks** show the images with outlines of their rigid registration mask drawn around them. If non-rigid registration is being performed, there will also be an image of the reference image with the non-rigid registration mask drawn around it.
 
 
 If the results look good, then one can warp and save all of the slides as ome.tiffs. When saving the images, there are three cropping options:
@@ -566,6 +569,19 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 
 Change Log
 ==========
+
+Version 1.0.0rc11 (August 26, 2022)
+-----------------------------------
+#. Fixed bug when providing rigid transformations (Issue 14, https://github.com/MathOnco/valis/issues/14).
+#. Can now warp one image onto another, making it possible to transfer annotations using labeled images (Issue 13 https://github.com/MathOnco/valis/issues/13). This can be done using a Slide object's :code:`warp_img_from_to` method. See example in examples/warp_annotation_image.py
+#. :code:`ImageProcesser` objects now have a  :code:`create_mask` function that is used to build the masks for rigid registration. These are then used to create the mask used for non-rigid registration, where they are combined such that the final mask is where they overlap and/or touch.
+#. Non-rigid registration performed on higher resolution version of the image. The area inside the non-rigid mask is sliced out such that it encompasses the area inside the mask but has a maximum dimension of  :code:`Valis.max_non_rigid_registartion_dim_px`. This can improve accuracy when the tissue is only a small part of the image. If masks aren't created, this region will be where all of the slides overalp.
+#. Version used to submit results to the ACROBAT Grand Challenge. Code used to perform registration can be found in examples/acrobat_grand_challenge.py. This example also shows how to use and create a custom :code:`ImageProcesser` and perform micro-registration with a mask.
+
+
+Version 1.0.0rc10 (August 11, 2022)
+-----------------------------------
+#. Fixed compatibility with updated interpolation package (Issue 12).
 
 Version 1.0.0rc9 (August 4, 2022)
 ---------------------------------

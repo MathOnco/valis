@@ -2,7 +2,6 @@
 Classes and functions to register a collection of images
 """
 
-from distutils.command.clean import clean
 import traceback
 import re
 import os
@@ -16,7 +15,7 @@ import pickle
 import colour
 import pyvips
 from scipy import ndimage
-import cv2
+
 from . import feature_matcher
 from . import serial_rigid
 from . import feature_detectors
@@ -196,9 +195,6 @@ class Slide(object):
     processed_img : ndarray
         Image used to perform registration
 
-    tissue_mask : ndarray
-        Mask covering tissue
-
     rigid_reg_mask : ndarray
         Mask of convex hulls covering tissue in unregistered image.
         Could be used to mask `processed_img` before rigid registration
@@ -333,7 +329,6 @@ class Slide(object):
 
         # To be filled in during registration #
         self.processed_img = None
-        self.tissue_mask = None
         self.rigid_reg_mask = None
         self.non_rigid_reg_mask = None # Created by combining rigid masks
         self.stack_idx = None
@@ -759,7 +754,6 @@ class Slide(object):
             to_slide_src_shape_rc = np.array(dst_slide_level)
 
             dst_scale_rc = (to_slide_src_shape_rc/np.array(to_slide_obj.processed_img_shape_rc))
-            # dst_scale_rc = (img_shape_rc/np.array(self.processed_img_shape_rc))
             aligned_slide_shape = np.round(dst_scale_rc*np.array(to_slide_obj.reg_img_shape_rc)).astype(int)
 
         if non_rigid:
@@ -1854,7 +1848,6 @@ class Valis(object):
             else:
                 self.image_type = unique_img_types[0]
 
-        # print("not checking image dimensions")
         self.check_img_max_dims()
 
     def check_img_max_dims(self):
@@ -2019,7 +2012,6 @@ class Valis(object):
                 processed_img[mask == 0] = 0
 
                 # Save image with mask drawn on top of it
-                # draw_mask = warp_tools.resize_img(mask, slide_obj.image.shape[0:2], interp_method="nearest")
                 thumbnail_mask = self.create_thumbnail(mask)
                 if slide_obj.img_type == slide_tools.IHC_NAME:
                     thumbnail_img = self.create_thumbnail(slide_obj.image)
@@ -2031,10 +2023,8 @@ class Valis(object):
                 warp_tools.save_img(outline_f_out, thumbnail_mask_outline)
 
             else:
-                # tissue_mask = None
-                mask = None # np.full_like(processed_img, 255)
+                mask = None
 
-            # slide_obj.tissue_mask = tissue_mask
             slide_obj.rigid_reg_mask = mask
             slide_obj.processed_img = processed_img
 
@@ -2060,13 +2050,6 @@ class Valis(object):
                 target_stats = all_v
 
             self.normalize_images(target_stats)
-
-    # def denoise_images(self):
-    #     for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
-    #         denoised = preprocessing.denoise_img(slide_obj.processed_img, mask=slide_obj.rigid_reg_mask)
-    #         warp_tools.save_img(slide_obj.processed_img_f, denoised)
-
-
 
     def denoise_images(self):
         for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
@@ -2529,19 +2512,6 @@ class Valis(object):
 
         return rigid_registrar
 
-    # def create_non_rigid_reg_mask(self):
-    #     ref_slide = self.get_ref_slide()
-    #     temp_non_rigid_mask = np.zeros(ref_slide.reg_img_shape_rc, dtype=np.uint8)
-    #     for slide_obj in self.slide_dict.values():
-    #         rigid_mask = slide_obj.warp_img(slide_obj.rigid_reg_mask, non_rigid=False, crop=False, interp_method="nearest")
-    #         temp_non_rigid_mask = cv2.bitwise_or(temp_non_rigid_mask, rigid_mask)
-
-    #     # Draw convex hull around each region
-    #     non_rigid_mask = 255*ndimage.binary_fill_holes(temp_non_rigid_mask).astype(np.uint8)
-    #     non_rigid_mask = preprocessing.mask2contours(non_rigid_mask)
-    #     for slide_obj in self.slide_dict.values():
-    #         slide_obj.non_rigid_reg_mask = non_rigid_mask
-
     def create_non_rigid_reg_mask(self):
         """
         Get mask for non-rigid registration
@@ -2558,19 +2528,21 @@ class Valis(object):
         # Save thumbnail of mask
         ref_slide = self.get_ref_slide()
         if ref_slide.img_type == slide_tools.IHC_NAME:
-            warped_ref_img = ref_slide.warp_img(non_rigid=False, crop=False)
+            warped_ref_img = ref_slide.warp_img(non_rigid=False, crop=CROP_REF)
         else:
-            warped_ref_img = ref_slide.warp_img(ref_slide.processed_img, non_rigid=False, crop=False)
+            warped_ref_img = ref_slide.warp_img(ref_slide.processed_img, non_rigid=False, crop=CROP_REF)
 
         pathlib.Path(self.mask_dir).mkdir(exist_ok=True, parents=True)
         thumbnail_img = self.create_thumbnail(warped_ref_img)
-        draw_mask = warp_tools.resize_img(non_rigid_mask, warped_ref_img.shape[0:2], interp_method="nearest")
+
+        draw_mask = warp_tools.resize_img(non_rigid_mask, ref_slide.reg_img_shape_rc, interp_method="nearest")
+        _, overlap_mask_bbox_xywh = self.get_crop_mask(CROP_REF)
+        draw_mask = warp_tools.crop_img(draw_mask, overlap_mask_bbox_xywh.astype(int))
         thumbnail_mask = self.create_thumbnail(draw_mask)
 
         thumbnail_mask_outline = viz.draw_outline(thumbnail_img, thumbnail_mask)
         outline_f_out = os.path.join(self.mask_dir, f'{self.name}_non_rigid_mask.png')
         warp_tools.save_img(outline_f_out, thumbnail_mask_outline)
-
 
     def _create_non_rigid_reg_mask_from_bbox(self):
         """Mask will be bounding box of image overlaps
@@ -2613,191 +2585,6 @@ class Valis(object):
         non_rigid_mask = preprocessing.mask2contours(non_rigid_mask)
 
         return non_rigid_mask
-
-    # def prep_images_for_large_non_rigid_registration(self, max_img_dim,
-    #      brightfield_processing_cls, brightfield_processing_kwargs,
-    #      if_processing_cls, if_processing_kwargs, updating_non_rigid=False):
-    #     """Scale and process images for non-rigid registration using larger images
-
-    #     Parameters
-    #     ----------
-    #     max_img_dim : int, optional
-    #         Maximum size of image to be used for non-rigid registration. If None, the whole image
-    #         will be used  for non-rigid registration
-
-    #     brightfield_processing_fxn : callable
-    #         Function to pre-process brightfield images to make them look as similar as possible.
-    #         Should return a single channel uint8 image.
-
-    #     brightfield_processing_kwargs : dict
-    #         Dictionary of keyward arguments to be passed to `ihc_processing_fxn`
-
-    #     if_processing_fxn : callable
-    #         Function to pre-process immunofluorescent images to make them look as similar as possible.
-    #         Should return a single channel uint8 image.
-
-    #     if_processing_kwargs : dict
-    #         Dictionary of keyward arguments to be passed to `if_processing_fxn`
-
-    #     updating_non_rigid : bool, optional
-    #         If `True`, the slide's current non-rigid registration will be applied
-    #         The new displacements found using these larger images can therefore be used
-    #         to update existing dxdy. If `False`, only the rigid transform will be applied,
-    #         so this will be the first non-rigid transformation.
-
-    #     Returns
-    #     -------
-    #     img_dict : dictionary
-    #         Dictionary that can be passed to a non-rigid registrar
-
-    #     max_img_dim : int
-    #         Maximum size of image to do non-rigid registration on. May be different
-    #         if the requested size was too big
-
-    #     scaled_non_rigid_mask : ndarray
-    #         Scaled mask to use for non-rigid registration
-
-    #     """
-
-    #     warp_full_img = max_img_dim is None
-    #     if not warp_full_img:
-    #         all_max_dims = [np.any(np.max(slide_obj.slide_dimensions_wh, axis=1) >= max_img_dim) for slide_obj in self.slide_dict.values()]
-    #         if not np.all(all_max_dims):
-    #             img_maxes = [np.max(slide_obj.slide_dimensions_wh, axis=1)[0] for slide_obj in self.slide_dict.values()]
-    #             smallest_img_max = np.min(img_maxes)
-    #             msg = (f"Requested size of images for non-rigid registration was {max_img_dim}. "
-    #                 f"However, not all images are this large. Setting `max_non_rigid_registartion_dim_px` to "
-    #                 f"{smallest_img_max}, which is the largest dimension of the smallest image")
-    #             valtils.print_warning(msg)
-    #             max_img_dim = smallest_img_max
-
-    #     ref_slide = self.get_ref_slide()
-
-    #     if not warp_full_img:
-    #         s = np.min(max_img_dim/np.array(ref_slide.processed_img_shape_rc))
-    #         out_shape = self.get_aligned_slide_shape(s)
-    #     else:
-    #         # Will register full size
-    #         out_shape = self.get_aligned_slide_shape(0)
-
-    #     use_tiler = False
-    #     if ref_slide.reader.metadata.bf_datatype is not None:
-    #         np_dtype = slide_tools.BF_FORMAT_NUMPY_DTYPE[ref_slide.reader.metadata.bf_datatype]
-    #     else:
-    #         # Assuming images not read by bio-formats are RGB read using from openslide or png, jpeg, etc...
-    #         np_dtype = "uint8"
-
-    #     estimated_gb = warp_tools.calc_memory_size_gb(out_shape, ref_slide.reader.metadata.n_channels, np_dtype)
-
-    #     if estimated_gb > TILER_THRESH_GB:
-    #         use_tiler = True
-
-    #     scaled_warped_img_list = [None] * self.size
-    #     scaled_mask_list = [None] * self.size
-    #     img_names_list = [None] * self.size
-    #     img_f_list = [None] * self.size
-
-    #     for slide_obj in tqdm.tqdm(self.slide_dict.values()):
-
-    #         # Get image to warp. Likely a larger image scaled down to specified shape #
-    #         src_img_shape_rc, src_M = warp_tools.get_src_img_shape_and_M(transformation_src_shape_rc=slide_obj.processed_img_shape_rc,
-    #                                                                      transformation_dst_shape_rc=slide_obj.reg_img_shape_rc,
-    #                                                                      dst_shape_rc=out_shape,
-    #                                                                      M=slide_obj.M)
-
-
-    #         if max_img_dim is not None:
-    #             closest_img_levels = np.where(np.max(slide_obj.slide_dimensions_wh, axis=1) < np.max(src_img_shape_rc))[0]
-    #             if len(closest_img_levels) > 0:
-    #                 closest_img_level = closest_img_levels[0] - 1
-    #             else:
-    #                 closest_img_level = len(slide_obj.slide_dimensions_wh) - 1
-    #         else:
-    #             closest_img_level = 0
-
-    #         vips_level_img = slide_obj.slide2vips(closest_img_level)
-    #         img_to_warp = warp_tools.resize_img(vips_level_img, src_img_shape_rc)
-
-    #         if updating_non_rigid:
-    #             dxdy = slide_obj.bk_dxdy
-    #         else:
-    #             dxdy = None
-
-    #         if not use_tiler:
-    #             # Process image using same method for rigid registration #
-    #             img_to_warp = warp_tools.vips2numpy(img_to_warp)
-    #             if slide_obj.img_type == slide_tools.IHC_NAME:
-    #                 processing_cls = brightfield_processing_cls
-    #                 processing_kwargs = brightfield_processing_kwargs
-    #             else:
-    #                 processing_cls = if_processing_cls
-    #                 processing_kwargs = if_processing_kwargs
-
-    #             processor = processing_cls(image=img_to_warp, src_f=slide_obj.src_f, level=closest_img_level, series=slide_obj.series)
-
-    #             try:
-    #                 processed_img = processor.process_image(**processing_kwargs)
-    #             except TypeError:
-    #                 # processor.process_image doesn't take kwargs
-    #                 processed_img = processor.process_image()
-    #             processed_img = exposure.rescale_intensity(processed_img, out_range=(0, 255)).astype(np.uint8)
-
-    #             # Normalize images using stats collected for rigid registration #
-    #             normed_img = preprocessing.norm_img_stats(processed_img, self.target_processing_stats)
-    #             normed_img = exposure.rescale_intensity(normed_img, out_range=(0, 255)).astype(np.uint8)
-
-    #             # Warp image #
-    #             warped_img = warp_tools.warp_img(img=normed_img, M=slide_obj.M,
-    #                             bk_dxdy=dxdy,
-    #                             transformation_src_shape_rc=slide_obj.processed_img_shape_rc,
-    #                             transformation_dst_shape_rc=slide_obj.reg_img_shape_rc,
-    #                             out_shape_rc=out_shape)
-    #         if use_tiler:
-    #             if not warp_full_img:
-    #                 warped_img = warp_tools.warp_img(img=img_to_warp, M=slide_obj.M,
-    #                             bk_dxdy=dxdy,
-    #                             transformation_src_shape_rc=slide_obj.processed_img_shape_rc,
-    #                             transformation_dst_shape_rc=slide_obj.reg_img_shape_rc,
-    #                             out_shape_rc=out_shape)
-    #             else:
-    #                 warped_img = slide_obj.warp_slide(0, non_rigid=updating_non_rigid, crop=False)
-
-    #         # Get mask #
-
-    #         img_fg =  pyvips.Image.black(slide_obj.processed_img_shape_rc[1], slide_obj.processed_img_shape_rc[0]).invert()
-    #         temp_mask = warp_tools.warp_img(img_fg, M=slide_obj.M, out_shape_rc=slide_obj.reg_img_shape_rc)
-    #         vips_mask = warp_tools.resize_img(temp_mask, out_shape, interp_method="nearest")
-
-    #         if use_tiler:
-    #             mask = vips_mask
-    #         else:
-    #             mask = warp_tools.vips2numpy(vips_mask).astype(np.uint8)
-
-    #         # Update lists
-    #         img_f_list[slide_obj.stack_idx] = slide_obj.src_f
-    #         img_names_list[slide_obj.stack_idx] = slide_obj.name
-    #         scaled_warped_img_list[slide_obj.stack_idx] = warped_img
-    #         scaled_mask_list[slide_obj.stack_idx] = mask
-
-
-    #     img_dict = {serial_non_rigid.IMG_LIST_KEY: scaled_warped_img_list,
-    #                 serial_non_rigid.IMG_F_LIST_KEY: img_f_list,
-    #                 serial_non_rigid.MASK_LIST_KEY: scaled_mask_list,
-    #                 serial_non_rigid.IMG_NAME_KEY: img_names_list
-    #                 }
-
-    #     if ref_slide.non_rigid_reg_mask is not None:
-    #         if use_tiler:
-    #             vips_nr_mask = warp_tools.numpy2vips(ref_slide.non_rigid_reg_mask)
-    #             scaled_non_rigid_mask = warp_tools.resize_img(vips_nr_mask, out_shape, interp_method="nearest")
-    #         else:
-    #             scaled_non_rigid_mask = warp_tools.resize_img(ref_slide.non_rigid_reg_mask, out_shape, interp_method="nearest")
-    #     else:
-    #         scaled_non_rigid_mask = None
-
-    #     return img_dict, max_img_dim, scaled_non_rigid_mask
-
-
 
     def pad_displacement(self, dxdy, out_shape_rc, bbox_xywh):
 
@@ -2888,10 +2675,6 @@ class Valis(object):
                 max_img_dim = smallest_img_max
 
         ref_slide = self.get_ref_slide()
-
-        # if mask is None:
-        #     if ref_slide.non_rigid_reg_mask is not None:
-        #         mask = ref_slide.non_rigid_reg_mask.copy()
 
         if mask is not None:
             if isinstance(mask, pyvips.Image):
@@ -3002,8 +2785,6 @@ class Valis(object):
                     bbox_xywh=mask_bbox_xywh,
                     bg_color=slide_obj.bg_color)
 
-                warp_tools.save_img(os.path.join(self.dst_dir, f"roi_{slide_obj.name}.png"), unprocessed_warped_img)
-
                 temp_processing_mask = pyvips.Image.black(img_to_warp.width, img_to_warp.height).invert()
                 processing_mask = warp_tools.warp_img(img=temp_processing_mask, M=slide_obj.M,
                     bk_dxdy=dxdy,
@@ -3047,7 +2828,6 @@ class Valis(object):
                                 bbox_xywh=mask_bbox_xywh)
                 else:
                     warped_img = slide_obj.warp_slide(0, non_rigid=updating_non_rigid, crop=mask_bbox_xywh)
-                    # warped_img = warped_img.extract_area(*mask_bbox_xywh)
 
             # Get mask #
             img_fg =  pyvips.Image.black(slide_obj.processed_img_shape_rc[1], slide_obj.processed_img_shape_rc[0]).invert()
@@ -3093,8 +2873,6 @@ class Valis(object):
 
         return img_dict, final_max_img_dim, scaled_non_rigid_mask, full_out_shape, mask_bbox_xywh
 
-
-
     def non_rigid_register(self, rigid_registrar,
         brightfield_processing_cls, brightfield_processing_kwargs,
         if_processing_cls, if_processing_kwargs):
@@ -3119,27 +2897,10 @@ class Valis(object):
         """
 
         ref_slide = self.get_ref_slide()
-        # any_rigid_reg_masks = np.any([slide_obj.rigid_reg_mask is not None for slide_obj in self.slide_dict.values()])
 
-        # if self.reference_img_mask is not None:
-        #     non_rigid_reg_mask = warp_tools.warp_img(self.reference_img_mask,
-        #                                              M=ref_slide.M,
-        #                                              out_shape_rc=ref_slide.reg_img_shape_rc,
-        #                                              interp_method="nearest"
-        #                                              )
-
-        # if any_rigid_reg_masks:
         self.create_non_rigid_reg_mask()
         non_rigid_reg_mask = ref_slide.non_rigid_reg_mask
         cropped_mask_shape_rc = warp_tools.xy2bbox(warp_tools.mask2xy(non_rigid_reg_mask))[2:][::-1]
-        # else:
-            # non_rigid_reg_mask = None
-            # cropped_mask_shape_rc = ref_slide.reg_img_shape_rc
-
-        # if non_rigid_reg_mask is not None:
-        #     cropped_mask_shape_rc = warp_tools.xy2bbox(warp_tools.mask2xy(non_rigid_reg_mask))[2:][::-1]
-        # else:
-        #     cropped_mask_shape_rc = ref_slide.reg_img_shape_rc
 
         nr_on_scaled_img = self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px or \
             (non_rigid_reg_mask is not None and np.any(cropped_mask_shape_rc != ref_slide.reg_img_shape_rc))
@@ -3155,12 +2916,12 @@ class Valis(object):
                                                                   if_processing_kwargs=if_processing_kwargs,
                                                                   mask=non_rigid_reg_mask)
 
-            self.max_non_rigid_registartion_dim_px = max_img_dim
             self._non_rigid_bbox = mask_bbox_xywh
-
+            self.max_non_rigid_registartion_dim_px = max_img_dim
         else:
             nr_reg_src = rigid_registrar
             full_out_shape_rc = ref_slide.reg_img_shape_rc
+
 
         self._full_displacement_shape_rc = full_out_shape_rc
         non_rigid_registrar = serial_non_rigid.register_images(src=nr_reg_src,
@@ -3179,9 +2940,7 @@ class Valis(object):
             if nr_on_scaled_img:
                 # If a mask was used, the displacement fields will be smaller
                 # So need to insert them in the full image
-
                 bk_dxdy = self.pad_displacement(nr_obj.bk_dxdy, full_out_shape_rc, mask_bbox_xywh)
-                # cleaned_fwd_dxdy = self.pad_displacement(cleaned_fwd_dxdy, full_out_shape_rc, mask_bbox_xywh)
             else:
                 bk_dxdy = nr_obj.bk_dxdy
 
@@ -3199,13 +2958,8 @@ class Valis(object):
         # Draw overlap image #
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
-        # overlap_min_r = overlap_mask_bbox_xywh[1]
-        # overlap_min_c = overlap_mask_bbox_xywh[0]
-        # overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
-        # overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
 
         if not nr_on_scaled_img:
-        # if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px:
             non_rigid_img_list = [nr_img_obj.registered_img for nr_img_obj in non_rigid_registrar.non_rigid_obj_list]
         else:
             non_rigid_img_list = [warp_tools.warp_img(img=o.image,
@@ -3216,7 +2970,7 @@ class Valis(object):
                                                     transformation_dst_shape_rc=o.registered_img.shape[0:2])
                                                 for o in rigid_registrar.img_obj_list]
 
-        self.non_rigid_overlap_img  = self.draw_overlap_img(non_rigid_img_list)#[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
+        self.non_rigid_overlap_img  = self.draw_overlap_img(non_rigid_img_list)
         self.non_rigid_overlap_img = warp_tools.crop_img(self.non_rigid_overlap_img, overlap_mask_bbox_xywh)
 
         overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_non_rigid_overlap.png")
@@ -3224,6 +2978,9 @@ class Valis(object):
 
         n_digits = len(str(self.size))
         for slide_name, slide_obj in self.slide_dict.items():
+            # slide_name = "401427_BrdU"
+            # slide_obj = self.slide_dict[slide_name]
+
             img_save_id = str.zfill(str(slide_obj.stack_idx), n_digits)
             slide_nr_reg_obj = non_rigid_registrar.non_rigid_obj_dict[slide_name]
             slide_obj.bk_dxdy = slide_nr_reg_obj.bk_dxdy
@@ -3238,35 +2995,11 @@ class Valis(object):
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=True, crop=self.crop)
             warp_tools.save_img(slide_obj.nr_rigid_reg_img_f, warped_img, thumbnail_size=self.thumbnail_size)
 
-            # Save deformation grid
-
-            # if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px and non_rigid_reg_mask is None:
-            # if not nr_on_scaled_img:
-            #     draw_dxdy = np.dstack(slide_obj.bk_dxdy)
-            # else:
-            #     dxdy_scaling = (np.array(slide_obj.reg_img_shape_rc)/np.array(slide_obj.bk_dxdy[0].shape))[::-1]
-            #     # dxdy_scaling_for_resize = np.min(dxdy_scaling)
-            #     # draw_dxdy = warp_tools.rescale_img(np.dstack(slide_obj.bk_dxdy), dxdy_scaling_for_resize)
-            #     draw_dxdy = warp_tools.resize_img(np.dstack(slide_obj.bk_dxdy), slide_obj.reg_img_shape_rc)
-            #     draw_dxdy *= dxdy_scaling
-
-
-            # draw_dxdy = warp_tools.crop_img(draw_dxdy, overlap_mask_bbox_xywh)
-            # thumbnail_scaling = np.min(self.thumbnail_size/np.array(draw_dxdy.shape[0:2]))
-            # thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy)
-            # thumbnail_bk_dxdy *= thumbnail_scaling
-
-            # temp_draw = slide_obj.warp_img(rigid_registrar.img_obj_dict[slide_name].image, non_rigid=True, crop=self.crop)
-            # draw_img = transform.resize(temp_draw,
-            #                             thumbnail_bk_dxdy[..., 0].shape,
-            #                             preserve_range=True).astype(temp_draw.dtype)
-
-            # if draw_img.ndim == 2:
-            #     draw_img = np.dstack([draw_img] * 3)
-
-
-            ### Draw displacements on image actually used in non-rigid
+            # Draw displacements on image actually used in non-rigid. Might be higher resolution
             draw_dxdy = np.dstack(slide_nr_reg_obj.bk_dxdy)
+            if nr_on_scaled_img:
+                draw_dxdy = warp_tools.crop_img(draw_dxdy, self._non_rigid_bbox)
+
             thumbnail_scaling = np.min(self.thumbnail_size/np.array(draw_dxdy.shape[0:2]))
             thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy)
             thumbnail_bk_dxdy *= thumbnail_scaling
@@ -3276,6 +3009,7 @@ class Valis(object):
                             preserve_range=True).astype(slide_nr_reg_obj.image.dtype)
 
             draw_img = exposure.rescale_intensity(draw_img, out_range=(0, 255))
+
             if draw_img.ndim == 2:
                 draw_img = np.dstack([draw_img] * 3)
 
@@ -3288,163 +3022,7 @@ class Valis(object):
             deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
             warp_tools.save_img(deform_img_f, thumbanil_deform_grid, thumbnail_size=self.thumbnail_size)
 
-
         return non_rigid_registrar
-
-
-
-    # def non_rigid_register(self, rigid_registrar,
-    #     brightfield_processing_cls, brightfield_processing_kwargs,
-    #     if_processing_cls, if_processing_kwargs):
-
-    #     """Non-rigidly register slides
-
-    #     Non-rigidly register slides after performing rigid registration.
-    #     Also saves thumbnails of non-rigidly registered images and deformation
-    #     fields.
-
-    #     Parameters
-    #     ----------
-    #     rigid_registrar : SerialRigidRegistrar
-    #         SerialRigidRegistrar object that performed the rigid registration.
-
-    #     Returns
-    #     -------
-    #     non_rigid_registrar : SerialNonRigidRegistrar
-    #         SerialNonRigidRegistrar object that performed serial
-    #         non-rigid registration.
-
-    #     """
-
-    #     ref_slide = self.get_ref_slide()
-    #     any_rigid_reg_masks = np.any([slide_obj.rigid_reg_mask is not None for slide_obj in self.slide_dict.values()])
-    #     if any_rigid_reg_masks:
-    #         self.create_non_rigid_reg_mask()
-    #         non_rigid_reg_mask = ref_slide.non_rigid_reg_mask
-    #     else:
-    #         non_rigid_reg_mask = None
-
-    #     if self.max_processed_image_dim_px != self.max_non_rigid_registartion_dim_px:
-    #         nr_reg_src, max_img_dim, non_rigid_reg_mask, full_out_shape_rc, mask_bbox_xywh = \
-    #             self.prep_images_for_large_non_rigid_registration(max_img_dim=self.max_non_rigid_registartion_dim_px,
-    #                                                               brightfield_processing_cls=brightfield_processing_cls,
-    #                                                               brightfield_processing_kwargs=brightfield_processing_kwargs,
-    #                                                               if_processing_cls=if_processing_cls,
-    #                                                               if_processing_kwargs=if_processing_kwargs,
-    #                                                               mask=non_rigid_reg_mask)
-
-    #         self.max_non_rigid_registartion_dim_px = max_img_dim
-    #         self._non_rigid_bbox = mask_bbox_xywh
-    #         self._full_displacement_shape_rc = full_out_shape_rc
-
-    #     else:
-    #         nr_reg_src = rigid_registrar
-    #         full_out_shape_rc = ref_slide.reg_img_shape_rc
-
-    #     non_rigid_registrar = serial_non_rigid.register_images(src=nr_reg_src,
-    #                                                            mask=non_rigid_reg_mask,
-    #                                                            align_to_reference=self.align_to_reference,
-    #                                                            **self.non_rigid_reg_kwargs)
-    #     self.end_non_rigid_time = time()
-
-    #     for d in  [self.non_rigid_dst_dir, self.deformation_field_dir]:
-    #         pathlib.Path(d).mkdir(exist_ok=True, parents=True)
-    #     self.non_rigid_registrar = non_rigid_registrar
-
-    #     # Clean up displacements and expand if mask was used
-    #     for nr_name, nr_obj in non_rigid_registrar.non_rigid_obj_dict.items():
-
-    #         rigid_obj = self.rigid_registrar.img_obj_dict[nr_name]
-    #         cleaned_bk_dxdy = warp_tools.remove_invasive_displacements(nr_obj.bk_dxdy,
-    #                                                                 M=rigid_obj.M,
-    #                                                                 src_shape_rc=rigid_obj.image.shape[0:2],
-    #                                                                 out_shape_rc=rigid_obj.registered_shape_rc)
-
-    #         cleaned_fwd_dxdy = warp_tools.get_inverse_field(cleaned_bk_dxdy)
-
-    #         if np.any(non_rigid_registrar.shape != full_out_shape_rc):
-    #             # If a mask was used, the displacement fields will be smaller
-    #             # So need to insert them in the full image
-
-    #             cleaned_bk_dxdy = self.pad_displacement(cleaned_bk_dxdy, full_out_shape_rc, mask_bbox_xywh)
-    #             cleaned_fwd_dxdy = self.pad_displacement(cleaned_fwd_dxdy, full_out_shape_rc, mask_bbox_xywh)
-
-    #         nr_obj.bk_dxdy = cleaned_bk_dxdy
-    #         nr_obj.fwd_dxdy = cleaned_fwd_dxdy
-
-    #     # Draw overlap image #
-    #     overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
-    #     overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
-    #     overlap_min_r = overlap_mask_bbox_xywh[1]
-    #     overlap_min_c = overlap_mask_bbox_xywh[0]
-    #     overlap_max_r = overlap_mask_bbox_xywh[1] + overlap_mask_bbox_xywh[3]
-    #     overlap_max_c = overlap_mask_bbox_xywh[0] + overlap_mask_bbox_xywh[2]
-
-    #     if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px:
-    #         non_rigid_img_list = [nr_img_obj.registered_img for nr_img_obj in non_rigid_registrar.non_rigid_obj_list]
-    #     else:
-    #         non_rigid_img_list = [warp_tools.warp_img(img=o.image,
-    #                                                 M=o.M,
-    #                                                 bk_dxdy= non_rigid_registrar.non_rigid_obj_dict[o.name].bk_dxdy,
-    #                                                 out_shape_rc=o.registered_img.shape[0:2],
-    #                                                 transformation_src_shape_rc=o.image.shape[0:2],
-    #                                                 transformation_dst_shape_rc=o.registered_img.shape[0:2])
-    #                                             for o in rigid_registrar.img_obj_list]
-
-    #     self.non_rigid_overlap_img  = self.draw_overlap_img(non_rigid_img_list)[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
-
-    #     overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_non_rigid_overlap.png")
-    #     warp_tools.save_img(overlap_img_fout, self.non_rigid_overlap_img, thumbnail_size=self.thumbnail_size)
-
-    #     n_digits = len(str(self.size))
-    #     for slide_name, slide_obj in self.slide_dict.items():
-    #         img_save_id = str.zfill(str(slide_obj.stack_idx), n_digits)
-    #         slide_nr_reg_obj = non_rigid_registrar.non_rigid_obj_dict[slide_name]
-    #         slide_obj.bk_dxdy = slide_nr_reg_obj.bk_dxdy
-    #         slide_obj.fwd_dxdy = slide_nr_reg_obj.fwd_dxdy
-    #         slide_obj.nr_rigid_reg_img_f = os.path.join(self.non_rigid_dst_dir, img_save_id + "_" + slide_obj.name + ".png")
-
-    #         if not slide_obj.is_rgb:
-    #             img_to_warp = rigid_registrar.img_obj_dict[slide_name].image
-    #         else:
-    #             img_to_warp = slide_obj.image
-
-    #         warped_img = slide_obj.warp_img(img_to_warp, non_rigid=True, crop=self.crop)
-    #         warp_tools.save_img(slide_obj.nr_rigid_reg_img_f, warped_img, thumbnail_size=self.thumbnail_size)
-
-    #         # Save deformation grid
-
-    #         if self.max_processed_image_dim_px == self.max_non_rigid_registartion_dim_px:
-    #             draw_dxdy = np.dstack(slide_obj.bk_dxdy)
-    #         else:
-    #             dxdy_scaling = (np.array(slide_obj.reg_img_shape_rc)/np.array(slide_obj.bk_dxdy[0].shape))[::-1]
-    #             dxdy_scaling_for_resize = np.min(dxdy_scaling)
-    #             draw_dxdy = warp_tools.rescale_img(np.dstack(slide_obj.bk_dxdy), dxdy_scaling_for_resize)
-    #             draw_dxdy *= dxdy_scaling
-
-    #         thumbnail_scaling = np.min(self.thumbnail_size/np.array(draw_dxdy.shape[0:2]))
-    #         thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c])
-    #         thumbnail_bk_dxdy *= thumbnail_scaling
-
-    #         temp_draw = slide_obj.warp_img(rigid_registrar.img_obj_dict[slide_name].image, non_rigid=True, crop=self.crop)
-    #         draw_img = transform.resize(temp_draw,
-    #                                     thumbnail_bk_dxdy[..., 0].shape,
-    #                                     preserve_range=True).astype(temp_draw.dtype)
-
-    #         if draw_img.ndim == 2:
-    #             draw_img = np.dstack([draw_img] * 3)
-
-    #         thumbanil_deform_grid = viz.color_displacement_tri_grid(bk_dx=thumbnail_bk_dxdy[..., 0],
-    #                                                                 bk_dy=thumbnail_bk_dxdy[..., 1],
-    #                                                                 img=draw_img,
-    #                                                                 n_grid_pts=25)
-
-    #         deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
-    #         warp_tools.save_img(deform_img_f, thumbanil_deform_grid, thumbnail_size=self.thumbnail_size)
-
-
-    #     return non_rigid_registrar
-
 
     def measure_error(self):
         """Measure registration error
@@ -3828,233 +3406,6 @@ class Valis(object):
         self.rigid_registrar = None
         self.non_rigid_registrar = None
 
-    # def register_micro(self,  brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
-    #              brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
-    #              if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
-    #              if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
-    #              max_non_rigid_registartion_dim_px=DEFAULT_MAX_NON_RIGID_REG_SIZE,
-    #              non_rigid_registrar_cls=DEFAULT_NON_RIGID_CLASS,
-    #              non_rigid_reg_params=DEFAULT_NON_RIGID_KWARGS,
-    #              reference_img_f=None, align_to_reference=False, mask=None, tile_wh=DEFAULT_NR_TILE_WH):
-    #     """Improve alingment of microfeatures by performing second non-rigid registration on larger images
-
-    #     Caclculates additional non-rigid deformations using a larger image
-
-    #     Parameters
-    #     ----------
-    #     brightfield_processing_cls : preprocessing.ImageProcesser
-    #         preprocessing.ImageProcesser used to pre-process brightfield images to make
-    #         them look as similar as possible.
-
-    #     brightfield_processing_kwargs : dict
-    #         Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
-
-    #     if_processing_cls : preprocessing.ImageProcesser
-    #         preprocessing.ImageProcesser used to pre-process immunofluorescent images
-    #         to make them look as similar as possible.
-
-    #     if_processing_kwargs : dict
-    #         Dictionary of keyward arguments to be passed to `if_processing_cls`
-
-    #     max_non_rigid_registartion_dim_px : int, optional
-    #          Maximum width or height of images used for non-rigid registration.
-    #          If None, then the full sized image will be used. However, this
-    #          may take quite some time to complete.
-
-    #     reference_img_f : str, optional
-    #         Filename of image that will be treated as the center of the stack.
-    #         If None, the index of the middle image will be the reference, and
-    #         images will be aligned towards it. If provided, images will be
-    #         aligned to this reference.
-
-    #     align_to_reference : bool, optional
-    #         If `False`, images will be non-rigidly aligned serially towards the
-    #         reference image. If `True`, images will be non-rigidly aligned
-    #         directly to the reference image. If `reference_img_f` is None,
-    #         then the reference image will be the one in the middle of the stack.
-
-    #     non_rigid_registrar_cls : NonRigidRegistrar, optional
-    #         Uninstantiated NonRigidRegistrar class that will be used to
-    #         calculate the deformation fields between images. See
-    #         the `non_rigid_registrars` module for a desciption of available
-    #         methods. If a desired non-rigid registration method is not available,
-    #         one can be implemented by subclassing.NonRigidRegistrar.
-
-    #     non_rigid_reg_params: dictionary, optional
-    #         Dictionary containing key, value pairs to be used to initialize
-    #         `non_rigid_registrar_cls`.
-    #         In the case where simple ITK is used by the, params should be
-    #         a SimpleITK.ParameterMap. Note that numeric values nedd to be
-    #         converted to strings. See the NonRigidRegistrar classes in
-    #         `non_rigid_registrars` for the available non-rigid registration
-    #         methods and arguments.
-
-    #     """
-    #     print("\n==== Preparing images for microregistration\n")
-    #     nr_reg_src, max_img_dim, non_rigid_reg_mask, full_out_shape_rc, mask_bbox_xywh = \
-    #         self.prep_images_for_large_non_rigid_registration(max_img_dim=max_non_rigid_registartion_dim_px,
-    #                                                             brightfield_processing_cls=brightfield_processing_cls,
-    #                                                             brightfield_processing_kwargs=brightfield_processing_kwargs,
-    #                                                             if_processing_cls=if_processing_cls,
-    #                                                             if_processing_kwargs=if_processing_kwargs,
-    #                                                             updating_non_rigid=True,
-    #                                                             mask=mask)
-
-    #     img0 = nr_reg_src[serial_non_rigid.IMG_LIST_KEY][0]
-    #     img_specific_args = None
-    #     write_dxdy = False
-
-
-    #     if isinstance(img0, pyvips.Image):
-
-    #         # np_format = str(slide_tools.VIPS_FORMAT_NUMPY_DTYPE[img0.format]().dtype)
-    #         # estimated_gb = self.size*warp_tools.calc_memory_size_gb([img0.width, img0.height], img0.bands, np_format)
-
-
-    #         # if estimated_gb > TILER_THRESH_GB:
-    #         # Have determined that these images will be too big
-    #         msg = (f"Registration would more than {TILER_THRESH_GB} GB if all images opened in memory."
-    #                 f"Will use NonRigidTileRegistrar to register cooresponding tiles, "
-    #                 f"but this method is experimental")
-
-    #         valtils.print_warning(msg)
-
-    #         write_dxdy = True
-    #         img_specific_args = {}
-    #         for slide_obj in self.slide_dict.values():
-
-    #             # Add registration parameters
-    #             tiled_non_rigid_reg_params = {}
-    #             tiled_non_rigid_reg_params[non_rigid_registrars.NR_CLS_KEY] = non_rigid_registrar_cls
-    #             tiled_non_rigid_reg_params[non_rigid_registrars.NR_STATS_KEY] = self.target_processing_stats
-    #             tiled_non_rigid_reg_params[non_rigid_registrars.NR_TILE_WH_KEY] = tile_wh
-
-    #             if slide_obj.is_rgb:
-    #                 processing_cls = brightfield_processing_cls
-    #                 processing_args = brightfield_processing_kwargs
-    #             else:
-    #                 processing_cls = if_processing_cls
-    #                 processing_args = if_processing_kwargs
-
-    #             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_CLASS_KEY] = processing_cls
-    #             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_KW_KEY] = processing_args
-
-    #             img_specific_args[slide_obj.src_f] = tiled_non_rigid_reg_params
-
-    #         non_rigid_registrar_cls = non_rigid_registrars.NonRigidTileRegistrar
-
-    #     print("\n==== Performing microregistration\n")
-    #     non_rigid_registrar = serial_non_rigid.register_images(src=nr_reg_src,
-    #                                                            non_rigid_reg_class=non_rigid_registrar_cls,
-    #                                                            non_rigid_reg_params=non_rigid_reg_params,
-    #                                                            reference_img_f=reference_img_f,
-    #                                                            mask=non_rigid_reg_mask,
-    #                                                            align_to_reference=align_to_reference,
-    #                                                            name=self.name,
-    #                                                            img_params=img_specific_args
-    #                                                            )
-
-    #     pathlib.Path(self.micro_reg_dir).mkdir(exist_ok=True, parents=True)
-    #     # out_shape = non_rigid_registrar.shape
-    #     out_shape = full_out_shape_rc
-    #     n_digits = len(str(self.size))
-    #     micro_reg_imgs = [None] * self.size
-    #     for slide_obj in self.slide_dict.values():
-
-    #         nr_obj = non_rigid_registrar.non_rigid_obj_dict[slide_obj.name]
-    #         is_array = False
-    #         if not isinstance(nr_obj.bk_dxdy[0], pyvips.Image):
-    #             is_array = True
-    #             cleaned_bk_dxdy = warp_tools.remove_invasive_displacements(nr_obj.bk_dxdy,
-    #                                                                 M=slide_obj.M,
-    #                                                                 src_shape_rc=slide_obj.processed_img_shape_rc,
-    #                                                                 out_shape_rc=slide_obj.reg_img_shape_rc)
-    #             cleaned_fwd_dxdy = warp_tools.get_inverse_field(cleaned_bk_dxdy)
-
-    #             new_bk_dxdy = warp_tools.numpy2vips(np.dstack(cleaned_bk_dxdy))
-    #             new_fwd_dxdy = warp_tools.numpy2vips(np.dstack(cleaned_fwd_dxdy))
-
-    #         else:
-    #             new_bk_dxdy = nr_obj.bk_dxdy
-    #             new_fwd_dxdy = nr_obj.fwd_dxdy
-
-
-    #         if np.any(non_rigid_registrar.shape != full_out_shape_rc):
-    #             # Micro-registration perfomred on sub-region. Need to put in full image
-    #             new_bk_dxdy = self.pad_displacement(new_bk_dxdy, full_out_shape_rc, mask_bbox_xywh)
-    #             new_fwd_dxdy = self.pad_displacement(new_fwd_dxdy, full_out_shape_rc, mask_bbox_xywh)
-
-    #         if not isinstance(slide_obj.bk_dxdy[0], pyvips.Image):
-    #             current_bk_dxdy = warp_tools.numpy2vips(np.dstack(slide_obj.bk_dxdy)).cast("float")
-    #             current_fwd_dxdy = warp_tools.numpy2vips(np.dstack(slide_obj.fwd_dxdy)).cast("float")
-    #         else:
-    #             current_bk_dxdy = slide_obj.bk_dxdy
-    #             current_fwd_dxdy = slide_obj.fwd_dxdy
-
-    #         slide_sxy = (np.array(out_shape)/np.array([current_bk_dxdy.height, current_bk_dxdy.width]))[::-1]
-    #         if not np.all(slide_sxy == 1):
-    #             scaled_bk_dx = float(slide_sxy[0])*current_bk_dxdy[0]
-    #             scaled_bk_dy = float(slide_sxy[1])*current_bk_dxdy[1]
-    #             current_bk_dxdy = scaled_bk_dx.bandjoin(scaled_bk_dy)
-    #             current_bk_dxdy = warp_tools.resize_img(current_bk_dxdy, out_shape)
-
-    #             scaled_fwd_dx = float(slide_sxy[0])*current_fwd_dxdy[0]
-    #             scaled_fwd_dy = float(slide_sxy[1])*current_fwd_dxdy[1]
-    #             current_fwd_dxdy = scaled_fwd_dx.bandjoin(scaled_fwd_dy)
-    #             current_fwd_dxdy = warp_tools.resize_img(current_fwd_dxdy, out_shape)
-
-    #         updated_bk_dxdy = current_bk_dxdy + new_bk_dxdy
-    #         updated_fwd_dxdy = current_fwd_dxdy + new_fwd_dxdy
-
-    #         if is_array:
-    #             updated_bk_dxdy = warp_tools.vips2numpy(updated_bk_dxdy)
-    #             updated_fwd_dxdy = warp_tools.vips2numpy(updated_fwd_dxdy)
-
-    #         if not write_dxdy:
-    #             slide_obj.bk_dxdy = np.array([updated_bk_dxdy[..., 0], updated_bk_dxdy[..., 1]])
-    #             slide_obj.fwd_dxdy = np.array([updated_fwd_dxdy[..., 0], updated_fwd_dxdy[..., 1]])
-    #         else:
-    #             pathlib.Path(self.displacements_dir).mkdir(exist_ok=True, parents=True)
-    #             slide_obj.stored_dxdy = True
-
-    #             bk_dxdy_f, fwd_dxdy_f = slide_obj.get_displacement_f()
-    #             slide_obj._bk_dxdy_f = bk_dxdy_f
-    #             slide_obj._fwd_dxdy_f = fwd_dxdy_f
-    #             slide_obj._non_rigid_bbox = mask_bbox_xywh
-
-    #             updated_bk_dxdy.cast("float").tiffsave(slide_obj._bk_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
-    #             updated_fwd_dxdy.cast("float").tiffsave(slide_obj._fwd_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
-
-    #         if not slide_obj.is_rgb:
-    #             img_to_warp = slide_obj.processed_img
-    #         else:
-    #             img_to_warp = slide_obj.image
-
-    #         micro_reg_img = slide_obj.warp_img(img_to_warp, non_rigid=True, crop=self.crop)
-
-
-    #         img_save_id = str.zfill(str(slide_obj.stack_idx), n_digits)
-    #         micro_fout = os.path.join(self.micro_reg_dir, f"{img_save_id}_{slide_obj.name}.png")
-    #         micro_thumb = self.create_thumbnail(micro_reg_img)
-    #         warp_tools.save_img(micro_fout, micro_thumb)
-
-    #         processed_micro_reg_img = slide_obj.warp_img(slide_obj.processed_img)
-    #         micro_reg_imgs[slide_obj.stack_idx] = processed_micro_reg_img
-
-    #     pickle.dump(self, open(self.reg_f, 'wb'))
-
-    #     micro_overlap = self.draw_overlap_img(micro_reg_imgs)
-    #     overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_micro_reg.png")
-    #     warp_tools.save_img(overlap_img_fout, micro_overlap, thumbnail_size=self.thumbnail_size)
-
-    #     print("\n==== Measuring error\n")
-    #     error_df = self.measure_error()
-    #     data_f_out = os.path.join(self.data_dir, self.name + "_summary.csv")
-    #     error_df.to_csv(data_f_out, index=False)
-
-    #     return non_rigid_registrar, error_df
-
-
     def register_micro(self,  brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                  brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
                  if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
@@ -4117,7 +3468,6 @@ class Valis(object):
             methods and arguments.
 
         """
-        # print("\n==== Preparing images for microregistration\n")
         ref_slide = self.get_ref_slide()
         if mask is None:
             if ref_slide.non_rigid_reg_mask is not None:
@@ -4143,11 +3493,6 @@ class Valis(object):
 
         if isinstance(img0, pyvips.Image):
 
-            # np_format = str(slide_tools.VIPS_FORMAT_NUMPY_DTYPE[img0.format]().dtype)
-            # estimated_gb = self.size*warp_tools.calc_memory_size_gb([img0.width, img0.height], img0.bands, np_format)
-
-
-            # if estimated_gb > TILER_THRESH_GB:
             # Have determined that these images will be too big
             msg = (f"Registration would more than {TILER_THRESH_GB} GB if all images opened in memory. "
                     f"Will use NonRigidTileRegistrar to register cooresponding tiles to reduce memory consumption, "
@@ -4191,7 +3536,6 @@ class Valis(object):
                                                                )
 
         pathlib.Path(self.micro_reg_dir).mkdir(exist_ok=True, parents=True)
-        # out_shape = non_rigid_registrar.shape
         out_shape = full_out_shape_rc
         n_digits = len(str(self.size))
         micro_reg_imgs = [None] * self.size
@@ -4264,9 +3608,6 @@ class Valis(object):
 
                 cropped_bk_dxdy.cast("float").tiffsave(slide_obj._bk_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
                 cropped_fwd_dxdy.cast("float").tiffsave(slide_obj._fwd_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
-
-                # updated_bk_dxdy.cast("float").tiffsave(slide_obj._bk_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
-                # updated_fwd_dxdy.cast("float").tiffsave(slide_obj._fwd_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
 
             if not slide_obj.is_rgb:
                 img_to_warp = slide_obj.processed_img

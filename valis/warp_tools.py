@@ -218,95 +218,6 @@ def remove_invasive_displacements(bk_dxdy, M, src_shape_rc, out_shape_rc, inpain
     return new_dxdy
 
 
-# def remove_invasive_displacements(bk_dxdy, M, src_shape_rc, out_shape_rc, inpaint_holes=False):
-#     """Remove displacements that would distort the image edges
-#     Finds areas where areas outside of the image get brought inside. Can
-#     happen if displacements are combined.
-
-#     Parameters
-#     ----------
-#     bk_dxdy : list
-#         Displacement fields [x, y]
-
-#     M : ndarray
-#         3x3 transformation matrix
-
-#     src_shape_rc : tuple
-#         Shape (row, col) of the image before affine transform
-
-#     Returns
-#     -------
-#     new_dxdy : list
-#         `bk_dxdy` but with invasive displacements set to 0
-
-#     """
-
-#     cleaned_dxdy = deepcopy(bk_dxdy)
-#     if M is not None:
-#         affine_mask = warp_img(np.full(src_shape_rc, 255, dtype=np.uint8), M, out_shape_rc=out_shape_rc, interp_method="nearest")
-#         if not np.all(out_shape_rc == bk_dxdy[0].shape):
-#             affine_mask = resize_img(affine_mask, bk_dxdy[0].shape, interp_method="nearest")
-#             cleaned_dxdy[0][affine_mask == 0] = 0
-#             cleaned_dxdy[1][affine_mask == 0] = 0
-
-#     else:
-#         affine_mask = np.full(out_shape_rc, 255, dtype=np.uint8)
-
-#     # cleaned_dxdy = deepcopy(bk_dxdy)
-#     # cleaned_dxdy[0][affine_mask == 0] = 0
-#     # cleaned_dxdy[1][affine_mask == 0] = 0
-#     inv_mask = 255*(affine_mask == 0).astype(np.uint8)
-#     inv_nr = warp_img(inv_mask, bk_dxdy=bk_dxdy, interp_method="nearest")
-#     out_to_in = ((inv_nr > 0) & (affine_mask > 0))
-
-#     # warp_tools.save_img("mask_out_to_in.png", out_to_in)
-#     # warp_tools.save_img("mask_inv.png", inv_mask)
-#     # warp_tools.save_img("mask_inv_warped.png", inv_nr)
-
-#     # fwd_dxdy = get_inverse_field(bk_dxdy)
-#     # in_out_inv_warp = warp_img(out_to_in, bk_dxdy=fwd_dxdy)
-#     # in_out_inv_warp[in_out_inv_warp != 0] = 255
-
-
-#     # warp_tools.save_img("mask_out_to_in_inv.png", in_out_inv_warp)
-#     # cleaned_dxdy = deepcopy(bk_dxdy)
-#     # cleaned_dxdy[0][in_out_inv_warp > 0] = 0
-#     # cleaned_dxdy[1][in_out_inv_warp > 0] = 0
-#     holes_mask = 255*out_to_in.astype(np.uint8)
-#     new_dx = cv2.inpaint(cleaned_dxdy[0].astype(np.float32), holes_mask, 3, cv2.INPAINT_TELEA)
-#     new_dy = cv2.inpaint(cleaned_dxdy[1].astype(np.float32), holes_mask, 3, cv2.INPAINT_TELEA)
-
-#     new_dxdy = np.array([new_dx, new_dy])
-#     # warped_clean = warp_img(slide_obj.image, M, bk_dxdy=cleaned_dxdy, out_shape_rc=out_shape_rc)
-#     # warp_tools.save_img("masked_out_to_paint.png", warped_clean)
-
-#     # selem = morphology.disk(3)
-#     # out_to_in  = morphology.binary_dilation(out_to_in, selem)
-
-#     # new_dy = bk_dxdy[1].copy()
-#     # new_dx = bk_dxdy[0].copy()
-
-#     # new_dx[out_to_in] = 0
-#     # new_dy[out_to_in] = 0
-
-#     # nr_img = np.round(warp_img(affine_mask, bk_dxdy=[new_dx, new_dy])).astype(np.uint8)
-
-#     # holes_mask = ((nr_img == 0) & (affine_mask > 0))
-#     # holes_mask = 255*(morphology.binary_dilation(holes_mask, selem)).astype(np.uint8)
-
-#     # if inpaint_holes and holes_mask.max() > 0:
-#     #     new_dx = cv2.inpaint(new_dx.astype(np.float32), holes_mask, 3, cv2.INPAINT_TELEA)
-#     #     new_dy = cv2.inpaint(new_dy.astype(np.float32), holes_mask, 3, cv2.INPAINT_TELEA)
-#     # else:
-#     #     new_dx[holes_mask > 0] = 0
-#     #     new_dy[holes_mask > 0] = 0
-
-#     # new_dxdy = np.array([new_dx, new_dy])
-
-#     return new_dxdy
-
-
-
 def rescale_img(img, scaling):
     is_array = False
     if not isinstance(img, pyvips.Image):
@@ -1280,8 +1191,6 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
                     interpolate=interpolator,
                     idx=-tx,
                     idy=-ty,
-                    # odx=-crop_x,
-                    # ody=-crop_y,
                     premultiplied=True,
                     background=bg_color,
                     extend=bg_extender
@@ -2150,9 +2059,6 @@ def _warp_xy_numpy(xy, M=None, transformation_src_shape_rc=None, transformation_
         fwd_dxdy = get_inverse_field(bk_dxdy)
 
     # Use cubic interpolation to determine position in warped image
-    # grid = UCGrid((0, displacement_shape_rc[1]-1, displacement_shape_rc[1]),
-    #               (0, displacement_shape_rc[0]-1, displacement_shape_rc[0]))
-
     grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), displacement_shape_rc[1]),
                   (0.0, float(displacement_shape_rc[0]-1), displacement_shape_rc[0]))
 
