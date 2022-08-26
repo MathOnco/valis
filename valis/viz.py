@@ -28,6 +28,46 @@ else:
 # DXDY_LRANGE = (0.5, 0.9)
 
 
+def draw_outline(img, mask, clr=(100, 240, 39), thickness=2):
+    """Draw mask outline around an image
+
+    Parameters
+    ----------
+    img : ndarray
+        Image on which to draw the mask outline
+
+
+    mask : ndarray
+        Mask to draw outline of
+
+    clr : ndarray
+        RGB (0-255) color of outline
+
+    thicknes : int
+        Thickness of outline
+
+    Returns
+    -------
+    outline_img : ndarray
+        Copy of `img` with the outline of `mask` drawn on it
+
+    """
+
+    outline_img = img.copy()
+    if outline_img.ndim == 2:
+        outline_img = np.dstack([outline_img for i in range(3)])
+
+    outline_img = outline_img.astype(np.uint8)
+
+    detection_mask = 255*(mask != 0).astype(np.uint8)
+    contours, _ = cv2.findContours(detection_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    int_color = [int(i) for i in clr]
+    for cnt in contours:
+        outline_img = cv2.drawContours(outline_img, [cnt], 0, color=int_color, thickness=thickness)
+
+    return outline_img
+
+
 def draw_features(kp_xy, image, n_features=500):
     """Draw keypoints on a image
 

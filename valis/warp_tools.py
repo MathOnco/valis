@@ -1049,6 +1049,265 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
     return warped
 
 
+def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, transformation_dst_shape_rc=None, src_shape_rc=None, bk_dxdy=None, bg_color=None, interp_method="bicubic"):
+    """Unwarp an image using rigid and/or non-rigid transformations
+
+    Unwarp an image using the trasformations defined by `M` and the optional
+    displacement field, `bk_dxdy`. This is accomplished by inverting `M` and
+    using the "foward" displacements in `fwd_dxdy`. If `fwd_dxdy` is not provided,
+    `bk_dxdy` will be inverted. Transformations will be scaled so that they can be applied to the images
+    with different sizes.
+
+    Parameters
+    ----------
+    img : ndarray, optional
+        Image to be warped
+
+    M : ndarray, optional
+        3x3 Affine transformation matrix to perform rigid warp
+
+    fwd_dxdy : ndarray, optional
+        A list containing the forward x-axis (column) displacement,
+        and y-axis (row) displacements.
+
+    transformation_src_shape_rc : tuple of int
+        Shape of image that was used to find the transformations M and/or `bk_dxdy`.
+        For example, this could be the original image in which features
+        were detected
+
+    transformation_dst_shape_rc : tuple of int
+        Shape of image with shape transformation_src_shape_rc after
+        being warped. Should be specified if `img` is a rescaled
+        version of the image for which the `M` and `bk_dxdy` were found.
+
+    src_shape_rc : tuple of int
+        Shape of the `img` before warping.
+
+    bg_color : optional, list
+        Background color, if `None`, then the background color will be black
+
+    interp_method : str, optional
+
+    Returns
+    -------
+    warped : ndarray, pyvips.Image
+        Warped version of `img`
+
+    """
+
+    do_non_rigid = bk_dxdy is not None or fwd_dxdy is not None
+    do_rigid = M is not None
+
+    if not do_rigid and not do_non_rigid:
+        return img
+
+    is_array = False
+    if not isinstance(img, pyvips.Image):
+        is_array = True
+        img = numpy2vips(img)
+
+    warped_src_shape_rc = np.array([img.height, img.width])
+    if transformation_dst_shape_rc is None:
+        transformation_dst_shape_rc = warped_src_shape_rc
+
+    src_sxy, dst_sxy, displacement_sxy, displacement_shape_rc = get_warp_scaling_factors(transformation_src_shape_rc=transformation_src_shape_rc,
+                                                                     transformation_dst_shape_rc=transformation_dst_shape_rc,
+                                                                     src_shape_rc=src_shape_rc, dst_shape_rc=warped_src_shape_rc,
+                                                                     bk_dxdy=bk_dxdy, fwd_dxdy=fwd_dxdy)
+
+        # Do transformations
+    if bg_color is None:
+        bg_color = [0] * img.bands
+        bg_extender = pyvips.enums.Extend.BLACK
+    else:
+        bg_extender = pyvips.enums.Extend.BACKGROUND
+        bg_color = list(bg_color)
+
+    interpolator = pyvips.Interpolate.new(interp_method)
+    # Undo non-rigid transformation #
+    if do_non_rigid:
+        if bk_dxdy is not None and fwd_dxdy is None:
+            fwd_dxdy = get_inverse_field(bk_dxdy)
+
+
+        if not isinstance(fwd_dxdy, pyvips.Image):
+            temp_dxdy = numpy2vips(np.dstack(fwd_dxdy))
+        else:
+            temp_dxdy = fwd_dxdy
+
+        if dst_sxy is not None:
+            scaled_dx = float(dst_sxy[0]) * temp_dxdy[0]
+            scaled_dy = float(dst_sxy[1]) * temp_dxdy[1]
+            vips_dxdy = scaled_dx.bandjoin(scaled_dy)
+        else:
+            vips_dxdy = temp_dxdy
+
+        if dst_sxy is not None:
+            S = [dst_sxy[0], 0, 0, dst_sxy[1]]
+        else:
+            S = [1.0, 0.0, 0.0, 1.0]
+
+        warp_dxdy = vips_dxdy.affine(S,
+                        oarea=[0, 0, img.width, img.height],
+                        interpolate=interpolator,
+                        premultiplied=True)
+
+        index = pyvips.Image.xyz(img.width, img.height)
+        warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
+
+        try:
+            #Option to set backround color in mapim added in libvips 8.13
+            nr_warped = img.mapim(warp_index,
+                premultiplied=True,
+                background=bg_color,
+                extend=bg_extender,
+                interpolate=interpolator)
+
+        except pyvips.error.Error:
+            nr_warped = img.mapim(warp_index, interpolate=interpolator)
+            if bg_color is not None:
+                nr_warped = (nr_warped == 0).ifthenelse(bg_color, nr_warped)
+
+    else:
+        nr_warped = img
+
+    if do_rigid:
+
+        img_corners_xy = get_corners_of_image(src_shape_rc)[::-1]
+        warped_corners = warp_xy(img_corners_xy, M=M,
+                                    transformation_src_shape_rc=transformation_src_shape_rc,
+                                    transformation_dst_shape_rc=transformation_dst_shape_rc,
+                                    src_shape_rc=src_shape_rc,
+                                    dst_shape_rc=warped_src_shape_rc)
+        M_tform = transform.ProjectiveTransform()
+        M_tform.estimate(img_corners_xy, warped_corners)
+        warp_M = M_tform.params
+
+        tx, ty = warp_M[:2, 2]
+        warp_M = np.linalg.inv(warp_M)
+        vips_M = warp_M[:2, :2].reshape(-1).tolist()
+        warped = img.affine(vips_M,
+                    oarea=[0, 0, src_shape_rc[1], src_shape_rc[0]],
+                    interpolate=interpolator,
+                    idx=-tx,
+                    idy=-ty,
+                    premultiplied=True,
+                    background=bg_color,
+                    extend=bg_extender
+                    )
+
+    else:
+        warped = nr_warped
+
+
+    if is_array:
+        warped = vips2numpy(warped)
+
+    return warped
+
+
+def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
+                   from_transformation_dst_shape_rc=None,
+                   from_dst_shape_rc=None, from_bk_dxdy=None,
+                   to_M=None, to_transformation_src_shape_rc=None,
+                   to_transformation_dst_shape_rc=None, to_src_shape_rc=None,
+                   to_bk_dxdy=None, to_fwd_dxdy=None, bg_color=None, interp_method="bicubic"):
+    """Warp image onto another
+
+    Warps `img` to registered coordinates using the "from" parameters, and then uses
+    the inverse "to" parameters to warp that image to the "to" image's coordinate system.
+    Can be useful for transfering annotations from one image to another.
+
+    Note: If `img` is a labeled image, it is recommended to set `interp_method` to "nearest"
+
+    Parameters
+    ----------
+    xy : ndarray
+        [P, 2] array of xy coordinates for P points
+
+    from_M : ndarray, optional
+         3x3 affine transformation matrix to perform rigid warp in the "from" image
+
+    from_transformation_src_shape_rc : (int, int)
+        Shape of image that was used to find the transformation in the
+        "from" image. For example, this could be the original image in
+        which features were detected in the "from" image.
+
+    from_transformation_dst_shape_rc : (int, int)
+        Shape (row, col) of registered image. As the "from"  and "to" images have been registered,
+        this shape should be the same for both images.
+
+    from_src_shape_rc : optional, (int, int)
+        Shape of the unwarped image from which the points originated. For example,
+        this could be a larger/smaller version of the "from" image that was
+        used for feature detection.
+
+    from_dst_shape_rc : optional, (int, int)
+        Shape of from image (with shape `src_shape_rc`) after warping
+
+    from_bk_dxdy : ndarray
+        (2, N, M) numpy array of pixel displacements in the x and y in the "from" image.
+        dx = bk_dxdy[0], and dy=bk_dxdy[1].
+
+    from_fwd_dxdy : ndarray
+        Inverse of `from_bk_dxdy`
+
+    to_M : ndarray, optional
+        3x3 affine transformation matrix to perform rigid warp in the "to" image
+
+    to_transformation_src_shape_rc :  optional, (int, int)
+        Shape of "to" image that was used to find the transformations.
+        For example, this could be the original image in which features were detected
+
+    to_src_shape_rc : optional, (int, int)
+        Shape of the unwarped "to" image to which the points will be warped. For example,
+        this could be a larger/smaller version of the "to" image that was
+        used for feature detection.
+
+    to_bk_dxdy : ndarray
+        (2, N, M) numpy array of pixel displacements in the x and y in the "to" image.
+        dx = bk_dxdy[0], and dy=bk_dxdy[1].
+
+    to_fwd_dxdy : ndarray
+        Inverse of `to_bk_dxdy`
+
+    bg_color : optional, list
+        Background color, if `None`, then the background color will be black
+
+    interp_method : str, optional
+
+    Returns
+    -------
+    in_target_space : ndarray, pvips.Image
+        `img` warped onto the "to" image
+
+    """
+
+
+    in_reg_space = warp_img(img,
+                            M=from_M,
+                            bk_dxdy=from_bk_dxdy,
+                            out_shape_rc=from_dst_shape_rc,
+                            transformation_src_shape_rc=from_transformation_src_shape_rc,
+                            transformation_dst_shape_rc=from_transformation_dst_shape_rc,
+                            bg_color=bg_color,
+                            interp_method=interp_method
+                            )
+
+    in_target_space = warp_img_inv(img=in_reg_space,
+                                   M=to_M,
+                                   fwd_dxdy=to_fwd_dxdy,
+                                   transformation_src_shape_rc=to_transformation_src_shape_rc,
+                                   transformation_dst_shape_rc=to_transformation_dst_shape_rc,
+                                   src_shape_rc=to_src_shape_rc,
+                                   bk_dxdy=to_bk_dxdy,
+                                   bg_color=bg_color,
+                                   interp_method=interp_method
+                                   )
+
+    return in_target_space
+
+
 def crop_img(img, xywh):
     is_array = False
     if not isinstance(img, pyvips.Image):
