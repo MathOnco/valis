@@ -473,7 +473,6 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
     cam_d, cam = calc_background_color_dist(img, brightness_q=brightness_q, mask=color_mask)
 
-
     # Reduce intensity of thick horizontal and vertial lines, usually artifacts like edges, streaks, folds, etc...
     vert_knl = np.ones((1, 5))
     no_v_lines = morphology.opening(cam_d, vert_knl)

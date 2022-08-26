@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-__version__ = "1.0.0rc10"
-=======
 __version__ = "1.0.0rc11"
->>>>>>> 1.0.rc10
 
 from . import affine_optimizer
 from . import feature_detectors

@@ -2058,10 +2058,6 @@ def _warp_xy_numpy(xy, M=None, transformation_src_shape_rc=None, transformation_
     if bk_dxdy is not None and fwd_dxdy is None:
         fwd_dxdy = get_inverse_field(bk_dxdy)
 
-<<<<<<< HEAD
-=======
-    # Use cubic interpolation to determine position in warped image
->>>>>>> 1.0.rc10
     grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), displacement_shape_rc[1]),
                   (0.0, float(displacement_shape_rc[0]-1), displacement_shape_rc[0]))
 
