@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.non_rigid_registrars &mdash; valis &#34;1.0.0rc5&#34;
+  <title>valis.non_rigid_registrars &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -174,11 +174,24 @@
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">SimpleITK</span> <span class="k">as</span> <span class="nn">sitk</span>
-<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">transform</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">filters</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">transform</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">exposure</span><span class="p">,</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">color</span> <span class="k">as</span> <span class="n">skcolor</span>
+<span class="kn">import</span> <span class="nn">pyvips</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span><span class="p">,</span> <span class="n">parallel_backend</span>
+
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">viz</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">warp_tools</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">preprocessing</span>
 
-
+<span class="n">NR_CLS_KEY</span> <span class="o">=</span> <span class="s2">&quot;non_rigid_registrar_cls&quot;</span>
+<span class="n">NR_PROCESSING_KW_KEY</span> <span class="o">=</span> <span class="s2">&quot;processing_kwargs&quot;</span>
+<span class="n">NR_PROCESSING_CLASS_KEY</span> <span class="o">=</span> <span class="s2">&quot;processing_cls&quot;</span>
+<span class="n">NR_STATS_KEY</span> <span class="o">=</span> <span class="s2">&quot;target_stats&quot;</span>
+<span class="n">NR_TILE_WH_KEY</span> <span class="o">=</span> <span class="s2">&quot;tile_wh&quot;</span>
+<span class="n">NR_PARAMS_KEY</span> <span class="o">=</span> <span class="s2">&quot;params&quot;</span>
 <span class="c1"># Abstract Classes #</span>
 <div class="viewcode-block" id="NonRigidRegistrar"><a class="viewcode-back" href="../../non_rigid_registrars.html#valis.non_rigid_registrars.NonRigidRegistrar">[docs]</a><span class="k">class</span> <span class="nc">NonRigidRegistrar</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for non-rigid registration using displacement fields</span>
@@ -388,7 +401,7 @@
             <span class="n">_</span><span class="p">,</span> <span class="n">masked_fixed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
             <span class="n">masked_moving</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">moving_img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-            <span class="n">mask_bbox</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">xy2bbox</span><span class="p">(</span><span class="n">warp_tools</span><span class="o">.</span><span class="n">mask2xy</span><span class="p">(</span><span class="n">mask</span><span class="p">))</span>
+            <span class="n">mask_bbox</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">xy2bbox</span><span class="p">(</span><span class="n">warp_tools</span><span class="o">.</span><span class="n">mask2xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">))</span>
             <span class="n">min_c</span><span class="p">,</span> <span class="n">min_r</span> <span class="o">=</span> <span class="n">mask_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
             <span class="n">max_c</span><span class="p">,</span> <span class="n">max_r</span> <span class="o">=</span> <span class="n">mask_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">mask_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">min_r</span><span class="p">:</span><span class="n">max_r</span><span class="p">,</span> <span class="n">min_c</span><span class="p">:</span><span class="n">max_c</span><span class="p">]</span>
@@ -1147,21 +1160,20 @@
 <div class="viewcode-block" id="OpticalFlowWarper.calc"><a class="viewcode-back" href="../../non_rigid_registrars.html#valis.non_rigid_registrars.OpticalFlowWarper.calc">[docs]</a>    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">moving_img</span><span class="p">,</span> <span class="n">fixed_img</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;createOptFlow_DenseRLOF&#39;</span><span class="p">,</span> <span class="s1">&#39;createOptFlow_SimpleFlow&#39;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="n">moving_img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">moving_img</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">grey2rgb</span><span class="p">(</span><span class="n">moving_img</span><span class="p">)</span>
+                <span class="n">moving_img</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">gray2rgb</span><span class="p">(</span><span class="n">moving_img</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">fixed_img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">fixed_img</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">grey2rgb</span><span class="p">(</span><span class="n">fixed_img</span><span class="p">)</span>
+                <span class="n">fixed_img</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">gray2rgb</span><span class="p">(</span><span class="n">fixed_img</span><span class="p">)</span>
 
         <span class="n">backward_flow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_flow_obj</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">fixed_img</span><span class="p">,</span> <span class="n">moving_img</span><span class="p">,</span>
                                                    <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">moving_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]))</span>
 
         <span class="n">backward_flow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">backward_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">backward_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">smoothing_method</span> <span class="o">==</span> <span class="s2">&quot;gauss&quot;</span><span class="p">:</span>
-                <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_ratio</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-                <span class="n">smooth_dx</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
-                <span class="n">smooth_dy</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
-                <span class="n">backward_flow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">smooth_dx</span><span class="p">,</span> <span class="n">smooth_dy</span><span class="p">])</span>
-
+            <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_ratio</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">smooth_dx</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="n">smooth_dy</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="n">backward_flow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">smooth_dx</span><span class="p">,</span> <span class="n">smooth_dy</span><span class="p">])</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">smoothing_method</span> <span class="o">==</span> <span class="s2">&quot;inpaint&quot;</span><span class="p">:</span>
             <span class="n">backward_flow</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">remove_folds_in_dxdy</span><span class="p">(</span><span class="n">backward_flow</span><span class="p">,</span>
@@ -1313,6 +1325,345 @@
                                       <span class="n">deformationField</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="o">...</span><span class="p">,</span>  <span class="mi">1</span><span class="p">]]</span>
                                      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">deformationField</span><span class="p">))])</span>
         <span class="k">return</span> <span class="n">deformationField</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">NonRigidTileRegistrar</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tile-wise non-rigid regisration</span>
+
+<span class="sd">    Slices moving and fixed images into tiles and then registers each tile.</span>
+<span class="sd">    Probably best for very large images.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    moving_img : pyvips.Image</span>
+<span class="sd">        Image with shape (N,M) thata is  warp to align with `fixed_img`.</span>
+
+<span class="sd">    fixed_img : pyvips.Image</span>
+<span class="sd">        Image with shape (N,M) that `moving_img` is warped to align with.</span>
+
+<span class="sd">    mask : pyvips.Image</span>
+<span class="sd">        2D array with shape (N,M) where non-zero pixel values are foreground,</span>
+<span class="sd">        and 0 is background, which is ignnored during registration. If None,</span>
+<span class="sd">        then all non-zero pixels in images will be used to create the mask.</span>
+
+<span class="sd">    shape : tuple</span>
+<span class="sd">        Number of rows and columns in each image. Will be (N,M).</span>
+
+<span class="sd">    bk_dxdy_tiles : list</span>
+<span class="sd">        List of bk_dxdy for each tile</span>
+
+<span class="sd">    bk_dxdy : pyvips.Image</span>
+<span class="sd">        Backwards isplacement field after stitching `bk_dxdy_tiles` together</span>
+
+<span class="sd">    fwd_dxdy_tiles : list</span>
+<span class="sd">        List of forward dxdy for each tile</span>
+
+<span class="sd">    fwd_dxdy : pyvips.Image</span>
+<span class="sd">        Displacement field after stitching `fwd_dxdy_tiles` together</span>
+
+<span class="sd">    pbar : tqdm</span>
+<span class="sd">        Progress bar to track registration time</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tile_wh</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">tile_buffer</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params : dictionary</span>
+<span class="sd">            Keyword: value dictionary of parameters to be used in reigstration.</span>
+<span class="sd">            Will get used when initializing the `non_rigid_registrar_cls`</span>
+
+<span class="sd">            In the case where simple ITK will be used, params should be</span>
+<span class="sd">            a SimpleITK.ParameterMap. Note that numeric values needd to be</span>
+<span class="sd">            converted to strings.</span>
+
+<span class="sd">        tile_wh : int</span>
+<span class="sd">            Width and height of tiles that will be used for registration</span>
+
+<span class="sd">        tile_buffer : int</span>
+<span class="sd">            The amount of overlap between each tile.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_wh</span> <span class="o">=</span> <span class="n">tile_wh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_buffer</span> <span class="o">=</span> <span class="n">tile_buffer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moving_img</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_img</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warped_image</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy_tiles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy_tiles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+    <span class="k">def</span> <span class="nf">norm_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">normed_img</span> <span class="o">=</span> <span class="n">exposure</span><span class="o">.</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">out_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="n">normed_img</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">norm_img_stats</span><span class="p">(</span><span class="n">normed_img</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+        <span class="n">normed_img</span> <span class="o">=</span> <span class="n">exposure</span><span class="o">.</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">normed_img</span><span class="p">,</span> <span class="n">out_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">normed_img</span>
+
+    <span class="k">def</span> <span class="nf">norm_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">moving_img</span><span class="p">,</span> <span class="n">fixed_img</span><span class="p">,</span> <span class="n">tile_mask</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Try norming using these tile stats</span>
+            <span class="k">if</span> <span class="n">tile_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pos_px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">tile_mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">tile_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">fixed_img</span><span class="p">[</span><span class="n">pos_px</span><span class="p">],</span> <span class="n">moving_img</span><span class="p">[</span><span class="n">pos_px</span><span class="p">]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tile_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">fixed_img</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">moving_img</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+
+            <span class="n">target_processing_stats</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">get_channel_stats</span><span class="p">(</span><span class="n">tile_v</span><span class="p">)</span>
+
+            <span class="n">fixed_normed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_img</span><span class="p">(</span><span class="n">fixed_img</span><span class="p">,</span> <span class="n">target_processing_stats</span><span class="p">,</span> <span class="n">tile_mask</span><span class="p">)</span>
+            <span class="n">moving_normed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_img</span><span class="p">(</span><span class="n">moving_img</span><span class="p">,</span> <span class="n">target_processing_stats</span><span class="p">,</span> <span class="n">tile_mask</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># Norm using full image&#39;s stats</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">fixed_normed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_img</span><span class="p">(</span><span class="n">fixed_img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_stats</span><span class="p">,</span> <span class="n">tile_mask</span><span class="p">)</span>
+                    <span class="n">moving_normed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_img</span><span class="p">(</span><span class="n">moving_img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_stats</span><span class="p">,</span> <span class="n">tile_mask</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">fixed_normed</span> <span class="o">=</span> <span class="n">fixed_img</span>
+                    <span class="n">moving_normed</span> <span class="o">=</span> <span class="n">moving_img</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fixed_normed</span> <span class="o">=</span> <span class="n">fixed_img</span>
+                <span class="n">moving_normed</span> <span class="o">=</span> <span class="n">moving_img</span>
+
+        <span class="k">return</span> <span class="n">moving_normed</span><span class="p">,</span> <span class="n">fixed_normed</span>
+
+    <span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process tiles</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">processor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_cls</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">img</span><span class="p">,</span> <span class="n">src_f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">series</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">processed_img</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">process_image</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">processing_kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c1"># processor.process_image doesn&#39;t take kwargs</span>
+            <span class="n">processed_img</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">process_image</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">processed_img</span>
+
+
+    <span class="k">def</span> <span class="nf">reg_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile_idx</span><span class="p">,</span> <span class="n">lock</span><span class="p">):</span>
+
+        <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+            <span class="c1"># Use lock when accessing images</span>
+            <span class="n">tile_bbox_xywh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expanded_bboxes</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span>
+            <span class="n">moving_tile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">moving_img</span><span class="o">.</span><span class="n">extract_area</span><span class="p">(</span><span class="o">*</span><span class="n">tile_bbox_xywh</span><span class="p">)</span>
+            <span class="n">fixed_tile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_img</span><span class="o">.</span><span class="n">extract_area</span><span class="p">(</span><span class="o">*</span><span class="n">tile_bbox_xywh</span><span class="p">)</span>
+
+            <span class="n">np_fixed</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">vips2numpy</span><span class="p">(</span><span class="n">fixed_tile</span><span class="p">)</span>
+            <span class="n">np_moving</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">vips2numpy</span><span class="p">(</span><span class="n">moving_tile</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tile_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">extract_area</span><span class="p">(</span><span class="o">*</span><span class="n">tile_bbox_xywh</span><span class="p">)</span>
+                <span class="n">np_mask</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">vips2numpy</span><span class="p">(</span><span class="n">tile_mask</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">np_mask</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">moving_tile</span><span class="o">.</span><span class="n">interpretation</span> <span class="o">==</span> <span class="s2">&quot;srgb&quot;</span><span class="p">:</span>
+                <span class="c1"># Limit registration to be inside image</span>
+                <span class="c1"># Warped areas outside image have the same pixel values, usually 0</span>
+                <span class="n">edge_mask</span> <span class="o">=</span> <span class="mi">255</span><span class="o">*</span><span class="p">((</span><span class="n">np_moving</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np_moving</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">np_fixed</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np_fixed</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">np_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">np_mask</span> <span class="o">=</span> <span class="mi">255</span><span class="o">*</span><span class="p">((</span><span class="n">edge_mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">np_mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">np_mask</span> <span class="o">=</span> <span class="n">edge_mask</span>
+
+
+            <span class="c1"># Check if either of the tiles are empty</span>
+            <span class="n">is_empty</span> <span class="o">=</span> <span class="n">fixed_tile</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">==</span> <span class="n">fixed_tile</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="ow">or</span> <span class="n">moving_tile</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">==</span> <span class="n">moving_tile</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">np_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">is_empty</span> <span class="o">=</span> <span class="n">is_empty</span> <span class="ow">or</span> <span class="n">np_mask</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+
+            <span class="k">if</span> <span class="n">is_empty</span><span class="p">:</span>
+                <span class="c1"># Nothing to register</span>
+                <span class="n">empty_dxdy</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">black</span><span class="p">(</span><span class="n">moving_tile</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">moving_tile</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy_tiles</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">empty_dxdy</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy_tiles</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">empty_dxdy</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Process tiles #</span>
+                <span class="n">fixed_processed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_tile</span><span class="p">(</span><span class="n">np_fixed</span><span class="p">)</span>
+                <span class="n">moving_processed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_tile</span><span class="p">(</span><span class="n">np_moving</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">np_fixed</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">fixed_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">skcolor</span><span class="o">.</span><span class="n">rgb2gray</span><span class="p">(</span><span class="n">np_fixed</span><span class="p">))</span>
+                    <span class="n">fixed_processed</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">img_as_ubyte</span><span class="p">(</span><span class="n">fixed_g</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">fixed_processed</span> <span class="o">=</span> <span class="n">np_fixed</span>
+
+                <span class="k">if</span> <span class="n">np_moving</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">moving_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">skcolor</span><span class="o">.</span><span class="n">rgb2gray</span><span class="p">(</span><span class="n">np_moving</span><span class="p">))</span>
+                    <span class="n">moving_processed</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">img_as_ubyte</span><span class="p">(</span><span class="n">moving_g</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">moving_processed</span> <span class="o">=</span> <span class="n">np_moving</span>
+
+            <span class="n">moving_normed</span><span class="p">,</span> <span class="n">fixed_normed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_tiles</span><span class="p">(</span><span class="n">moving_processed</span><span class="p">,</span> <span class="n">fixed_processed</span><span class="p">,</span> <span class="n">np_mask</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">np_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">moving_normed</span><span class="p">[</span><span class="n">np_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">fixed_normed</span><span class="p">[</span><span class="n">np_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Register tiles #</span>
+            <span class="n">tile_non_rigid_reg_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_registrar_cls</span><span class="p">()</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">tile_non_rigid_reg_obj</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">moving_normed</span><span class="p">,</span> <span class="n">fixed_normed</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">np_mask</span><span class="p">)</span>
+            <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">remove_invasive_displacements</span><span class="p">(</span><span class="n">bk_dxdy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_shape_rc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out_shape_rc</span><span class="o">=</span><span class="n">moving_normed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">vips_tile_bk_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">bk_dxdy</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+            <span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_inverse_field</span><span class="p">(</span><span class="n">bk_dxdy</span><span class="p">)</span>
+            <span class="n">vips_tile_fwd_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">fwd_dxdy</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">np_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">temp_tile_mask</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">np_mask</span><span class="p">)</span>
+                <span class="n">vips_tile_bk_dxdy</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp_tile_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ifthenelse</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">vips_tile_bk_dxdy</span><span class="p">)</span>
+                <span class="n">vips_tile_fwd_dxdy</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp_tile_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ifthenelse</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">vips_tile_fwd_dxdy</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy_tiles</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">vips_tile_bk_dxdy</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy_tiles</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">vips_tile_fwd_dxdy</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cacluate displacement fields</span>
+<span class="sd">        Each tile is registered and then stitched together</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;======== Registering tiles</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lock</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="n">n_cpu</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_tiles</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">parallel_backend</span><span class="p">(</span><span class="s2">&quot;threading&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_cpu</span><span class="p">):</span>
+            <span class="n">Parallel</span><span class="p">()(</span><span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_tile</span><span class="p">)(</span><span class="n">i</span><span class="p">,</span> <span class="n">lock</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_tiles</span><span class="p">))</span>
+
+        <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">stitch_tiles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy_tiles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">expanded_bboxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_buffer</span><span class="p">)</span>
+        <span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">stitch_tiles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy_tiles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">expanded_bboxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_buffer</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ifthenelse</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">bk_dxdy</span><span class="p">)</span>
+            <span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ifthenelse</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">fwd_dxdy</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bk_dxdy</span><span class="p">,</span> <span class="n">fwd_dxdy</span>
+
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">moving_img</span><span class="p">,</span> <span class="n">fixed_img</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">non_rigid_registrar_cls</span><span class="o">=</span><span class="n">OpticalFlowWarper</span><span class="p">,</span>
+                 <span class="n">processing_cls</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">processing_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_stats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register images, warping moving_img to align with fixed_img</span>
+
+<span class="sd">        Uses backwards transforms to register images (i.e. aligning</span>
+<span class="sd">        fixed to moving), so the inverse transform needs to be used</span>
+<span class="sd">        to warp points from moving_img. This is automatically done in</span>
+<span class="sd">        warp_tools.warp_xy</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        moving_img : ndarray, pyvips.Image</span>
+<span class="sd">            Image to warp to align with `fixed_img`.</span>
+
+<span class="sd">        fixed_img : ndarray, pyvips.Image</span>
+<span class="sd">            Image `moving_img` is warped to align with.</span>
+
+<span class="sd">        mask : ndarray, pyvips.Image</span>
+<span class="sd">            2D array with shape (N,M) where non-zero pixel values are foreground,</span>
+<span class="sd">            and 0 is background, which is ignnored during registration. If None,</span>
+<span class="sd">            then all non-zero pixels in images will be used to create the mask.</span>
+
+<span class="sd">        non_rigid_registrar_cls : NonRigidRegistrar, optional</span>
+<span class="sd">            Uninstantiated NonRigidRegistrar class that will be used</span>
+<span class="sd">            to calculate the deformation fields between images.</span>
+
+<span class="sd">        processing_cls : preprocessing.ImageProcesser, optional</span>
+<span class="sd">            preprocessing.ImageProcesser used to process the images</span>
+
+<span class="sd">        processing_kwargs : dict</span>
+<span class="sd">            Dictionary of keyward arguments to be passed to `processing_cls`</span>
+
+<span class="sd">        target_stats : ndarray</span>
+<span class="sd">            Target stats used to normalize each tile after being processed.</span>
+
+<span class="sd">        **kwargs : dict, optional</span>
+<span class="sd">            Additional keyword arguments passed to NonRigidRegistrar.calc</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        warped_img : pyvips.Image</span>
+<span class="sd">            Moving image registered to align with fixed image.</span>
+
+<span class="sd">        fwd_dxdy :</span>
+<span class="sd">            (2, N, M)  pyvips.Image with pixel displacements in</span>
+<span class="sd">            the x and y directions. Found by registering `moving_img`</span>
+<span class="sd">            to `fixed_img`. Used for point warping</span>
+
+<span class="sd">        bk_dxdy : pyvips.Image</span>
+<span class="sd">            (2, N, M)  pyvips.Image with pixel displacements in</span>
+<span class="sd">            the x and y directions. Found by registering `fixed_img` to</span>
+<span class="sd">            `moving_img`. Used for image warping</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_array</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">moving_img</span><span class="p">,</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_array</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_array</span><span class="p">:</span>
+            <span class="n">shape_rc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">moving_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shape_rc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">moving_img</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">moving_img</span><span class="o">.</span><span class="n">width</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape_rc</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">non_rigid_registrar_cls</span> <span class="o">=</span> <span class="n">non_rigid_registrar_cls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processing_cls</span> <span class="o">=</span> <span class="n">processing_cls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_stats</span> <span class="o">=</span> <span class="n">target_stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processing_kwargs</span> <span class="o">=</span> <span class="n">processing_kwargs</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_array</span><span class="p">:</span>
+            <span class="n">moving_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">moving_img</span><span class="p">)</span>
+            <span class="n">fixed_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">fixed_img</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">moving_img</span> <span class="o">=</span> <span class="n">moving_img</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_img</span> <span class="o">=</span> <span class="n">fixed_img</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
+
+        <span class="n">temp_tile_bboxes</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_grid_bboxes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_wh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_wh</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expanded_bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">warp_tools</span><span class="o">.</span><span class="n">expand_bbox</span><span class="p">(</span><span class="n">bbox_xywh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_buffer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">bbox_xywh</span> <span class="ow">in</span> <span class="n">temp_tile_bboxes</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_tiles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp_tile_bboxes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy_tiles</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy_tiles</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">temp_tile_bboxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">temp_tile_bboxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">bk_dxdy</span><span class="p">,</span> <span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc</span><span class="p">()</span>
+
+        <span class="n">warped_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_img</span><span class="p">(</span><span class="n">moving_img</span><span class="p">,</span> <span class="n">bk_dxdy</span><span class="o">=</span><span class="n">bk_dxdy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_array</span><span class="p">:</span>
+            <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">vips2numpy</span><span class="p">(</span><span class="n">bk_dxdy</span><span class="p">)</span>
+            <span class="n">bk_dxdy</span> <span class="o">=</span> <span class="p">[</span><span class="n">bk_dxdy</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bk_dxdy</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+
+            <span class="n">warped_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">vips2numpy</span><span class="p">(</span><span class="n">warped_img</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bk_dxdy</span> <span class="o">=</span> <span class="n">bk_dxdy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwd_dxdy</span> <span class="o">=</span> <span class="n">fwd_dxdy</span>
+
+        <span class="k">return</span> <span class="n">warped_img</span><span class="p">,</span> <span class="n">fwd_dxdy</span><span class="p">,</span> <span class="n">bk_dxdy</span>
+
+
 </pre></div>
 
            </div>

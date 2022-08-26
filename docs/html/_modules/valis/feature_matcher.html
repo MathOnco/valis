@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.feature_matcher &mdash; valis &#34;1.0.0rc4&#34;
+  <title>valis.feature_matcher &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -174,6 +174,8 @@
 <span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nba</span>
 <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
 <span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="kn">import</span> <span class="n">pairwise_kernels</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">transform</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">warp_tools</span>
 
 <span class="n">AMBIGUOUS_METRICS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">pairwise</span><span class="o">.</span><span class="n">_VALID_METRICS</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
     <span class="n">metrics</span><span class="o">.</span><span class="n">pairwise</span><span class="o">.</span><span class="n">PAIRWISE_KERNEL_FUNCTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -359,7 +361,75 @@
         <span class="n">filtered_src_points</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
         <span class="n">filtered_dst_points</span> <span class="o">=</span> <span class="n">kp2_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
 
-    <span class="k">return</span> <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">filtered_src_points</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">filtered_dst_points</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">good_idx</span><span class="p">)</span>
+
+
+
+<span class="k">def</span> <span class="nf">filter_matches_tukey</span><span class="p">(</span><span class="n">src_xy</span><span class="p">,</span> <span class="n">dst_xy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Detect and remove outliers using Tukey&#39;s method</span>
+<span class="sd">    Adapted from https://towardsdatascience.com/detecting-and-treating-outliers-in-python-part-1-4ece5098b755</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    src_xy : ndarray</span>
+<span class="sd">        (N, 2) array containing image 1s keypoint positions, in xy coordinates.</span>
+
+<span class="sd">    dst_xy : ndarray</span>
+<span class="sd">        (N, 2) array containing image 2s keypoint positions, in xy coordinates.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_src_points : (N, 2) array</span>
+<span class="sd">        Inlier keypoints from kp1_xy</span>
+
+<span class="sd">    filtered_dst_points : (N, 2) array</span>
+<span class="sd">        Inlier keypoints from kp1_xy</span>
+
+<span class="sd">    good_idx : (1, N) array</span>
+<span class="sd">        Indices of inliers</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tform</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">SimilarityTransform</span><span class="p">()</span>
+    <span class="n">tform</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">dst_xy</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">src_xy</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">tform</span><span class="o">.</span><span class="n">params</span>
+
+    <span class="n">warped_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">src_xy</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">calc_d</span><span class="p">(</span><span class="n">warped_xy</span><span class="p">,</span>  <span class="n">dst_xy</span><span class="p">)</span>
+
+    <span class="n">q1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+    <span class="n">q3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">)</span>
+    <span class="n">iqr</span> <span class="o">=</span> <span class="n">q3</span><span class="o">-</span><span class="n">q1</span>
+    <span class="n">inner_fence</span> <span class="o">=</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">iqr</span>
+    <span class="n">outer_fence</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">iqr</span>
+
+    <span class="c1">#inner fence lower and upper end</span>
+    <span class="n">inner_fence_le</span> <span class="o">=</span> <span class="n">q1</span><span class="o">-</span><span class="n">inner_fence</span>
+    <span class="n">inner_fence_ue</span> <span class="o">=</span> <span class="n">q3</span><span class="o">+</span><span class="n">inner_fence</span>
+
+    <span class="c1">#outer fence lower and upper end</span>
+    <span class="n">outer_fence_le</span> <span class="o">=</span> <span class="n">q1</span><span class="o">-</span><span class="n">outer_fence</span>
+    <span class="n">outer_fence_ue</span> <span class="o">=</span> <span class="n">q3</span><span class="o">+</span><span class="n">outer_fence</span>
+
+    <span class="n">outliers_prob</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">outliers_poss</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">inliers_prob</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">inliers_poss</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="n">outer_fence_le</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">outer_fence_ue</span><span class="p">:</span>
+            <span class="n">outliers_prob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inliers_prob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="n">inner_fence_le</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">inner_fence_ue</span><span class="p">:</span>
+            <span class="n">outliers_poss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inliers_poss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="n">src_xy_inlier</span> <span class="o">=</span> <span class="n">src_xy</span><span class="p">[</span><span class="n">inliers_prob</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">dst_xy_inlier</span> <span class="o">=</span> <span class="n">dst_xy</span><span class="p">[</span><span class="n">inliers_prob</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="k">return</span> <span class="n">src_xy_inlier</span><span class="p">,</span> <span class="n">dst_xy_inlier</span><span class="p">,</span> <span class="n">inliers_prob</span>
 
 
 <div class="viewcode-block" id="filter_matches"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.filter_matches">[docs]</a><span class="k">def</span> <span class="nf">filter_matches</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">DEFAULT_MATCH_FILTER</span><span class="p">,</span>
@@ -409,6 +479,9 @@
         <span class="n">filter_fxn</span> <span class="o">=</span> <span class="n">filter_matches_ransac</span>
 
     <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span> <span class="o">=</span> <span class="n">filter_fxn</span><span class="p">(</span><span class="o">**</span><span class="n">all_matching_args</span><span class="p">)</span>
+
+    <span class="c1"># Do additional filtering to remove other outliers that may have been missed by RANSAC</span>
+    <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span> <span class="o">=</span> <span class="n">filter_matches_tukey</span><span class="p">(</span><span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span></div>
 

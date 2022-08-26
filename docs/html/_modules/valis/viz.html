@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.viz &mdash; valis &#34;1.0.0rc4&#34;
+  <title>valis.viz &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -171,22 +171,69 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">colour</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">draw</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">exposure</span><span class="p">,</span> <span class="n">transform</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">draw</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">exposure</span><span class="p">,</span> <span class="n">transform</span>
 <span class="kn">from</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="kn">import</span> <span class="n">dendrogram</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nb</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">warp_tools</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">platform</span>
 <span class="c1"># JzAzBz #</span>
 <span class="n">DXDY_CSPACE</span> <span class="o">=</span> <span class="s2">&quot;JzAzBz&quot;</span>
 <span class="n">DXDY_CRANGE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">)</span>
 <span class="n">DXDY_LRANGE</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.004</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">)</span>
 
+<span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span> <span class="ow">or</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Darwin&#39;</span><span class="p">:</span>
+    <span class="n">uniTupleDtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">uniTupleDtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span>
+
+
 <span class="c1"># CAM16-UCS #</span>
 <span class="c1"># DXDY_CSPACE = &quot;CAM16UCS&quot;</span>
 <span class="c1"># DXDY_CRANGE = (0, 0.5)</span>
 <span class="c1"># DXDY_LRANGE = (0.5, 0.9)</span>
+
+
+<span class="k">def</span> <span class="nf">draw_outline</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">clr</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">,</span> <span class="mi">39</span><span class="p">),</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Draw mask outline around an image</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : ndarray</span>
+<span class="sd">        Image on which to draw the mask outline</span>
+
+
+<span class="sd">    mask : ndarray</span>
+<span class="sd">        Mask to draw outline of</span>
+
+<span class="sd">    clr : ndarray</span>
+<span class="sd">        RGB (0-255) color of outline</span>
+
+<span class="sd">    thicknes : int</span>
+<span class="sd">        Thickness of outline</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    outline_img : ndarray</span>
+<span class="sd">        Copy of `img` with the outline of `mask` drawn on it</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">outline_img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">outline_img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">outline_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">outline_img</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+
+    <span class="n">outline_img</span> <span class="o">=</span> <span class="n">outline_img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="n">detection_mask</span> <span class="o">=</span> <span class="mi">255</span><span class="o">*</span><span class="p">(</span><span class="n">mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">contours</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">detection_mask</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_EXTERNAL</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_SIMPLE</span><span class="p">)</span>
+    <span class="n">int_color</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">clr</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="n">contours</span><span class="p">:</span>
+        <span class="n">outline_img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">outline_img</span><span class="p">,</span> <span class="p">[</span><span class="n">cnt</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">int_color</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="n">thickness</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">outline_img</span>
 
 
 <div class="viewcode-block" id="draw_features"><a class="viewcode-back" href="../../viz.html#valis.viz.draw_features">[docs]</a><span class="k">def</span> <span class="nf">draw_features</span><span class="p">(</span><span class="n">kp_xy</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
@@ -213,34 +260,76 @@
     <span class="k">return</span> <span class="n">feature_img</span></div>
 
 
-<div class="viewcode-block" id="draw_matches"><a class="viewcode-back" href="../../viz.html#valis.viz.draw_matches">[docs]</a><span class="k">def</span> <span class="nf">draw_matches</span><span class="p">(</span><span class="n">src_img</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">dst_img</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Draw all matches between src_img and dst_img, using scikit-image. Assumes they have already been filtered</span>
+<div class="viewcode-block" id="draw_matches"><a class="viewcode-back" href="../../viz.html#valis.viz.draw_matches">[docs]</a><span class="k">def</span> <span class="nf">draw_matches</span><span class="p">(</span><span class="n">src_img</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">dst_img</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">rad</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Draw feature matches between two images</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">        src_img : ndarray</span>
-<span class="sd">            Image from which kp1_xy were detected</span>
+<span class="sd">    src_img : ndarray</span>
+<span class="sd">        Image associated with `kp1_xy`</span>
 
-<span class="sd">        kp1_xy : (N, 2) array</span>
-<span class="sd">            Image 1s keypoint positions, in xy coordinates,  for each of the N descriptors in desc1</span>
+<span class="sd">    kp1_xy : ndarray</span>
+<span class="sd">        xy coordinates of feature points found in `src_img`</span>
 
-<span class="sd">        dst_img : ndarray</span>
-<span class="sd">            Image from which kp2_xy were detected</span>
+<span class="sd">    dst_img : ndarray</span>
+<span class="sd">        Image associated with `kp2_xy`</span>
 
-<span class="sd">        kp2_xy : (M, 2) array</span>
-<span class="sd">            Image 1s keypoint positions, in xy coordinates,  for each of the M descriptors in desc2</span>
+<span class="sd">    kp2_xy : ndarray</span>
+<span class="sd">        xy coordinates of feature points found in `dst_img`</span>
+
+<span class="sd">    rad : int</span>
+<span class="sd">        Radius of circles used to draw feature points</span>
+
+<span class="sd">    alignment : string</span>
+<span class="sd">        How to stack the images, either &#39;veritcal&#39; or &#39;horizontal&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    feature_img : ndarray</span>
+<span class="sd">        Image show corresponding features of `src_img` and `dst_img`</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="n">plt</span><span class="o">.</span><span class="n">gray</span><span class="p">()</span>
-    <span class="n">match_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">))</span>
-    <span class="n">matches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">match_idx</span><span class="p">,</span> <span class="n">match_idx</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">all_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">src_img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dst_img</span><span class="o">.</span><span class="n">shape</span><span class="p">])</span>
+    <span class="n">out_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">all_dims</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
 
-    <span class="n">feature</span><span class="o">.</span><span class="n">plot_matches</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">src_img</span><span class="p">,</span> <span class="n">dst_img</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">kp2_xy</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">matches</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="n">alignment</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">)),</span> <span class="s2">&quot;matches&quot;</span><span class="p">]))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span></div>
-    <span class="c1"># plt.close()</span>
+    <span class="n">padded_src</span><span class="p">,</span> <span class="n">src_T</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">pad_img</span><span class="p">(</span><span class="n">src_img</span><span class="p">,</span> <span class="n">out_shape</span><span class="p">)</span>
+    <span class="n">padded_dst</span><span class="p">,</span> <span class="n">dst_T</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">pad_img</span><span class="p">(</span><span class="n">dst_img</span><span class="p">,</span> <span class="n">out_shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">alignment</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">):</span>
+        <span class="n">feature_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">padded_src</span><span class="p">,</span> <span class="n">padded_dst</span><span class="p">])</span>
+        <span class="n">dst_xy_shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">feature_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">padded_src</span><span class="p">,</span> <span class="n">padded_dst</span><span class="p">])</span>
+        <span class="n">dst_xy_shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">out_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">feature_img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">feature_img</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">gray2rgb</span><span class="p">(</span><span class="n">feature_img</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="n">dst_T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dst_xy_shift</span>
+    <span class="n">dst_xy_in_feature_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">kp2_xy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">dst_T</span><span class="p">)</span>
+
+    <span class="n">n_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">kp1_xy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">kp2_xy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="o">*</span><span class="n">jzazbz_cmap</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">all_color_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">all_color_idx</span><span class="p">,</span> <span class="n">n_pt</span><span class="p">),</span> <span class="p">:]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_pt</span><span class="p">):</span>
+
+        <span class="n">xy1</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">xy2</span> <span class="o">=</span> <span class="n">dst_xy_in_feature_img</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">pt_color</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">circ_rc_1</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="o">*</span><span class="n">xy1</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">rad</span><span class="p">,</span> <span class="n">rad</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">feature_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">circ_rc_2</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="o">*</span><span class="n">xy2</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">rad</span><span class="p">,</span> <span class="n">rad</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">feature_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">line_rc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="n">line_aa</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">xy1</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">xy2</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)))</span>
+        <span class="n">line_rc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">line_rc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">feature_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">line_rc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">line_rc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">feature_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">feature_img</span><span class="p">[</span><span class="n">line_rc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">line_rc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pt_color</span><span class="o">*</span><span class="n">line_rc</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">feature_img</span><span class="p">[</span><span class="n">circ_rc_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">pt_color</span>
+        <span class="n">feature_img</span><span class="p">[</span><span class="n">circ_rc_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">pt_color</span>
+
+    <span class="k">return</span> <span class="n">feature_img</span></div>
 
 
 <span class="k">def</span> <span class="nf">draw_clusterd_D</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">optimal_Z</span><span class="p">):</span>
@@ -273,7 +362,7 @@
 
 
 <span class="c1"># Non-rigid visualization #</span>
-<span class="nd">@nb</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">nb</span><span class="o">.</span><span class="n">typeof</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">])))(</span><span class="n">nb</span><span class="o">.</span><span class="n">typeof</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">nb</span><span class="o">.</span><span class="n">typeof</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">nb</span><span class="o">.</span><span class="n">typeof</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+<span class="nd">@nb</span><span class="o">.</span><span class="n">njit</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">get_grid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get points for a grid. Can be used to view deformation field</span>
@@ -295,7 +384,7 @@
 <span class="sd">        2, 1D arrays, which each element corresponding to a point in the grid</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">all_rows</span> <span class="o">=</span><span class="p">[]</span>
+    <span class="n">all_rows</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">all_cols</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">row_add_idx</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">thickness</span><span class="p">):</span>
@@ -329,7 +418,7 @@
         <span class="k">if</span> <span class="n">k</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">col_add_idx</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_rows</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_cols</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uniTupleDtype</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_cols</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uniTupleDtype</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="jzazbz_cmap"><a class="viewcode-back" href="../../viz.html#valis.viz.jzazbz_cmap">[docs]</a><span class="k">def</span> <span class="nf">jzazbz_cmap</span><span class="p">(</span><span class="n">luminosity</span><span class="o">=</span><span class="mf">0.012</span><span class="p">,</span> <span class="n">colorfulness</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">max_h</span><span class="o">=</span><span class="mi">260</span><span class="p">):</span>
@@ -357,7 +446,6 @@
         <span class="n">rgb</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">jzazbz</span><span class="p">,</span> <span class="s1">&#39;JzAzBz&#39;</span><span class="p">,</span> <span class="s1">&#39;sRGB&#39;</span><span class="p">)</span>
 
     <span class="n">rgb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">max_h</span> <span class="o">=</span> <span class="mi">260</span>
     <span class="k">if</span> <span class="n">max_h</span> <span class="o">!=</span> <span class="mi">360</span><span class="p">:</span>
         <span class="n">rgb</span> <span class="o">=</span> <span class="n">rgb</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">max_h</span><span class="p">]</span>
 
@@ -393,6 +481,12 @@
 
     <span class="k">return</span> <span class="n">rgb</span></div>
 
+
+
+<span class="k">def</span> <span class="nf">make_cbar</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="n">bar_height</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">bar_height</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">return</span> <span class="n">cbar</span>
 
 
 <span class="k">def</span> <span class="nf">rgb_triangle_cmap</span><span class="p">():</span>
@@ -550,27 +644,66 @@
     <span class="k">return</span> <span class="n">rgb</span><span class="p">[</span><span class="n">rgb_idx</span><span class="p">]</span></div>
 
 
-<span class="nd">@nb</span><span class="o">.</span><span class="n">njit</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">get_AB</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="nd">@nb</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">blend_colors</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">scale_by</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Color an image by blending</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : ndarray</span>
+<span class="sd">        Image containing the raw data (float 32)</span>
+
+<span class="sd">    colors : ndarray</span>
+<span class="sd">        Colors for each channel in `img`</span>
+
+<span class="sd">    scale_by : int</span>
+<span class="sd">        How to scale each channel. &quot;image&quot; will scale the channel</span>
+<span class="sd">        by the maximum value in the image. &quot;channel&quot; will scale</span>
+<span class="sd">        the channel by the maximum in the channel</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    blended_img : ndarray</span>
+<span class="sd">        A colored version of `img`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">n_channel_colors</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n_channel_colors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">nc</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nc</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
     <span class="n">eps</span> <span class="o">=</span> <span class="mf">1.0000000000000001e-15</span>
-    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">sum_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">eps</span>  <span class="c1"># Avoid division by 0</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
-            <span class="n">chanel_weight</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">sum_img</span>
-            <span class="n">A</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">chanel_weight</span>
-            <span class="n">B</span> <span class="o">+=</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">chanel_weight</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">sum_img</span> <span class="o">=</span> <span class="n">img</span><span class="o">/</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">sum_img</span>
-        <span class="n">B</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">sum_img</span>
+    <span class="n">sum_img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">eps</span>
+    <span class="k">if</span> <span class="n">scale_by</span> <span class="o">==</span> <span class="s2">&quot;image&quot;</span><span class="p">:</span>
+        <span class="n">img_max</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 
-    <span class="k">return</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span>
+    <span class="n">blended_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n_channel_colors</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nc</span><span class="p">):</span>
+        <span class="c1"># relative image is how bright the channel will be</span>
+        <span class="k">if</span> <span class="n">scale_by</span> <span class="o">!=</span> <span class="s2">&quot;image&quot;</span><span class="p">:</span>
+            <span class="n">channel_max</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">relative_img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">channel_max</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">relative_img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">img_max</span>
+
+        <span class="c1"># blending is how to weight the mix of colors, similar to an alpha channel</span>
+        <span class="n">blending</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">sum_img</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">colors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">channel_color</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+            <span class="n">blended_img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">channel_color</span> <span class="o">*</span> <span class="n">relative_img</span> <span class="o">*</span> <span class="n">blending</span>
+
+    <span class="k">return</span> <span class="n">blended_img</span>
 
 
-<div class="viewcode-block" id="color_multichannel"><a class="viewcode-back" href="../../viz.html#valis.viz.color_multichannel">[docs]</a><span class="k">def</span> <span class="nf">color_multichannel</span><span class="p">(</span><span class="n">multichannel_img</span><span class="p">,</span> <span class="n">marker_colors</span><span class="p">,</span> <span class="n">rescale_channels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalize_by</span><span class="o">=</span><span class="s2">&quot;channel&quot;</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="s2">&quot;CAM16UCS&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="color_multichannel"><a class="viewcode-back" href="../../viz.html#valis.viz.color_multichannel">[docs]</a><span class="k">def</span> <span class="nf">color_multichannel</span><span class="p">(</span><span class="n">multichannel_img</span><span class="p">,</span> <span class="n">marker_colors</span><span class="p">,</span> <span class="n">rescale_channels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalize_by</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="s2">&quot;Hunter Lab&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Color a multichannel image to view as RGB</span>
 
 <span class="sd">    Parameters</span>
@@ -579,64 +712,67 @@
 <span class="sd">        Image to color</span>
 
 <span class="sd">    marker_colors : ndarray</span>
-<span class="sd">        RGB colors for each channel. These RGB values are between 0-1, not 0-255</span>
+<span class="sd">        sRGB colors for each channel.</span>
 
 <span class="sd">    rescale_channels : bool</span>
-<span class="sd">        If True, then each channel will be scaled between 0 and 1 before building the composite RGB image. This will</span>
-<span class="sd">        allow markers to &#39;pop&#39; in areas where they are expressed in isolation, but can also make it appear more marker</span>
-<span class="sd">        is expressed than there really is.</span>
+<span class="sd">        If True, then each channel will be scaled between 0 and 1 before</span>
+<span class="sd">        building the composite RGB image. This will allow markers to &#39;pop&#39;</span>
+<span class="sd">        in areas where they are expressed in isolation, but can also make</span>
+<span class="sd">        it appear more marker is expressed than there really is.</span>
 
 <span class="sd">    normalize_by : str, optionaal</span>
-<span class="sd">        &quot;image&quot; will produce an image where all values are scaled between 0 and the highest intensity in the composite image.</span>
-<span class="sd">        This will produce an image where one can see the expression of each marker relative to the others, making it easier to</span>
-<span class="sd">        compare marker expression levels.</span>
+<span class="sd">        &quot;image&quot; will produce an image where all values are scaled between</span>
+<span class="sd">        0 and the highest intensity in the composite image. This will produce</span>
+<span class="sd">        an image where one can see the expression of each marker relative to</span>
+<span class="sd">        the others, making it easier to compare marker expression levels.</span>
 
-<span class="sd">        &quot;channel&quot; will first scale the intensity of each channel, and then blend all of the channels together. This will allow</span>
-<span class="sd">        one to see the relative expression of each marker, but won&#39;t allow one to directly compare the expression of markers</span>
-<span class="sd">        across channels.</span>
+<span class="sd">        &quot;channel&quot; will first scale the intensity of each channel, and then</span>
+<span class="sd">        blend all of the channels together. This will allow one to see the</span>
+<span class="sd">        relative expression of each marker, but won&#39;t allow one to directly</span>
+<span class="sd">        compare the expression of markers across channels.</span>
 
 <span class="sd">    cspace : str</span>
 <span class="sd">        Colorspace in which `marker_colors` will be blended.</span>
-<span class="sd">        See the &quot;color-science&quot; package for details.</span>
+<span class="sd">        JzAzBz, Hunter Lab, and sRGB all work well. But, see</span>
+<span class="sd">        colour.COLOURSPACE_MODELS for other possible colorspaces</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    rgb : ndarray</span>
-<span class="sd">        An RGB version of `multichannel_img`</span>
+<span class="sd">        An sRGB version of `multichannel_img`</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">rescale_channels</span><span class="p">:</span>
         <span class="n">multichannel_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">exposure</span><span class="o">.</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">multichannel_img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">in_range</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="n">out_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">multichannel_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])])</span>
 
-    <span class="k">with</span> <span class="n">colour</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">(</span><span class="n">colour_usage_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">marker_colors</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">255</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">marker_colors</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
-            <span class="n">jab_colors</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">marker_colors</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="s1">&#39;sRGB&#39;</span><span class="p">,</span> <span class="n">cspace</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">jab_colors</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">marker_colors</span><span class="p">,</span> <span class="s1">&#39;sRGB&#39;</span><span class="p">,</span> <span class="n">cspace</span><span class="p">)</span>
+    <span class="n">is_srgb</span> <span class="o">=</span> <span class="n">cspace</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;srgb&quot;</span>
+    <span class="n">is_srgb_01</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">marker_colors</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">255</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">marker_colors</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="n">srgb_01</span> <span class="o">=</span> <span class="n">marker_colors</span><span class="o">/</span><span class="mi">255</span>
+        <span class="n">is_srgb_01</span> <span class="o">=</span> <span class="kc">False</span>
 
-
-    <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">get_AB</span><span class="p">(</span><span class="n">multichannel_img</span><span class="p">,</span> <span class="n">jab_colors</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">jab_colors</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-
-    <span class="k">if</span> <span class="n">multichannel_img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">normalize_by</span> <span class="o">==</span> <span class="s2">&quot;channel&quot;</span><span class="p">:</span>
-            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">multichannel_img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">normalize_by</span> <span class="o">==</span> <span class="s2">&quot;image&quot;</span><span class="p">:</span>
-            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">multichannel_img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="n">multichannel_img</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-    <span class="n">J</span> <span class="o">=</span> <span class="n">J</span><span class="o">/</span><span class="n">J</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">cspace</span> <span class="o">==</span> <span class="s2">&quot;JzAzBz&quot;</span><span class="p">:</span>
-        <span class="n">J</span><span class="o">*=</span> <span class="mf">0.01</span>
-
+        <span class="n">srgb_01</span> <span class="o">=</span> <span class="n">marker_colors</span>
     <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
-    <span class="k">with</span> <span class="n">colour</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">(</span><span class="n">colour_usage_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="n">rgb</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">J</span><span class="p">,</span> <span class="n">A</span><span class="o">+</span><span class="n">eps</span><span class="p">,</span> <span class="n">B</span><span class="o">+</span><span class="n">eps</span><span class="p">]),</span> <span class="n">cspace</span><span class="p">,</span> <span class="s1">&#39;sRGB&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_srgb</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">colour</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">(</span><span class="n">colour_usage_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">cspace_colors</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">srgb_01</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span> <span class="s1">&#39;sRGB&#39;</span><span class="p">,</span> <span class="n">cspace</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cspace_colors</span> <span class="o">=</span> <span class="n">srgb_01</span>
 
-    <span class="n">rgb</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">blended_img</span> <span class="o">=</span> <span class="n">blend_colors</span><span class="p">(</span><span class="n">multichannel_img</span><span class="p">,</span> <span class="n">cspace_colors</span><span class="p">,</span> <span class="n">normalize_by</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_srgb</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">colour</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">suppress_warnings</span><span class="p">(</span><span class="n">colour_usage_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">srgb_blended</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">blended_img</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span> <span class="n">cspace</span><span class="p">,</span> <span class="s1">&#39;sRGB&#39;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">eps</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">srgb_blended</span> <span class="o">=</span> <span class="n">blended_img</span>
 
-    <span class="k">return</span> <span class="n">rgb</span></div>
+    <span class="n">srgb_blended</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">srgb_blended</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_srgb_01</span><span class="p">:</span>
+        <span class="n">srgb_blended</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">srgb_blended</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">marker_colors</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">srgb_blended</span></div>
 
 
 <div class="viewcode-block" id="color_dxdy"><a class="viewcode-back" href="../../viz.html#valis.viz.color_dxdy">[docs]</a><span class="k">def</span> <span class="nf">color_dxdy</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">c_range</span><span class="o">=</span><span class="n">DXDY_CRANGE</span><span class="p">,</span> <span class="n">l_range</span><span class="o">=</span><span class="n">DXDY_LRANGE</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="n">DXDY_CSPACE</span><span class="p">):</span>
@@ -760,7 +896,6 @@
 
     <span class="n">grid_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">warped_hcl</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
-
     <span class="k">return</span> <span class="n">grid_img</span></div>
 
 
@@ -784,7 +919,7 @@
 
 
 
-<div class="viewcode-block" id="color_displacement_tri_grid"><a class="viewcode-back" href="../../viz.html#valis.viz.color_displacement_tri_grid">[docs]</a><span class="k">def</span> <span class="nf">color_displacement_tri_grid</span><span class="p">(</span><span class="n">bk_dx</span><span class="p">,</span> <span class="n">bk_dy</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_grid_pts</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">c_range</span><span class="o">=</span><span class="n">DXDY_CRANGE</span><span class="p">,</span> <span class="n">l_range</span><span class="o">=</span><span class="n">DXDY_LRANGE</span><span class="p">,</span>  <span class="n">thickness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="n">DXDY_CSPACE</span><span class="p">):</span>
+<div class="viewcode-block" id="color_displacement_tri_grid"><a class="viewcode-back" href="../../viz.html#valis.viz.color_displacement_tri_grid">[docs]</a><span class="k">def</span> <span class="nf">color_displacement_tri_grid</span><span class="p">(</span><span class="n">bk_dx</span><span class="p">,</span> <span class="n">bk_dy</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_grid_pts</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">c_range</span><span class="o">=</span><span class="n">DXDY_CRANGE</span><span class="p">,</span> <span class="n">l_range</span><span class="o">=</span><span class="n">DXDY_LRANGE</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cspace</span><span class="o">=</span><span class="n">DXDY_CSPACE</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;View how a displacement warps a triangular mesh.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 

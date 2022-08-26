@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Registration &mdash; valis &#34;1.0.0rc5&#34;
+  <title>Registration &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -94,8 +94,11 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Registration</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#valis">Valis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#slide">Slide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-valis.registration">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#valis">Valis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#slide">Slide</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="slide_io.html">Slide I/O</a></li>
@@ -176,11 +179,43 @@
             
   <section id="registration">
 <h1>Registration<a class="headerlink" href="#registration" title="Permalink to this headline">¶</a></h1>
+<section id="module-valis.registration">
+<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-valis.registration" title="Permalink to this headline">¶</a></h2>
+<p>Classes and functions to register a collection of images</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="valis.registration.init_jvm">
+<span class="sig-prename descclassname"><span class="pre">valis.registration.</span></span><span class="sig-name descname"><span class="pre">init_jvm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#init_jvm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.init_jvm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize JVM for BioFormats</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valis.registration.kill_jvm">
+<span class="sig-prename descclassname"><span class="pre">valis.registration.</span></span><span class="sig-name descname"><span class="pre">kill_jvm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#kill_jvm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.kill_jvm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kill JVM for BioFormats</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valis.registration.load_registrar">
+<span class="sig-prename descclassname"><span class="pre">valis.registration.</span></span><span class="sig-name descname"><span class="pre">load_registrar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#load_registrar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.load_registrar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a Valis object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>src_f</strong> (<em>string</em>) – Path to pickled Valis object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>registrar</strong> – Valis object used for registration</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#valis.registration.Valis" title="valis.registration.Valis">Valis</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <section id="valis">
-<h2>Valis<a class="headerlink" href="#valis" title="Permalink to this headline">¶</a></h2>
+<h3>Valis<a class="headerlink" href="#valis" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="valis.registration.Valis">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.registration.</span></span><span class="sig-name descname"><span class="pre">Valis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_detector_cls=&lt;class</span> <span class="pre">'valis.feature_detectors.VggFD'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_cls=&lt;class</span> <span class="pre">'skimage.transform._geometric.SimilarityTransform'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine_optimizer_cls=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_metric='n_matches'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_filter_method='RANSAC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_registrar_cls=&lt;class</span> <span class="pre">'valis.non_rigid_registrars.OpticalFlowWarper'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_list=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution_xyu=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slide_dims_dict_wh=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_processed_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thumbnail_size=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_method='img_stats'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qt_emitter=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Valis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Valis" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.registration.</span></span><span class="sig-name descname"><span class="pre">Valis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_detector_cls=&lt;class</span> <span class="pre">'valis.feature_detectors.VggFD'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_cls=&lt;class</span> <span class="pre">'skimage.transform._geometric.SimilarityTransform'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine_optimizer_cls=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_metric='n_matches'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_filter_method='RANSAC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_registrar_cls=&lt;class</span> <span class="pre">'valis.non_rigid_registrars.OpticalFlowWarper'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compose_non_rigid=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_list=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to_reference=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_rigid=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_masks=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution_xyu=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slide_dims_dict_wh=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_processed_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_non_rigid_registartion_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thumbnail_size=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_method='img_stats'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qt_emitter=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Valis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Valis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads, registers, and saves a series of slides/images</p>
 <p>Implements the registration pipeline described in
 “VALIS: Virtual Alignment of pathoLogy Image Series” by Gatenbee et al.
@@ -417,6 +452,19 @@ the <cite>img_obj_list</cite> has been sorted during rigid registration.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Valis.align_to_reference">
+<span class="sig-name descname"><span class="pre">align_to_reference</span></span><a class="headerlink" href="#valis.registration.Valis.align_to_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not images should be aligne to a reference image
+specified by <cite>reference_img_f</cite>. Will be set to True if
+<cite>reference_img_f</cite> is provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="valis.registration.Valis.crop">
 <span class="sig-name descname"><span class="pre">crop</span></span><a class="headerlink" href="#valis.registration.Valis.crop" title="Permalink to this definition">¶</a></dt>
 <dd><p>How to crop the registered images.</p>
@@ -624,6 +672,17 @@ have single images spread across multiple files. An example would be
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Valis.target_processing_stats">
+<span class="sig-name descname"><span class="pre">target_processing_stats</span></span><a class="headerlink" href="#valis.registration.Valis.target_processing_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of processed images’ stats used to normalize all images</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="valis.registration.Valis.summary_df">
 <span class="sig-name descname"><span class="pre">summary_df</span></span><a class="headerlink" href="#valis.registration.Valis.summary_df" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pandas dataframe containing information about the results, such
@@ -714,7 +773,7 @@ to create a high dimensional ome.tiff slide</p>
 <p>View ome.tiff, located at merged_slide_dst_f</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.registration.Valis.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_detector_cls=&lt;class</span> <span class="pre">'valis.feature_detectors.VggFD'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_cls=&lt;class</span> <span class="pre">'skimage.transform._geometric.SimilarityTransform'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine_optimizer_cls=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_metric='n_matches'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_filter_method='RANSAC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_registrar_cls=&lt;class</span> <span class="pre">'valis.non_rigid_registrars.OpticalFlowWarper'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_list=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution_xyu=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slide_dims_dict_wh=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_processed_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thumbnail_size=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_method='img_stats'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qt_emitter=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Valis.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Valis.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_detector_cls=&lt;class</span> <span class="pre">'valis.feature_detectors.VggFD'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_cls=&lt;class</span> <span class="pre">'skimage.transform._geometric.SimilarityTransform'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine_optimizer_cls=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_metric='n_matches'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_filter_method='RANSAC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_registrar_cls=&lt;class</span> <span class="pre">'valis.non_rigid_registrars.OpticalFlowWarper'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compose_non_rigid=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_list=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to_reference=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_rigid=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_masks=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution_xyu=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slide_dims_dict_wh=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_processed_image_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_non_rigid_registartion_dim_px=850</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thumbnail_size=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_method='img_stats'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qt_emitter=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Valis.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Valis.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
 <dt>src_dir: str</dt><dd><p>Path to directory containing the slides that will be registered.</p>
 </dd>
@@ -763,6 +822,11 @@ matix. Default is False.</p>
 <dt>reference_img_f<span class="classifier">str, optional</span></dt><dd><p>Filename of image that will be treated as the center of the stack.
 If None, the index of the middle image will be the reference.</p>
 </dd>
+<dt>align_to_reference<span class="classifier">bool, optional</span></dt><dd><p>If <cite>False</cite>, images will be non-rigidly aligned serially towards the
+reference image. If <cite>True</cite>, images will be non-rigidly aligned
+directly to the reference image. If <cite>reference_img_f</cite> is None,
+then the reference image will be the one in the middle of the stack.</p>
+</dd>
 <dt>non_rigid_registrar_cls<span class="classifier">NonRigidRegistrar, optional</span></dt><dd><p>Uninstantiated NonRigidRegistrar class that will be used to
 calculate the deformation fields between images. See
 the <cite>non_rigid_registrars</cite> module for a desciption of available
@@ -778,6 +842,35 @@ converted to strings. See the NonRigidRegistrar classes in
 <cite>non_rigid_registrars</cite> for the available non-rigid registration
 methods and arguments.</p>
 </dd>
+<dt>compose_non_rigid<span class="classifier">bool, optional</span></dt><dd><p>Whether or not to compose non-rigid transformations. If <cite>True</cite>,
+then an image is non-rigidly warped before aligning to the
+adjacent non-rigidly aligned image. This allows the transformations
+to accumulate, which may bring distant features together but could
+also  result  in un-wanted deformations, particularly around the edges.
+If <cite>False</cite>, the image not warped before being aaligned to the adjacent
+non-rigidly aligned image. This can reduce unwanted deformations, but
+may not bring distant features together.</p>
+</dd>
+<dt>do_rigid: bool, dictionary, optional</dt><dd><p>Whether or not to perform rigid registration. If <cite>False</cite>, rigid
+registration will be skipped.</p>
+<p>If <cite>do_rigid</cite> is a dictionary, it should contain inverse transformation
+matrices to rigidly align images to the specificed by <cite>reference_img_f</cite>.
+M will be estimated for images that are not in the dictionary.
+Each key is the filename of the image associated with the transformation matrix,
+and value is a dictionary containing the following values:</p>
+<blockquote>
+<div><dl class="simple">
+<dt><cite>M</cite><span class="classifier">(required) a 3x3 inverse transformation matrix as a numpy array.</span></dt><dd><p>Found by determining how to align fixed to moving.
+If <cite>M</cite> was found by determining how to align moving to fixed,
+then <cite>M</cite> will need to be inverted first.</p>
+</dd>
+<dt><cite>transformation_src_shape_rc</cite><span class="classifier">(optional) shape (row, col) of image used to find the rigid transformation.</span></dt><dd><p>If not provided, then it is assumed to be the shape of the level 0 slide</p>
+</dd>
+<dt><cite>transformation_dst_shape_rc</cite><span class="classifier">(optional) shape of registered image.</span></dt><dd><p>If not provided, this is assumed to be the shape of the level 0 reference slide.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
 <dt>crop: str, optional</dt><dd><p>How to crop the registered images. “overlap” will crop to include
 only areas where all images overlapped. “reference” crops to the
 area that overlaps with a reference image, defined by
@@ -787,6 +880,10 @@ of the stack.</p>
 <p>If both <cite>crop</cite> and <cite>reference_img_f</cite> are <cite>None</cite>, <cite>crop</cite>
 will be set to “overlap”. If <cite>crop</cite> is None, but <cite>reference_img_f</cite>
 is defined, then <cite>crop</cite> will be set to “reference”.</p>
+</dd>
+<dt>create_masks<span class="classifier">bool, optional</span></dt><dd><p>Whether or not to create and apply masks for registration.
+Can help focus alignment on the tissue, but can sometimes
+mask too much if there is a lot of variation in the image.</p>
 </dd>
 <dt>resolution_xyu: tuple, optional</dt><dd><p>Physical size per pixel and the unit. If None (the default), these
 values will be determined for each slide using the slides’ metadata.
@@ -808,6 +905,11 @@ This limit is mostly to keep memory in check.</p>
 parameter, as it determines the size of of the image in which
 features will be detected and displacement fields computed.</p>
 </dd>
+<dt>max_non_rigid_registartion_dim_px<span class="classifier">int, optional</span></dt><dd><p>Maximum width or height of images used for non-rigid registration.
+Larger values may yeild more accurate results, at the expense of
+speed and memory. There is also a practical limit, as the specified
+size may be too large to fit in memory.</p>
+</dd>
 <dt>mask_dict<span class="classifier">dictionary</span></dt><dd><p>Dictionary where key = overlap type (all, overlap, or reference), and
 value = (mask, mask_bbox_xywh)</p>
 </dd>
@@ -817,6 +919,11 @@ value = (mask, mask_bbox_xywh)</p>
 are “histo_match” for histogram matching, “img_stats” for normalizing by
 image statistics. See preprocessing.match_histograms
 and preprocessing.norm_khan for details.</p>
+</dd>
+<dt>_non_rigid_bbox<span class="classifier">list</span></dt><dd><p>Bounding box of area in which non-rigid registration was conducted</p>
+</dd>
+<dt>_full_displacement_shape_rc<span class="classifier">tuple</span></dt><dd><p>Shape of full displacement field. Would be larger than <cite>_non_rigid_bbox</cite>
+if non-rigid registration only performed in a masked region</p>
 </dd>
 <dt>qt_emitter<span class="classifier">PySide2.QtCore.Signal, optional</span></dt><dd><p>Used to emit signals that update the GUI’s progress bars</p>
 </dd>
@@ -879,12 +986,12 @@ later be opened (unpickled) and used to warp slides and/or point data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>brightfield_processing_fxn</strong> (<em>callable</em>) – Function to pre-process brightfield images to make them look as similar as possible.
-Should return a single channel uint8 image.</p></li>
-<li><p><strong>brightfield_processing_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Dictionary of keyward arguments to be passed to <cite>ihc_processing_fxn</cite></p></li>
-<li><p><strong>if_processing_fxn</strong> (<em>callable</em>) – Function to pre-process immunofluorescent images to make them look as similar as possible.
-Should return a single channel uint8 image.</p></li>
-<li><p><strong>if_processing_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Dictionary of keyward arguments to be passed to <cite>if_processing_fxn</cite></p></li>
+<li><p><strong>brightfield_processing_cls</strong> (<a class="reference internal" href="preprocessing.html#valis.preprocessing.ImageProcesser" title="valis.preprocessing.ImageProcesser"><em>preprocessing.ImageProcesser</em></a>) – preprocessing.ImageProcesser used to pre-process brightfield images to make
+them look as similar as possible.</p></li>
+<li><p><strong>brightfield_processing_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Dictionary of keyward arguments to be passed to <cite>brightfield_processing_cls</cite></p></li>
+<li><p><strong>if_processing_cls</strong> (<a class="reference internal" href="preprocessing.html#valis.preprocessing.ImageProcesser" title="valis.preprocessing.ImageProcesser"><em>preprocessing.ImageProcesser</em></a>) – preprocessing.ImageProcesser used to pre-process immunofluorescent images
+to make them look as similar as possible.</p></li>
+<li><p><strong>if_processing_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Dictionary of keyward arguments to be passed to <cite>if_processing_cls</cite></p></li>
 <li><p><strong>reader_cls</strong> (<a class="reference internal" href="slide_io.html#valis.slide_io.SlideReader" title="valis.slide_io.SlideReader"><em>SlideReader</em></a><em>, </em><em>optional</em>) – Uninstantiated SlideReader class that will convert
 the slide to an image, and also collect metadata. If None (the default),
 the appropriate SlideReader will be found by <cite>slide_io.get_slide_reader</cite>.
@@ -984,7 +1091,7 @@ will only contain unique channels.</p></li>
 
 </section>
 <section id="slide">
-<h2>Slide<a class="headerlink" href="#slide" title="Permalink to this headline">¶</a></h2>
+<h3>Slide<a class="headerlink" href="#slide" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="valis.registration.Slide">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.registration.</span></span><span class="sig-name descname"><span class="pre">Slide</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Slide"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Slide" title="Permalink to this definition">¶</a></dt>
@@ -1141,6 +1248,41 @@ of (row, col).</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide.processed_img">
+<span class="sig-name descname"><span class="pre">processed_img</span></span><a class="headerlink" href="#valis.registration.Slide.processed_img" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image used to perform registration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide.rigid_reg_mask">
+<span class="sig-name descname"><span class="pre">rigid_reg_mask</span></span><a class="headerlink" href="#valis.registration.Slide.rigid_reg_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mask of convex hulls covering tissue in unregistered image.
+Could be used to mask <cite>processed_img</cite> before rigid registration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide.non_rigid_reg_mask">
+<span class="sig-name descname"><span class="pre">non_rigid_reg_mask</span></span><a class="headerlink" href="#valis.registration.Slide.non_rigid_reg_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Created by combining rigidly warped <cite>rigid_reg_mask</cite> in all
+other slides.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="valis.registration.Slide.stack_idx">
 <span class="sig-name descname"><span class="pre">stack_idx</span></span><a class="headerlink" href="#valis.registration.Slide.stack_idx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Position of image in sorted Z-stack</p>
@@ -1255,6 +1397,64 @@ processed image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide._bk_dxdy_f">
+<span class="sig-name descname"><span class="pre">_bk_dxdy_f</span></span><a class="headerlink" href="#valis.registration.Slide._bk_dxdy_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to file containing bk_dxdy, if saved</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide._fwd_dxdy_f">
+<span class="sig-name descname"><span class="pre">_fwd_dxdy_f</span></span><a class="headerlink" href="#valis.registration.Slide._fwd_dxdy_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to file containing fwd_dxdy, if saved</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide._bk_dxdy_np">
+<span class="sig-name descname"><span class="pre">_bk_dxdy_np</span></span><a class="headerlink" href="#valis.registration.Slide._bk_dxdy_np" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>bk_dxdy</cite> as a numpy array. Only not None if <cite>bk_dxdy</cite> becomes
+associated with a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide._fwd_dxdy_np">
+<span class="sig-name descname"><span class="pre">_fwd_dxdy_np</span></span><a class="headerlink" href="#valis.registration.Slide._fwd_dxdy_np" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>fwd_dxdy</cite> as a numpy array. Only not None if <cite>fwd_dxdy</cite> becomes
+associated with a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valis.registration.Slide.stored_dxdy">
+<span class="sig-name descname"><span class="pre">stored_dxdy</span></span><a class="headerlink" href="#valis.registration.Slide.stored_dxdy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not the non-rigid displacements are saved in a file
+Should only occur if image is very large.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1451,7 +1651,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.registration.Slide.warp_img">
-<span class="sig-name descname"><span class="pre">warp_img</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Slide.warp_img"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Slide.warp_img" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">warp_img</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bicubic'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Slide.warp_img"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Slide.warp_img" title="Permalink to this definition">¶</a></dt>
 <dd><p>Warp an image using the registration parameters</p>
 <dl class="simple">
 <dt>img<span class="classifier">ndarray, optional</span></dt><dd><p>The image to be warped. If None, then Slide.image
@@ -1466,6 +1666,8 @@ image will not be cropped. If “overlap”, the warped slide will be
 cropped to include only areas where all images overlapped.
 “reference” crops to the area that overlaps with the reference image,
 defined by <cite>reference_img_f</cite> when initialzing the <cite>Valis object</cite>.</p>
+</dd>
+<dt>interp_method<span class="classifier">str</span></dt><dd><p>Interpolation method used when warping slide. Default is “bicubic”</p>
 </dd>
 </dl>
 <dl class="field-list simple">
@@ -1514,7 +1716,7 @@ processing (e.g. stain segmentation), has a mask applied, etc…</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>xy</strong> (<em>ndarray</em>) – (N, 2) array of points to be warped. Must be x,y coordinates</p></li>
 <li><p><strong>slide_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – Pyramid level of the slide. Used to scale transformation matrices.
-Can also be the shape of the unwarped image (row, col) into which
+Can also be the shape of the warped image (row, col) into which
 the points should be warped. Default is 0.</p></li>
 <li><p><strong>pt_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – Pyramid level from which the points origingated. For example, if
 <cite>xy</cite> are from the centroids of cell segmentation performed on the
@@ -1543,7 +1745,7 @@ defined by <cite>reference_img_f</cite> when initialzing the <cite>Valis object<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.registration.Slide.warp_xy_from_to">
-<span class="sig-name descname"><span class="pre">warp_xy_from_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_slide_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_pt_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_slide_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Slide.warp_xy_from_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Slide.warp_xy_from_to" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">warp_xy_from_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_slide_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_slide_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_pt_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_slide_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/registration.html#Slide.warp_xy_from_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.registration.Slide.warp_xy_from_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Warp points from this slide to another unwarped slide</p>
 <p>Takes a set of points found in this unwarped slide, and warps them to
 their position in the unwarped “to” slide.</p>
@@ -1575,6 +1777,7 @@ then only a rigid transformation will be applied.</p></li>
 
 </dd></dl>
 
+</section>
 </section>
 </section>
 

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.serial_rigid &mdash; valis &#34;1.0.0rc5&#34;
+  <title>valis.serial_rigid &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -535,6 +535,11 @@
 <span class="sd">        Index of ZImage that corresponds to `reference_img_f`, after</span>
 <span class="sd">        the `img_obj_list` has been sorted.</span>
 
+<span class="sd">    align_to_reference : bool, optional</span>
+<span class="sd">        Whether or not images should be aligne to a reference image</span>
+<span class="sd">        specified by `reference_img_f`. Will be set to True if</span>
+<span class="sd">        `reference_img_f` is provided.</span>
+
 <span class="sd">    iter_order : list of tuples</span>
 <span class="sd">        Each element of `iter_order` contains a tuple of stack</span>
 <span class="sd">        indices. The first value is the index of the moving/current/from</span>
@@ -547,7 +552,8 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SerialRigidRegistrar.__init__"><a class="viewcode-back" href="../../serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_dir</span><span class="p">,</span> <span class="n">imgs_ordered</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reference_img_f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SerialRigidRegistrar.__init__"><a class="viewcode-back" href="../../serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_dir</span><span class="p">,</span> <span class="n">imgs_ordered</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reference_img_f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">align_to_reference</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Class that performs serial rigid registration</span>
 
 <span class="sd">        Parameters</span>
@@ -574,8 +580,12 @@
 <span class="sd">        name : str, optional</span>
 <span class="sd">            Descriptive name of registrar, such as the sample&#39;s name</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        align_to_reference : bool, optional</span>
+<span class="sd">            Whether or not images should be aligne to a reference image</span>
+<span class="sd">            specified by `reference_img_f`. Will be set to True if</span>
+<span class="sd">            `reference_img_f` is provided.</span>
 
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">img_dir</span> <span class="o">=</span> <span class="n">img_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aleady_sorted</span> <span class="o">=</span> <span class="n">imgs_ordered</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -595,9 +605,19 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">reference_img_f</span> <span class="o">=</span> <span class="n">reference_img_f</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reference_img_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">align_to_reference</span> <span class="o">=</span> <span class="n">align_to_reference</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iter_order</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_to_reference</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">reference_img_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">og_ref_name</span> <span class="o">=</span> <span class="n">valtils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">reference_img_f</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The reference was specified as </span><span class="si">{</span><span class="n">og_ref_name</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">,</span>
+                   <span class="sa">f</span><span class="s2">&quot;but `align_to_reference` is `False`, and so images will be aligned serially. &quot;</span><span class="p">,</span>
+                   <span class="sa">f</span><span class="s2">&quot;If you would like all images to be directly aligned to </span><span class="si">{</span><span class="n">og_ref_name</span><span class="si">}</span><span class="s2">, &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;then set `align_to_reference` to `True`&quot;</span><span class="p">)</span>
+            <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
 
 
     <span class="k">def</span> <span class="nf">generate_img_obj_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_detector</span><span class="p">,</span> <span class="n">qt_emitter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -762,6 +782,52 @@
         <span class="k">with</span> <span class="n">parallel_backend</span><span class="p">(</span><span class="s2">&quot;threading&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_cpu</span><span class="p">):</span>
             <span class="n">Parallel</span><span class="p">()(</span><span class="n">delayed</span><span class="p">(</span><span class="n">match_img_obj</span><span class="p">)(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
 
+    <span class="k">def</span> <span class="nf">get_neighbor_matches_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_obj</span><span class="p">,</span> <span class="n">prev_img_obj</span><span class="p">,</span> <span class="n">next_img_obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get indices of features found in both neighbors</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nf_prev_idx</span>
+
+<span class="sd">        nf_next_idx</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">xy_to_prev</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">prev_img_obj</span><span class="p">]</span><span class="o">.</span><span class="n">matched_kp1_xy</span>
+        <span class="n">xy_to_next</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">next_img_obj</span><span class="p">]</span><span class="o">.</span><span class="n">matched_kp1_xy</span>
+
+        <span class="n">xy_to_prev_idx</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">index2d_to_1d</span><span class="p">(</span><span class="n">xy_to_prev</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xy_to_prev</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">xy_to_next_idx</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">index2d_to_1d</span><span class="p">(</span><span class="n">xy_to_next</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xy_to_next</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">shared_pts</span><span class="p">,</span> <span class="n">nf_prev_idx</span><span class="p">,</span> <span class="n">nf_next_idx</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="n">xy_to_prev_idx</span><span class="p">,</span> <span class="n">xy_to_next_idx</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># assert np.all(xy_to_prev[nf_prev_idx, :] == xy_to_next[nf_next_idx, :])</span>
+
+        <span class="c1">#trying to remove diff features if they are different... (possible due to some very rare rounding errors?)</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">xy_to_prev</span><span class="p">[</span><span class="n">nf_prev_idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">!=</span> <span class="n">xy_to_next</span><span class="p">[</span><span class="n">nf_next_idx</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="k">if</span> <span class="n">diff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">nf_prev_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">nf_prev_idx</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span>
+            <span class="n">nf_next_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">nf_next_idx</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">nf_prev_idx</span><span class="p">,</span> <span class="n">nf_next_idx</span>
+
+
+    <span class="k">def</span> <span class="nf">get_common_desc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_img_obj</span><span class="p">,</span> <span class="n">neighbor_obj</span><span class="p">,</span> <span class="n">nf_kp_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get descriptors that correspond to filtered neighbor points</span>
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            nf_kp_idx : ndarray</span>
+<span class="sd">                Indicies of already matched keypoints that were found after</span>
+<span class="sd">                neighbonr filtering</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">neighbor_match_info12</span> <span class="o">=</span> <span class="n">current_img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">neighbor_obj</span><span class="p">]</span>
+        <span class="n">nf_kp</span> <span class="o">=</span> <span class="n">neighbor_match_info12</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">[</span><span class="n">nf_kp_idx</span><span class="p">]</span>
+        <span class="n">nf_desc</span> <span class="o">=</span> <span class="n">neighbor_match_info12</span><span class="o">.</span><span class="n">matched_desc1</span><span class="p">[</span><span class="n">nf_kp_idx</span><span class="p">]</span>
+
+        <span class="k">return</span>  <span class="n">nf_desc</span><span class="p">,</span> <span class="n">nf_kp</span>
+
     <span class="k">def</span> <span class="nf">neighbor_match_filtering</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_obj</span><span class="p">,</span> <span class="n">prev_img_obj</span><span class="p">,</span> <span class="n">next_img_obj</span><span class="p">,</span>
                                  <span class="n">tform</span><span class="p">,</span> <span class="n">matcher_obj</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Remove poor matches by keeping only the matches found in neighbors</span>
@@ -808,73 +874,68 @@
             <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">tform</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">dst_xy</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">src_xy</span><span class="p">)</span>
                 <span class="n">M</span> <span class="o">=</span> <span class="n">tform</span><span class="o">.</span><span class="n">params</span>
-            <span class="n">warped_xy</span> <span class="o">=</span> <span class="n">tform</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">src_xy</span><span class="p">)</span>
-            <span class="n">dxdy</span> <span class="o">=</span> <span class="n">dst_xy</span> <span class="o">-</span> <span class="n">warped_xy</span>
-            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dxdy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dxdy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">warped_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">src_xy</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">warp_tools</span><span class="o">.</span><span class="n">calc_d</span><span class="p">(</span><span class="n">warped_xy</span><span class="p">,</span>  <span class="n">dst_xy</span><span class="p">))</span>
 
             <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">M</span>
 
+
+        <span class="n">nf_prev_idx</span><span class="p">,</span> <span class="n">nf_next_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighbor_matches_idx</span><span class="p">(</span><span class="n">img_obj</span><span class="p">,</span> <span class="n">prev_img_obj</span><span class="p">,</span> <span class="n">next_img_obj</span><span class="p">)</span>
         <span class="n">to_prev_match_info12</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">prev_img_obj</span><span class="p">]</span>
         <span class="n">to_next_match_info12</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">next_img_obj</span><span class="p">]</span>
 
-        <span class="n">common_neighbor_matches</span> <span class="o">=</span> \
-            <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matches12</span><span class="p">,</span>
-                           <span class="n">to_next_match_info12</span><span class="o">.</span><span class="n">matches12</span><span class="p">)</span>
         <span class="n">improved</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_neighbor_matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="c1"># Want at least 4 matches to estimate transformation</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nf_prev_idx</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># Need at least 3 points for an affine transform</span>
 
-            <span class="n">to_prev_match_info12_l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matches12</span><span class="p">)</span>
-            <span class="n">matches_idx_in_prev</span> <span class="o">=</span> \
-                <span class="p">[</span><span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matches21</span><span class="p">[</span><span class="n">to_prev_match_info12_l</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span>
-                <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">common_neighbor_matches</span><span class="p">]</span>
+            <span class="n">common_kp</span> <span class="o">=</span> <span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">[</span><span class="n">nf_prev_idx</span><span class="p">]</span>
+            <span class="n">_common_kp</span> <span class="o">=</span> <span class="n">to_next_match_info12</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">[</span><span class="n">nf_next_idx</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">common_kp</span> <span class="o">==</span> <span class="n">_common_kp</span><span class="p">)</span>
 
-            <span class="n">to_next_match_info12_l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">to_next_match_info12</span><span class="o">.</span><span class="n">matches12</span><span class="p">)</span>
-            <span class="n">matches_idx_in_next</span> <span class="o">=</span> \
-                <span class="p">[</span><span class="n">to_next_match_info12</span><span class="o">.</span><span class="n">matches21</span><span class="p">[</span><span class="n">to_next_match_info12_l</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span>
-                <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">common_neighbor_matches</span><span class="p">]</span>
-
-            <span class="n">common_kp</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">kp_pos_xy</span><span class="p">[</span><span class="n">common_neighbor_matches</span><span class="p">]</span>
-            <span class="n">common_desc</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">desc</span><span class="p">[</span><span class="n">common_neighbor_matches</span><span class="p">]</span>
-
-            <span class="n">common_prev_kp</span> <span class="o">=</span> <span class="n">prev_img_obj</span><span class="o">.</span><span class="n">kp_pos_xy</span><span class="p">[</span><span class="n">matches_idx_in_prev</span><span class="p">]</span>
-            <span class="n">common_prev_desc</span> <span class="o">=</span> <span class="n">prev_img_obj</span><span class="o">.</span><span class="n">desc</span><span class="p">[</span><span class="n">matches_idx_in_prev</span><span class="p">]</span>
-
-            <span class="n">common_next_kp</span> <span class="o">=</span> <span class="n">next_img_obj</span><span class="o">.</span><span class="n">kp_pos_xy</span><span class="p">[</span><span class="n">matches_idx_in_next</span><span class="p">]</span>
-            <span class="n">common_next_desc</span> <span class="o">=</span> <span class="n">next_img_obj</span><span class="o">.</span><span class="n">desc</span><span class="p">[</span><span class="n">matches_idx_in_next</span><span class="p">]</span>
+            <span class="n">common_prev_kp</span> <span class="o">=</span> <span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matched_kp2_xy</span><span class="p">[</span><span class="n">nf_prev_idx</span><span class="p">]</span>
+            <span class="n">common_next_kp</span> <span class="o">=</span> <span class="n">to_next_match_info12</span><span class="o">.</span><span class="n">matched_kp2_xy</span><span class="p">[</span><span class="n">nf_next_idx</span><span class="p">]</span>
 
             <span class="n">common_matches_d</span><span class="p">,</span> <span class="n">common_matches_M</span> <span class="o">=</span> <span class="n">measure_d</span><span class="p">(</span><span class="n">common_kp</span><span class="p">,</span>
                                                            <span class="n">common_prev_kp</span><span class="p">,</span>
                                                            <span class="n">tform</span><span class="p">)</span>
 
-            <span class="n">original_to_prev_matches</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">prev_img_obj</span><span class="p">]</span>
-            <span class="n">original_d</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">measure_d</span><span class="p">(</span><span class="n">original_to_prev_matches</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
-                                      <span class="n">original_to_prev_matches</span><span class="o">.</span><span class="n">matched_kp2_xy</span><span class="p">,</span>
+            <span class="n">original_d</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">measure_d</span><span class="p">(</span><span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
+                                      <span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matched_kp2_xy</span><span class="p">,</span>
                                       <span class="n">tform</span><span class="p">)</span>
 
-            <span class="n">original_with_neighbor_filter_d</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">measure_d</span><span class="p">(</span><span class="n">original_to_prev_matches</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
-                                                           <span class="n">original_to_prev_matches</span><span class="o">.</span><span class="n">matched_kp2_xy</span><span class="p">,</span>
+            <span class="n">original_with_neighbor_filter_d</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">measure_d</span><span class="p">(</span><span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
+                                                           <span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matched_kp2_xy</span><span class="p">,</span>
                                                            <span class="n">tform</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">common_matches_M</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">common_matches_d</span> <span class="o">&lt;</span> <span class="n">original_d</span> <span class="ow">and</span> <span class="n">common_matches_d</span> <span class="o">&lt;</span> <span class="n">original_with_neighbor_filter_d</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">common_matches_d</span> <span class="o">&lt;</span> <span class="n">original_d</span> <span class="ow">and</span> <span class="n">original_with_neighbor_filter_d</span> <span class="o">&lt;=</span> <span class="n">original_d</span><span class="p">:</span>
                 <span class="c1"># neighbor filtering improved alignment</span>
                 <span class="n">improved</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="n">filtered_desc</span><span class="p">,</span> <span class="n">filtered_kp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_common_desc</span><span class="p">(</span><span class="n">img_obj</span><span class="p">,</span> <span class="n">prev_img_obj</span><span class="p">,</span> <span class="n">nf_prev_idx</span><span class="p">)</span>
+                <span class="n">_filtered_desc</span><span class="p">,</span> <span class="n">_filtered_kp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_common_desc</span><span class="p">(</span><span class="n">img_obj</span><span class="p">,</span> <span class="n">next_img_obj</span><span class="p">,</span> <span class="n">nf_next_idx</span><span class="p">)</span>
+
+                <span class="n">filtered_prev_desc</span><span class="p">,</span> <span class="n">filtered_prev_kp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_common_desc</span><span class="p">(</span><span class="n">prev_img_obj</span><span class="p">,</span> <span class="n">img_obj</span><span class="p">,</span> <span class="n">nf_prev_idx</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">common_prev_kp</span> <span class="o">==</span> <span class="n">filtered_prev_kp</span><span class="p">)</span>
+
+                <span class="n">filtered_next_desc</span><span class="p">,</span> <span class="n">filtered_next_kp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_common_desc</span><span class="p">(</span><span class="n">next_img_obj</span><span class="p">,</span> <span class="n">img_obj</span><span class="p">,</span> <span class="n">nf_next_idx</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">common_next_kp</span> <span class="o">==</span> <span class="n">filtered_next_kp</span><span class="p">)</span>
+
                 <span class="n">updated_prev_match_info12</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">updated_prev_match_info21</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> \
-                    <span class="n">matcher_obj</span><span class="o">.</span><span class="n">match_images</span><span class="p">(</span><span class="n">desc1</span><span class="o">=</span><span class="n">common_desc</span><span class="p">,</span>
-                                             <span class="n">kp1_xy</span><span class="o">=</span><span class="n">common_kp</span><span class="p">,</span>
-                                             <span class="n">desc2</span><span class="o">=</span><span class="n">common_prev_desc</span><span class="p">,</span>
-                                             <span class="n">kp2_xy</span><span class="o">=</span><span class="n">common_prev_kp</span><span class="p">)</span>
+                    <span class="n">matcher_obj</span><span class="o">.</span><span class="n">match_images</span><span class="p">(</span><span class="n">desc1</span><span class="o">=</span><span class="n">filtered_desc</span><span class="p">,</span>
+                                             <span class="n">kp1_xy</span><span class="o">=</span><span class="n">filtered_kp</span><span class="p">,</span>
+                                             <span class="n">desc2</span><span class="o">=</span><span class="n">filtered_prev_desc</span><span class="p">,</span>
+                                             <span class="n">kp2_xy</span><span class="o">=</span><span class="n">filtered_prev_kp</span><span class="p">)</span>
 
                 <span class="n">updated_next_match_info12</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">updated_next_match_info21</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> \
-                    <span class="n">matcher_obj</span><span class="o">.</span><span class="n">match_images</span><span class="p">(</span><span class="n">desc1</span><span class="o">=</span><span class="n">common_desc</span><span class="p">,</span>
-                                             <span class="n">kp1_xy</span><span class="o">=</span><span class="n">common_kp</span><span class="p">,</span>
-                                             <span class="n">desc2</span><span class="o">=</span><span class="n">common_next_desc</span><span class="p">,</span>
-                                             <span class="n">kp2_xy</span><span class="o">=</span><span class="n">common_next_kp</span><span class="p">)</span>
+                    <span class="n">matcher_obj</span><span class="o">.</span><span class="n">match_images</span><span class="p">(</span><span class="n">desc1</span><span class="o">=</span><span class="n">_filtered_desc</span><span class="p">,</span>
+                                             <span class="n">kp1_xy</span><span class="o">=</span><span class="n">_filtered_kp</span><span class="p">,</span>
+                                             <span class="n">desc2</span><span class="o">=</span><span class="n">filtered_next_desc</span><span class="p">,</span>
+                                             <span class="n">kp2_xy</span><span class="o">=</span><span class="n">filtered_next_kp</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">improved</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">improved</span><span class="p">,</span> <span class="n">updated_prev_match_info12</span><span class="p">,</span> <span class="n">updated_next_match_info12</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">improved</span><span class="p">,</span> <span class="n">to_prev_match_info12</span><span class="o">.</span><span class="n">matches12</span><span class="p">,</span> <span class="n">to_next_match_info12</span><span class="o">.</span><span class="n">matches12</span>
+            <span class="k">return</span> <span class="n">improved</span><span class="p">,</span> <span class="n">to_prev_match_info12</span><span class="p">,</span> <span class="n">to_next_match_info12</span>
 
     <span class="k">def</span> <span class="nf">update_match_dicts_with_neighbor_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tform</span><span class="p">,</span> <span class="n">matcher_obj</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Remove poor matches by keeping only the matches found in neighbors</span>
@@ -889,7 +950,7 @@
 <span class="sd">            Object to match features between images.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
+        <span class="n">new_matches</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -904,8 +965,22 @@
                                               <span class="n">next_img_obj</span><span class="p">,</span> <span class="n">tform</span><span class="p">,</span> <span class="n">matcher_obj</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">improved</span><span class="p">:</span>
-                <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">prev_img_obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_prev_match_info12</span>
-                <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">next_img_obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_next_match_info12</span>
+                <span class="n">new_matches</span><span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">updated_prev_match_info12</span><span class="p">,</span> <span class="n">updated_next_match_info12</span><span class="p">]</span>
+
+        <span class="c1"># Update matches</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">new_matches</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">prev_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">prev_img_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">[</span><span class="n">prev_idx</span><span class="p">]</span>
+
+            <span class="n">next_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">next_img_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">[</span><span class="n">next_idx</span><span class="p">]</span>
+
+            <span class="n">img_obj_new_matches</span> <span class="o">=</span> <span class="n">new_matches</span><span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">prev_img_obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_obj_new_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">next_img_obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_obj_new_matches</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
 
     <span class="k">def</span> <span class="nf">build_metric_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;n_matches&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create metric matrix based image similarity/distance</span>
@@ -1054,10 +1129,6 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ref_img_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_img_idx</span><span class="p">]</span>
-        <span class="c1"># ref_warped = transform.warp(ref_img_obj.image, ref_img_obj.T,</span>
-        <span class="c1">#                             output_shape=ref_img_obj.padded_shape_rc,</span>
-        <span class="c1">#                             preserve_range=True).astype(ref_img_obj.image.dtype)</span>
-
         <span class="n">ref_warped</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_img</span><span class="p">(</span><span class="n">ref_img_obj</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">ref_img_obj</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
                                          <span class="n">out_shape_rc</span><span class="o">=</span><span class="n">ref_img_obj</span><span class="o">.</span><span class="n">padded_shape_rc</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">qt_emitter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1205,11 +1276,61 @@
             <span class="n">img_obj</span><span class="o">.</span><span class="n">crop_T</span> <span class="o">=</span> <span class="n">crop_T</span>
             <span class="n">img_obj</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">M_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">@</span> <span class="n">crop_T</span>
             <span class="n">img_obj</span><span class="o">.</span><span class="n">M_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">img_obj</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
-            <span class="n">img_obj</span><span class="o">.</span><span class="n">registered_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_img</span><span class="p">(</span><span class="n">img_obj</span><span class="o">.</span><span class="n">image</span><span class="p">,</span>
+            <span class="n">img_obj</span><span class="o">.</span><span class="n">registered_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_img</span><span class="p">(</span><span class="n">img</span><span class="o">=</span><span class="n">img_obj</span><span class="o">.</span><span class="n">image</span><span class="p">,</span>
                                                          <span class="n">M</span><span class="o">=</span><span class="n">img_obj</span><span class="o">.</span><span class="n">M</span><span class="p">,</span>
                                                          <span class="n">out_shape_rc</span><span class="o">=</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
 
             <span class="n">img_obj</span><span class="o">.</span><span class="n">registered_shape_rc</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">registered_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+
+    <span class="k">def</span> <span class="nf">wiggle_to_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compose rigid transforms to wiggle image to reference</span>
+
+<span class="sd">        #. For each slide, get M that aligns it&#39;s rigidly warp points</span>
+<span class="sd">        to it&#39;s fixed image&#39;s rigidly warped points. These will be `rolling_M`</span>
+<span class="sd">        #. Then, for each slide, compose their `M` with each neighbor&#39;s `rolling M`</span>
+<span class="sd">        until it gets to the reference slide</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ref_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_img_idx</span><span class="p">]</span>
+        <span class="c1"># Find inverse transforms that will align rigid image to rigid neighbor</span>
+        <span class="n">rolling_M_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">img_obj</span> <span class="o">==</span> <span class="n">ref_obj</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">matches</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">match_dict</span><span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">fixed_obj</span><span class="p">]</span>
+
+            <span class="n">rigid_reg_moving_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">matches</span><span class="o">.</span><span class="n">matched_kp1_xy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">img_obj</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+            <span class="n">rigid_reg_fixed_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">matches</span><span class="o">.</span><span class="n">matched_kp2_xy</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">img_obj</span><span class="o">.</span><span class="n">fixed_obj</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+
+            <span class="n">transformer</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">rigid_reg_fixed_xy</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">rigid_reg_moving_xy</span><span class="p">)</span>
+
+            <span class="n">rolling_M</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">params</span>
+            <span class="n">rolling_M_list</span><span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">stack_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">rolling_M</span>
+
+        <span class="c1"># Compose rolling transforms</span>
+        <span class="n">wiggle_M_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">img_obj</span> <span class="o">==</span> <span class="n">ref_obj</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">neighbor_slide</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">fixed_obj</span>
+            <span class="n">wiggle_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">neighbor_slide</span> <span class="o">!=</span> <span class="n">ref_obj</span><span class="p">:</span>
+                <span class="n">neighbor_rolling_M</span> <span class="o">=</span> <span class="n">rolling_M_list</span><span class="p">[</span><span class="n">neighbor_slide</span><span class="o">.</span><span class="n">stack_idx</span><span class="p">]</span>
+                <span class="n">wiggle_M</span> <span class="o">=</span> <span class="n">wiggle_M</span> <span class="o">@</span> <span class="n">neighbor_rolling_M</span>
+                <span class="n">neighbor_slide</span> <span class="o">=</span> <span class="n">neighbor_slide</span><span class="o">.</span><span class="n">fixed_obj</span>
+
+            <span class="n">wiggle_M_list</span><span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">stack_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">wiggle_M</span>
+
+        <span class="c1"># Update M</span>
+        <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">img_obj</span> <span class="o">==</span> <span class="n">ref_obj</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">updated_M</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">M</span> <span class="o">@</span> <span class="n">wiggle_M_list</span><span class="p">[</span><span class="n">img_obj</span><span class="o">.</span><span class="n">stack_idx</span><span class="p">]</span>
+            <span class="n">img_obj</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">updated_M</span>
+
 
     <span class="k">def</span> <span class="nf">clear_unused_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Clear up space by removing unused matches between Zimages</span>
@@ -1309,14 +1430,13 @@
 
 
 
-
 <div class="viewcode-block" id="register_images"><a class="viewcode-back" href="../../serial_rigid.html#valis.serial_rigid.register_images">[docs]</a><span class="k">def</span> <span class="nf">register_images</span><span class="p">(</span><span class="n">img_dir</span><span class="p">,</span> <span class="n">dst_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;registrar&quot;</span><span class="p">,</span>
                     <span class="n">feature_detector</span><span class="o">=</span><span class="n">VggFD</span><span class="p">(),</span>
                     <span class="n">matcher</span><span class="o">=</span><span class="n">Matcher</span><span class="p">(),</span> <span class="n">transformer</span><span class="o">=</span><span class="n">EuclideanTransform</span><span class="p">(),</span>
                     <span class="n">affine_optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">imgs_ordered</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reference_img_f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">similarity_metric</span><span class="o">=</span><span class="s2">&quot;n_matches&quot;</span><span class="p">,</span>
-                    <span class="n">max_scaling</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">qt_emitter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                    <span class="n">max_scaling</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">align_to_reference</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">qt_emitter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rigidly align collection of images</span>
 
@@ -1367,9 +1487,12 @@
 <span class="sd">        Pandas dataframe containing the median distance between matched features</span>
 <span class="sd">        before and after registration.</span>
 
+<span class="sd">    align_to_reference : bool, optional</span>
+<span class="sd">        Whether or not images should be aligned to a reference image</span>
+<span class="sd">        specified by `reference_img_f`.</span>
+
 <span class="sd">    qt_emitter : PySide2.QtCore.Signal, optional</span>
 <span class="sd">        Used to emit signals that update the GUI&#39;s progress bars</span>
-
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1403,7 +1526,8 @@
     <span class="n">registrar</span> <span class="o">=</span> <span class="n">SerialRigidRegistrar</span><span class="p">(</span><span class="n">img_dir</span><span class="p">,</span>
                                      <span class="n">imgs_ordered</span><span class="o">=</span><span class="n">imgs_ordered</span><span class="p">,</span>
                                      <span class="n">reference_img_f</span><span class="o">=</span><span class="n">reference_img_f</span><span class="p">,</span>
-                                     <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+                                     <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                     <span class="n">align_to_reference</span><span class="o">=</span><span class="n">align_to_reference</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">======== Detecting features</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">registrar</span><span class="o">.</span><span class="n">generate_img_obj_list</span><span class="p">(</span><span class="n">feature_detector</span><span class="p">,</span> <span class="n">qt_emitter</span><span class="o">=</span><span class="n">qt_emitter</span><span class="p">)</span>
@@ -1433,20 +1557,23 @@
 
     <span class="n">registrar</span><span class="o">.</span><span class="n">align_to_prev</span><span class="p">(</span><span class="n">transformer</span><span class="o">=</span><span class="n">transformer</span><span class="p">,</span> <span class="n">qt_emitter</span><span class="o">=</span><span class="n">qt_emitter</span><span class="p">)</span>
 
-    <span class="c1"># Check current output shape. If too large,  then  registration failed</span>
-    <span class="n">estimated_out_shape_rc</span> <span class="o">=</span> <span class="n">registrar</span><span class="o">.</span><span class="n">calc_warped_img_size</span><span class="p">()</span>
-    <span class="n">actual_max_scaling</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">estimated_out_shape_rc</span><span class="o">/</span><span class="n">img_obj</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="n">registrar</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">actual_max_scaling</span> <span class="o">&gt;</span> <span class="n">max_scaling</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="ne">Warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max allowed scaling is </span><span class="si">{</span><span class="n">max_scaling</span><span class="si">}</span><span class="s2">,</span><span class="se">\</span>
-<span class="s2">                      but was calculated as being </span><span class="si">{</span><span class="n">actual_max_scaling</span><span class="si">}</span><span class="s2">.</span><span class="se">\</span>
-<span class="s2">                      Registration failed&quot;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="kc">False</span>
+    <span class="c1"># Check current output shape. If too large, then  registration failed</span>
+    <span class="k">for</span> <span class="n">img_obj</span> <span class="ow">in</span> <span class="n">registrar</span><span class="o">.</span><span class="n">img_obj_list</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">SimilarityTransform</span><span class="p">(</span><span class="n">img_obj</span><span class="o">.</span><span class="n">M</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="n">max_scaling</span> <span class="ow">or</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="o">/</span><span class="n">max_scaling</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="ne">Warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max allowed scaling is </span><span class="si">{</span><span class="n">max_scaling</span><span class="si">}</span><span class="s2">,</span><span class="se">\</span>
+<span class="s2">                          but was calculated as being </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">.</span><span class="se">\</span>
+<span class="s2">                          Registration failed. Maybe try using the Euclidean transform.&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">if</span> <span class="n">affine_optimizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">======== Optimizing alignments</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">registrar</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">affine_optimizer</span><span class="p">,</span> <span class="n">qt_emitter</span><span class="o">=</span><span class="n">qt_emitter</span><span class="p">)</span>
 
     <span class="n">registrar</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">align_to_reference</span><span class="p">:</span>
+        <span class="n">registrar</span><span class="o">.</span><span class="n">wiggle_to_ref</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">dst_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">registered_img_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dst_dir</span><span class="p">,</span> <span class="s2">&quot;registered_images&quot;</span><span class="p">)</span>

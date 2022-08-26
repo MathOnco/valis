@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Visualization &mdash; valis &#34;1.0.0rc5&#34;
+  <title>Visualization &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -226,29 +226,33 @@ and, if scale_l=True,  brighter.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valis.viz.color_multichannel">
-<span class="sig-prename descclassname"><span class="pre">valis.viz.</span></span><span class="sig-name descname"><span class="pre">color_multichannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multichannel_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_colors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'channel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cspace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CAM16UCS'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/viz.html#color_multichannel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.viz.color_multichannel" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">valis.viz.</span></span><span class="sig-name descname"><span class="pre">color_multichannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multichannel_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_colors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cspace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Hunter</span> <span class="pre">Lab'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/viz.html#color_multichannel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.viz.color_multichannel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Color a multichannel image to view as RGB</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>multichannel_img</strong> (<em>ndarray</em>) – Image to color</p></li>
-<li><p><strong>marker_colors</strong> (<em>ndarray</em>) – RGB colors for each channel. These RGB values are between 0-1, not 0-255</p></li>
-<li><p><strong>rescale_channels</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, then each channel will be scaled between 0 and 1 before building the composite RGB image. This will
-allow markers to ‘pop’ in areas where they are expressed in isolation, but can also make it appear more marker
-is expressed than there really is.</p></li>
-<li><p><strong>normalize_by</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optionaal</em>) – <p>“image” will produce an image where all values are scaled between 0 and the highest intensity in the composite image.
-This will produce an image where one can see the expression of each marker relative to the others, making it easier to
-compare marker expression levels.</p>
-<p>”channel” will first scale the intensity of each channel, and then blend all of the channels together. This will allow
-one to see the relative expression of each marker, but won’t allow one to directly compare the expression of markers
-across channels.</p>
+<li><p><strong>marker_colors</strong> (<em>ndarray</em>) – sRGB colors for each channel.</p></li>
+<li><p><strong>rescale_channels</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If True, then each channel will be scaled between 0 and 1 before
+building the composite RGB image. This will allow markers to ‘pop’
+in areas where they are expressed in isolation, but can also make
+it appear more marker is expressed than there really is.</p></li>
+<li><p><strong>normalize_by</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optionaal</em>) – <p>“image” will produce an image where all values are scaled between
+0 and the highest intensity in the composite image. This will produce
+an image where one can see the expression of each marker relative to
+the others, making it easier to compare marker expression levels.</p>
+<p>”channel” will first scale the intensity of each channel, and then
+blend all of the channels together. This will allow one to see the
+relative expression of each marker, but won’t allow one to directly
+compare the expression of markers across channels.</p>
 </p></li>
 <li><p><strong>cspace</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Colorspace in which <cite>marker_colors</cite> will be blended.
-See the “color-science” package for details.</p></li>
+JzAzBz, Hunter Lab, and sRGB all work well. But, see
+colour.COLOURSPACE_MODELS for other possible colorspaces</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>rgb</strong> – An RGB version of <cite>multichannel_img</cite></p>
+<dd class="field-even"><p><strong>rgb</strong> – An sRGB version of <cite>multichannel_img</cite></p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>ndarray</p>
@@ -264,16 +268,26 @@ See the “color-science” package for details.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valis.viz.draw_matches">
-<span class="sig-prename descclassname"><span class="pre">valis.viz.</span></span><span class="sig-name descname"><span class="pre">draw_matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kp1_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kp2_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alignment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'horizontal'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/viz.html#draw_matches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.viz.draw_matches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draw all matches between src_img and dst_img, using scikit-image. Assumes they have already been filtered
-:param src_img: Image from which kp1_xy were detected
-:type src_img: ndarray
-:param kp1_xy: Image 1s keypoint positions, in xy coordinates,  for each of the N descriptors in desc1
-:type kp1_xy: (N, 2) array
-:param dst_img: Image from which kp2_xy were detected
-:type dst_img: ndarray
-:param kp2_xy: Image 1s keypoint positions, in xy coordinates,  for each of the M descriptors in desc2
-:type kp2_xy: (M, 2) array</p>
+<span class="sig-prename descclassname"><span class="pre">valis.viz.</span></span><span class="sig-name descname"><span class="pre">draw_matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kp1_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kp2_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alignment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'horizontal'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/viz.html#draw_matches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.viz.draw_matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw feature matches between two images</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_img</strong> (<em>ndarray</em>) – Image associated with <cite>kp1_xy</cite></p></li>
+<li><p><strong>kp1_xy</strong> (<em>ndarray</em>) – xy coordinates of feature points found in <cite>src_img</cite></p></li>
+<li><p><strong>dst_img</strong> (<em>ndarray</em>) – Image associated with <cite>kp2_xy</cite></p></li>
+<li><p><strong>kp2_xy</strong> (<em>ndarray</em>) – xy coordinates of feature points found in <cite>dst_img</cite></p></li>
+<li><p><strong>rad</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Radius of circles used to draw feature points</p></li>
+<li><p><strong>alignment</strong> (<em>string</em>) – How to stack the images, either ‘veritcal’ or ‘horizontal’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>feature_img</strong> – Image show corresponding features of <cite>src_img</cite> and <cite>dst_img</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

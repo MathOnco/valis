@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Serial non-rigid registration &mdash; valis &#34;1.0.0rc5&#34;
+  <title>Serial non-rigid registration &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -185,7 +185,7 @@
 <p>Classes and functions to perform serial non-rigid registration of a set of images</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="valis.serial_non_rigid.register_images">
-<span class="sig-prename descclassname"><span class="pre">valis.serial_non_rigid.</span></span><span class="sig-name descname"><span class="pre">register_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_class=&lt;class</span> <span class="pre">'valis.non_rigid_registrars.OpticalFlowWarper'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_to_fixed_xy=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qt_emitter=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#register_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.register_images" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">valis.serial_non_rigid.</span></span><span class="sig-name descname"><span class="pre">register_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_class=&lt;class</span> <span class="pre">'valis.non_rigid_registrars.OpticalFlowWarper'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_to_fixed_xy=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to_reference=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compose_transforms=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qt_emitter=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#register_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.register_images" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -231,6 +231,13 @@ will be used.</p>
 <p>If False or None, no mask will be used.</p>
 </p></li>
 <li><p><strong>name</strong> (<em>optional</em>) – Optional name for this SerialNonRigidRegistrar</p></li>
+<li><p><strong>align_to_reference</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether or not images should be aligne to a reference image
+specified by <cite>reference_img_f</cite>. Will be set to True if
+<cite>reference_img_f</cite> is provided.</p></li>
+<li><p><strong>img_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>, </em><em>optional</em>) – Dictionary of parameters to be used for each particular image.
+Useful if images to be registered haven’t been processed.
+Will be passed to <cite>non_rigid_reg_class</cite> init and register functions.
+key = file name, value= dictionary of keyword arguments and values</p></li>
 <li><p><strong>qt_emitter</strong> (<em>PySide2.QtCore.Signal</em><em>, </em><em>optional</em>) – Used to emit signals that update the GUI’s progress bars</p></li>
 </ul>
 </dd>
@@ -250,7 +257,7 @@ will be used.</p>
 <h3>NonRigidZImage<a class="headerlink" href="#nonrigidzimage" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="valis.serial_non_rigid.NonRigidZImage">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.serial_non_rigid.</span></span><span class="sig-name descname"><span class="pre">NonRigidZImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#NonRigidZImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.NonRigidZImage" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.serial_non_rigid.</span></span><span class="sig-name descname"><span class="pre">NonRigidZImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#NonRigidZImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.NonRigidZImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class that store info about an image, including both
 rigid and non-rigid registration parameters</p>
 <dl class="py attribute">
@@ -350,7 +357,7 @@ Used to warp points</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.serial_non_rigid.NonRigidZImage.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#NonRigidZImage.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.NonRigidZImage.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#NonRigidZImage.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.NonRigidZImage.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -375,7 +382,7 @@ to those in the moving image</p></li>
 <h3>SerialNonRigidRegistrar<a class="headerlink" href="#serialnonrigidregistrar" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="valis.serial_non_rigid.SerialNonRigidRegistrar">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.serial_non_rigid.</span></span><span class="sig-name descname"><span class="pre">SerialNonRigidRegistrar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_to_fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#SerialNonRigidRegistrar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.serial_non_rigid.</span></span><span class="sig-name descname"><span class="pre">SerialNonRigidRegistrar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_to_fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compose_transforms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#SerialNonRigidRegistrar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class that performs serial non-rigid registration, based on results SerialRigidRegistrar</p>
 <p>A SerialNonRigidRegistrar finds the deformation fields that will non-rigidly align
 a series of images, using the rigid registration parameters found by a
@@ -405,10 +412,9 @@ transformation matrices, and the calculated deformation fields.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="valis.serial_non_rigid.SerialNonRigidRegistrar.from_dir">
-<span class="sig-name descname"><span class="pre">from_dir</span></span><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar.from_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether or not the images are from a source directory. If False, then
-the images will be extracted from a SerialRigidRegistrar</p>
+<dt class="sig sig-object py" id="valis.serial_non_rigid.SerialNonRigidRegistrar.from_rigid_reg">
+<span class="sig-name descname"><span class="pre">from_rigid_reg</span></span><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar.from_rigid_reg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not the images are from a SerialRigidRegistrar</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
@@ -514,18 +520,28 @@ features before and after registration.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.serial_non_rigid.SerialNonRigidRegistrar.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_to_fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#SerialNonRigidRegistrar.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moving_to_fixed_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compose_transforms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#SerialNonRigidRegistrar.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>src</strong> (<a class="reference internal" href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar" title="valis.serial_rigid.SerialRigidRegistrar"><em>SerialRigidRegistrar</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Either a SerialRigidRegistrar object that was used to optimally
-align a series of images, or a string indicating where the images
+<dd class="field-odd"><p><strong>src</strong> (<a class="reference internal" href="serial_rigid.html#valis.serial_rigid.SerialRigidRegistrar" title="valis.serial_rigid.SerialRigidRegistrar"><em>SerialRigidRegistrar</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – <p>A SerialRigidRegistrar object that was used to optimally
+align a series of images.</p>
+<p>If a string, it should indicating where the images
 to be aligned are located. If src is a string, the images should be
 named such that they are read in the correct order, i.e. each
-starting with a number.</p></li>
-<li><p><strong>ref_img_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Name of image that will be treated as the center of the stack.
-If None, the index of the middle image will be returned.</p></li>
-<li><p><strong>moving_to_fixed_xy</strong> (<em>dict of list</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – <p>If <cite>moving_to_fixed_xy</cite> is a dict of list, then
+starting with a number.</p>
+<p>If a dictionary, it should contain the following key, value pairs:</p>
+<p>”img_list” : list of images to register
+“img_f_list” : list of filenames of each image
+“name_list” : list of image names. If not provided, will come from file names
+“mask_list” list of masks for each image</p>
+</p>
+</dd>
+</dl>
+<dl>
+<dt>reference_img_f<span class="classifier">str, optional</span></dt><dd><p>Filename of image that will be treated as the center of the stack.
+If None, the index of the middle image will be returned.</p>
+</dd>
+<dt>moving_to_fixed_xy<span class="classifier">dict of list, or bool</span></dt><dd><p>If <cite>moving_to_fixed_xy</cite> is a dict of list, then
 Key = image name, value = list of matched keypoints between
 each moving image and the fixed image.
 Each element in the list contains 2 arrays:</p>
@@ -540,22 +556,29 @@ to the indices retuned by <cite>get_alignment_indices</cite>.</p>
 <p>If <cite>src</cite> is a SerialRigidRegistrar and <cite>moving_to_fixed_xy</cite> is
 True, then the matching features in the SerialRigidRegistrar will
 be used. If False, then matching features will not be used.</p>
-</p></li>
-<li><p><strong>mask</strong> (<em>ndarray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Mask used in non-rigid alignments.</p>
+</dd>
+<dt>mask<span class="classifier">ndarray, bool, optional</span></dt><dd><p>Mask used for all non-rigid alignments.</p>
 <p>If an ndarray, it must have the same size as the other images.</p>
 <p>If True, then the <cite>overlap_mask</cite> in the SerialRigidRegistrar
 will be used.</p>
 <p>If False or None, no mask will be used.</p>
-</p></li>
-<li><p><strong>name</strong> (<em>optional</em>) – Optional name for this SerialNonRigidRegistrar</p></li>
-</ul>
+</dd>
+<dt>name<span class="classifier">optional</span></dt><dd><p>Optional name for this SerialNonRigidRegistrar</p>
+</dd>
+<dt>align_to_reference<span class="classifier">bool, optional</span></dt><dd><p>Whether or not images should be aligned to a reference image
+specified by <cite>reference_img_f</cite>.</p>
+</dd>
+<dt>img_params<span class="classifier">dict, optional</span></dt><dd><p>Dictionary of parameters to be used for each particular image.
+Useful if images to be registered haven’t been processed.
+Will be passed to <cite>non_rigid_reg_class</cite> init and register functions.
+key = file name, value= dictionary of keyword arguments and values</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.serial_non_rigid.SerialNonRigidRegistrar.register">
-<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#SerialNonRigidRegistrar.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar.register" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_rigid_reg_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_non_rigid.html#SerialNonRigidRegistrar.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_non_rigid.SerialNonRigidRegistrar.register" title="Permalink to this definition">¶</a></dt>
 <dd><p>Non-rigidly align images, either as a group or serially</p>
 <p>Images will be registered serially if <cite>non_rigid_reg_class</cite> is a
 subclass of NonRigidRegistrarGroupwise, then groupwise registration
@@ -571,6 +594,10 @@ the NonRigidRegistrar.
 In the case where simple ITK is used by the, params should be
 a SimpleITK.ParameterMap. Note that numeric values nedd to be
 converted to strings.</p></li>
+<li><p><strong>img_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>, </em><em>optional</em>) – Dictionary of parameters to be used for each particular image.
+Useful if images to be registered haven’t been processed.
+Will be passed to <cite>non_rigid_reg_class</cite> init and register functions.
+key = file name, value= dictionary of keyword arguments and values</p></li>
 </ul>
 </dd>
 </dl>

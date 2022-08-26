@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installation &mdash; valis &#34;1.0.0rc5&#34;
+  <title>Installation &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -178,12 +178,12 @@
 </div></blockquote>
 <ol class="arabic">
 <li><p>Images/slides are converted to numpy arrays. As WSI are often too large to fit into memory, these images are usually lower resolution images from different pyramid levels.</p></li>
-<li><p>Images are processed to single channel images. They are then normalized to make them look as similar as possible.</p></li>
+<li><p>Images are processed to single channel images. They are then normalized to make them look as similar as possible. Masks are then created to focus registration on the tissue.</p></li>
 <li><p>Image features are detected and then matched between all pairs of image.</p></li>
-<li><p>If the order of images is unknown, they will be optimally ordered based on their feature similarity</p></li>
-<li><p>Images will be aligned <em>towards</em> (not to) a reference image. If the reference image was not specified, it will automatically be set to the image at the center of the stack.</p></li>
-<li><p>Rigid registration is performed serially, with each image being rigidly aligned towards the reference image. That is, if the reference image is the 5th in the stack, image 4 will be aligned to 5 (the reference), and then 3 will be aligned to the now registered version of 4, and so on. VALIS uses feature detection to match and align images, but one can optionally perform a final step that maximizes the mutual information betweeen each pair of images.</p></li>
-<li><p>Non-rigid registration is then performed either by:</p>
+<li><p>If the order of images is unknown, they will be optimally ordered based on their feature similarity. This increases the chances of successful registration because each image will be aligned to one that looks very similar.</p></li>
+<li><p>Images will be aligned <em>towards</em> (not to) a reference image. If the reference image is not specified, it will automatically be set to the image at the center of the stack.</p></li>
+<li><p>Rigid registration is performed serially, with each image being rigidly aligned towards the reference image. That is, if the reference image is the 5th in the stack, image 4 will be aligned to 5 (the reference), and then 3 will be aligned to the now registered version of 4, and so on. Only features found in both neighboring slides are used to align the image to the next one in the stack. VALIS uses feature detection to match and align images, but one can optionally perform a final step that maximizes the mutual information betweeen each pair of images.</p></li>
+<li><p>The registered rigid masks are combined to create a non-rigid registration mask. The bounding box of this mask is then used to extract higher resolution versions of the tissue from each slide. These higher resolution images are then processed as above and used for non-rigid registration, which is performed either by:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>aliging each image towards the reference image following the same sequence used during rigid registation.</p></li>
@@ -191,11 +191,12 @@
 </ul>
 </div></blockquote>
 </li>
-<li><p>Error is measured by calculating the distance between registered matched features in the full resolution images.</p></li>
+<li><p>One can optionally perform a second non-rigid registration using an even higher resolution versions of each image. This is intended to better align micro-features not visible in the original images, and so is referred to as micro-registration. A mask can also be used to indicate where registration should take place.</p></li>
+<li><p>Error is estimated by calculating the distance between registered matched features in the full resolution images.</p></li>
 </ol>
 </div></blockquote>
-<p>The transformations found by VALIS can then be used to warp the full resolution slides. It is also possible to merge non-RGB registered slides to create a highly multiplexed image. These aligned and/or merged slides can then be saved as ome.tiff images.</p>
-<p>In addition to warping images and slides, VALIS can also warp point data, such as cell centoids or ROI coordinates.</p>
+<p>The transformations found by VALIS can then be used to warp the full resolution slides. It is also possible to merge non-RGB registered slides to create a highly multiplexed image. These aligned and/or merged slides can then be saved as ome.tiff images. The transformations can also be use to warp point data, such as cell centroids, polygon vertices, etc…</p>
+<p>In addition to registering images, VALIS provides tools to read slides using Bio-Formats and OpenSlide, which can be read at multiple resolutions and converted to numpy arrays or pyvips.Image objects. One can also slice regions of interest from these slides and warp annotated images. VALIS also provides functions to convert slides to the ome.tiff format, preserving the original metadata. Please see examples and documentation for more details.</p>
 <p>Full documentation can be found at <a class="reference external" href="https://valis.readthedocs.io/en/latest/">ReadTheDocs</a>.</p>
 <div class="contents local topic" id="table-of-contents">
 <p class="topic-title">Table of Contents</p>
@@ -282,7 +283,7 @@ $ python3 pip install valis-wsi
 <p class="admonition-title">Important</p>
 <p>If the order of slices is known and needs to be preserved, such as building a 3D image, set <code class="code docutils literal notranslate"><span class="pre">imgs_ordered=True</span></code> when intialzing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, be sure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff … 10.tiff, etc…</p>
 </div>
-<p>In this example, the slides that need to be registered are located in <code class="code docutils literal notranslate"><span class="pre">/path/to/slides</span></code>. This process simply involves the creation of a Valis object, which is what conducts the registration. In this example no reference image is specfied, and so all images will be aligned towards the center. In this case, the resulting images will be cropped to the region where all of the images overlap. However, one can specify the reference image when intialzing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object, by setting <code class="code docutils literal notranslate"><span class="pre">reference_img_f</span></code> to the filename of the image the others should be aligned towards. When the reference image is specifed, the images will be cropped such that only the regions which overlap with the reference image will be saved. While this is the default behavior, one can also specify the cropping method by setting the <code class="code docutils literal notranslate"><span class="pre">crop</span></code> parameeter value when initialzing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object. The cropping method can also be changed when saving the registered images (see below).</p>
+<p>In this example, the slides that need to be registered are located in <code class="code docutils literal notranslate"><span class="pre">/path/to/slides</span></code>. This process involves creating a Valis object, which is what conducts the registration. In this example no reference image is specfied, and so all images will be aligned towards the center of the image stack. In this case, the resulting images will be cropped to the region where all of the images overlap. However, one can specify the reference image when intialzing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object, by setting <code class="code docutils literal notranslate"><span class="pre">reference_img_f</span></code> to the filename of the image the others should be aligned towards. When the reference image is specifed, the images will be cropped such that only the regions which overlap with the reference image will be saved. While this is the default behavior, one can also specify the cropping method by setting the <code class="code docutils literal notranslate"><span class="pre">crop</span></code> parameter value when initialzing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object. The cropping method can also be changed when saving the registered images (see below).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valis</span> <span class="kn">import</span> <span class="n">registration</span>
 <span class="n">slide_src_dir</span> <span class="o">=</span> <span class="s2">&quot;/path/to/slides&quot;</span>
 <span class="n">results_dst_dir</span> <span class="o">=</span> <span class="s2">&quot;./slide_registration_example&quot;</span>
@@ -291,6 +292,21 @@ $ python3 pip install valis-wsi
 <span class="c1"># Create a Valis object and use it to register the slides in slide_src_dir</span>
 <span class="n">registrar</span> <span class="o">=</span> <span class="n">registration</span><span class="o">.</span><span class="n">Valis</span><span class="p">(</span><span class="n">slide_src_dir</span><span class="p">,</span> <span class="n">results_dst_dir</span><span class="p">)</span>
 <span class="n">rigid_registrar</span><span class="p">,</span> <span class="n">non_rigid_registrar</span><span class="p">,</span> <span class="n">error_df</span> <span class="o">=</span> <span class="n">registrar</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The next example shows how align each image to a reference image, followed up by micro-registration. The reference image the others should be aligned towards is set with the <code class="code docutils literal notranslate"><span class="pre">reference_img_f</span></code> argument when initialzing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object. This initial registration is followed up by micro-registration in order to better align features that were not present in the smaller images used for the first registration (The size of the images used for micro-registration can is set with the <code class="code docutils literal notranslate"><span class="pre">max_non_rigid_registartion_dim_px</span></code> argument in <code class="code docutils literal notranslate"><span class="pre">Valis.register_micro</span></code>). Setting <code class="code docutils literal notranslate"><span class="pre">align_to_reference</span></code> to <cite>True</cite> will align each image directly <em>to</em> the reference image, as opposed to <em>towards</em> it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valis</span> <span class="kn">import</span> <span class="n">registration</span>
+<span class="n">slide_src_dir</span> <span class="o">=</span> <span class="s2">&quot;/path/to/slides&quot;</span>
+<span class="n">results_dst_dir</span> <span class="o">=</span> <span class="s2">&quot;./slide_registration_example&quot;</span>
+<span class="n">registered_slide_dst_dir</span> <span class="o">=</span> <span class="s2">&quot;./slide_registration_example/registered_slides&quot;</span>
+<span class="n">reference_slide</span> <span class="o">=</span> <span class="s2">&quot;HE.tiff&quot;</span>
+
+<span class="c1"># Create a Valis object and use it to register the slides in slide_src_dir, aligning towards the reference slide.</span>
+<span class="n">registrar</span> <span class="o">=</span> <span class="n">registration</span><span class="o">.</span><span class="n">Valis</span><span class="p">(</span><span class="n">slide_src_dir</span><span class="p">,</span> <span class="n">results_dst_dir</span><span class="p">,</span> <span class="n">reference_img_f</span><span class="o">=</span><span class="n">reference_slide</span><span class="p">)</span>
+<span class="n">rigid_registrar</span><span class="p">,</span> <span class="n">non_rigid_registrar</span><span class="p">,</span> <span class="n">error_df</span> <span class="o">=</span> <span class="n">registrar</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+
+<span class="c1"># Perform micro-registration on higher resolution images, aligning directly to the reference image</span>
+<span class="n">registrar</span><span class="o">.</span><span class="n">register_micro</span><span class="p">(</span><span class="n">max_non_rigid_registartion_dim_px</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">align_to_reference</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>After registration is complete, one can view the results to determine if they are acceptable. In this example, the results are located in  <code class="code docutils literal notranslate"><span class="pre">./slide_registration_example</span></code>. Inside this folder will be 6 subfolders:</p>
@@ -306,6 +322,7 @@ $ python3 pip install valis-wsi
 <li><p><strong>non_rigid_registration</strong> shows thumbnaials of how each image looks after non-rigid registration. These would be similar to the bottom row in the figure above.</p></li>
 <li><p><strong>deformation_fields</strong> contains images showing what the non-rigid deformation would do to a triangular mesh. These can be used to get a sense of how the images were altered by non-rigid warping. In these images, the color indicates the direction of the displacement, while brightness indicates it’s magnitude. These would be similar to those in the middle row in the figure above.</p></li>
 <li><p><strong>processed</strong> shows thumnails of the processed images. These are thumbnails of the images that were actually used to perform the registration. The pre-processing and normalization methods should try to make these images look as similar as possible.</p></li>
+<li><p><strong>masks</strong> show the images with outlines of their rigid registration mask drawn around them. If non-rigid registration is being performed, there will also be an image of the reference image with the non-rigid registration mask drawn around it.</p></li>
 </ol>
 <p>If the results look good, then one can warp and save all of the slides as ome.tiffs. When saving the images, there are three cropping options:</p>
 <ol class="arabic simple">
@@ -323,15 +340,15 @@ $ python3 pip install valis-wsi
 </div>
 <p>The ome.tiff images can subsequently be used for downstream analysis, such as <a class="reference external" href="https://qupath.github.io/">QuPath</a></p>
 <img alt="https://github.com/MathOnco/valis/raw/main/docs/_images/ome_tiff_zoom.png" src="https://github.com/MathOnco/valis/raw/main/docs/_images/ome_tiff_zoom.png" />
-<p>One can also choose to save individual slides. This is accomplished by accessing the Slide object associated with a particular file, <code class="code docutils literal notranslate"><span class="pre">slide_f</span></code> and then “telling” it to save the slide aas <code class="code docutils literal notranslate"><span class="pre">out_f.ome.tiff</span></code>.</p>
+<p>One can also choose to save individual slides. This is accomplished by accessing the Slide object associated with a particular file, <code class="code docutils literal notranslate"><span class="pre">slide_f</span></code> and then “telling” it to save the slide as <code class="code docutils literal notranslate"><span class="pre">out_f.ome.tiff</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">slide_obj</span> <span class="o">=</span> <span class="n">registrar</span><span class="o">.</span><span class="n">get_slide</span><span class="p">(</span><span class="n">slide_f</span><span class="p">)</span>
-<span class="n">slide_obj</span><span class="o">.</span><span class="n">warp_and_save_slide</span><span class="p">(</span><span class="n">out_f</span><span class="o">.</span><span class="n">ome</span><span class="o">.</span><span class="n">tiff</span><span class="p">)</span>
+<span class="n">slide_obj</span><span class="o">.</span><span class="n">warp_and_save_slide</span><span class="p">(</span><span class="s2">&quot;out_f.ome.tiff&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Finally, if the non-rigid registration is deemed to have distored the image too much, one can apply only the rigid transformation by setting <code class="code docutils literal notranslate"><span class="pre">non_rigid=False</span></code> in <code class="code docutils literal notranslate"><span class="pre">slide_obj.warp_and_save_slide</span></code> or <code class="code docutils literal notranslate"><span class="pre">registrar.warp_and_save_slides</span></code>.</p>
 </section>
-<section id="slide-registration-and-merging">
-<h2>Slide registration and merging<a class="headerlink" href="#slide-registration-and-merging" title="Permalink to this headline">¶</a></h2>
+<section id="create-multiplex-image-from-immunofluorescence-images">
+<h2>Create multiplex image from immunofluorescence images<a class="headerlink" href="#create-multiplex-image-from-immunofluorescence-images" title="Permalink to this headline">¶</a></h2>
 <p>Following registration, VALIS can merge the slides to create a single composite image. However, this should only be done for non-RGB images, such as multi/single-channel immunofluorescence images. An example would be slides of multiple CyCIF rounds. The user also has the option to provide channel names, but if not provided the channel names will become the “channel (filename)” given the channel name in the metadata. For example, if the file name is round1.ndpis then the DAPI channel name will be “DAPI (round1)”). In this example, the channel names are taken from the filename, which have the form “Tris CD20 FOXP3 CD3.ndpis”, “Tris CD4 CD68 CD3 1in25 ON.ndpis”, etc… The channel names need to be in a dictionary, where key=filename, value = list of channel names.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -390,7 +407,7 @@ $ python3 pip install valis-wsi
 
 <span class="c1"># Load a Valis object that has already registered the images.</span>
 <span class="n">registrar_f</span> <span class="o">=</span> <span class="s2">&quot;path/to/results/data/registrar.pickle&quot;</span>
-<span class="n">registrar</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">registrar_f</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
+<span class="n">registrar</span> <span class="o">=</span> <span class="n">registration</span><span class="o">.</span><span class="n">load_registrar</span><span class="p">(</span><span class="n">registrar_f</span><span class="p">)</span>
 
 <span class="c1"># Get .csv files containing cell coordinates</span>
 <span class="n">point_data_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">point_data_dir</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.csv&quot;</span><span class="p">))</span>
@@ -435,8 +452,7 @@ $ python3 pip install valis-wsi
 
 <span class="c1"># Load a registrar that has already registered the images.</span>
 <span class="n">registrar_f</span> <span class="o">=</span> <span class="s2">&quot;./expected_results/registration/ihc/data/ihc_registrar.pickle&quot;</span>
-<span class="n">registrar</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">registrar_f</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
-
+<span class="n">registrar</span> <span class="o">=</span> <span class="n">registration</span><span class="o">.</span><span class="n">load_registrar</span><span class="p">(</span><span class="n">registrar_f</span><span class="p">)</span>
 <span class="c1"># Set the pyramid level from which the ROI coordinates originated. Usually 0 when working with slides.</span>
 <span class="n">COORD_LEVEL</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -503,6 +519,73 @@ $ python3 pip install valis-wsi
 </div>
 <img alt="https://github.com/MathOnco/valis/raw/main/docs/_images/pu_color_mplex.png" src="https://github.com/MathOnco/valis/raw/main/docs/_images/pu_color_mplex.png" />
 </section>
+<section id="reading-slides">
+<h2>Reading slides<a class="headerlink" href="#reading-slides" title="Permalink to this headline">¶</a></h2>
+<p>VALIS also provides functions to read images/slides using libvips, Bio-Formats, or Openslide. These reader objects also contain some of the slide’s metatadata. The <code class="code docutils literal notranslate"><span class="pre">slide2image</span></code> method will return a numpy array of the slide, while <code class="code docutils literal notranslate"><span class="pre">slide2vips</span></code> will return a <code class="code docutils literal notranslate"><span class="pre">pyvips.Image</span></code>, which is ideal when working with very large images. The user can specify the pyramid level, series, and bounding box, but the default is level 0, series 0, and the whole image. See <code class="code docutils literal notranslate"><span class="pre">slide_io.SlideReader</span></code> and <code class="code docutils literal notranslate"><span class="pre">slide_io.MetaData</span></code> for more details.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valis</span> <span class="kn">import</span> <span class="n">slide_io</span>
+<span class="n">slide_src_f</span> <span class="o">=</span> <span class="s2">&quot;path/to/slide.svs</span>
+<span class="n">series</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c1"># Get reader for slide format</span>
+<span class="n">reader_cls</span> <span class="o">=</span> <span class="n">slide_io</span><span class="o">.</span><span class="n">get_slide_reader</span><span class="p">(</span><span class="n">slide_src_f</span><span class="p">,</span> <span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">)</span> <span class="c1">#Get appropriate slide reader class</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">reader_cls</span><span class="p">(</span><span class="n">slide_src_f</span><span class="p">,</span> <span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">)</span> <span class="c1"># Instantiate reader</span>
+
+<span class="c1">#Get size of images in each pyramid level (width, height)</span>
+<span class="n">pyramid_level_sizes_wh</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">slide_dimensions</span>
+
+<span class="c1"># Get physical units per pixel</span>
+<span class="n">pixel_physical_size_xyu</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">pixel_physical_size_xyu</span>
+
+<span class="c1"># Get channel names (None if image is RGB)</span>
+<span class="n">channel_names</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">channel_names</span>
+
+<span class="c1"># Get original xml metadata</span>
+<span class="n">original_xml</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">original_xml</span>
+
+<span class="c1"># Get smaller pyramid level 3 as a numpy array</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">slide2image</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Get full resolution image as a pyvips.Image</span>
+<span class="n">full_rez_vips</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">slide2vips</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Slice region of interest from level 0 and return as numpy array</span>
+<span class="n">roi_img</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">slide2image</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xywh</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">))</span>
+
+<span class="n">slide_io</span><span class="o">.</span><span class="n">kill_jvm</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="warping-slides-with-custom-transforms">
+<h2>Warping slides with custom transforms<a class="headerlink" href="#warping-slides-with-custom-transforms" title="Permalink to this headline">¶</a></h2>
+<p>VALIS provides the functions to apply transformations to slides and then save the registered slide, meaning the user can provide their own transformation parameters. In this example, <cite>src_f</cite> is the path to the file associated with the slide, <cite>M</cite> is the inverse rigid registration matrix, and <cite>bk_dxdy</cite> is a list of the backwards non-rigid displacement fields (i.e. [dx, dy]), each found by aligning the fixed/target image to the moving/source image.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The transformations will need to be inverted if they were found the other way around, i.e. aligning the moving/source image to the fixed/target image. Transformation matrices can be inverted using <code class="code docutils literal notranslate"><span class="pre">np.linalg.inv</span></code>, while displacement fields can be inverted using <code class="code docutils literal notranslate"><span class="pre">warp_tools.get_inverse_field</span></code>.</p>
+</div>
+<p>One may also need to provide the shape of the image (row, col) used to find the rigid transformation (if applicable), which is the <cite>transformation_src_shape_rc</cite> argument. In this case, it is the shape of the processed image that was used during feature detection. Similarly, <cite>transformation_dst_shape_rc</cite> is the shape of the registered image, in this case the shape of the processed image after being warped. Finally, <cite>aligned_slide_shape_rc</cite> is the shape of the warped slide. Please see <code class="code docutils literal notranslate"><span class="pre">slide_io.warp_and_save_slide</span></code> for more information and options, like defining background color, crop area, etc..</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valis</span> <span class="kn">import</span> <span class="n">slide_io</span>
+
+<span class="c1"># Read and warp the slide #</span>
+<span class="n">slide_src_f</span> <span class="o">=</span> <span class="s2">&quot;path/to/slide</span>
+<span class="n">dst_f</span> <span class="o">=</span> <span class="s2">&quot;path/to/write/slide.ome.tiff&quot;</span>
+<span class="n">series</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">pyramid_level</span><span class="o">=</span><span class="mi">0</span>
+
+<span class="n">slide_io</span><span class="o">.</span><span class="n">warp_and_save_slide</span><span class="p">(</span><span class="n">src_f</span><span class="o">=</span><span class="n">slide_src_f</span><span class="p">,</span>
+                             <span class="n">dst_f</span><span class="o">=</span><span class="n">dst_f</span><span class="p">,</span>
+                             <span class="n">transformation_src_shape_rc</span><span class="o">=</span><span class="n">processed_img_shape_rc</span><span class="p">,</span>
+                             <span class="n">transformation_dst_shape_rc</span><span class="o">=</span><span class="n">small_registered_img_shape_rc</span><span class="p">,</span>
+                             <span class="n">aligned_slide_shape_rc</span><span class="o">=</span><span class="n">aligned_slide_shape_rc</span><span class="p">,</span>
+                             <span class="n">level</span><span class="o">=</span><span class="n">pyramid_level</span><span class="p">,</span>
+                             <span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span>
+                             <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
+                             <span class="n">dxdy</span><span class="o">=</span><span class="n">dxdy</span><span class="p">)</span>
+
+
+<span class="n">slide_io</span><span class="o">.</span><span class="n">kill_jvm</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 <section id="using-non-defaults">
 <h2>Using non-defaults<a class="headerlink" href="#using-non-defaults" title="Permalink to this headline">¶</a></h2>
 <p>The defaults used by VALIS work well, but one may wish to try some other values/class, and/or create their own affine optimizer, feature detector, non-rigid registrar, etc… This examples shows how to conduct registration using non-default values</p>
@@ -539,6 +622,63 @@ $ python3 pip install valis-wsi
 </section>
 <section id="change-log">
 <h1><a class="toc-backref" href="#id6">Change Log</a><a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<section id="version-1-0-0rc11-august-26-2022">
+<h2>Version 1.0.0rc11 (August 26, 2022)<a class="headerlink" href="#version-1-0-0rc11-august-26-2022" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Fixed bug when providing rigid transformations (Issue 14, <a class="reference external" href="https://github.com/MathOnco/valis/issues/14">https://github.com/MathOnco/valis/issues/14</a>).</p></li>
+<li><p>Can now warp one image onto another, making it possible to transfer annotations using labeled images (Issue 13 <a class="reference external" href="https://github.com/MathOnco/valis/issues/13">https://github.com/MathOnco/valis/issues/13</a>). This can be done using a Slide object’s <code class="code docutils literal notranslate"><span class="pre">warp_img_from_to</span></code> method. See example in examples/warp_annotation_image.py</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">ImageProcesser</span></code> objects now have a  <code class="code docutils literal notranslate"><span class="pre">create_mask</span></code> function that is used to build the masks for rigid registration. These are then used to create the mask used for non-rigid registration, where they are combined such that the final mask is where they overlap and/or touch.</p></li>
+<li><p>Non-rigid registration performed on higher resolution version of the image. The area inside the non-rigid mask is sliced out such that it encompasses the area inside the mask but has a maximum dimension of  <code class="code docutils literal notranslate"><span class="pre">Valis.max_non_rigid_registartion_dim_px</span></code>. This can improve accuracy when the tissue is only a small part of the image. If masks aren’t created, this region will be where all of the slides overalp.</p></li>
+<li><p>Version used to submit results to the ACROBAT Grand Challenge. Code used to perform registration can be found in examples/acrobat_grand_challenge.py. This example also shows how to use and create a custom <code class="code docutils literal notranslate"><span class="pre">ImageProcesser</span></code> and perform micro-registration with a mask.</p></li>
+</ol>
+</section>
+<section id="version-1-0-0rc10-august-11-2022">
+<h2>Version 1.0.0rc10 (August 11, 2022)<a class="headerlink" href="#version-1-0-0rc10-august-11-2022" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Fixed compatibility with updated interpolation package (Issue 12).</p></li>
+</ol>
+</section>
+<section id="version-1-0-0rc9-august-4-2022">
+<h2>Version 1.0.0rc9 (August 4, 2022)<a class="headerlink" href="#version-1-0-0rc9-august-4-2022" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Reduced memory usage for micro-registration and warping. No longer copying memory before warping, and large displacement fields saved as .tiff images instead of .vips images.</p></li>
+<li><p>Reduced unwanted accumulation of displacements</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">viz.draw_matches</span></code> now returns an image instead of a matplotlib pyplot</p></li>
+<li><p>Pull request 9-11 bug fixes (many thanks to crobbins327 and zindy): Not converting uint16 to uint8 when reading using Bio-Formats or pyvips; fixed rare error when filtering neighbor matches; <code class="code docutils literal notranslate"><span class="pre">viz.get_grid</span></code> consistent on Linux and Windows; typos.</p></li>
+</ol>
+</section>
+<section id="version-1-0-0rc8-july-1-2022">
+<h2>Version 1.0.0rc8 (July 1, 2022)<a class="headerlink" href="#version-1-0-0rc8-july-1-2022" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Now compatible with single channel images. These images are treated as immunofluorescent images, and so custom pre-processing classes and arguments should be passed to <code class="code docutils literal notranslate"><span class="pre">if_processing_cls</span></code> and <code class="code docutils literal notranslate"><span class="pre">if_processing_kwargs</span></code> of the <code class="code docutils literal notranslate"><span class="pre">Valis.register</span></code> method. The current method will perform adaptive histogram equalization and scales the image to 0-255 (see <code class="code docutils literal notranslate"><span class="pre">preprocessing.ChannelGetter</span></code>). Also, since it isn’t possible to determine if the single channel image is a greyscale RGB (light background) or single channel immunofluorescence (or similar with dark background), the background color will not be estimated, meaning that in the registered image the area outside of the warped image will be black (as opposed to the estimated background color). Tissue masks will still be created, but if it seems they are not covering enough area then try setting <code class="code docutils literal notranslate"><span class="pre">create_masks</span></code> to <cite>False</cite> when initializing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object.</p></li>
+</ol>
+</section>
+<section id="version-1-0-0rc7-june-27-2022">
+<h2>Version 1.0.0rc7 (June 27, 2022)<a class="headerlink" href="#version-1-0-0rc7-june-27-2022" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Can set size of image to be used for non-rigid registration, which may help improve aligment of micro-architectural structures. However this will increase the amount of time it takes to perform non-rigid registration, and will increase amount of memory used during registration, and the size of the pickled :code: <cite>Valis</cite> object. To change this value, set the <code class="code docutils literal notranslate"><span class="pre">max_non_rigid_registartion_dim_px</span></code> parameter when initializing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object.</p></li>
+<li><p>Can now do a second non-rigid registartion on higher resolution images, including the full resolution one. This can be done with the <code class="code docutils literal notranslate"><span class="pre">Valis.register_micro</span></code>. If the images are large, they will be sliced into tiles, and then each tile registered with one another. The deformation fields will be saved separately as .vips images within the data folder.</p></li>
+<li><p>Added <code class="code docutils literal notranslate"><span class="pre">registration.load_registrar</span></code> function to open a <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object. This should be used instead of <cite>pickle.load</cite>.</p></li>
+<li><p>Creating and applying tissue masks before registration. This improves image normalization, reduces the number of poor feature matches, and helps remove unwanted non-rigid deformations (especially around the image edges), all of which improve alignment accuracy. This step can be skipped by setting <code class="code docutils literal notranslate"><span class="pre">create_masks</span></code> to <cite>False</cite> when initializing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object.</p></li>
+<li><p>Now possible to directly non-rigidly align to the reference image specified by <code class="code docutils literal notranslate"><span class="pre">reference_img_f</span></code>. This can be done by setting <code class="code docutils literal notranslate"><span class="pre">align_to_reference</span></code> to <cite>True</cite> when initializing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object. The default is <cite>False</cite>, which means images will be aligned serially towards the reference image.  This option is also available with <code class="code docutils literal notranslate"><span class="pre">Valis.register_micro</span></code>, meaning that one could do a second alignment, but aligning all directly to a reference image.</p></li>
+<li><p>RANSAC filtered matches found for rigid registration undergo second round of filtering, this time using Tukey’s method to remove matches whose distance after  being warped would be considered outliers.</p></li>
+<li><p>Now have option off whether or not to compose non-rigid transformations. This can be set specifying the <code class="code docutils literal notranslate"><span class="pre">compose_non_rigid</span></code> argument when initialzing the <cite>Valis</cite> object.</p></li>
+<li><p>Can provide rigid transformation matrices by passing in a dictionary to the <code class="code docutils literal notranslate"><span class="pre">do_rigid</span></code> parameter when initializing the <code class="code docutils literal notranslate"><span class="pre">Valis</span></code> object. Setting <code class="code docutils literal notranslate"><span class="pre">do_rigid</span></code> to <cite>False</cite> will completely skip the rigid registration step. See the documentation for initializing the <cite>Valis</cite> object for more details.</p></li>
+<li><p>Added examples of how to read slides and use custom transforms</p></li>
+<li><p>Benchmarked using ANHIR Grand Challenge dataset and posted results on leaderboard.</p></li>
+<li><p>bioformats_jar has been deprecated, so added support for its replacement, scyjava. However, the default behavior will be to use the bioformats_jar JAR file if it’s already been installed. One can also now specify the JAR file when calling <code class="code docutils literal notranslate"><span class="pre">init_jvm</span></code>.</p></li>
+</ol>
+</section>
+<section id="version-1-0-0rc6-april-18-2022">
+<h2>Version 1.0.0rc6 (April 18, 2022)<a class="headerlink" href="#version-1-0-0rc6-april-18-2022" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>More accurate color mixing with fewer artifacts. Affects overlap images and pseudo-colored multi-channel images.</p></li>
+<li><p>Initializing  ‘is_flattended_pyramid’ with False. Pull request #6</p></li>
+<li><p>Reformatting flattened pyramids to have same datatype as that in metadata.</p></li>
+<li><p>Saving all images using pyvips. Should be faster.</p></li>
+<li><p>Using Bio-Formats to read non-RGB ome-tiff. Addresses an issue where converting non-RGB ome-tiff to numpy was very slow.</p></li>
+</ol>
+</section>
 <section id="version-1-0-0rc5-april-5-2022">
 <h2>Version 1.0.0rc5 (April 5, 2022)<a class="headerlink" href="#version-1-0-0rc5-april-5-2022" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">

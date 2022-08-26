@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>valis.slide_io &mdash; valis &#34;1.0.0rc5&#34;
+  <title>valis.slide_io &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -169,9 +169,9 @@
 <span></span><span class="sd">&quot;&quot;&quot;Methods and classes to read and write slides in the .ome.tiff format</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">csv</span> <span class="kn">import</span> <span class="n">excel</span>
+
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">util</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="n">transform</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">io</span><span class="p">,</span> <span class="n">transform</span>
 <span class="kn">import</span> <span class="nn">pyvips</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
@@ -193,9 +193,13 @@
 <span class="kn">import</span> <span class="nn">jpype</span>
 <span class="kn">import</span> <span class="nn">bioformats_jar</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">scyjava</span>
+
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">valtils</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">slide_tools</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">warp_tools</span>
+
+<span class="n">pyvips</span><span class="o">.</span><span class="n">cache_set_max</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="n">MAX_TILE_SIZE</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">10</span>
 <span class="sd">&quot;&quot;&quot;int: maximum tile used to read or write images&quot;&quot;&quot;</span>
@@ -339,9 +343,11 @@
 <span class="c1">#     return readable_formats</span>
 <span class="c1">#---------------------------------------#</span>
 
-<span class="c1"># Bioformats + Jpype #</span>
+<span class="c1"># Bioformats/scyjava + Jpype #</span>
 <span class="c1">#--------------------#</span>
-<div class="viewcode-block" id="init_jvm"><a class="viewcode-back" href="../../slide_io.html#valis.slide_io.init_jvm">[docs]</a><span class="k">def</span> <span class="nf">init_jvm</span><span class="p">(</span><span class="n">mem_gb</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+
+
+<div class="viewcode-block" id="init_jvm"><a class="viewcode-back" href="../../slide_io.html#valis.slide_io.init_jvm">[docs]</a><span class="k">def</span> <span class="nf">init_jvm</span><span class="p">(</span><span class="n">jar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initialize JVM for BioFormats</span>
 
 <span class="sd">    Parameters</span>
@@ -349,7 +355,7 @@
 <span class="sd">    mem_gb : int</span>
 <span class="sd">        Amount of memory, in GB, for JVM</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
+    <span class="kn">import</span> <span class="nn">jpype</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">jpype</span><span class="o">.</span><span class="n">isJVMStarted</span><span class="p">():</span>
         <span class="k">global</span> <span class="n">FormatTools</span>
         <span class="k">global</span> <span class="n">BF_MICROMETER</span>
@@ -358,15 +364,29 @@
         <span class="k">global</span> <span class="n">ome</span>
         <span class="k">global</span> <span class="n">loci</span>
 
-        <span class="n">bioformats_jar</span><span class="o">.</span><span class="n">start_jvm</span><span class="p">(</span><span class="n">memory</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mem_gb</span><span class="si">}</span><span class="s2">G&quot;</span><span class="p">)</span>
-        <span class="n">loci</span> <span class="o">=</span> <span class="n">bioformats_jar</span><span class="o">.</span><span class="n">get_loci</span><span class="p">()</span>
-        <span class="n">ome</span> <span class="o">=</span> <span class="n">bioformats_jar</span><span class="o">.</span><span class="n">get_ome</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">jar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">jpype</span><span class="o">.</span><span class="n">addClassPath</span><span class="p">(</span><span class="n">jar</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">jar</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bioformats_jar</span><span class="p">,</span> <span class="s2">&quot;JAR&quot;</span><span class="p">):</span>
+            <span class="n">jpype</span><span class="o">.</span><span class="n">addClassPath</span><span class="p">(</span><span class="n">bioformats_jar</span><span class="o">.</span><span class="n">JAR</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scyjava</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">endpoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;ome:formats-gpl&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># jpype.startJVM(f&quot;-Djava.awt.headless=true -Xmx{mem_gb}G&quot;, classpath=bioformats_jar.JAR)</span>
+            <span class="n">scyjava</span><span class="o">.</span><span class="n">start_jvm</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;-Xmx</span><span class="si">{</span><span class="n">mem_gb</span><span class="si">}</span><span class="s2">G&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+            <span class="n">bioformats_jar</span><span class="o">.</span><span class="n">start_jvm</span><span class="p">(</span><span class="n">memory</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mem_gb</span><span class="si">}</span><span class="s2">G&quot;</span><span class="p">)</span>
+
+        <span class="n">loci</span> <span class="o">=</span> <span class="n">jpype</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s2">&quot;loci&quot;</span><span class="p">)</span>
+        <span class="n">ome</span> <span class="o">=</span> <span class="n">jpype</span><span class="o">.</span><span class="n">JPackage</span><span class="p">(</span><span class="s2">&quot;ome&quot;</span><span class="p">)</span>
+        <span class="n">loci</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">DebugTools</span><span class="o">.</span><span class="n">setRootLevel</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">)</span>
+
         <span class="n">FormatTools</span> <span class="o">=</span> <span class="n">loci</span><span class="o">.</span><span class="n">formats</span><span class="o">.</span><span class="n">FormatTools</span>
         <span class="n">BF_MICROMETER</span> <span class="o">=</span> <span class="n">ome</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">UNITS</span><span class="o">.</span><span class="n">MICROMETER</span>
         <span class="n">BF_READABLE_FORMATS</span> <span class="o">=</span> <span class="n">get_bf_readable_formats</span><span class="p">()</span>
         <span class="n">OPENSLIDE_ONLY</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ALL_OPENSLIDE_READABLE_FORMATS</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">BF_READABLE_FORMATS</span><span class="p">)))</span>
 
-        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JVM has been initialized with </span><span class="si">{</span><span class="n">mem_gb</span><span class="si">}</span><span class="s2"> GB of memory. &quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JVM has been initialized. &quot;</span>
                <span class="sa">f</span><span class="s2">&quot;Be sure to call registration.kill_jvm() &quot;</span>
                <span class="sa">f</span><span class="s2">&quot;or slide_io.kill_jvm() at the end of your script.&quot;</span><span class="p">)</span>
         <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">warning_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="n">valtils</span><span class="o">.</span><span class="n">Fore</span><span class="o">.</span><span class="n">GREEN</span><span class="p">)</span></div>
@@ -469,12 +489,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    vips_format : str</span>
-<span class="sd">        Format of the pyvips.Ima</span>
-<span class="sd">    bf_pixel_type : int</span>
-<span class="sd">        Integer indicating the Bioformats pixel type</span>
-
-<span class="sd">    little_endian : bool</span>
-<span class="sd">        Whether or not the image is little endian</span>
+<span class="sd">        Format of the pyvips.Image</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -487,6 +502,27 @@
     <span class="n">bf_dtype</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">NUMPY_FORMAT_BF_DTYPE</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">np_dtype</span><span class="p">()</span><span class="o">.</span><span class="n">dtype</span><span class="p">)]</span>
 
     <span class="k">return</span> <span class="n">bf_dtype</span>
+
+
+<span class="k">def</span> <span class="nf">bf2vips_dtype</span><span class="p">(</span><span class="n">bf_dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get bioformats equivalent of the pyvips pixel type</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bf_dtype : str</span>
+<span class="sd">        String format of Bioformats datatype</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vips_format : str</span>
+<span class="sd">        Format of the pyvips.Image</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">np_type</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">BF_FORMAT_NUMPY_DTYPE</span><span class="p">[</span><span class="n">bf_dtype</span><span class="p">]</span>
+    <span class="n">vips_format</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">NUMPY_FORMAT_VIPS_DTYPE</span><span class="p">[</span><span class="n">np_type</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">vips_format</span>
 
 
 <span class="k">def</span> <span class="nf">check_to_use_openslide</span><span class="p">(</span><span class="n">src_f</span><span class="p">):</span>
@@ -517,8 +553,6 @@
                 <span class="n">use_openslide</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">except</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="c1"># msg = f&quot;OpenSlide cannot be found. Will try to open with {BF_RDR} or {IMG_RDR}&quot;</span>
-            <span class="c1"># valtils.print_warning(msg)</span>
 
     <span class="k">return</span> <span class="n">use_openslide</span>
 
@@ -560,6 +594,8 @@
 
     <span class="n">vips_img</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">new_from_file</span><span class="p">(</span><span class="n">src_f</span><span class="p">)</span>
     <span class="n">vips_fields</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">get_fields</span><span class="p">()</span>
+
+    <span class="n">is_flattended_pyramid</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">if</span> <span class="s1">&#39;n-pages&#39;</span> <span class="ow">in</span> <span class="n">vips_fields</span><span class="p">:</span>
         <span class="n">n_pages</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n-pages&quot;</span><span class="p">)</span>
@@ -656,7 +692,7 @@
 <span class="sd">        Physical size per pixel and the unit.</span>
 
 <span class="sd">    channel_names : list</span>
-<span class="sd">        List of channel names.</span>
+<span class="sd">        List of channel names. None if image is RGB</span>
 
 <span class="sd">    n_channels : int</span>
 <span class="sd">        Number of channels.</span>
@@ -785,10 +821,10 @@
 
 <span class="s2">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">is_rgb</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">img_type</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">IF_NAME</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">is_rgb</span><span class="p">:</span>
             <span class="n">img_type</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">IHC_NAME</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img_type</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">IF_NAME</span>
 
         <span class="k">return</span> <span class="n">img_type</span>
 
@@ -828,26 +864,8 @@
 <span class="sd">            MetaData object containing metadata about slide</span>
 
 <span class="sd">        &quot;&quot;&quot;</span></div>
-    <span class="k">def</span> <span class="nf">get_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">channel</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get channel from slide</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        level : int</span>
-<span class="sd">            Pyramid level</span>
-
-<span class="sd">        series  : int</span>
-<span class="sd">            Series number</span>
-
-<span class="sd">        channel : str, int</span>
-<span class="sd">            Either the name of the channel (string), or the index of the channel (int)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        img_channel : ndarray</span>
-<span class="sd">            Specified channel sliced from the slide/image</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">get_channel_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">matching_channel_idx</span> <span class="o">=</span> <span class="n">channel</span>
@@ -871,6 +889,30 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">matching_channel_idx</span> <span class="o">=</span> <span class="n">matching_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+        <span class="k">return</span> <span class="n">matching_channel_idx</span>
+
+    <span class="k">def</span> <span class="nf">get_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">channel</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get channel from slide</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        level : int</span>
+<span class="sd">            Pyramid level</span>
+
+<span class="sd">        series  : int</span>
+<span class="sd">            Series number</span>
+
+<span class="sd">        channel : str, int</span>
+<span class="sd">            Either the name of the channel (string), or the index of the channel (int)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        img_channel : ndarray</span>
+<span class="sd">            Specified channel sliced from the slide/image</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">matching_channel_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_channel_index</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
         <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slide2image</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span> <span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">)</span>
         <span class="n">img_channel</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">matching_channel_idx</span><span class="p">]</span>
 
@@ -964,7 +1006,7 @@
 
             <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">warning_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="n">valtils</span><span class="o">.</span><span class="n">Fore</span><span class="o">.</span><span class="n">GREEN</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_seris</span> <span class="o">=</span> <span class="n">series</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_series</span> <span class="o">=</span> <span class="n">series</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">series</span> <span class="o">=</span> <span class="n">series</span>
 
     <span class="k">def</span> <span class="nf">_set_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
@@ -994,10 +1036,10 @@
             <span class="c1"># javabridge.detach()</span>
             <span class="n">jpype</span><span class="o">.</span><span class="n">detachThreadFromJVM</span><span class="p">()</span>
 
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">pixel_type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unsignedinteger</span><span class="p">):</span>
-                <span class="n">tile</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">img_as_ubyte</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+            <span class="c1"># if np.issubdtype(pixel_type, np.unsignedinteger):</span>
+            <span class="c1">#     tile = util.img_as_ubyte(tile)</span>
 
-            <span class="n">tile_array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+            <span class="n">tile_array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">numpy2vips</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">pyvips_interpretation</span><span class="p">)</span>
 
         <span class="n">n_cpu</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">with</span> <span class="n">parallel_backend</span><span class="p">(</span><span class="s2">&quot;threading&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_cpu</span><span class="p">):</span>
@@ -1139,9 +1181,15 @@
 
                 <span class="n">series_meta</span><span class="o">.</span><span class="n">is_rgb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_rgb</span><span class="p">(</span><span class="n">rdr</span><span class="p">)</span>
                 <span class="n">series_meta</span><span class="o">.</span><span class="n">channel_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_channel_names</span><span class="p">(</span><span class="n">rdr</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
-                <span class="n">series_meta</span><span class="o">.</span><span class="n">slide_dimensions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slide_dimensions</span><span class="p">(</span><span class="n">rdr</span><span class="p">)</span>
-                <span class="n">series_meta</span><span class="o">.</span><span class="n">pixel_physical_size_xyu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixel_physical_size</span><span class="p">(</span><span class="n">rdr</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
                 <span class="n">series_meta</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rdr</span><span class="o">.</span><span class="n">getSizeC</span><span class="p">())</span>
+                <span class="n">series_meta</span><span class="o">.</span><span class="n">slide_dimensions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slide_dimensions</span><span class="p">(</span><span class="n">rdr</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">series_meta</span><span class="o">.</span><span class="n">is_rgb</span><span class="p">:</span>
+                    <span class="n">series_meta</span><span class="o">.</span><span class="n">pyvips_interpretation</span> <span class="o">=</span> <span class="s1">&#39;srgb&#39;</span>
+                <span class="k">elif</span> <span class="n">series_meta</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">series_meta</span><span class="o">.</span><span class="n">pyvips_interpretation</span> <span class="o">=</span> <span class="s1">&#39;b-w&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">series_meta</span><span class="o">.</span><span class="n">pyvips_interpretation</span> <span class="o">=</span> <span class="s1">&#39;multiband&#39;</span>
+                <span class="n">series_meta</span><span class="o">.</span><span class="n">pixel_physical_size_xyu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixel_physical_size</span><span class="p">(</span><span class="n">rdr</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
                 <span class="n">series_meta</span><span class="o">.</span><span class="n">bf_pixel_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rdr</span><span class="o">.</span><span class="n">getPixelType</span><span class="p">())</span>
                 <span class="n">series_meta</span><span class="o">.</span><span class="n">is_little_endian</span> <span class="o">=</span> <span class="n">rdr</span><span class="o">.</span><span class="n">isLittleEndian</span><span class="p">()</span>
                 <span class="n">series_meta</span><span class="o">.</span><span class="n">original_xml</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">meta_xml</span><span class="p">)</span>
@@ -1405,18 +1453,19 @@
         <span class="n">vips_img</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">new_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_f</span><span class="p">)</span>
 
         <span class="n">slide_meta</span><span class="o">.</span><span class="n">is_rgb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_rgb</span><span class="p">(</span><span class="n">vips_img</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_openslide</span><span class="p">:</span>
-            <span class="c1"># Will remove alpha channel</span>
-            <span class="n">slide_meta</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">bands</span> <span class="o">-</span> <span class="mi">1</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">slide_meta</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">bands</span>
+        <span class="n">slide_meta</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">bands</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">slide_meta</span><span class="o">.</span><span class="n">is_rgb</span> <span class="ow">and</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">hasalpha</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_openslide</span><span class="p">:</span>
+            <span class="c1"># Will remove alpha channel after reading</span>
+            <span class="n">slide_meta</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">bands</span> <span class="o">-</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">hasalpha</span><span class="p">()</span>
 
         <span class="n">slide_meta</span><span class="o">.</span><span class="n">slide_dimensions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slide_dimensions</span><span class="p">(</span><span class="n">vips_img</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">f_extension</span> <span class="ow">in</span> <span class="n">BF_READABLE_FORMATS</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">valtils</span><span class="o">.</span><span class="n">HiddenPrints</span><span class="p">():</span>
                 <span class="n">bf_reader</span> <span class="o">=</span> <span class="n">BioFormatsSlideReader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_f</span><span class="p">)</span>
 
-            <span class="n">slide_meta</span><span class="o">.</span><span class="n">channel_names</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">channel_names</span>
+            <span class="n">slide_meta</span><span class="o">.</span><span class="n">channel_names</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">channel_names</span> <span class="c1"># None if RGB</span>
+            <span class="c1"># Need to update the n_channels based on bioformats metadata if toilet roll .ome.tiff</span>
+            <span class="n">slide_meta</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">n_channels</span>
             <span class="n">slide_meta</span><span class="o">.</span><span class="n">pixel_physical_size_xyu</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">pixel_physical_size_xyu</span>
             <span class="n">slide_meta</span><span class="o">.</span><span class="n">bf_pixel_type</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">bf_pixel_type</span>
             <span class="n">slide_meta</span><span class="o">.</span><span class="n">is_little_endian</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">is_little_endian</span>
@@ -1425,7 +1474,6 @@
             <span class="n">slide_meta</span><span class="o">.</span><span class="n">optimal_tile_wh</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">optimal_tile_wh</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">slide_meta</span><span class="o">.</span><span class="n">pixel_physical_size_xyu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixel_physical_size</span><span class="p">(</span><span class="n">vips_img</span><span class="p">)</span>
-
 
         <span class="k">if</span> <span class="n">slide_meta</span><span class="o">.</span><span class="n">is_rgb</span><span class="p">:</span>
             <span class="n">slide_meta</span><span class="o">.</span><span class="n">channel_names</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1471,6 +1519,7 @@
                 <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">interpretation</span><span class="o">=</span><span class="s2">&quot;b-w&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">interpretation</span><span class="o">=</span><span class="s2">&quot;multiband&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">n_channels</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">bands</span>
 
         <span class="k">return</span> <span class="n">vips_slide</span>
 
@@ -1504,9 +1553,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">new_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_f</span><span class="p">,</span> <span class="n">subifd</span><span class="o">=</span><span class="n">level</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">access</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="c1"># Regular images like png or jpeg don&#39;t have SubIFD</span>
-                <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">new_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_f</span><span class="p">,</span> <span class="n">access</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">slide_dimensions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># Pyramid image but each level is a page, not a SubIFD</span>
+                    <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">new_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_f</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="n">level</span><span class="p">,</span> <span class="n">access</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Regular images like png or jpeg don&#39;t have SubIFD or pages</span>
+                    <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">new_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_f</span><span class="p">,</span> <span class="n">access</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">is_rgb</span> <span class="ow">and</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">hasalpha</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Remove alpha channel</span>
+            <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">xywh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">extract_area</span><span class="p">(</span><span class="o">*</span><span class="n">xywh</span><span class="p">)</span>
@@ -1733,6 +1790,11 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src_f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">src_f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># BF Datatype may not match min/max values in the image</span>
+        <span class="c1"># e.g. datatype is uint32, but min and max are floats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dtype</span><span class="p">()</span>
+
 
 <div class="viewcode-block" id="FlattenedPyramidReader.create_metadata"><a class="viewcode-back" href="../../slide_io.html#valis.slide_io.FlattenedPyramidReader.create_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">create_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">is_flattended_pyramid</span><span class="p">,</span> <span class="n">bf_reads_flat</span><span class="p">,</span> <span class="n">slide_dimensions</span><span class="p">,</span>\
@@ -1767,7 +1829,6 @@
             <span class="n">channel_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_channel_names</span><span class="p">(</span><span class="n">vips_img</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)</span>
 
         <span class="n">slide_meta</span><span class="o">.</span><span class="n">channel_names</span> <span class="o">=</span> <span class="n">channel_names</span>
-        <span class="n">slide_meta</span><span class="o">.</span><span class="n">img_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dtype</span><span class="p">(</span><span class="n">vips_img</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">slide_meta</span></div>
 
@@ -1809,8 +1870,16 @@
         <span class="k">if</span> <span class="n">xywh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">extract_area</span><span class="p">(</span><span class="o">*</span><span class="n">xywh</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">format</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">bf_datatype</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Min/max/response datatypes in xml don&#39;t match values image.</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bio-formats datatype is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">bf_datatype</span><span class="si">}</span><span class="s2">, &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;but min/max/response values in xml are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span><span class="si">}</span><span class="s2">. &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;Converting to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
+                   <span class="p">)</span>
+            <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">vips_dtype</span> <span class="o">=</span> <span class="n">bf2vips_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span><span class="p">)</span>
+            <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="n">vips_dtype</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bf_datatype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">img_dtype</span>
 
         <span class="k">if</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">bands</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">vips_slide</span> <span class="o">=</span> <span class="n">vips_slide</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">interpretation</span><span class="o">=</span><span class="s2">&quot;b-w&quot;</span><span class="p">)</span>
@@ -1834,7 +1903,7 @@
             <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg2</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
             <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">out_shape_wh</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">slide_dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">l0_slide</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">slide2vips</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xywh</span><span class="o">=</span><span class="n">xywh</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">l0_slide</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slide2vips</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xywh</span><span class="o">=</span><span class="n">xywh</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">resized</span> <span class="o">=</span> <span class="n">l0_slide</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
             <span class="n">vips_img</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">vips2numpy</span><span class="p">(</span><span class="n">resized</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">vips_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">out_shape_wh</span><span class="p">):</span>
@@ -1871,28 +1940,44 @@
 
         <span class="k">return</span> <span class="n">n_pages</span>
 
-    <span class="k">def</span> <span class="nf">_get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vips_img</span><span class="p">):</span>
 
+    <span class="k">def</span> <span class="nf">_get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get Bio-Formats datatype from values in metadata.</span>
+
+<span class="sd">        For example, BF metadata may have image datatype as</span>
+<span class="sd">        uint32, but in the image descriiption, min/max/resppnse,</span>
+<span class="sd">        are floats. This will determine if the slide should be cast</span>
+<span class="sd">        to a different dataatype to match values in metadata.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">smallest_level</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">slide_dimensions</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">vips_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slide2vips</span><span class="p">(</span><span class="n">smallest_level</span><span class="p">)</span>
         <span class="n">vips_fields</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">get_fields</span><span class="p">()</span>
+        <span class="n">current_bf_dtype</span> <span class="o">=</span> <span class="n">vips2bf_dtype</span><span class="p">(</span><span class="n">vips_img</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;n-pages&#39;</span> <span class="ow">in</span> <span class="n">vips_fields</span><span class="p">:</span>
             <span class="n">page</span> <span class="o">=</span> <span class="n">pyvips</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">new_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_f</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">page_metadata</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;image-description&quot;</span><span class="p">)</span>
 
             <span class="n">page_soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">page_metadata</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="s2">&quot;lxml&quot;</span><span class="p">)</span>
             <span class="n">channels</span> <span class="o">=</span> <span class="n">page_soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;channel&quot;</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">page_soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">channels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Indica Labs tiff</span>
                 <span class="n">dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">channels</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chnl</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">channels</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">chnl</span><span class="o">.</span><span class="n">has_attr</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">):</span>
                         <span class="n">max_v</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">chnl</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">])</span>
                         <span class="n">dtypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_v</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># PerkinElmer-QPI tiff</span>
+                <span class="n">dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">getText</span><span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">))</span>
+                    <span class="n">dtypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">v</span><span class="p">])</span><span class="o">.</span><span class="n">dtype</span>
+                    <span class="n">dtypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">response</span> <span class="o">=</span> <span class="n">page_soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
-                        <span class="n">v</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">getText</span><span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">))</span>
-                        <span class="n">dtypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="k">return</span> <span class="n">current_bf_dtype</span>
 
             <span class="n">unique_dtypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dtypes</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_dtypes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -1902,7 +1987,23 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">img_dtype</span> <span class="o">=</span> <span class="n">dtypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-            <span class="k">return</span> <span class="n">img_dtype</span></div>
+            <span class="n">vals_are_floats</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="n">img_dtype</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">img_is_int</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="n">current_bf_dtype</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">vals_are_floats</span> <span class="ow">and</span> <span class="n">img_is_int</span><span class="p">:</span>
+                <span class="n">max_v</span> <span class="o">=</span> <span class="n">vips_img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+                <span class="n">bf_px_num_type</span> <span class="o">=</span> <span class="n">FormatTools</span><span class="o">.</span><span class="n">pixelTypeFromString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">bf_datatype</span><span class="p">)</span>
+                <span class="n">temp_np_type</span><span class="p">,</span> <span class="n">max_v_for_type</span> <span class="o">=</span> <span class="n">bf_to_numpy_dtype</span><span class="p">(</span><span class="n">bf_px_num_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">is_little_endian</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">temp_np_type</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;4&#39;</span><span class="p">):</span>
+                    <span class="n">np_type</span> <span class="o">=</span> <span class="s2">&quot;float32&quot;</span>
+                <span class="k">elif</span> <span class="n">temp_np_type</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;8&#39;</span><span class="p">):</span>
+                    <span class="n">np_type</span> <span class="o">=</span> <span class="s2">&quot;float64&quot;</span>
+
+                <span class="n">bf_type</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">NUMPY_FORMAT_BF_DTYPE</span><span class="p">[</span><span class="n">np_type</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bf_type</span> <span class="o">=</span> <span class="n">current_bf_dtype</span>
+
+        <span class="k">return</span> <span class="n">bf_type</span></div>
 
 
 <div class="viewcode-block" id="ImageReader"><a class="viewcode-back" href="../../slide_io.html#valis.slide_io.ImageReader">[docs]</a><span class="k">class</span> <span class="nc">ImageReader</span><span class="p">(</span><span class="n">SlideReader</span><span class="p">):</span>
@@ -2023,7 +2124,7 @@
     <span class="n">can_only_use_openslide</span> <span class="o">=</span> <span class="n">f_extension</span> <span class="ow">in</span> <span class="n">OPENSLIDE_ONLY</span>
     <span class="k">if</span> <span class="n">can_only_use_openslide</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">can_use_openslide</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;file </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">src_f</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> can only be read by OpenSlide, &quot;</span>
-               <span class="sa">f</span><span class="s2">&quot;which is required to open files with the follwing extensions: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OPENSLIDE_ONLY</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+               <span class="sa">f</span><span class="s2">&quot;which is required to open files with the follwing extensions: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OPENSLIDE_ONLY</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
                <span class="sa">f</span><span class="s2">&quot;However, OpenSlide cannot be found. Unable to read this slide.&quot;</span>
                <span class="p">)</span>
 
@@ -2038,8 +2139,8 @@
     <span class="k">except</span><span class="p">:</span>
         <span class="n">can_use_pyvips</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="n">fail_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Can&#39;t find reader to open </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">src_f</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">. May need to create a new one by subclassing SlideReader. Returning None&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">can_use_openslide</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">can_use_bf</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">can_use_skimage</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">can_use_pyvips</span><span class="p">:</span>
+        <span class="n">fail_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Can&#39;t find reader to open </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">src_f</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">. May need to create a new one by subclassing SlideReader. Returning None&quot;</span>
         <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">fail_msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">None</span>
@@ -2049,12 +2150,15 @@
         <span class="k">return</span> <span class="n">reader</span>
 
     <span class="n">n_series</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">is_rgb</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">can_use_bf</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">valtils</span><span class="o">.</span><span class="n">HiddenPrints</span><span class="p">():</span>
             <span class="n">bf_reader</span> <span class="o">=</span> <span class="n">BioFormatsSlideReader</span><span class="p">(</span><span class="n">src_f</span><span class="p">)</span>
 
         <span class="n">n_series</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">n_series</span>
         <span class="n">is_ometiff</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;ome-tiff&quot;</span><span class="p">,</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">is_rgb</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">is_rgb</span>
+
         <span class="k">if</span> <span class="n">series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">series</span> <span class="o">=</span> <span class="n">bf_reader</span><span class="o">.</span><span class="n">series</span>
     <span class="k">else</span><span class="p">:</span>
@@ -2080,8 +2184,9 @@
         <span class="n">reader</span> <span class="o">=</span> <span class="n">VipsSlideReader</span>
 
     <span class="k">elif</span> <span class="n">is_ometiff</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">series</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_series</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">series</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_series</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">is_rgb</span> <span class="ow">and</span> <span class="n">is_rgb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Seems pvips can only read ome.tiff if there is 1 series.</span>
+            <span class="c1"># Converting a multichannel pyvips.Image is very slow, but is fast for RGB</span>
             <span class="n">reader</span> <span class="o">=</span> <span class="n">VipsSlideReader</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">reader</span> <span class="o">=</span> <span class="n">BioFormatsSlideReader</span>
@@ -2325,6 +2430,122 @@
         <span class="n">new_ome</span> <span class="o">=</span> <span class="n">temp_new_ome</span>
 
     <span class="k">return</span> <span class="n">new_ome</span></div>
+
+
+<span class="k">def</span> <span class="nf">warp_and_save_slide</span><span class="p">(</span><span class="n">src_f</span><span class="p">,</span> <span class="n">dst_f</span><span class="p">,</span> <span class="n">transformation_src_shape_rc</span><span class="p">,</span> <span class="n">transformation_dst_shape_rc</span><span class="p">,</span>
+                        <span class="n">aligned_slide_shape_rc</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dxdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">series</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp_method</span><span class="o">=</span><span class="s2">&quot;bicubic&quot;</span><span class="p">,</span>
+                        <span class="n">bbox_xywh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bg_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">perceputally_uniform_channel_colors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">tile_wh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;lzw&quot;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Warp and save a slide</span>
+
+<span class="sd">    Warp slide according to `M` and/or `dxdy`, then save as an ome.tiff image.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    src_f : str</span>
+<span class="sd">        Path to slide</span>
+
+<span class="sd">    dst_f : str</span>
+<span class="sd">        Path indicating where the warped slide will be saved.</span>
+
+<span class="sd">    transformation_src_shape_rc : (int, int)</span>
+<span class="sd">        Shape of the image used to find the rigid transformations (row, col)</span>
+
+<span class="sd">    transformation_dst_shape_rc : (int, int)</span>
+<span class="sd">        Shape of image with shape `in_shape_rc`, after being warped,</span>
+<span class="sd">        i.e. the shape of the registered image.</span>
+
+<span class="sd">    aligned_slide_shape_rc : (int, int)</span>
+<span class="sd">        Shape of the warped slide (row, col)</span>
+
+<span class="sd">    M : ndarray, optional</span>
+<span class="sd">        3x3 Affine transformation matrix to perform rigid warp.</span>
+<span class="sd">        Found by aligning the target/fixed image to source/moving image.</span>
+<span class="sd">        If `M` was found the other way around, then `M` will need to be inverted</span>
+<span class="sd">        using np.linalg.inv()</span>
+
+<span class="sd">    dxdy : list, optional</span>
+<span class="sd">        A list containing the x-axis (column) displacement and y-axis (row) displacements.</span>
+<span class="sd">        Found by aligning the target/fixed image to source/moving image.</span>
+<span class="sd">        If `dxdy` was found the other way around, then `dxdy` will need to be inverted,</span>
+<span class="sd">        which can be done using `warp_tools.get_inverse_field`</span>
+
+<span class="sd">    level : int, optional</span>
+<span class="sd">        Pyramid level to warp an save</span>
+
+<span class="sd">    series : int, optional</span>
+<span class="sd">        Series number of image</span>
+
+<span class="sd">    interp_method : str, optional</span>
+<span class="sd">        Interpolation method</span>
+
+<span class="sd">    bbox_xywh : tuple</span>
+<span class="sd">        Bounding box to crop warped slide. Should be in reference the</span>
+<span class="sd">        warped slide.</span>
+
+<span class="sd">    bg_color : optional, list</span>
+<span class="sd">        Background color, if `None`, then the background color will be black</span>
+
+<span class="sd">    perceputally_uniform_channel_colors : bool, optional</span>
+<span class="sd">        Whether or not to add perceptually uniform channel colors to non-RGB images</span>
+
+<span class="sd">    tile_wh : int, optional</span>
+<span class="sd">        Tile width and height used to save image</span>
+
+<span class="sd">    compression : str</span>
+<span class="sd">        Compression method used to save ome.tiff . Default is lzw, but can also</span>
+<span class="sd">        be jpeg or jp2k. See https://libvips.github.io/pyvips/enums.html#pyvips.enums.ForeignTiffCompression for more details.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">warped_slide</span> <span class="o">=</span> <span class="n">slide_tools</span><span class="o">.</span><span class="n">warp_slide</span><span class="p">(</span><span class="n">src_f</span><span class="o">=</span><span class="n">src_f</span><span class="p">,</span>
+                                          <span class="n">transformation_src_shape_rc</span><span class="o">=</span><span class="n">transformation_src_shape_rc</span><span class="p">,</span>
+                                          <span class="n">transformation_dst_shape_rc</span><span class="o">=</span><span class="n">transformation_dst_shape_rc</span><span class="p">,</span>
+                                          <span class="n">aligned_slide_shape_rc</span><span class="o">=</span><span class="n">aligned_slide_shape_rc</span><span class="p">,</span>
+                                          <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
+                                          <span class="n">dxdy</span><span class="o">=</span><span class="n">dxdy</span><span class="p">,</span>
+                                          <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span>
+                                          <span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span>
+                                          <span class="n">interp_method</span><span class="o">=</span><span class="n">interp_method</span><span class="p">,</span>
+                                          <span class="n">bbox_xywh</span><span class="o">=</span><span class="n">bbox_xywh</span><span class="p">,</span>
+                                          <span class="n">bg_color</span><span class="o">=</span><span class="n">bg_color</span><span class="p">)</span>
+
+    <span class="c1"># Get OMEXML and update with new dimensions</span>
+    <span class="n">reader_cls</span> <span class="o">=</span> <span class="n">get_slide_reader</span><span class="p">(</span><span class="n">src_f</span><span class="p">,</span> <span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">)</span> <span class="c1"># Get slide reader class</span>
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">reader_cls</span><span class="p">(</span><span class="n">src_f</span><span class="p">,</span> <span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">)</span> <span class="c1"># Get reader</span>
+    <span class="n">slide_meta</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">metadata</span>
+    <span class="k">if</span> <span class="n">slide_meta</span><span class="o">.</span><span class="n">pixel_physical_size_xyu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">PIXEL_UNIT</span><span class="p">:</span>
+        <span class="n">px_phys_size</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">px_phys_size</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">scale_physical_size</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+
+    <span class="n">bf_dtype</span> <span class="o">=</span> <span class="n">vips2bf_dtype</span><span class="p">(</span><span class="n">warped_slide</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+    <span class="n">out_xyczt</span> <span class="o">=</span> <span class="n">get_shape_xyzct</span><span class="p">((</span><span class="n">warped_slide</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">warped_slide</span><span class="o">.</span><span class="n">height</span><span class="p">),</span> <span class="n">warped_slide</span><span class="o">.</span><span class="n">bands</span><span class="p">)</span>
+    <span class="n">ome_xml_obj</span> <span class="o">=</span> <span class="n">update_xml_for_new_img</span><span class="p">(</span><span class="n">slide_meta</span><span class="o">.</span><span class="n">original_xml</span><span class="p">,</span>
+                                         <span class="n">new_xyzct</span><span class="o">=</span><span class="n">out_xyczt</span><span class="p">,</span>
+                                         <span class="n">bf_dtype</span><span class="o">=</span><span class="n">bf_dtype</span><span class="p">,</span>
+                                         <span class="n">is_rgb</span><span class="o">=</span><span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">is_rgb</span><span class="p">,</span>
+                                         <span class="n">pixel_physical_size_xyu</span><span class="o">=</span><span class="n">px_phys_size</span><span class="p">,</span>
+                                         <span class="n">channel_names</span><span class="o">=</span><span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">channel_names</span><span class="p">,</span>
+                                         <span class="n">perceputally_uniform_channel_colors</span><span class="o">=</span><span class="n">perceputally_uniform_channel_colors</span>
+                                         <span class="p">)</span>
+
+    <span class="n">ome_xml</span> <span class="o">=</span> <span class="n">ome_xml_obj</span><span class="o">.</span><span class="n">to_xml</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">tile_wh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tile_wh</span> <span class="o">=</span> <span class="n">slide_meta</span><span class="o">.</span><span class="n">optimal_tile_wh</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">down_sampling</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">slide_meta</span><span class="o">.</span><span class="n">slide_dimensions</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="o">/</span><span class="n">slide_meta</span><span class="o">.</span><span class="n">slide_dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">tile_wh</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">tile_wh</span><span class="o">*</span><span class="n">down_sampling</span><span class="p">))</span>
+            <span class="n">tile_wh</span> <span class="o">=</span> <span class="n">tile_wh</span> <span class="o">-</span> <span class="p">(</span><span class="n">tile_wh</span> <span class="o">%</span> <span class="mi">16</span><span class="p">)</span>  <span class="c1"># Tile shape must be multiple of 16</span>
+            <span class="k">if</span> <span class="n">tile_wh</span> <span class="o">&lt;</span> <span class="mi">16</span><span class="p">:</span>
+                <span class="n">tile_wh</span> <span class="o">=</span> <span class="mi">16</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">out_xyczt</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">tile_wh</span><span class="p">):</span>
+                <span class="n">tile_wh</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">out_xyczt</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">save_ome_tiff</span><span class="p">(</span><span class="n">warped_slide</span><span class="p">,</span> <span class="n">dst_f</span><span class="o">=</span><span class="n">dst_f</span><span class="p">,</span> <span class="n">ome_xml</span><span class="o">=</span><span class="n">ome_xml</span><span class="p">,</span>
+                  <span class="n">tile_wh</span><span class="o">=</span><span class="n">tile_wh</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">compression</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="save_ome_tiff"><a class="viewcode-back" href="../../slide_io.html#valis.slide_io.save_ome_tiff">[docs]</a><span class="k">def</span> <span class="nf">save_ome_tiff</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">dst_f</span><span class="p">,</span> <span class="n">ome_xml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tile_wh</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;lzw&quot;</span><span class="p">):</span>

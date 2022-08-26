@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Slide I/O &mdash; valis &#34;1.0.0rc5&#34;
+  <title>Slide I/O &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -272,7 +272,7 @@ the slide, like dimensions at each level, physical units, etc…</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valis.slide_io.init_jvm">
-<span class="sig-prename descclassname"><span class="pre">valis.slide_io.</span></span><span class="sig-name descname"><span class="pre">init_jvm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mem_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/slide_io.html#init_jvm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.slide_io.init_jvm" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">valis.slide_io.</span></span><span class="sig-name descname"><span class="pre">init_jvm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/slide_io.html#init_jvm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.slide_io.init_jvm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize JVM for BioFormats</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -402,7 +402,7 @@ be jpeg or jp2k. See pyips for more details.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="valis.slide_io.MetaData.channel_names">
 <span class="sig-name descname"><span class="pre">channel_names</span></span><a class="headerlink" href="#valis.slide_io.MetaData.channel_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of channel names.</p>
+<dd><p>List of channel names. None if image is RGB</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a></p>

@@ -570,8 +570,6 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 Change Log
 ==========
 
-<<<<<<< HEAD
-=======
 Version 1.0.0rc11 (August 26, 2022)
 -----------------------------------
 #. Fixed bug when providing rigid transformations (Issue 14, https://github.com/MathOnco/valis/issues/14).
@@ -581,15 +579,10 @@ Version 1.0.0rc11 (August 26, 2022)
 #. Version used to submit results to the ACROBAT Grand Challenge. Code used to perform registration can be found in examples/acrobat_grand_challenge.py. This example also shows how to use and create a custom :code:`ImageProcesser` and perform micro-registration with a mask.
 
 
->>>>>>> 1.0.rc10
 Version 1.0.0rc10 (August 11, 2022)
 -----------------------------------
 #. Fixed compatibility with updated interpolation package (Issue 12).
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 1.0.rc10
 Version 1.0.0rc9 (August 4, 2022)
 ---------------------------------
 #. Reduced memory usage for micro-registration and warping. No longer copying memory before warping, and large displacement fields saved as .tiff images instead of .vips images.

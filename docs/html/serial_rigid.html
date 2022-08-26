@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Serial rigid registration &mdash; valis &#34;1.0.0rc5&#34;
+  <title>Serial rigid registration &mdash; valis &#34;1.0.0rc11&#34;
  documentation</title>
   
 
@@ -185,7 +185,7 @@
 <p>Classes and functions to perform serial rigid registration of a set of images</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="valis.serial_rigid.register_images">
-<span class="sig-prename descclassname"><span class="pre">valis.serial_rigid.</span></span><span class="sig-name descname"><span class="pre">register_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">img_dir,</span> <span class="pre">dst_dir=None,</span> <span class="pre">name='registrar',</span> <span class="pre">feature_detector=&lt;valis.feature_detectors.VggFD</span> <span class="pre">object&gt;,</span> <span class="pre">matcher=&lt;valis.feature_matcher.Matcher</span> <span class="pre">object&gt;,</span> <span class="pre">transformer=&lt;EuclideanTransform(matrix=</span>&#160;&#160;&#160;&#160; <span class="pre">[[</span> <span class="pre">1.,</span>&#160; <span class="pre">0.,</span>&#160; <span class="pre">0.],</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[</span> <span class="pre">0.,</span>&#160; <span class="pre">1.,</span>&#160; <span class="pre">0.],</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[</span> <span class="pre">0.,</span>&#160; <span class="pre">0.,</span>&#160; <span class="pre">1.]])&gt;,</span> <span class="pre">affine_optimizer=None,</span> <span class="pre">imgs_ordered=False,</span> <span class="pre">reference_img_f=None,</span> <span class="pre">similarity_metric='n_matches',</span> <span class="pre">max_scaling=3.0,</span> <span class="pre">qt_emitter=None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_rigid.html#register_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_rigid.register_images" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">valis.serial_rigid.</span></span><span class="sig-name descname"><span class="pre">register_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">img_dir,</span> <span class="pre">dst_dir=None,</span> <span class="pre">name='registrar',</span> <span class="pre">feature_detector=&lt;valis.feature_detectors.VggFD</span> <span class="pre">object&gt;,</span> <span class="pre">matcher=&lt;valis.feature_matcher.Matcher</span> <span class="pre">object&gt;,</span> <span class="pre">transformer=&lt;EuclideanTransform(matrix=</span>&#160;&#160;&#160;&#160; <span class="pre">[[</span> <span class="pre">1.,</span>&#160; <span class="pre">0.,</span>&#160; <span class="pre">0.],</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[</span> <span class="pre">0.,</span>&#160; <span class="pre">1.,</span>&#160; <span class="pre">0.],</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[</span> <span class="pre">0.,</span>&#160; <span class="pre">0.,</span>&#160; <span class="pre">1.]])&gt;,</span> <span class="pre">affine_optimizer=None,</span> <span class="pre">imgs_ordered=False,</span> <span class="pre">reference_img_f=None,</span> <span class="pre">similarity_metric='n_matches',</span> <span class="pre">max_scaling=3.0,</span> <span class="pre">align_to_reference=False,</span> <span class="pre">qt_emitter=None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_rigid.html#register_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_rigid.register_images" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rigidly align collection of images</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -213,6 +213,8 @@ If None, the index of the middle image will be the reference.</p></li>
 used to build the distance matrix used to sort the images.</p></li>
 <li><p><strong>summary</strong> (<em>Dataframe</em>) – Pandas dataframe containing the median distance between matched features
 before and after registration.</p></li>
+<li><p><strong>align_to_reference</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether or not images should be aligned to a reference image
+specified by <cite>reference_img_f</cite>.</p></li>
 <li><p><strong>qt_emitter</strong> (<em>PySide2.QtCore.Signal</em><em>, </em><em>optional</em>) – Used to emit signals that update the GUI’s progress bars</p></li>
 </ul>
 </dd>
@@ -487,7 +489,7 @@ look as similar as possible.</p></li>
 <h3>SerialRigidRegistrar<a class="headerlink" href="#serialrigidregistrar" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="valis.serial_rigid.SerialRigidRegistrar">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.serial_rigid.</span></span><span class="sig-name descname"><span class="pre">SerialRigidRegistrar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_rigid.html#SerialRigidRegistrar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_rigid.SerialRigidRegistrar" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">valis.serial_rigid.</span></span><span class="sig-name descname"><span class="pre">SerialRigidRegistrar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_rigid.html#SerialRigidRegistrar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_rigid.SerialRigidRegistrar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class that performs serial rigid registration</p>
 <p>Registration is conducted by first detecting features in all images.
 Features are then matched between images, which are then used to construct
@@ -719,6 +721,19 @@ the <cite>img_obj_list</cite> has been sorted.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="valis.serial_rigid.SerialRigidRegistrar.align_to_reference">
+<span class="sig-name descname"><span class="pre">align_to_reference</span></span><a class="headerlink" href="#valis.serial_rigid.SerialRigidRegistrar.align_to_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not images should be aligne to a reference image
+specified by <cite>reference_img_f</cite>. Will be set to True if
+<cite>reference_img_f</cite> is provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="valis.serial_rigid.SerialRigidRegistrar.iter_order">
 <span class="sig-name descname"><span class="pre">iter_order</span></span><a class="headerlink" href="#valis.serial_rigid.SerialRigidRegistrar.iter_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each element of <cite>iter_order</cite> contains a tuple of stack
@@ -746,7 +761,7 @@ alignment between each image and the previous one in the stack.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="valis.serial_rigid.SerialRigidRegistrar.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_rigid.html#SerialRigidRegistrar.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_rigid.SerialRigidRegistrar.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_ordered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_img_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/valis/serial_rigid.html#SerialRigidRegistrar.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valis.serial_rigid.SerialRigidRegistrar.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class that performs serial rigid registration</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -765,6 +780,9 @@ will be determined by sorting a distance matrix.</p></li>
 <li><p><strong>reference_img_f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Filename of image that will be treated as the center of the stack.
 If None, the index of the middle image will be the reference.</p></li>
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Descriptive name of registrar, such as the sample’s name</p></li>
+<li><p><strong>align_to_reference</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether or not images should be aligne to a reference image
+specified by <cite>reference_img_f</cite>. Will be set to True if
+<cite>reference_img_f</cite> is provided.</p></li>
 </ul>
 </dd>
 </dl>
