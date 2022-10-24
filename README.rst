@@ -570,6 +570,11 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 Change Log
 ==========
 
+Version 1.0.0rc12 (October 26, 2022)
+-----------------------------------
+#. Fixed bug where would get out of bounds errors when cropping with user provided transformations (github issue 14 https://github.com/MathOnco/valis/issues/14)
+
+
 Version 1.0.0rc11 (August 26, 2022)
 -----------------------------------
 #. Fixed bug when providing rigid transformations (Issue 14, https://github.com/MathOnco/valis/issues/14).

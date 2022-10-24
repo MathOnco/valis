@@ -2317,9 +2317,7 @@ class Valis(object):
             out_rc = np.round(temp_out_shape_rc*ref_to_reg_sxy).astype(int)
 
         else:
-            ref_slide_shape_rc = ref_slide_obj.slide_dimensions_wh[0][::-1]
-            ref_to_reg_sxy = (np.array(rigid_ref_obj.image.shape)/np.array(ref_slide_shape_rc))[::-1]
-            out_rc = np.round(ref_slide_shape_rc*ref_to_reg_sxy).astype(int)
+            out_rc = rigid_ref_obj.image.shape
 
         scaled_M_dict = {}
         for img_name, img_tforms in named_tform_dict.items():
@@ -2357,9 +2355,11 @@ class Valis(object):
             img_obj = rigid_registrar.img_obj_list[moving_idx]
             if img_obj.name in scaled_M_dict:
                 continue
-
+                
             prev_img_obj = rigid_registrar.img_obj_list[fixed_idx]
             img_obj.fixed_obj = prev_img_obj
+
+            print(f"finding M for {img_obj.name}, which is being aligned to {prev_img_obj.name}")
 
             if fixed_idx == rigid_registrar.reference_img_idx:
                 prev_M = np.eye(3)
@@ -2490,7 +2490,7 @@ class Valis(object):
                 img_obj.image = matching_slide.processed_img
 
         rigid_img_list = [img_obj.registered_img for img_obj in rigid_registrar.img_obj_list]
-        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)#[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
+        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)
         self.rigid_overlap_img = warp_tools.crop_img(self.rigid_overlap_img, overlap_mask_bbox_xywh)
 
         rigid_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_rigid_overlap.png")
@@ -2676,36 +2676,36 @@ class Valis(object):
 
         ref_slide = self.get_ref_slide()
 
-        if mask is not None:
+        max_s = np.min(ref_slide.slide_dimensions_wh[0]/np.array(ref_slide.processed_img_shape_rc[::-1]))
+        if mask is None:
+            if warp_full_img:
+                s = max_s
+            else:
+                s = np.min(max_img_dim/np.array(ref_slide.processed_img_shape_rc))
+        else:
+            # Determine how big image would have to be to get mask with maxmimum dimension = max_img_dim
             if isinstance(mask, pyvips.Image):
                 mask_shape_rc = np.array((mask.height, mask.width))
             else:
                 mask_shape_rc = np.array(mask.shape[0:2])
 
-        # Determine size of warped image/ROI
-        if not warp_full_img:
-            if mask is None:
-                s = np.min(max_img_dim/np.array(ref_slide.processed_img_shape_rc))
+            to_reg_mask_sxy = (mask_shape_rc/np.array(ref_slide.reg_img_shape_rc))[::-1]
+            if not np.all(to_reg_mask_sxy == 1):
+                # Resize just in case it's huge. Only need bounding box
+                reg_size_mask = warp_tools.resize_img(mask, ref_slide.reg_img_shape_rc, interp_method="nearest")
             else:
-                # If there is a mask then want its scaled bounding box to be == max_img_dim
-                to_reg_mask_sxy = (mask_shape_rc/np.array(ref_slide.reg_img_shape_rc))[::-1]
-                if not np.all(to_reg_mask_sxy == 1):
-                    # Resize just in case it's huge. Only need bounding box
-                    reg_size_mask = warp_tools.resize_img(mask, ref_slide.reg_img_shape_rc, interp_method="nearest")
-                else:
-                    reg_size_mask = mask
-                reg_size_mask_xy = warp_tools.mask2xy(reg_size_mask)
-                to_reg_mask_bbox_xywh = list(warp_tools.xy2bbox(reg_size_mask_xy))
-                to_reg_mask_wh = np.round(to_reg_mask_bbox_xywh[2:]).astype(int)
+                reg_size_mask = mask
+            reg_size_mask_xy = warp_tools.mask2xy(reg_size_mask)
+            to_reg_mask_bbox_xywh = list(warp_tools.xy2bbox(reg_size_mask_xy))
+            to_reg_mask_wh = np.round(to_reg_mask_bbox_xywh[2:]).astype(int)
+            if warp_full_img:
+                s = max_s
+            else:
                 s = np.min(max_img_dim/np.array(to_reg_mask_wh))
 
-            max_s = np.min(ref_slide.slide_dimensions_wh[0]/np.array(ref_slide.processed_img_shape_rc[::-1]))
-            if s < max_s:
-                full_out_shape = self.get_aligned_slide_shape(s)
-            else:
-                full_out_shape = self.get_aligned_slide_shape(0)
+        if s < max_s:
+            full_out_shape = self.get_aligned_slide_shape(s)
         else:
-            # Will register full size
             full_out_shape = self.get_aligned_slide_shape(0)
 
         if mask is None:
@@ -2724,6 +2724,7 @@ class Valis(object):
                 vips_micro_reg_mask = mask
             vips_micro_reg_mask = warp_tools.resize_img(vips_micro_reg_mask, full_out_shape, interp_method="nearest")
             vips_micro_reg_mask = warp_tools.crop_img(img=vips_micro_reg_mask, xywh=mask_bbox_xywh)
+
 
         use_tiler = False
         if ref_slide.reader.metadata.bf_datatype is not None:
