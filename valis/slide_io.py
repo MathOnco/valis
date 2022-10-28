@@ -2125,7 +2125,146 @@ def create_channel(channel_id, name=None, color=None):
     return new_channel
 
 
-def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, perceputally_uniform_channel_colors=False):
+# def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, perceputally_uniform_channel_colors=False):
+#     """Create new ome-xmml object
+
+#     Parameters
+#     -------
+#     shape_xyzct : tuple of int
+#         XYZCT shape of image
+
+#     bf_dtype : str
+#         String format of Bioformats datatype
+
+#     is_rgb : bool
+#         Whether or not the image is RGB
+
+#     pixel_physical_size_xyu : tuple, optional
+#         Physical size per pixel and the unit.
+
+#     channel_names : list, optional
+#         List of channel names.
+
+#     perceputally_uniform_channel_colors : bool
+#         Whether or not to add perceptually uniform channel colors.
+
+#     Returns
+#     -------
+#     new_ome : ome_types.model.OME
+#         ome_types.model.OME object containing ome-xml metadata
+
+#     """
+
+#     x, y, z, c, t = shape_xyzct
+#     new_ome = ome_types.OME()
+#     new_img = ome_types.model.Image(
+#         id="Image:0",
+#         pixels=ome_types.model.Pixels(
+#             id="Pixels:0",
+#             size_x=x,
+#             size_y=y,
+#             size_z=z,
+#             size_c=c,
+#             size_t=t,
+#             type=bf_dtype,
+#             dimension_order='XYZCT',
+#             metadata_only=True
+#         )
+#     )
+
+#     if pixel_physical_size_xyu is not None:
+#         phys_x, phys_y, phys_u = pixel_physical_size_xyu
+#         new_img.pixels.physical_size_x = phys_x
+#         new_img.pixels.physical_size_x_unit = phys_u
+#         new_img.pixels.physical_size_y = phys_y
+#         new_img.pixels.physical_size_y_unit = phys_u
+
+#     if is_rgb:
+#         rgb_channel = ome_types.model.Channel(id='Channel:0:0', samples_per_pixel=3)
+#         new_img.pixels.channels = [rgb_channel]
+
+#     else:
+#         if channel_names is not None:
+#             default_channel_colors = slide_tools.turbo_channel_colors(c)
+#             channels = [create_channel(i, name=channel_names[i], color=default_channel_colors[i]) for i in range(c)]
+#             new_img.pixels.channels = channels
+
+#         if perceputally_uniform_channel_colors:
+#             channel_colors = slide_tools.perceptually_uniform_channel_colors(c)
+#             if len(new_img.pixels.channels) == 0:
+#                 channels = [create_channel(i, color=channel_colors[i]) for i in range(c)]
+#             else:
+#                 channels = new_img.pixels.channels
+#                 for i, clr in enumerate(channel_colors):
+#                     channels[i].color = (*clr, 1)
+
+#     new_ome = ome_types.model.OME()
+#     new_ome.images.append(new_img)
+
+#     return new_ome
+
+
+# def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, perceputally_uniform_channel_colors=False):
+#     """Update dimensions ome-xml metadata
+
+#     Used to create a new ome-xml that reflects changes in an image, such as its shape
+
+#     If `current_ome_xml_str` is invalid or None, a new ome-xml will be created
+
+#     Parameters
+#     -------
+#     current_ome_xml_str : str
+#         ome-xml string that needs to be updated
+
+#     new_xyzct : tuple of int
+#         XYZCT shape of image
+
+#     bf_dtype : str
+#         String format of Bioformats datatype
+
+#     is_rgb : bool
+#         Whether or not the image is RGB
+
+#     pixel_physical_size_xyu : tuple, optional
+#         Physical size per pixel and the unit.
+
+#     channel_names : list, optional
+#         List of channel names.
+
+#     perceputally_uniform_channel_colors : bool
+#         Whether or not to add perceptually uniform channel colors
+
+#     Returns
+#     -------
+#     new_ome : ome_types.model.OME
+#         ome_types.model.OME object containing ome-xml metadata
+
+#     """
+
+#     temp_new_ome = create_ome_xml(new_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu, channel_names, perceputally_uniform_channel_colors)
+#     og_valid_xml = True
+#     if current_ome_xml_str is not None:
+#         try:
+#             elementTree.fromstring(current_ome_xml_str)
+#         except elementTree.ParseError as e:
+#             print(e)
+#             msg = "xml in original file is invalid or missing. Will create one"
+#             valtils.print_warning(msg)
+#             og_valid_xml = False
+
+#     else:
+#         og_valid_xml = False
+
+#     if og_valid_xml:
+#         new_ome = ome_types.from_xml(current_ome_xml_str)
+#         new_ome.images = temp_new_ome.images
+#     else:
+#         new_ome = temp_new_ome
+
+#     return new_ome
+
+@valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
+def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
     """Create new ome-xmml object
 
     Parameters
@@ -2145,8 +2284,9 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
     channel_names : list, optional
         List of channel names.
 
-    perceputally_uniform_channel_colors : bool
-        Whether or not to add perceptually uniform channel colors.
+    colormap : dict, optional
+        Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+        If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
 
     Returns
     -------
@@ -2184,19 +2324,22 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
         new_img.pixels.channels = [rgb_channel]
 
     else:
-        if channel_names is not None:
-            default_channel_colors = slide_tools.turbo_channel_colors(c)
-            channels = [create_channel(i, name=channel_names[i], color=default_channel_colors[i]) for i in range(c)]
-            new_img.pixels.channels = channels
 
-        if perceputally_uniform_channel_colors:
-            channel_colors = slide_tools.perceptually_uniform_channel_colors(c)
-            if len(new_img.pixels.channels) == 0:
-                channels = [create_channel(i, color=channel_colors[i]) for i in range(c)]
-            else:
-                channels = new_img.pixels.channels
-                for i, clr in enumerate(channel_colors):
-                    channels[i].color = (*clr, 1)
+        if channel_names is None:
+            channel_names = [f"C{i}" for i in range(c)]
+
+        default_colors = slide_tools.get_matplotlib_channel_colors(c)
+        default_colormap = {channel_names[i]:tuple(default_colors[i]) for i in range(c)}
+        if colormap is not None:
+            if len(colormap) != c:
+                colormap = default_colormap
+                msg = "Number of colors in colormap not same as the number of channels. Using default colormap"
+                valtils.print_warning(msg)
+        else:
+            colormap = default_colormap
+
+        channels = [create_channel(i, name=channel_names[i], color=colormap[channel_names[i]]) for i in range(c)]
+        new_img.pixels.channels = channels
 
     new_ome = ome_types.model.OME()
     new_ome.images.append(new_img)
@@ -2204,10 +2347,11 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
     return new_ome
 
 
-def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, perceputally_uniform_channel_colors=False):
+@valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
+def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, series, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
     """Update dimensions ome-xml metadata
 
-    Used to create a new ome-xml that reflects changes in an image, such as its shape
+    Used to create a new ome-xmlthat reflects changes in an image, such as its shape
 
     If `current_ome_xml_str` is invalid or None, a new ome-xml will be created
 
@@ -2231,8 +2375,10 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, pix
     channel_names : list, optional
         List of channel names.
 
-    perceputally_uniform_channel_colors : bool
-        Whether or not to add perceptually uniform channel colors
+    colormap : dict, optional
+        Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+        If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+        If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
     Returns
     -------
@@ -2241,11 +2387,23 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, pix
 
     """
 
-    temp_new_ome = create_ome_xml(new_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu, channel_names, perceputally_uniform_channel_colors)
     og_valid_xml = True
+    og_ome = None
     if current_ome_xml_str is not None:
         try:
             elementTree.fromstring(current_ome_xml_str)
+            og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
+
+            if colormap is None:
+                # Get original channel colors
+                img = og_ome.images[series]
+                colormap = {c.name: c.color.as_rgb_tuple() for c in img.pixels.channels}
+                all_rgb = set(list(colormap.values()))
+                nc = len(img.pixels.channels)
+                if len(all_rgb) == 1 and nc > 1:
+                    default_colors = slide_tools.get_matplotlib_channel_colors(nc)
+                    colormap = {img.pixels.channels[i].name: tuple(default_colors[i]) for i in range(nc)}
+
         except elementTree.ParseError as e:
             print(e)
             msg = "xml in original file is invalid or missing. Will create one"
@@ -2255,8 +2413,10 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, pix
     else:
         og_valid_xml = False
 
+    temp_new_ome = create_ome_xml(new_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu, channel_names, colormap=colormap)
+
     if og_valid_xml:
-        new_ome = ome_types.from_xml(current_ome_xml_str)
+        new_ome = og_ome.copy()
         new_ome.images = temp_new_ome.images
     else:
         new_ome = temp_new_ome
@@ -2264,10 +2424,12 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, pix
     return new_ome
 
 
+
+@valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformation_dst_shape_rc,
                         aligned_slide_shape_rc, M=None, dxdy=None,
                         level=0, series=None, interp_method="bicubic",
-                        bbox_xywh=None, bg_color=None, perceputally_uniform_channel_colors=False,
+                        bbox_xywh=None, bg_color=None, colormap=None,
                         tile_wh=None, compression="lzw"):
 
     """ Warp and save a slide
@@ -2320,8 +2482,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
     bg_color : optional, list
         Background color, if `None`, then the background color will be black
 
-    perceputally_uniform_channel_colors : bool, optional
-        Whether or not to add perceptually uniform channel colors to non-RGB images
+    colormap : dict, optional
+        Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+        If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+        If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
     tile_wh : int, optional
         Tile width and height used to save image
@@ -2359,9 +2523,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                                          new_xyzct=out_xyczt,
                                          bf_dtype=bf_dtype,
                                          is_rgb=reader.metadata.is_rgb,
+                                         series=series,
                                          pixel_physical_size_xyu=px_phys_size,
                                          channel_names=reader.metadata.channel_names,
-                                         perceputally_uniform_channel_colors=perceputally_uniform_channel_colors
+                                         colormap=colormap
                                          )
 
     ome_xml = ome_xml_obj.to_xml()
@@ -2430,7 +2595,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
         ome_xml_obj = create_ome_xml(xyzct, bf_dtype, is_rgb)
     else:
         # Verify that vips image and ome-xml match
-        ome_xml_obj = ome_types.from_xml(ome_xml)
+        ome_xml_obj = ome_types.from_xml(ome_xml, parser="xmlschema")
         ome_img = ome_xml_obj.images[0].pixels
         match_dict = {"same_x": ome_img.size_x == img.width,
                       "same_y": ome_img.size_y == img.height,
@@ -2518,8 +2683,9 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
     print("")
 
 
+@valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
-                        perceputally_uniform_channel_colors=False, tile_wh=None, compression="lzw"):
+                        colormap=None, tile_wh=None, compression="lzw"):
     """Convert an image to an ome.tiff image
 
     Saves a new copy of the image as a tiled pyramid ome.tiff with valid ome-xml.
@@ -2545,8 +2711,10 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
         xywh is the (top left x, top left y, width, height) of
         the region to be sliced.
 
-    perceputally_uniform_channel_colors : bool
-        Whether or not to add perceptually uniform channel colors
+    colormap : dict, optional
+        Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+        If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+        If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
     tile_wh : int
         Tile shape used to save the image. Used to create a square tile,
@@ -2583,9 +2751,10 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
                                      new_xyzct=out_xyczt,
                                      bf_dtype=bf_dtype,
                                      is_rgb=slide_meta.is_rgb,
+                                     series=series,
                                      pixel_physical_size_xyu=px_phys_size,
                                      channel_names=slide_meta.channel_names,
-                                     perceputally_uniform_channel_colors=perceputally_uniform_channel_colors
+                                     colormap=colormap
                                      )
 
     ome_obj.creator = f"pyvips version {pyvips.__version__}"

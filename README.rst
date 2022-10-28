@@ -573,7 +573,9 @@ Change Log
 Version 1.0.0rc12 (October 26, 2022)
 -----------------------------------
 #. Fixed bug where would get out of bounds errors when cropping with user provided transformations (github issue 14 https://github.com/MathOnco/valis/issues/14)
-
+#. Fixed bug where feature matches not drawn in correct location in :code:`src_img` in :code:`viz.draw_matches`.
+#. Can now check if refelcting/mirroring/flipping images improves alignment by setting :code:`check_for_reflections=True` when initializing the :code:`Valis` object. Addresses githib issue 22 (https://github.com/MathOnco/valis/issues/22)
+#. Channel colors now transfered to registered image (github issue 14 https://github.com/MathOnco/valis/issues/23). Also option to provide a colormap when saving the slides. This replaces the :code:`perceputally_uniform_channel_colors` argument
 
 Version 1.0.0rc11 (August 26, 2022)
 -----------------------------------

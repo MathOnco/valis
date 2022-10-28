@@ -1442,6 +1442,41 @@ def get_padding_matrix(img_shape_rc, out_shape_rc):
     return T
 
 
+def get_reflection_M(reflect_x, reflect_y, shape_rc):
+    """Get transformation matrix to reflect an image
+
+    Parameters
+    ----------
+
+    reflect_x : bool
+        Whether or not to reflect the x-axis (columns)
+
+    reflecct y : bool
+        Whether or not to reflect the y-axis (rows)
+
+    shape_rc : tuple of int
+        Shape of the image being reflected
+
+    Returns
+    -------
+    reflection_M : ndarray
+        Transformation matrix that will reflect an image along the
+        specified axes.
+
+    """
+
+    reflection_M = np.eye(3)
+    if reflect_x:
+        reflection_M[0, 0] *= -1
+        reflection_M[0, 2] += shape_rc[1] - 1
+
+    if reflect_y:
+        reflection_M[1, 1] *= -1
+        reflection_M[1, 2] += shape_rc[0] - 1
+
+    return reflection_M
+
+
 def get_img_area(img_shape_rc, M=None):
 
     prev_img_corners = get_corners_of_image(img_shape_rc)[:, ::-1]

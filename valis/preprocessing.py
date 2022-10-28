@@ -326,8 +326,6 @@ def jab2rgb(jab, cspace='CAM16UCS'):
     with colour.utilities.suppress_warnings(colour_usage_warnings=True):
         rgb = colour.convert(jab+eps, cspace, 'sRGB')
 
-    rgb.max()
-
     return rgb
 
 

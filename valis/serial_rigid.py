@@ -167,6 +167,10 @@ class ZImage(object):
         `fixed_obj` will either be immediately above or immediately
         below this ZImage in the image stack.
 
+    reflection_M : ndarray
+        Transformation to reflect the image in the x and/or y axis, before padding.
+        Will be the first transformation performed
+
     T : ndarray
         Transformation matrix that translates the image such that it is in a
         padded image that has the same shape as all other images
@@ -234,6 +238,7 @@ class ZImage(object):
         self.fixed_obj = None
 
         self.padded_shape_rc = None
+        self.reflection_M = np.identity(3)
         self.T = np.identity(3)
         self.to_prev_A = np.identity(3)
         self.optimal_M = np.identity(3)
@@ -586,6 +591,7 @@ class SerialRigidRegistrar(object):
                     filter_kwargs = {"img1_shape":img_obj_1.image.shape[0:2], "img2_shape": img_obj_2.image.shape[0:2]}
                 else:
                     filter_kwargs = None
+
                 unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
                     matcher_obj.match_images(img_obj_1.desc, img_obj_1.kp_pos_xy,
                                                 img_obj_2.desc, img_obj_2.kp_pos_xy,
@@ -906,6 +912,136 @@ class SerialRigidRegistrar(object):
             prev_img_obj = self.img_obj_list[fixed_idx]
             img_obj.fixed_obj = prev_img_obj
 
+    def align_to_prev_check_reflections(self, transformer, feature_detector, matcher_obj, keep_unfiltered=False, qt_emitter=None):
+        """Use key points to align current image to previous image in the stack, but checking if reflection improves alignment
+
+        Parameters
+        ---------
+        transformer : skimage.transform object
+            The scikit-image transform object that estimates the
+            parameter matrix
+
+        feature_detector : FeatureDD
+            FeatureDD object that detects and computes image features.
+
+        matcher_obj : Matcher
+            Object to match features between images.
+
+        keep_unfiltered : bool
+            Whether or not matcher_obj should store unfiltered matches
+
+        qt_emitter : PySide2.QtCore.Signal, optional
+            Used to emit signals that update the GUI's progress bars
+
+        """
+
+        ref_img_obj = self.img_obj_list[self.reference_img_idx]
+        for moving_idx, fixed_idx in tqdm(self.iter_order):
+            img_obj = self.img_obj_list[moving_idx]
+            prev_img_obj = self.img_obj_list[fixed_idx]
+
+            if fixed_idx == self.reference_img_idx:
+                prev_M = ref_img_obj.T.copy()
+
+            if matcher_obj.match_filter_method == GMS_NAME:
+                    filter_kwargs = {"img1_shape":img_obj.image.shape[0:2], "img2_shape": prev_img_obj.image.shape[0:2]}
+            else:
+                filter_kwargs = None
+
+            # Estimate curent error without reflections. Don't need to re-detect and match features
+            to_prev_match_info = img_obj.match_dict[prev_img_obj]
+            transformer.estimate(to_prev_match_info.matched_kp2_xy, to_prev_match_info.matched_kp1_xy)
+            unreflected_warped_src_xy = warp_tools.warp_xy(to_prev_match_info.matched_kp1_xy, transformer.params)
+            _,  unreflected_d = warp_tools.measure_error(to_prev_match_info.matched_kp2_xy, unreflected_warped_src_xy, prev_img_obj.image.shape)
+
+            reflected_d_vals = [unreflected_d]
+            reflection_M = [np.eye(3)]
+            transforms = [transformer.params]
+            reflected_matches12 = [to_prev_match_info]
+            reflected_matches21 = [prev_img_obj.match_dict[img_obj]]
+
+            if keep_unfiltered and prev_img_obj in img_obj.unfiltered_match_dict:
+                unfiltered_reflected_matches12 = [img_obj.unfiltered_match_dict[prev_img_obj]]
+                unfiltered_reflected_matches21 = [prev_img_obj.unfiltered_match_dict[img_obj]]
+
+            # Estimate error with reflections
+            dst_xy = warp_tools.warp_xy(prev_img_obj.kp_pos_xy, prev_M)
+            for rx in [False, True]:
+                for ry in [False, True]:
+                    if not rx and not ry:
+                        continue
+
+                    rM = warp_tools.get_reflection_M(rx, ry, img_obj.image.shape)
+                    reflected_img = warp_tools.warp_img(img_obj.image, rM @ img_obj.T, out_shape_rc=img_obj.padded_shape_rc)
+
+                    reflected_src_xy, reflected_desc = feature_detector.detect_and_compute(reflected_img)
+
+                    unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
+                        matcher_obj.match_images(reflected_desc, reflected_src_xy,
+                                                    prev_img_obj.desc, dst_xy,
+                                                    filter_kwargs)
+
+                    # Record info #
+                    _ = transformer.estimate(filtered_match_info12.matched_kp2_xy, filtered_match_info12.matched_kp1_xy)
+                    _,  reflected_d = warp_tools.measure_error(filtered_match_info12.matched_kp2_xy, filtered_match_info12.matched_kp1_xy, prev_img_obj.padded_shape_rc)
+                    reflected_d_vals.append(reflected_d)
+                    reflection_M.append(rM)
+                    transforms.append(transformer.params)
+
+                    # Move matched features to position in original images
+                    img_inv_M = np.linalg.inv(rM @ img_obj.T)
+                    prev_img_inv_M = np.linalg.inv(prev_M)
+
+                    filtered_match_info12.matched_kp1_xy = warp_tools.warp_xy(filtered_match_info12.matched_kp1_xy, img_inv_M)
+                    filtered_match_info12.matched_kp2_xy = warp_tools.warp_xy(filtered_match_info12.matched_kp2_xy, prev_img_inv_M)
+
+                    filtered_match_info21.matched_kp1_xy = warp_tools.warp_xy(filtered_match_info21.matched_kp1_xy, prev_img_inv_M)
+                    filtered_match_info21.matched_kp2_xy = warp_tools.warp_xy(filtered_match_info21.matched_kp2_xy, img_inv_M)
+
+                    reflected_matches12.append(filtered_match_info12)
+                    reflected_matches21.append(filtered_match_info21)
+
+                    if keep_unfiltered:
+                        unfiltered_match_info12.matched_kp1_xy = warp_tools.warp_xy(unfiltered_match_info12.matched_kp1_xy, img_inv_M)
+                        unfiltered_match_info12.matched_kp2_xy = warp_tools.warp_xy(unfiltered_match_info12.matched_kp2_xy, prev_img_inv_M)
+
+                        unfiltered_match_info21.matched_kp1_xy = warp_tools.warp_xy(unfiltered_match_info21.matched_kp1_xy, prev_img_inv_M)
+                        unfiltered_match_info21.matched_kp2_xy = warp_tools.warp_xy(unfiltered_match_info21.matched_kp2_xy, img_inv_M)
+
+                        unfiltered_reflected_matches12.append(unfiltered_match_info12)
+                        unfiltered_reflected_matches21.append(unfiltered_match_info21)
+
+            best_idx = np.argmin(reflected_d_vals)
+            best_reflect_M = reflection_M[best_idx]
+            best_M = transforms[best_idx]
+            img_obj.to_prev_A = best_M
+            img_obj.reflection_M = best_reflect_M
+            prev_M = img_obj.reflection_M @ img_obj.T @ img_obj.to_prev_A
+
+            ref_x, ref_y = best_reflect_M[[0, 1], [0, 1]] < 0
+            if ref_x or ref_y:
+                msg = f'detected relfections between {img_obj.name} and {prev_img_obj.name} along the'
+                if ref_x and ref_y:
+                    msg = f'{msg} x and y axes'
+                elif ref_x:
+                    msg = f'{msg} x axis'
+                elif ref_y:
+                    msg = f'{msg} y axis'
+
+                valtils.print_warning(msg)
+
+                # Update matches
+                img_obj.match_dict[prev_img_obj] = reflected_matches12[best_idx]
+                prev_img_obj.match_dict[img_obj] = reflected_matches21[best_idx]
+
+                if keep_unfiltered:
+                    img_obj.unfiltered_match_dict[prev_img_obj] = unfiltered_reflected_matches12[best_idx]
+                    prev_img_obj.unfiltered_match_dict[img_obj] = unfiltered_reflected_matches21[best_idx]
+
+            if qt_emitter is not None:
+                qt_emitter.emit(1)
+
+
     def align_to_prev(self, transformer, qt_emitter=None):
         """Use key points to align current image to previous image in the stack
 
@@ -974,7 +1110,7 @@ class SerialRigidRegistrar(object):
                 prev_img = ref_warped
                 prev_M = ref_img_obj.T
 
-            M = img_obj.T @ img_obj.to_prev_A
+            M = img_obj.reflection_M @ img_obj.T @ img_obj.to_prev_A
             warped_img = warp_tools.warp_img(img_obj.image,
                                              M=M,
                                              out_shape_rc=img_obj.padded_shape_rc)
@@ -1060,7 +1196,7 @@ class SerialRigidRegistrar(object):
         max_y = 0
         for i in range(self.size):
             img_obj = self.img_obj_list[i]
-            M = img_obj.T @ img_obj.to_prev_A @ img_obj.optimal_M
+            M = img_obj.reflection_M @ img_obj.T @ img_obj.to_prev_A @ img_obj.optimal_M
             img_corners_rc = warp_tools.get_corners_of_image(img_obj.image.shape)
             warped_corners_xy = warp_tools.warp_xy(img_corners_rc[:, ::-1], M)
 
@@ -1087,7 +1223,7 @@ class SerialRigidRegistrar(object):
 
             img_obj = self.img_obj_list[i]
 
-            M = img_obj.T @ img_obj.to_prev_A @ img_obj.optimal_M
+            M = img_obj.reflection_M @ img_obj.T @ img_obj.to_prev_A @ img_obj.optimal_M
             M_list[i] = M
 
             img_corners_rc = warp_tools.get_corners_of_image(img_obj.image.shape)
@@ -1268,6 +1404,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
                     affine_optimizer=None,
                     imgs_ordered=False, reference_img_f=None,
                     similarity_metric="n_matches",
+                    check_for_reflections=False,
                     max_scaling=3.0, align_to_reference=False, qt_emitter=None):
     """
     Rigidly align collection of images
@@ -1310,6 +1447,12 @@ def register_images(img_dir, dst_dir=None, name="registrar",
     reference_img_f : str, optional
         Filename of image that will be treated as the center of the stack.
         If None, the index of the middle image will be the reference.
+
+    check_for_reflections : bool, optional
+        Determine if alignments are improved by relfecting/mirroring/flipping
+        images. Optional because it requires re-detecting features in each version
+        of the images and then re-matching features, and so can be time consuming and
+        not always necessary.
 
     similarity_metric : str
         Metric used to calculate similarity between images, which is in turn
@@ -1387,7 +1530,14 @@ def register_images(img_dir, dst_dir=None, name="registrar",
     if registrar.size > 2:
         registrar.update_match_dicts_with_neighbor_filter(transformer, matcher)
 
-    registrar.align_to_prev(transformer=transformer, qt_emitter=qt_emitter)
+    if check_for_reflections:
+        registrar.align_to_prev_check_reflections(transformer=transformer,
+                                                  feature_detector=feature_detector,
+                                                  matcher_obj=matcher,
+                                                  keep_unfiltered=False,
+                                                  qt_emitter=qt_emitter)
+    else:
+        registrar.align_to_prev(transformer=transformer, qt_emitter=qt_emitter)
 
     # Check current output shape. If too large, then  registration failed
     for img_obj in registrar.img_obj_list:
