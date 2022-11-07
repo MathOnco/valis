@@ -315,7 +315,6 @@ def cam16ucs_cmap(luminosity=0.8, colorfulness=0.5, max_h=300):
     return rgb
 
 
-
 def make_cbar(rgb, bar_height=30):
     cbar = np.tile(rgb[np.newaxis].T, bar_height).T
 

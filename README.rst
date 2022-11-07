@@ -441,13 +441,11 @@ In this second example, a region of interest (ROI) was marked in one of the unre
 The extracted and registered ROI are shown below:
 
 .. image::  https://github.com/MathOnco/valis/raw/main/examples/expected_results/roi/ihc_roi.png
-.. .. image::  ../examples/expected_results/roi/ihc_roi.png
 
 
 Converting slides to ome.tiff
 -----------------------------
-In addition to registering slide, VALIS can convert slides to ome.tiff, maintaining the original metadata. If the original is image is not RGB, the option :code:`perceputally_uniform_channel_colors=True` can be used to give each channel a perceptually uniform color, derived from the `JzAzBz <https://www.osapublishing.org/DirectPDFAccess/5166548C-BD18-487D-8601630F3A343883_368272/oe-25-13-15131.pdf?da=1&id=368272&seq=0&mobile=no>`_ colorspace. An advantage of using perceptually uniform colors is that markers should appear brighter only if there is higher expression, not because the color (such as yellow) is perceived to be brighter.
-
+In addition to registering slide, VALIS can convert slides to ome.tiff, maintaining the original metadata. If the original is image is not RGB, the option :code:`colormap` can be used to give each channel a specific color. If :code:`colormap` is not provided, the original channel colors will be used.
 .. code-block:: python
 
     from valis import slide_io
@@ -455,8 +453,7 @@ In addition to registering slide, VALIS can convert slides to ome.tiff, maintain
     converted_slide_f = "converted.ome.tiff"
     slide_io.convert_to_ome_tiff(slide_src_f,
                                 converted_slide_f,
-                                level=0,
-                                perceputally_uniform_channel_colors=True)
+                                level=0)
     slide_io.kill_jvm()
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/pu_color_mplex.png
@@ -570,7 +567,7 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 Change Log
 ==========
 
-Version 1.0.0rc12 (October 26, 2022)
+Version 1.0.0rc12 (October 28, 2022)
 -----------------------------------
 #. Fixed bug where would get out of bounds errors when cropping with user provided transformations (github issue 14 https://github.com/MathOnco/valis/issues/14)
 #. Fixed bug where feature matches not drawn in correct location in :code:`src_img` in :code:`viz.draw_matches`.

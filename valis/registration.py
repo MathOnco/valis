@@ -2995,9 +2995,6 @@ class Valis(object):
 
         n_digits = len(str(self.size))
         for slide_name, slide_obj in self.slide_dict.items():
-            # slide_name = "401427_BrdU"
-            # slide_obj = self.slide_dict[slide_name]
-
             img_save_id = str.zfill(str(slide_obj.stack_idx), n_digits)
             slide_nr_reg_obj = non_rigid_registrar.non_rigid_obj_dict[slide_name]
             slide_obj.bk_dxdy = slide_nr_reg_obj.bk_dxdy
