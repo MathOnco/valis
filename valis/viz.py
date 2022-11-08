@@ -75,9 +75,9 @@ def draw_features(kp_xy, image, n_features=500):
 
     image = exposure.rescale_intensity(image, out_range=(0, 255))
     if image.ndim == 2:
-        feature_img = color.grey2rgb(image)
+        feature_img = color.gray2rgb(image)
     else:
-        feature_img = image
+        feature_img = image.copy()
 
     rad = int(np.mean(feature_img.shape) / 100)
 
@@ -140,6 +140,7 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, rad=3, alignment='horizontal'
 
     dst_T[0:2, 2] -= dst_xy_shift
     dst_xy_in_feature_img = warp_tools.warp_xy(kp2_xy, M=dst_T)
+    src_xy_in_feature_img = warp_tools.warp_xy(kp1_xy, M=src_T)
 
     n_pt = np.min([kp1_xy.shape[0], kp2_xy.shape[0]])
     cmap = (255*jzazbz_cmap()).astype(np.uint8)
@@ -147,7 +148,7 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, rad=3, alignment='horizontal'
     colors = cmap[np.random.choice(all_color_idx, n_pt), :]
     for i in range(n_pt):
 
-        xy1 = kp1_xy[i]
+        xy1 = src_xy_in_feature_img[i]
         xy2 = dst_xy_in_feature_img[i]
         pt_color = colors[i]
 
@@ -314,9 +315,8 @@ def cam16ucs_cmap(luminosity=0.8, colorfulness=0.5, max_h=300):
     return rgb
 
 
-
 def make_cbar(rgb, bar_height=30):
-    cbar = np.tile(rgb.T, bar_height).T
+    cbar = np.tile(rgb[np.newaxis].T, bar_height).T
 
     return cbar
 

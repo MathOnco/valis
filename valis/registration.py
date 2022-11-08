@@ -77,6 +77,7 @@ QT_EMMITER_KEY = "qt_emitter"
 TFORM_SRC_SHAPE_KEY = "transformation_src_shape_rc"
 TFORM_DST_SHAPE_KEY = "transformation_dst_shape_rc"
 TFORM_MAT_KEY = "M"
+CHECK_REFLECT_KEY = "check_for_reflections"
 
 # Rigid registration kwarg keys #
 NON_RIGID_REG_CLASS_KEY = "non_rigid_reg_class"
@@ -868,11 +869,11 @@ class Slide(object):
                                               bg_color=bg_color)
         return warped_slide
 
-    @valtils.deprecated_args(crop_to_overlap="crop")
+    @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_save_slide(self, dst_f, level=0, non_rigid=True,
                             crop=True, src_f=None,
                             channel_names=None,
-                            perceputally_uniform_channel_colors=False,
+                            colormap=None,
                             interp_method="bicubic",
                             tile_wh=None, compression="lzw"):
 
@@ -903,6 +904,11 @@ class Slide(object):
         channel_names : list, optional
             List of channel names. If None, then Slide.reader
             will attempt to find the channel names associated with `src_f`.
+
+        colormap : dict, optional
+            Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+            If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+            If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
         src_f : str, optional
            Path of slide to be warped. If None (the deffault), Slide.src_f
@@ -943,13 +949,14 @@ class Slide(object):
 
         bf_dtype = slide_io.vips2bf_dtype(warped_slide.format)
         out_xyczt = slide_io.get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
-        ome_xml_obj = slide_io.update_xml_for_new_img(slide_meta.original_xml,
+        ome_xml_obj = slide_io.update_xml_for_new_img(current_ome_xml_str=slide_meta.original_xml,
                                                       new_xyzct=out_xyczt,
                                                       bf_dtype=bf_dtype,
                                                       is_rgb=self.is_rgb,
+                                                      series=self.series,
                                                       pixel_physical_size_xyu=px_phys_size,
                                                       channel_names=channel_names,
-                                                      perceputally_uniform_channel_colors=perceputally_uniform_channel_colors
+                                                      colormap=colormap
                                                       )
 
         ome_xml = ome_xml_obj.to_xml()
@@ -1393,6 +1400,7 @@ class Valis(object):
                  do_rigid=True,
                  crop=None,
                  create_masks=True,
+                 check_for_reflections=False,
                  resolution_xyu=None, slide_dims_dict_wh=None,
                  max_image_dim_px=DEFAULT_MAX_IMG_DIM,
                  max_processed_image_dim_px=DEFAULT_MAX_PROCESSED_IMG_SIZE,
@@ -1528,6 +1536,12 @@ class Valis(object):
             Can help focus alignment on the tissue, but can sometimes
             mask too much if there is a lot of variation in the image.
 
+        check_for_reflections : bool, optional
+            Determine if alignments are improved by relfecting/mirroring/flipping
+            images. Optional because it requires re-detecting features in each version
+            of the images and then re-matching features, and so can be time consuming and
+            not always necessary.
+
         resolution_xyu: tuple, optional
             Physical size per pixel and the unit. If None (the default), these
             values will be determined for each slide using the slides' metadata.
@@ -1636,6 +1650,7 @@ class Valis(object):
                                    affine_optimizer=affine_optimizer_cls,
                                    imgs_ordered=imgs_ordered,
                                    reference_img_f=reference_img_f,
+                                   check_for_reflections=check_for_reflections,
                                    qt_emitter=qt_emitter)
 
         # Setup non-rigid registration #
@@ -1678,7 +1693,7 @@ class Valis(object):
 
     def _set_rigid_reg_kwargs(self, name, feature_detector, similarity_metric,
                               match_filter_method, transformer, affine_optimizer,
-                              imgs_ordered, reference_img_f, qt_emitter):
+                              imgs_ordered, reference_img_f, check_for_reflections, qt_emitter):
 
         """Set rigid registration kwargs
         Keyword arguments will be passed to `serial_rigid.register_images`
@@ -1699,6 +1714,7 @@ class Valis(object):
                                  AFFINE_OPTIMIZER_KEY: afo,
                                  REF_IMG_KEY: reference_img_f,
                                  IMAGES_ORDERD_KEY: imgs_ordered,
+                                 CHECK_REFLECT_KEY: check_for_reflections,
                                  QT_EMMITER_KEY: qt_emitter
                                  }
 
@@ -2317,9 +2333,7 @@ class Valis(object):
             out_rc = np.round(temp_out_shape_rc*ref_to_reg_sxy).astype(int)
 
         else:
-            ref_slide_shape_rc = ref_slide_obj.slide_dimensions_wh[0][::-1]
-            ref_to_reg_sxy = (np.array(rigid_ref_obj.image.shape)/np.array(ref_slide_shape_rc))[::-1]
-            out_rc = np.round(ref_slide_shape_rc*ref_to_reg_sxy).astype(int)
+            out_rc = rigid_ref_obj.image.shape
 
         scaled_M_dict = {}
         for img_name, img_tforms in named_tform_dict.items():
@@ -2360,6 +2374,8 @@ class Valis(object):
 
             prev_img_obj = rigid_registrar.img_obj_list[fixed_idx]
             img_obj.fixed_obj = prev_img_obj
+
+            print(f"finding M for {img_obj.name}, which is being aligned to {prev_img_obj.name}")
 
             if fixed_idx == rigid_registrar.reference_img_idx:
                 prev_M = np.eye(3)
@@ -2490,7 +2506,7 @@ class Valis(object):
                 img_obj.image = matching_slide.processed_img
 
         rigid_img_list = [img_obj.registered_img for img_obj in rigid_registrar.img_obj_list]
-        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)#[overlap_min_r:overlap_max_r, overlap_min_c:overlap_max_c]
+        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)
         self.rigid_overlap_img = warp_tools.crop_img(self.rigid_overlap_img, overlap_mask_bbox_xywh)
 
         rigid_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_rigid_overlap.png")
@@ -2676,36 +2692,36 @@ class Valis(object):
 
         ref_slide = self.get_ref_slide()
 
-        if mask is not None:
+        max_s = np.min(ref_slide.slide_dimensions_wh[0]/np.array(ref_slide.processed_img_shape_rc[::-1]))
+        if mask is None:
+            if warp_full_img:
+                s = max_s
+            else:
+                s = np.min(max_img_dim/np.array(ref_slide.processed_img_shape_rc))
+        else:
+            # Determine how big image would have to be to get mask with maxmimum dimension = max_img_dim
             if isinstance(mask, pyvips.Image):
                 mask_shape_rc = np.array((mask.height, mask.width))
             else:
                 mask_shape_rc = np.array(mask.shape[0:2])
 
-        # Determine size of warped image/ROI
-        if not warp_full_img:
-            if mask is None:
-                s = np.min(max_img_dim/np.array(ref_slide.processed_img_shape_rc))
+            to_reg_mask_sxy = (mask_shape_rc/np.array(ref_slide.reg_img_shape_rc))[::-1]
+            if not np.all(to_reg_mask_sxy == 1):
+                # Resize just in case it's huge. Only need bounding box
+                reg_size_mask = warp_tools.resize_img(mask, ref_slide.reg_img_shape_rc, interp_method="nearest")
             else:
-                # If there is a mask then want its scaled bounding box to be == max_img_dim
-                to_reg_mask_sxy = (mask_shape_rc/np.array(ref_slide.reg_img_shape_rc))[::-1]
-                if not np.all(to_reg_mask_sxy == 1):
-                    # Resize just in case it's huge. Only need bounding box
-                    reg_size_mask = warp_tools.resize_img(mask, ref_slide.reg_img_shape_rc, interp_method="nearest")
-                else:
-                    reg_size_mask = mask
-                reg_size_mask_xy = warp_tools.mask2xy(reg_size_mask)
-                to_reg_mask_bbox_xywh = list(warp_tools.xy2bbox(reg_size_mask_xy))
-                to_reg_mask_wh = np.round(to_reg_mask_bbox_xywh[2:]).astype(int)
+                reg_size_mask = mask
+            reg_size_mask_xy = warp_tools.mask2xy(reg_size_mask)
+            to_reg_mask_bbox_xywh = list(warp_tools.xy2bbox(reg_size_mask_xy))
+            to_reg_mask_wh = np.round(to_reg_mask_bbox_xywh[2:]).astype(int)
+            if warp_full_img:
+                s = max_s
+            else:
                 s = np.min(max_img_dim/np.array(to_reg_mask_wh))
 
-            max_s = np.min(ref_slide.slide_dimensions_wh[0]/np.array(ref_slide.processed_img_shape_rc[::-1]))
-            if s < max_s:
-                full_out_shape = self.get_aligned_slide_shape(s)
-            else:
-                full_out_shape = self.get_aligned_slide_shape(0)
+        if s < max_s:
+            full_out_shape = self.get_aligned_slide_shape(s)
         else:
-            # Will register full size
             full_out_shape = self.get_aligned_slide_shape(0)
 
         if mask is None:
@@ -2724,6 +2740,7 @@ class Valis(object):
                 vips_micro_reg_mask = mask
             vips_micro_reg_mask = warp_tools.resize_img(vips_micro_reg_mask, full_out_shape, interp_method="nearest")
             vips_micro_reg_mask = warp_tools.crop_img(img=vips_micro_reg_mask, xywh=mask_bbox_xywh)
+
 
         use_tiler = False
         if ref_slide.reader.metadata.bf_datatype is not None:
@@ -2978,9 +2995,6 @@ class Valis(object):
 
         n_digits = len(str(self.size))
         for slide_name, slide_obj in self.slide_dict.items():
-            # slide_name = "401427_BrdU"
-            # slide_obj = self.slide_dict[slide_name]
-
             img_save_id = str.zfill(str(slide_obj.stack_idx), n_digits)
             slide_nr_reg_obj = non_rigid_registrar.non_rigid_obj_dict[slide_name]
             slide_obj.bk_dxdy = slide_nr_reg_obj.bk_dxdy
@@ -3710,10 +3724,10 @@ class Valis(object):
 
         return slide_obj
 
-    @valtils.deprecated_args(crop_to_overlap="crop")
+    @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_save_slides(self, dst_dir, level = 0, non_rigid=True,
                              crop=True,
-                             perceputally_uniform_channel_colors=False,
+                             colormap=None,
                              interp_method="bicubic",
                              tile_wh=None, compression="lzw"):
 
@@ -3743,6 +3757,9 @@ class Valis(object):
             "reference" crops to the area that overlaps with the reference image,
             defined by `reference_img_f` when initialzing the `Valis object`.
 
+        colormap : list
+            List of RGB colors (0-255) to use for channel colors
+
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
 
@@ -3757,18 +3774,29 @@ class Valis(object):
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
         for slide_obj in tqdm.tqdm(self.slide_dict.values()):
+            slide_cmap = None
+            if colormap is not None:
+                chnl_names = slide_obj.reader.metadata.channel_names
+                if chnl_names is not None:
+                    if len(colormap) >= len(chnl_names):
+                        slide_cmap = {chnl_names[i]:tuple(colormap[i]) for i in range(len(chnl_names))}
+
+                    else:
+                        msg = f'{slide_obj.name} has {len(chnl_names)} but colormap only has {len(colormap)} colors'
+                        valtils.print_warning(msg)
+
             dst_f = os.path.join(dst_dir, slide_obj.name + ".ome.tiff")
             slide_obj.warp_and_save_slide(dst_f=dst_f, level = level,
                                           non_rigid=non_rigid,
                                           crop=crop,
-                                          perceputally_uniform_channel_colors=perceputally_uniform_channel_colors,
                                           interp_method=interp_method,
+                                          colormap=slide_cmap,
                                           tile_wh=tile_wh, compression=compression)
 
-    @valtils.deprecated_args(crop_to_overlap="crop")
+    @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_merge_slides(self, dst_f=None, level=0, non_rigid=True,
                               crop=True, channel_name_dict=None,
-                              src_f_list=None, perceputally_uniform_channel_colors=False,
+                              src_f_list=None, colormap=None,
                               drop_duplicates=True, tile_wh=None,
                               interp_method="bicubic", compression="lzw"):
 
@@ -3806,8 +3834,8 @@ class Valis(object):
             be an alternative copy of the slides, such as ones that have undergone
             processing (e.g. stain segmentation), had a mask applied, etc...
 
-        perceputally_uniform_channel_colors : bool, optional
-            Whether or not to add perceptually uniform channel colors.
+        colormap : list
+            List of RGB colors (0-255) to use for channel colors
 
         drop_duplicates : bool, optional
             Whether or not to drop duplicate channels that might be found in multiple slides.
@@ -3884,13 +3912,25 @@ class Valis(object):
             all_channel_names.extend(slide_channel_names)
 
 
+        if colormap is not None:
+            if len(colormap) >= len(all_channel_names):
+                cmap_dict = {all_channel_names[i]:tuple(colormap[i]) for i in range(len(all_channel_names))}
+
+            else:
+                msg = f'Merged image has {len(all_channel_names)} but colormap only has {len(colormap)} colors'
+                valtils.print_warning(msg)
+
+        else:
+            cmap_dict = None
+
         px_phys_size = slide_obj.reader.scale_physical_size(level)
         bf_dtype = slide_io.vips2bf_dtype(merged_slide.format)
         out_xyczt = slide_io.get_shape_xyzct((merged_slide.width, merged_slide.height), merged_slide.bands)
+
         ome_xml_obj = slide_io.create_ome_xml(out_xyczt, bf_dtype, is_rgb=False,
                                               pixel_physical_size_xyu=px_phys_size,
                                               channel_names=all_channel_names,
-                                              perceputally_uniform_channel_colors=perceputally_uniform_channel_colors)
+                                              colormap=cmap_dict)
         ome_xml = ome_xml_obj.to_xml()
 
         if dst_f is not None:

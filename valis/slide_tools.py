@@ -7,12 +7,14 @@ import os
 import pyvips
 import numpy as np
 import colour
+from matplotlib import cm
 import re
 import imghdr
 from collections import Counter
 from . import warp_tools
 from . import slide_io
 from . import viz
+from . import preprocessing
 
 IHC_NAME = "brightfield"
 IF_NAME = "fluorescence"
@@ -279,6 +281,43 @@ def warp_slide(src_f, transformation_src_shape_rc, transformation_dst_shape_rc,
                                       interp_method=interp_method)
 
     return vips_warped
+
+
+def get_matplotlib_channel_colors(n_colors, name="gist_rainbow", min_lum=0.5, min_c=0.2):
+    """Get channel colors using matplotlib colormaps
+
+    Parameters
+    ----------
+    n_colors : int
+        Number of colors needed.
+
+    name : str
+        Name of matplotlib colormap
+
+    min_lum : float
+        Minimum luminosity allowed
+
+    min_c : float
+        Minimum colorfulness allowed
+
+    Returns
+    --------
+    channel_colors : ndarray
+        RGB values for each of the `n_colors`
+
+    """
+    n = 200
+    if n_colors > n:
+        n  = n_colors
+    all_colors =  cm.get_cmap(name)(np.linspace(0, 1, n))[..., 0:3]
+
+    # Only allow bright colors #
+    jch = preprocessing.rgb2jch(all_colors)
+    all_colors = all_colors[(jch[..., 0] >= min_lum) & (jch[..., 1] >= min_c)]
+    channel_colors = viz.get_n_colors(all_colors, n_colors)
+    channel_colors = (255*channel_colors).astype(np.uint8)
+
+    return channel_colors
 
 
 def turbo_channel_colors(n_colors):
