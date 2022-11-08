@@ -445,15 +445,17 @@ The extracted and registered ROI are shown below:
 
 Converting slides to ome.tiff
 -----------------------------
-In addition to registering slide, VALIS can convert slides to ome.tiff, maintaining the original metadata. If the original is image is not RGB, the option :code:`colormap` can be used to give each channel a specific color. If :code:`colormap` is not provided, the original channel colors will be used.
+In addition to registering slide, VALIS can convert slides to ome.tiff, maintaining the original metadata. If the original is image is not RGB, the option :code:`colormap` can be used to give each channel a specific color using a dictionary, where the key is the channel name, and the value is the RGB tuple (0-255). If :code:`colormap` is not provided, the original channel colors will be used.
+
+
 .. code-block:: python
 
     from valis import slide_io
     slide_src_f = "path/to/slide
     converted_slide_f = "converted.ome.tiff"
     slide_io.convert_to_ome_tiff(slide_src_f,
-                                converted_slide_f,
-                                level=0)
+                                 converted_slide_f,
+                                 level=0)
     slide_io.kill_jvm()
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/pu_color_mplex.png
@@ -567,8 +569,8 @@ The defaults used by VALIS work well, but one may wish to try some other values/
 Change Log
 ==========
 
-Version 1.0.0rc12 (October 28, 2022)
------------------------------------
+Version 1.0.0rc12 (November 7, 2022)
+------------------------------------
 #. Fixed bug where would get out of bounds errors when cropping with user provided transformations (github issue 14 https://github.com/MathOnco/valis/issues/14)
 #. Fixed bug where feature matches not drawn in correct location in :code:`src_img` in :code:`viz.draw_matches`.
 #. Can now check if refelcting/mirroring/flipping images improves alignment by setting :code:`check_for_reflections=True` when initializing the :code:`Valis` object. Addresses githib issue 22 (https://github.com/MathOnco/valis/issues/22)
