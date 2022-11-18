@@ -17,6 +17,7 @@ import warnings
 import pyvips
 from interpolation.splines import UCGrid, filter_cubic, eval_cubic
 import SimpleITK as sitk
+import shapely
 from colorama import Fore
 import os
 import re
@@ -2346,6 +2347,213 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
                                 )
     return xy_in_to_space
 
+
+def clip_xy(xy, shape_rc):
+    """Clip xy coordintaes to be within image
+
+    """
+    clipped_x =  np.clip(xy[:, 0], 0, shape_rc[1])
+    clipped_y =  np.clip(xy[:, 1], 0, shape_rc[0])
+
+    clipped_xy = np.dstack([clipped_x, clipped_y])[0]
+    return clipped_xy
+
+
+def _warp_shapely(geom, warp_fxn, warp_kwargs, shift_xy=None):
+    """Warp a shapely geometry
+    Based on shapely.ops.trasform
+
+    """
+    if "dst_shape_rc" in warp_kwargs:
+        dst_shape_rc = warp_kwargs["dst_shape_rc"]
+    elif "to_dst_shape_rc" in warp_kwargs:
+        dst_shape_rc = warp_kwargs["to_dst_shape_rc"]
+    else:
+        dst_shape_rc  = None
+
+    if geom.geom_type in ("Point", "LineString", "LinearRing", "Polygon"):
+        if geom.geom_type in ("Point", "LineString", "LinearRing"):
+            warped_xy = warp_fxn(np.vstack(geom.coords), **warp_kwargs)
+            if shift_xy is not None:
+                warped_xy -= shift_xy
+            if dst_shape_rc is not None:
+                warped_xy = clip_xy(warped_xy, dst_shape_rc)
+
+            return type(geom)(warped_xy.tolist())
+
+        elif geom.geom_type == "Polygon":
+            shell_xy = warp_fxn(np.vstack(geom.exterior.coords), **warp_kwargs)
+            if shift_xy is not None:
+                shell_xy -= shift_xy
+
+            if dst_shape_rc is not None:
+                shell_xy = clip_xy(shell_xy, dst_shape_rc)
+            
+            shell = type(geom.exterior)(shell_xy.tolist())
+            holes = []
+            for ring in geom.interiors:
+                holes_xy = warp_fxn(np.vstack(ring.coords), **warp_kwargs)
+                if shift_xy is not None:
+                    holes_xy -= shift_xy
+                if dst_shape_rc is not None:
+                    holes_xy = clip_xy(holes_xy, dst_shape_rc)
+
+                holes.append(type(ring)(holes_xy))
+
+            return type(geom)(shell, holes)
+
+    elif geom.geom_type.startswith("Multi") or geom.geom_type == "GeometryCollection":
+        return type(geom)([_warp_shapely(part, warp_fxn, warp_kwargs) for part in geom.geoms])
+    else:
+        raise shapely.errors.GeometryTypeError(f"Type {geom.geom_type!r} not recognized")
+
+
+def warp_shapely_geom(geom, M=None, transformation_src_shape_rc=None, transformation_dst_shape_rc=None,
+            src_shape_rc=None, dst_shape_rc=None,
+            bk_dxdy=None, fwd_dxdy=None, pt_buffer=100, shift_xy=None):
+    """
+    Warp xy points using M and/or bk_dxdy/fwd_dxdy. If bk_dxdy is provided, it will be inverted to  create fwd_dxdy
+
+    Parameters
+    ----------
+    geom : shapely.geometery
+        Shapely geom to warp
+
+    M : ndarray, optional
+         3x3 affine transformation matrix to perform rigid warp
+
+    transformation_src_shape_rc : (int, int)
+        Shape of image that was used to find the transformation.
+        For example, this could be the original image in which features were detected
+
+    transformation_dst_shape_rc : (int, int), optional
+        Shape of the image with shape `transformation_src_shape_rc` after warping.
+        This could be the shape of the original image after applying `M`.
+
+    src_shape_rc : optional, (int, int)
+        Shape of the image from which the points originated. For example,
+        this could be a larger/smaller version of the image that was
+        used for feature detection.
+
+    dst_shape_rc : optional, (int, int)
+        Shape of image (with shape `src_shape_rc`) after warping
+
+    bk_dxdy : ndarray, pyvips.Image
+        (2, N, M) numpy array of pixel displacements in the x and y
+        directions from the reference image. dx = bk_dxdy[0],
+        and dy=bk_dxdy[1]. If `bk_dxdy` is not None, but
+        `fwd_dxdy` is None, then `bk_dxdy` will be inverted to warp `xy`.
+
+    fwd_dxdy : ndarray, pyvips.Image
+        Inverse of bk_dxdy. dx = fwd_dxdy[0], and dy=fwd_dxdy[1].
+        This is what is actually used to warp the points.
+
+    pt_buffer : int
+        If `bk_dxdy` or `fwd_dxdy` are pyvips.Image object, then
+        pt_buffer` determines the size of the window around the point used to
+        get the local displacements.
+
+    shift_xy : tuple of int, optional
+        How much to shift the geom after being warped
+
+    Returns
+    -------
+    warped_geom : shapely.geom
+       Warped `geom`
+
+    """
+
+    warp_kwargs = {"M":M,
+                   "transformation_src_shape_rc": transformation_src_shape_rc,
+                   "transformation_dst_shape_rc": transformation_dst_shape_rc,
+                   "src_shape_rc": src_shape_rc,
+                   "dst_shape_rc": dst_shape_rc,
+                   'bk_dxdy': bk_dxdy,
+                   "fwd_dxdy": fwd_dxdy,
+                   "pt_buffer": pt_buffer}
+
+    if shift_xy is not None:
+        shift_xy = np.array(shift_xy)
+
+    warped_geom = _warp_shapely(geom, warp_xy, warp_kwargs, shift_xy)
+
+    return warped_geom
+
+
+
+def warp_shapely_geom_from_to(geom, from_M=None, from_transformation_src_shape_rc=None,
+                   from_transformation_dst_shape_rc=None, from_src_shape_rc=None,
+                   from_dst_shape_rc=None,from_bk_dxdy=None, from_fwd_dxdy=None,
+                   to_M=None, to_transformation_src_shape_rc=None,
+                   to_transformation_dst_shape_rc=None, to_src_shape_rc=None,
+                   to_dst_shape_rc=None, to_bk_dxdy=None, to_fwd_dxdy=None):
+    """
+    Warp xy points using M and/or bk_dxdy/fwd_dxdy. If bk_dxdy is provided, it will be inverted to  create fwd_dxdy
+
+    Parameters
+    ----------
+    geom : shapely.geometery
+        Shapely geom to warp
+
+    M : ndarray, optional
+         3x3 affine transformation matrix to perform rigid warp
+
+    transformation_src_shape_rc : (int, int)
+        Shape of image that was used to find the transformation.
+        For example, this could be the original image in which features were detected
+
+    transformation_dst_shape_rc : (int, int), optional
+        Shape of the image with shape `transformation_src_shape_rc` after warping.
+        This could be the shape of the original image after applying `M`.
+
+    src_shape_rc : optional, (int, int)
+        Shape of the image from which the points originated. For example,
+        this could be a larger/smaller version of the image that was
+        used for feature detection.
+
+    dst_shape_rc : optional, (int, int)
+        Shape of image (with shape `src_shape_rc`) after warping
+
+    bk_dxdy : ndarray, pyvips.Image
+        (2, N, M) numpy array of pixel displacements in the x and y
+        directions from the reference image. dx = bk_dxdy[0],
+        and dy=bk_dxdy[1]. If `bk_dxdy` is not None, but
+        `fwd_dxdy` is None, then `bk_dxdy` will be inverted to warp `xy`.
+
+    fwd_dxdy : ndarray, pyvips.Image
+        Inverse of bk_dxdy. dx = fwd_dxdy[0], and dy=fwd_dxdy[1].
+        This is what is actually used to warp the points.
+
+    pt_buffer : int
+        If `bk_dxdy` or `fwd_dxdy` are pyvips.Image object, then
+        pt_buffer` determines the size of the window around the point used to
+        get the local displacements.
+
+
+    Returns
+    -------
+    warped_geom : shapely.geom
+       Warped `geom`
+
+    """
+
+    warp_kwargs = {"from_M": from_M,
+                   "from_transformation_src_shape_rc": from_transformation_src_shape_rc,
+                   "from_transformation_dst_shape_rc": from_transformation_dst_shape_rc,
+                   "from_src_shape_rc": from_src_shape_rc,
+                   "from_dst_shape_rc":from_dst_shape_rc,
+                   "from_bk_dxdy":from_bk_dxdy,
+                   "from_fwd_dxdy":from_fwd_dxdy,
+                   "to_M":to_M,
+                   "to_transformation_src_shape_rc": to_transformation_src_shape_rc,
+                   "to_transformation_dst_shape_rc": to_transformation_dst_shape_rc,
+                   "to_src_shape_rc": to_src_shape_rc,
+                   "to_dst_shape_rc": to_dst_shape_rc, "to_bk_dxdy": to_bk_dxdy,
+                   "to_fwd_dxdy":to_fwd_dxdy}
+
+    warped_geom = _warp_shapely(geom, warp_xy_from_to, warp_kwargs)
+
+    return warped_geom
 
 
 def get_inside_mask_idx(xy, mask):

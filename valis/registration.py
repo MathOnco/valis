@@ -15,6 +15,9 @@ import pickle
 import colour
 import pyvips
 from scipy import ndimage
+import shapely
+from copy import deepcopy
+import json
 
 from . import feature_matcher
 from . import serial_rigid
@@ -1148,6 +1151,212 @@ class Slide(object):
                                        )
 
         return xy_in_unwarped_to_img
+
+    def warp_geojson(self, geojson_f, M=None, slide_level=0, pt_level=0,
+                non_rigid=True, crop=True):
+        """Warp geometry using registration parameters
+
+        Warps geometries to their location in the registered slide/image
+
+        Parameters
+        ----------
+        geojson_f : str
+            Path to geojson file containing the annotation geometries. Assumes
+            coordinates are in pixels.
+
+        slide_level: int, tuple, optional
+            Pyramid level of the slide. Used to scale transformation matrices.
+            Can also be the shape of the warped image (row, col) into which
+            the points should be warped. Default is 0.
+
+        pt_level: int, tuple, optional
+            Pyramid level from which the points origingated. For example, if
+            `xy` are from the centroids of cell segmentation performed on the
+            full resolution image, this should be 0. Alternatively, the value can
+            be a tuple of the image's shape (row, col) from which the points came.
+            For example, if `xy` are  bounding box coordinates from an analysis on
+            a lower resolution image, then pt_level is that lower resolution
+            image's shape (row, col). Default is 0.
+
+        non_rigid : bool, optional
+            Whether or not to conduct non-rigid warping. If False,
+            then only a rigid transformation will be applied. Default is True.
+
+        crop: bool, str
+            Apply crop to warped points by shifting points to the mask's origin.
+            Note that this can result in negative coordinates, but might be useful
+            if wanting to draw the coordinates on the registered slide, such as
+            annotation coordinates.
+
+            If `True`, then the same crop used
+            when initializing the `Valis` object will be used. If `False`, the
+            image will not be cropped. If "overlap", the warped slide will be
+            cropped to include only areas where all images overlapped.
+            "reference" crops to the area that overlaps with the reference image,
+            defined by `reference_img_f` when initialzing the `Valis object`.
+
+        """
+        if M is None:
+            M = self.M
+
+        if np.issubdtype(type(pt_level), np.integer):
+            pt_dim_rc = self.slide_dimensions_wh[pt_level][::-1]
+        else:
+            pt_dim_rc = np.array(pt_level)
+
+        if np.issubdtype(type(slide_level), np.integer):
+            if slide_level != 0:
+                if np.issubdtype(type(slide_level), np.integer):
+                    aligned_slide_shape = self.val_obj.get_aligned_slide_shape(slide_level)
+                else:
+                    aligned_slide_shape = np.array(slide_level)
+            else:
+                aligned_slide_shape = self.aligned_slide_shape_rc
+        else:
+            aligned_slide_shape = np.array(slide_level)
+
+        if non_rigid:
+            fwd_dxdy = self.fwd_dxdy
+        else:
+            fwd_dxdy = None
+
+        with open(geojson_f) as f:
+            annotation_geojson = json.load(f)
+
+        crop_method = self.get_crop_method(crop)
+        if crop_method is not False:
+            if crop_method == CROP_REF:
+                ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                if isinstance(slide_level, int):
+                    scaled_aligned_shape_rc = ref_slide.slide_dimensions_wh[slide_level][::-1]
+                else:
+                    if len(slide_level) == 2:
+                        scaled_aligned_shape_rc = slide_level
+            elif crop_method == CROP_OVERLAP:
+                scaled_aligned_shape_rc = aligned_slide_shape
+
+            crop_bbox_xywh, _ = self.get_crop_xywh(crop_method, scaled_aligned_shape_rc)
+            shift_xy = crop_bbox_xywh[0:2]
+        else:
+            shift_xy = None
+
+        warped_features = [None]*len(annotation_geojson["features"])
+        for i, ft in tqdm.tqdm(enumerate(annotation_geojson["features"])):
+            geom = shapely.geometry.shape(ft["geometry"])
+            warped_geom = warp_tools.warp_shapely_geom(geom, M=M,
+                                            transformation_src_shape_rc=self.processed_img_shape_rc,
+                                            transformation_dst_shape_rc=self.reg_img_shape_rc,
+                                            src_shape_rc=pt_dim_rc,
+                                            dst_shape_rc=aligned_slide_shape,
+                                            fwd_dxdy=fwd_dxdy,
+                                            shift_xy=shift_xy)
+            warped_ft = deepcopy(ft)
+            warped_ft["geometry"] = shapely.geometry.mapping(warped_geom)
+            warped_features[i] = warped_ft
+
+        warped_geojson = {"type":annotation_geojson["type"], "features":warped_features}
+
+        return warped_geojson
+
+    def warp_geojson_from_to(self, geojson_f, to_slide_obj, src_slide_level=0, src_pt_level=0,
+                            dst_slide_level=0, non_rigid=True):
+        """Warp geoms in geojson file from annotation slide to another unwarped slide
+
+        Takes a set of geometries found in this annotation slide, and warps them to
+        their position in the unwarped "to" slide.
+
+        Parameters
+        ----------
+        geojson_f : str
+            Path to geojson file containing the annotation geometries. Assumes
+            coordinates are in pixels.
+
+        to_slide_obj : Slide
+            Slide to which the points will be warped. I.e. `xy`
+            will be warped from this Slide to their position in
+            the unwarped slide associated with `to_slide_obj`.
+
+        src_pt_level: int, tuple, optional
+            Pyramid level of the slide/image in which `xy` originated.
+            For example, if `xy` are from the centroids of cell segmentation
+            performed on the unwarped full resolution image, this should be 0.
+            Alternatively, the value can be a tuple of the image's shape (row, col)
+            from which the points came. For example, if `xy` are  bounding
+            box coordinates from an analysis on a lower resolution image,
+            then pt_level is that lower resolution image's shape (row, col).
+
+        dst_slide_level: int, tuple, optional
+            Pyramid level of the slide/image in to `xy` will be warped.
+            Similar to `src_pt_level`, if `dst_slide_level` is an int then
+            the points will be warped to that pyramid level. If `dst_slide_level`
+            is the "to" image's shape (row, col), then the points will be warped
+            to their location in an image with that same shape.
+
+        non_rigid : bool, optional
+            Whether or not to conduct non-rigid warping. If False,
+            then only a rigid transformation will be applied.
+
+        Returns
+        -------
+        warped_geojson : dict
+            Dictionry of warped geojson geometries
+
+        """
+
+        if np.issubdtype(type(src_pt_level), np.integer):
+            src_pt_dim_rc = self.slide_dimensions_wh[src_pt_level][::-1]
+        else:
+            src_pt_dim_rc = np.array(src_pt_level)
+
+        if np.issubdtype(type(dst_slide_level), np.integer):
+            to_slide_src_shape_rc = to_slide_obj.slide_dimensions_wh[dst_slide_level][::-1]
+        else:
+            to_slide_src_shape_rc = np.array(dst_slide_level)
+
+        if src_slide_level != 0:
+            if np.issubdtype(type(src_slide_level), np.integer):
+                aligned_slide_shape = self.val_obj.get_aligned_slide_shape(src_slide_level)
+            else:
+                aligned_slide_shape = np.array(src_slide_level)
+        else:
+            aligned_slide_shape = self.aligned_slide_shape_rc
+
+        if non_rigid:
+            src_fwd_dxdy = self.fwd_dxdy
+            dst_bk_dxdy = to_slide_obj.bk_dxdy
+
+        else:
+            src_fwd_dxdy = None
+            dst_bk_dxdy = None
+
+        with open(geojson_f) as f:
+            annotation_geojson = json.load(f)
+
+        warped_features = [None]*len(annotation_geojson["features"])
+        for i, ft in tqdm.tqdm(enumerate(annotation_geojson["features"])):
+            geom = shapely.geometry.shape(ft["geometry"])
+            warped_geom = warp_tools.warp_shapely_geom_from_to(geom=geom,
+                                            from_M=self.M,
+                                            from_transformation_dst_shape_rc=self.reg_img_shape_rc,
+                                            from_transformation_src_shape_rc=self.processed_img_shape_rc,
+                                            from_dst_shape_rc=aligned_slide_shape,
+                                            from_src_shape_rc=src_pt_dim_rc,
+                                            from_fwd_dxdy=src_fwd_dxdy,
+                                            to_M=to_slide_obj.M,
+                                            to_transformation_src_shape_rc=to_slide_obj.processed_img_shape_rc,
+                                            to_transformation_dst_shape_rc=to_slide_obj.reg_img_shape_rc,
+                                            to_src_shape_rc=to_slide_src_shape_rc,
+                                            to_dst_shape_rc=aligned_slide_shape,
+                                            to_bk_dxdy=dst_bk_dxdy
+                                            )
+
+            warped_ft = deepcopy(ft)
+            warped_ft["geometry"] = shapely.geometry.mapping(warped_geom)
+            warped_features[i] = warped_ft
+
+        warped_geojson = {"type":annotation_geojson["type"], "features":warped_features}
+
+        return warped_geojson
 
 
 class Valis(object):
