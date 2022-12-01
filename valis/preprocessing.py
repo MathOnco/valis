@@ -6,9 +6,12 @@ from skimage import exposure, filters, measure, morphology, restoration
 import numpy as np
 import cv2
 from skimage import color as skcolor
-from . import slide_io
+import pyvips
 import colour
 from scipy import ndimage
+
+from . import slide_io
+from . import warp_tools
 
 # DEFAULT_COLOR_STD_C = 0.01 # jzazbz
 DEFAULT_COLOR_STD_C = 0.2 # cam16-ucs
@@ -383,14 +386,48 @@ def combine_masks_by_hysteresis(mask_list):
     """
     Combine masks. Keeps areas where they overlap _and_ touch
     """
-    to_hyst_mask = np.zeros_like(mask_list[0])
+    m0 = mask_list[0]
+    if isinstance(m0, pyvips.Image):
+        mshape = np.array([m0.height, m0.width])
+    else:
+        mshape = m0.shape[0:2]
+
+    to_hyst_mask = np.zeros(mshape)
     for m in mask_list:
-        to_hyst_mask[ m > 0] += 1
+
+        if(isinstance(m, pyvips.Image)):
+            np_mask = warp_tools.vips2numpy(m)
+        else:
+            np_mask = m.copy()
+
+        to_hyst_mask[ np_mask > 0] += 1
 
     hyst_mask = 255*filters.apply_hysteresis_threshold(to_hyst_mask, 0.5, len(mask_list) - 0.5).astype(np.uint8)
 
     return hyst_mask
 
+
+def combine_masks(mask1, mask2, op="or"):
+    if not isinstance(mask1, pyvips.Image):
+        vmask1 = warp_tools.numpy2vips(mask1)
+    else:
+        vmask1 = mask1
+
+    if not isinstance(mask2, pyvips.Image):
+        vmask2 = warp_tools.numpy2vips(mask2)
+    else:
+        vmask2 = mask2
+
+    vips_combo_mask = vmask1.bandjoin(vmask2)
+    if op == "or":
+        combo_mask = vips_combo_mask.bandor()
+    else:
+        combo_mask = vips_combo_mask.bandand()
+
+    if not isinstance(mask1, pyvips.Image):
+        combo_mask = warp_tools.vips2numpy(combo_mask)
+
+    return combo_mask
 
 def remove_small_obj_and_lines_by_dist(mask):
     """

@@ -189,7 +189,8 @@ def determine_if_staining_round(src_dir):
         multifile_img = False
         master_img_f = None
     else:
-        f_list = [os.path.join(src_dir, f) for f in os.listdir(src_dir) if get_img_type(os.path.join(src_dir, f)) is not None]
+
+        f_list = [os.path.join(src_dir, f) for f in os.listdir(src_dir) if get_img_type(os.path.join(src_dir, f)) is not None and not f.startswith(".")]
         extensions = [get_slide_extension(f) for f in f_list]
         format_counts = Counter(extensions)
         format_count_values = list(format_counts.values())
