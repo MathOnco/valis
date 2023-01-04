@@ -15,6 +15,7 @@ print(os.getcwd(), os.path.exists(os.getcwd()), os.path.exists("/Users/gatenbcd/
 p = os.path.join(os.getcwd(), "Users/gatenbcd/Dropbox/Documents")
 print(p, os.listdir(p))
 
+os.path.exists("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/docs/_images/annotation_transfer.png")
 # "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/docker_test.py:main.py"
 
 

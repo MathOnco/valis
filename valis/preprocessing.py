@@ -160,6 +160,12 @@ class Luminosity(ImageProcesser):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
 
+
+    def create_mask(self):
+        _, tissue_mask = create_tissue_mask_from_rgb(self.image)
+
+        return tissue_mask
+
     def process_image(self,  *args, **kwaargs):
         lum = get_luminosity(self.image)
         inv_lum = 255 - lum
@@ -177,9 +183,14 @@ class BgColorDistance(ImageProcesser):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
 
+    def create_mask(self):
+        _, tissue_mask = create_tissue_mask_from_rgb(self.image)
+
+        return tissue_mask
+
     def process_image(self,  brightness_q=0.99, *args, **kwargs):
 
-        processed_img = calc_background_color_dist(self.image)
+        processed_img, _ = calc_background_color_dist(self.image, brightness_q=brightness_q)
         processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 1))
         processed_img = exposure.equalize_adapthist(processed_img)
         processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 255)).astype(np.uint8)

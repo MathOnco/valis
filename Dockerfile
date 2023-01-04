@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 RUN apt-get update \
 	&& apt-get upgrade -y \
@@ -18,4 +18,3 @@ COPY setup.py setup.py
 COPY setup.cfg setup.cfg
 RUN python3 -m pip install .
 
-ENTRYPOINT ["python3"]
