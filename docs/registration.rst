@@ -7,6 +7,9 @@ Functions
 .. automodule:: valis.registration
     :members: load_registrar, init_jvm, kill_jvm
 
+Classes
+=======
+
 Valis
 -----
 .. autoclass:: valis.registration::Valis
