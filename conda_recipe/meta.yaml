@@ -22,7 +22,7 @@ channels:
 
 requirements:
   build:
-    - libvips  >=8.11,<8.12
+    - libvips 
     - pip
     - python {{ python }}
     - setuptools
@@ -30,14 +30,14 @@ requirements:
 
   host:
     - python >=3.7
-    - libvips  >=8.11,<8.12
+    - libvips  
     - pip
 
   run:
     - python >=3.7
     - setuptools
     - beautifulsoup4
-    - bioformats_jar
+    # - bioformats_jar
     - scyjava
     - colorama
     - fastcluster
@@ -62,7 +62,8 @@ requirements:
     - wheel
     - lxml
     - colour-science
-    - libvips  >=8.11,<8.12
+    - libvips
+    - maven
 
 test:
   imports:

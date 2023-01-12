@@ -169,3 +169,5 @@ examples/expected_results/registration/ihc/data/ihc_registrar.pickle
 docs/_images/
 
 docs/html/
+
+.DS_Store
