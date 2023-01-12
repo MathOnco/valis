@@ -1,0 +1,24 @@
+beautifulsoup4
+bioformats_jar
+scyjava
+colorama
+colour-science
+fastcluster
+interpolation
+joblib
+JPype1
+matplotlib
+numba
+numpy
+ome_types
+opencv-contrib-python-headless == 4.6.0.66
+pandas
+Pillow
+pyvips
+scikit_image
+scikit_learn
+scipy
+Shapely
+SimpleITK
+tqdm
+weightedstats
