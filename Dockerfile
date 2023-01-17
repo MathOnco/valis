@@ -1,4 +1,10 @@
-FROM ubuntu:lunar
+FROM ubuntu:lunar as builder
+
+ARG WKDIR=/usr/local/src
+WORKDIR ${WKDIR}
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # Get build dependencies
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,15 +15,16 @@ RUN apt-get update \
 		ninja-build \
 		python3-pip \
 		bc \
-		wget 
+		wget \
+		ca-certificates
+
 
 # we need meson for libvips build
 RUN pip3 install meson
 
 # libvips dependencies
-RUN apt-get install -y \
+RUN apt-get install --no-install-recommends -y \
 	glib-2.0-dev \
-    openslide-tools \
 	libexpat-dev \
 	librsvg2-dev \
 	libpng-dev \
@@ -28,38 +35,37 @@ RUN apt-get install -y \
 	libheif-dev \
 	liborc-dev \
     libgirepository1.0-dev \
-    ca-certificates
+	libopenslide-dev
 
 # Openslide dependencies
-RUN apt-get install -y \
-	libc6 \
-	libglib2.0-0 \
-	libopenslide0 \
-	libopenjp2-7-dev \
-	libxml++2.6-dev \
-	libsqlite3-dev
+# RUN apt-get install --no-install-recommends -y \
+# 	libc6 \
+# 	libglib2.0-0 \
+# 	libopenslide0 \
+# 	libopenjp2-7-dev \
+# 	libxml++2.6-dev \
+# 	libsqlite3-dev
 
 
-# Install Openslide and libvips
-WORKDIR /usr/local/src
-
+# Install Openslide and libvips from source
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
 
 ARG VIPS_VERSION=8.14.1
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 
-ARG OPENSLIDE_VERSION=3.4.1
-ARG OPENSLIDE_URL=https://github.com/openslide/openslide/releases/download
+# ARG OPENSLIDE_VERSION=3.4.1
+# ARG OPENSLIDE_URL=https://github.com/openslide/openslide/releases/download
 
-RUN wget ${OPENSLIDE_URL}/v${OPENSLIDE_VERSION}/openslide-${OPENSLIDE_VERSION}.tar.gz --no-check-certificate \
-	&& tar xf openslide-${OPENSLIDE_VERSION}.tar.gz \
-	&& cd openslide-${OPENSLIDE_VERSION} \
-	&& ./configure \
-	&& make \
-	&& make install 
+# RUN wget ${OPENSLIDE_URL}/v${OPENSLIDE_VERSION}/openslide-${OPENSLIDE_VERSION}.tar.gz --no-check-certificate \
+# 	&& tar xf openslide-${OPENSLIDE_VERSION}.tar.gz \
+# 	&& cd openslide-${OPENSLIDE_VERSION} \
+# 	&& ./configure \
+# 	&& make \
+# 	&& make install 
 
-RUN rm openslide-${OPENSLIDE_VERSION}.tar.gz
+# RUN rm openslide-${OPENSLIDE_VERSION}.tar.gz
+# RUN rm -r openslide-${OPENSLIDE_VERSION}
 
 # build the head of the stable 8.14 branch
 RUN wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz --no-check-certificate \
@@ -71,18 +77,61 @@ RUN wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz --no-check-cer
 	&& ninja install
 
 RUN rm vips-${VIPS_VERSION}.tar.xz
+RUN rm -r vips-${VIPS_VERSION}
 
-# Install other non-Python packages that are unrelated to libvips and openslide
-RUN apt-get install -y maven \
-    openjdk-11-jre
-
-# Install python packages
+# Install python packages using poetry
 COPY . .
-RUN pip install --no-cache --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir --upgrade pip \
-  && pip install --no-cache-dir -r requirements_lock.txt
 
-# Install valis-wsi source code
-RUN python3 -m pip install .
+
+RUN pip3 install poetry && poetry config virtualenvs.in-project true
+RUN poetry install --only main
+
+# Set path to use .venv Python
+ENV PATH="${WKDIR}/.venv/bin:$PATH"
+
+# Clean up
+RUN  apt-get remove -y wget build-essential ninja-build && \
+  apt-get autoremove -y && \
+  apt-get autoclean && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+  rm -rf /usr/local/lib/python*
+
+
+# Copy over only what is needed to run, but not build, the package. Saves about 0.75GB
+FROM ubuntu:lunar
+
+ARG WKDIR=/usr/local/src
+WORKDIR ${WKDIR}
+
+COPY --from=builder /usr/local/lib /usr/local/lib
+COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+COPY --from=builder /usr/local/src /usr/local/src
+
+ENV LD_LIBRARY_PATH /usr/local/lib
+ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
+ENV PATH="${WKDIR}/.venv/bin:$PATH"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+	&& apt-get install -y \
+	glib-2.0-dev \
+	libexpat-dev \
+	librsvg2-dev \
+	libpng-dev \
+	libjpeg-turbo8-dev \
+	libtiff-dev \
+	libexif-dev \
+	liblcms2-dev \
+	libheif-dev \
+	liborc-dev \
+    libgirepository1.0-dev \
+	libopenslide-dev
+
+# Install other non-Python dependencies
+RUN apt-get install -y \
+ 	maven \
+    openjdk-11-jre
 
 # ENTRYPOINT ["python3"]

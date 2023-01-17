@@ -218,13 +218,13 @@ class BoostFD(FeatureDD):
 class VggFD(FeatureDD):
     """Uses BRISK for feature detection and VGG for feature description"""
     def __init__(self,  kp_detector=DEFAULT_FEATURE_DETECTOR,
-                 kp_descriptor=cv2.xfeatures2d.VGG_create(scale_factor=6.25)):
+                 kp_descriptor=cv2.xfeatures2d.VGG_create(scale_factor=5.0)):
         super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
 
 
 class OrbVggFD(FeatureDD):
     """Uses ORB for feature detection and VGG for feature description"""
-    def __init__(self,  kp_detector=cv2.ORB_create(nfeatures=MAX_FEATURES, fastThreshold=0), kp_descriptor=cv2.xfeatures2d.VGG_create(scale_factor=6.25)):
+    def __init__(self,  kp_detector=cv2.ORB_create(nfeatures=MAX_FEATURES, fastThreshold=0), kp_descriptor=cv2.xfeatures2d.VGG_create(scale_factor=0.75)):
         super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
 
 
