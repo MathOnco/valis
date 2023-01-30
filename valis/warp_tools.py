@@ -1933,8 +1933,8 @@ def smooth_dxdy(dxdy, grid_spacing_ratio=0.015, sigma_ratio=0.005,
 
         subgrid_r, subgrid_c = get_mesh(dx.shape, grid_spacing, inclusive=True)
 
-        grid = UCGrid((0.0, float(dx.shape[1]), subgrid_r.shape[1]),
-                      (0.0, float(dx.shape[0]), subgrid_r.shape[0]))
+        grid = UCGrid((0.0, float(dx.shape[1]), int(subgrid_r.shape[1])),
+                      (0.0, float(dx.shape[0]), int(subgrid_r.shape[0])))
 
         grid_y, grid_x = np.indices(dx.shape)
         grid_xy = np.dstack([grid_x.reshape(-1), grid_y.reshape(-1)]).astype(float)[0]
@@ -2148,8 +2148,8 @@ def _warp_pt_vips(xy, M=None, vips_bk_dxdy=None, vips_fwd_dxdy=None, src_sxy=Non
         region_bk_dxdy = vips2numpy(vips_region_bk_dxdy)
         region_dxdy = np.dstack(get_inverse_field(region_bk_dxdy[..., 0], region_bk_dxdy[..., 1]))
 
-    grid = UCGrid((0.0, float(bbox_w-1), bbox_w),
-                  (0.0, float(bbox_h-1), bbox_h))
+    grid = UCGrid((0.0, float(bbox_w-1), int(bbox_w)),
+                  (0.0, float(bbox_h-1), int(bbox_h)))
 
     dx_cubic_coeffs = filter_cubic(grid, region_dxdy[..., 0]).T
     dy_cubic_coeffs = filter_cubic(grid, region_dxdy[..., 1]).T
@@ -2304,8 +2304,8 @@ def _warp_xy_numpy(xy, M=None, transformation_src_shape_rc=None, transformation_
     if bk_dxdy is not None and fwd_dxdy is None:
         fwd_dxdy = get_inverse_field(bk_dxdy)
 
-    grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), displacement_shape_rc[1]),
-                  (0.0, float(displacement_shape_rc[0]-1), displacement_shape_rc[0]))
+    grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), int(displacement_shape_rc[1])),
+                  (0.0, float(displacement_shape_rc[0]-1), int(displacement_shape_rc[0])))
 
     dx_cubic_coeffs = filter_cubic(grid, fwd_dxdy[0]).T
     dy_cubic_coeffs = filter_cubic(grid, fwd_dxdy[1]).T
@@ -3048,8 +3048,8 @@ def untangle(dxdy, n_grid_pts=50, penalty=10e-6, mask=None):
     untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
 
     padded_shape = mesh.padded_shape
-    grid = UCGrid((0.0, float(padded_shape[1]), mesh.nc),
-                  (0.0, float(padded_shape[0]), mesh.nr))
+    grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
+                  (0.0, float(padded_shape[0]), int(mesh.nr)))
 
     dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
     dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T
@@ -3154,8 +3154,8 @@ def remove_folds_in_dxdy(dxdy, n_grid_pts=50, method="inpaint", paint_size=5000,
         untangled_dx = (mesh.sample_pos_xy[:, 0] - untangled_coords[:, 0]).reshape((mesh.nr, mesh.nc))
         untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
 
-        grid = UCGrid((0.0, float(padded_shape[1]), mesh.nc),
-                      (0.0, float(padded_shape[0]), mesh.nr))
+        grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
+                      (0.0, float(padded_shape[0]), int(mesh.nr)))
 
         dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
         dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T

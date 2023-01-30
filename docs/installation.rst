@@ -2,7 +2,17 @@ Installation
 ************
 
 .. note::
-    VALIS requires Python >=3.7
+    Currently, VALIS requires Python 3.9 or 3.10
+
+DockerHub
+=========
+VALIS is available as a Docker image and can be downloaded from DockerHub. Starting a container will launch an Ubuntu shell, and so executing a Python script that registers images in a local directory (:code:`-src_dir`) and takes command line arguments would be something like:
+
+.. code-block:: bash
+    docker run --memory=20g  -v "$HOME:$HOME" valis-wsi python3 full/path/to/your_pyscript.py -src_dir full/path/to/images_to_align -dst_dir full/path/to/where_to_save_results
+
+.. important::
+    To avoid the container from shutting down prematurely, be sure to set appropriately high memory limits (including in Docker Desktop).
 
 PyPi
 =====

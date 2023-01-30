@@ -27,6 +27,7 @@ Docmentation
    serial_rigid
    serial_non_rigid
    viz
+   changelog
 
 Indices and tables
 ==================
