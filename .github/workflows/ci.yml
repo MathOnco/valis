@@ -1,31 +1,24 @@
-name: CI
+# Run this job on pushes to `main`, and for pull requests. If you don't specify
+# `branches: [main], then this actions runs _twice_ on pull requests, which is
+# annoying.
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
-  workflow_dispatch:
 
 jobs:
-  tests:
-    name: "Python ${{ matrix.python-version }}"
-    runs-on: "ubuntu-latest"
-    env:
-      USING_COVERAGE: '3.9, 3.10'
-
-
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10"]
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-
+  test:
+    runs-on: ubuntu-latest
     steps:
-      # - uses: "actions/checkout@v2"
-      - uses: "actions/setup-python@v2"
+      - uses: actions/checkout@v2
+
+      # If you wanted to use multiple Python versions, you'd have specify a matrix in the job and
+      # reference the matrixe python version here.
+      - uses: actions/setup-python@v2
         with:
-          python-version: "${{ matrix.python-version }}"
-      
+          python-version: 3.9
+
       # Cache the installation of Poetry itself, e.g. the next step. This prevents the workflow
       # from installing Poetry every time, which can be slow. Note the use of the Poetry version
       # number in the cache key, and the "-0" suffix: this allows you to invalidate the cache
@@ -36,7 +29,7 @@ jobs:
         with:
           path: ~/.local
           key: poetry-1.1.12-0
-      
+
       # Install Poetry. You could do this manually, or there are several actions that do this.
       # `snok/install-poetry` seems to be minimal yet complete, and really just calls out to
       # Poetry's default install script, which feels correct. I pin the Poetry version here
@@ -51,7 +44,7 @@ jobs:
           version: 1.1.12
           virtualenvs-create: true
           virtualenvs-in-project: true
-      
+
       # Cache your dependencies (i.e. all the stuff in your `pyproject.toml`). Note the cache
       # key: if you're using multiple Python versions, or multiple OSes, you'd need to include
       # them in the cache key. I'm not, so it can be simple and just depend on the poetry.lock.
@@ -60,34 +53,16 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .venv
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pydeps-${{ hashFiles('**/poetry.lock') }}
-
+          key: pydeps-${{ hashFiles('**/poetry.lock') }}
 
       # Install dependencies. `--no-root` means "install all dependencies but not the project
       # itself", which is what you want to avoid caching _your_ code. The `if` statement
       # ensures this only runs on a cache miss.
       - run: poetry install --no-interaction --no-root
         if: steps.cache-deps.outputs.cache-hit != 'true'
-  
 
       # Now install _your_ project. This isn't necessary for many types of projects -- particularly
       # things like Django apps don't need this. But it's a good idea since it fully-exercises the
       # pyproject.toml and makes that if you add things like console-scripts at some point that
       # they'll be installed and working.
       - run: poetry install --no-interaction
-
-
-      # And finally run tests. I'm using pytest and all my pytest config is in my `pyproject.toml`
-      # so this line is super-simple. But it could be as complex as you need.
-      # - run: poetry run pytest
-
-
-      # - name: "Install dependencies"
-      #   run: |
-      #     python -VV
-      #     python -m site
-      #     python -m pip install --upgrade pip setuptools wheel poetry
-      #     python -m pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
-
-      # - name: "Run tox targets for ${{ matrix.python-version }}"
-      #   run: "python -m tox"
