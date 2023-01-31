@@ -35,5 +35,5 @@ weightedstats = "^0.4.1"
 
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry", "setuptools"]
 build-backend = "poetry.core.masonry.api"
