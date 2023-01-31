@@ -468,7 +468,6 @@ def stitch_tiles(tile_list, tile_bboxes, nrow, ncol, overlap):
     #. Blend each row to bottom of the one above
     """
 
-
     is_array = False
     if not isinstance(tile_list[0], pyvips.Image):
         is_array = True
@@ -838,218 +837,6 @@ def pad_img(img, padded_shape):
     padded_img = warp_img(img, padding_T, out_shape_rc=padded_shape)
 
     return padded_img, padding_T
-
-
-# def warp_img_og(img, M=None, bk_dxdy=None, out_shape_rc=None,
-#              transformation_src_shape_rc=None,
-#              transformation_dst_shape_rc=None,
-#              bbox_xywh=None,
-#              bg_color=None,
-#              interp_method="bicubic"):
-#     """Warp an image using rigid and/or non-rigid transformations
-
-#     Warp an image using the trasformations defined by `M` and the optional
-#     displacement field, `bk_dxdy`. Transformations will be scaled so that
-#     they can be applied to the image.
-
-#     Parameters
-#     ----------
-#     img : ndarray, optional
-#         Image to be warped
-
-#     M : ndarray, optional
-#         3x3 Affine transformation matrix to perform rigid warp
-
-#     bk_dxdy : ndarray, optional
-#         A list containing the backward x-axis (column) displacement,
-#         and y-axis (row) displacement applied after the rigid transformation.
-
-#     out_shape_rc : tuple of int
-#         Shape of the `img` after warping.
-
-#     transformation_src_shape_rc : tuple of int
-#         Shape of image that was used to find the transformations M and/or `bk_dxdy`.
-#         For example, this could be the original image in which features
-#         were detected
-
-#     transformation_dst_shape_rc : tuple of int
-#         Shape of image with shape transformation_src_shape_rc after
-#         being warped. Should be specified if `img` is a rescaled
-#         version of the image for which the `M` and `bk_dxdy` were found.
-
-#     bbox_xywh : tuple
-#         Bounding box to crop warped image. Should be in reference to the image
-#         with shape = `out_shape_rc`, which may or not be the same as
-#         `transformation_dst_shape_rc`. For example, to crop a region
-#         from a large warped slide, `bbox_xywh` should refer to an area
-#         in that warped slide, not an area in the image used to find the
-#         transformation.
-
-#     bg_color : optional, list
-#         Background color, if `None`, then the background color will be black
-
-#     interp_method : str, optional
-
-#     Returns
-#     -------
-#     warped : ndarray, pyvips.Image
-#         Warped version of `img`
-
-#     """
-
-#     is_array = False
-#     if not isinstance(img, pyvips.Image):
-#         is_array = True
-#         img = numpy2vips(img)
-
-#     src_shape_rc = np.array([img.height, img.width])
-#     if transformation_src_shape_rc is None:
-#         transformation_src_shape_rc = src_shape_rc
-
-#     # Determine shape of unscaled output. If not provided, find shape big enough to avoid cropping
-#     if transformation_dst_shape_rc is None:
-#         if bk_dxdy is not None:
-#             if isinstance(bk_dxdy, pyvips.Image):
-#                 transformation_dst_shape_rc = np.array([bk_dxdy.height, bk_dxdy.width])
-#             else:
-#                 transformation_dst_shape_rc = bk_dxdy[0].shape
-#         elif out_shape_rc is not None:
-#             transformation_dst_shape_rc = out_shape_rc
-#         else:
-#             transformation_src_corners_rc = get_corners_of_image(transformation_src_shape_rc)
-#             warped_transformation_src_corners_xy = warp_xy(transformation_src_corners_rc[:, ::-1], M)
-#             transformation_dst_shape_rc = np.ceil(np.max(warped_transformation_src_corners_xy[:, ::-1], axis=0)).astype(int)
-
-#     # Determine shape of scaled output
-#     if out_shape_rc is None:
-#         out_shape_rc = transformation_dst_shape_rc
-
-#     src_shape_rc = np.array(src_shape_rc)
-#     transformation_src_shape_rc = np.array(transformation_src_shape_rc)
-#     out_shape_rc = np.array(out_shape_rc)
-#     transformation_dst_shape_rc = np.array(transformation_dst_shape_rc)
-
-#     src_sxy, dst_sxy, displacement_sxy, displacement_shape_rc = get_warp_scaling_factors(
-#                                                                      transformation_src_shape_rc=transformation_src_shape_rc,
-#                                                                      transformation_dst_shape_rc=transformation_dst_shape_rc,
-#                                                                      src_shape_rc=src_shape_rc, dst_shape_rc=out_shape_rc,
-#                                                                      bk_dxdy=bk_dxdy)
-#     if bbox_xywh is not None:
-#         crop_x, crop_y, out_w, out_h = bbox_xywh
-#         do_crop = True
-#     else:
-#         out_h, out_w = out_shape_rc
-#         crop_x, crop_y = 0, 0
-#         do_crop = False
-
-#     # Determine if any transformations need to be done
-#     if M is not None:
-#         do_rigid = True
-#     else:
-#         do_rigid = False
-
-#     if bk_dxdy is not None:
-#         do_non_rigid = True
-#     else:
-#         do_non_rigid = False
-
-#     if not any([do_rigid, do_non_rigid, do_crop]):
-#         if is_array:
-#             img = vips2numpy(img)
-#         return img
-
-#     # Do transformations
-#     if bg_color is None:
-#         bg_color = [0] * img.bands
-#         bg_extender = pyvips.enums.Extend.BLACK
-#     else:
-#         bg_extender = pyvips.enums.Extend.BACKGROUND
-#         bg_color = list(bg_color)
-
-#     interpolator = pyvips.Interpolate.new(interp_method)
-#     if do_rigid:
-#         if not np.all(src_sxy == 1):
-#             img_corners_xy = get_corners_of_image(src_shape_rc)[::-1]
-#             warped_corners = warp_xy(img_corners_xy, M=M,
-#                                      transformation_src_shape_rc=transformation_src_shape_rc,
-#                                      transformation_dst_shape_rc=transformation_dst_shape_rc,
-#                                      src_shape_rc=src_shape_rc,
-#                                      dst_shape_rc=out_shape_rc)
-#             M_tform = transform.ProjectiveTransform()
-#             M_tform.estimate(warped_corners, img_corners_xy)
-#             warp_M = M_tform.params
-
-#         else:
-#             warp_M = M
-
-#         tx, ty = warp_M[:2, 2]
-#         warp_M = np.linalg.inv(warp_M)
-#         vips_M = warp_M[:2, :2].reshape(-1).tolist()
-#         affine_warped = img.affine(vips_M,
-#                     oarea=[0, 0, out_w, out_h],
-#                     interpolate=interpolator,
-#                     idx=-tx,
-#                     idy=-ty,
-#                     odx=-crop_x,
-#                     ody=-crop_y,
-#                     premultiplied=True,
-#                     background=bg_color,
-#                     extend=bg_extender
-#                     )
-#     else:
-#         affine_warped = img
-
-#     if do_non_rigid:
-#         # Scale dxdy map
-#         if not isinstance(bk_dxdy, pyvips.Image):
-#             temp_dxdy = numpy2vips(np.dstack(bk_dxdy))
-#         else:
-#             temp_dxdy = bk_dxdy
-
-#         if dst_sxy is not None:
-#             scaled_dx = float(dst_sxy[0]) * temp_dxdy[0]
-#             scaled_dy = float(dst_sxy[1]) * temp_dxdy[1]
-#             vips_dxdy = scaled_dx.bandjoin(scaled_dy)
-#         else:
-#             vips_dxdy = temp_dxdy
-
-#         if dst_sxy is not None:
-#             S = [dst_sxy[0], 0, 0, dst_sxy[1]]
-#         else:
-#             S = [1.0, 0.0, 0.0, 1.0]
-
-#         warp_dxdy = vips_dxdy.affine(S,
-#                        oarea=[0, 0, out_w, out_h],
-#                        interpolate=interpolator,
-#                        premultiplied=True,
-#                        odx=-crop_x,
-#                        ody=-crop_y)
-
-#         index = pyvips.Image.xyz(affine_warped.width, affine_warped.height)
-#         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
-
-#         try:
-#             #Option to set backround color in mapim added in libvips 8.13
-#             warped = affine_warped.mapim(warp_index,
-#                 premultiplied=True,
-#                 background=bg_color,
-#                 extend=bg_extender,
-#                 interpolate=interpolator)
-
-#         except pyvips.error.Error:
-#             warped = affine_warped.mapim(warp_index, interpolate=interpolator)
-#             if bg_color is not None:
-#                 warped = (warped == 0).ifthenelse(bg_color, warped)
-
-#     else:
-#         warped = affine_warped
-
-#     if is_array:
-#         warped = vips2numpy(warped)
-
-#     return warped
-
-
 
 def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
              transformation_src_shape_rc=None,
@@ -1933,8 +1720,8 @@ def smooth_dxdy(dxdy, grid_spacing_ratio=0.015, sigma_ratio=0.005,
 
         subgrid_r, subgrid_c = get_mesh(dx.shape, grid_spacing, inclusive=True)
 
-        grid = UCGrid((0.0, float(dx.shape[1]), subgrid_r.shape[1]),
-                      (0.0, float(dx.shape[0]), subgrid_r.shape[0]))
+        grid = UCGrid((0.0, float(dx.shape[1]), int(subgrid_r.shape[1])),
+                      (0.0, float(dx.shape[0]), int(subgrid_r.shape[0])))
 
         grid_y, grid_x = np.indices(dx.shape)
         grid_xy = np.dstack([grid_x.reshape(-1), grid_y.reshape(-1)]).astype(float)[0]
@@ -2148,8 +1935,8 @@ def _warp_pt_vips(xy, M=None, vips_bk_dxdy=None, vips_fwd_dxdy=None, src_sxy=Non
         region_bk_dxdy = vips2numpy(vips_region_bk_dxdy)
         region_dxdy = np.dstack(get_inverse_field(region_bk_dxdy[..., 0], region_bk_dxdy[..., 1]))
 
-    grid = UCGrid((0.0, float(bbox_w-1), bbox_w),
-                  (0.0, float(bbox_h-1), bbox_h))
+    grid = UCGrid((0.0, float(bbox_w-1), int(bbox_w)),
+                  (0.0, float(bbox_h-1), int(bbox_h)))
 
     dx_cubic_coeffs = filter_cubic(grid, region_dxdy[..., 0]).T
     dy_cubic_coeffs = filter_cubic(grid, region_dxdy[..., 1]).T
@@ -2304,8 +2091,8 @@ def _warp_xy_numpy(xy, M=None, transformation_src_shape_rc=None, transformation_
     if bk_dxdy is not None and fwd_dxdy is None:
         fwd_dxdy = get_inverse_field(bk_dxdy)
 
-    grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), displacement_shape_rc[1]),
-                  (0.0, float(displacement_shape_rc[0]-1), displacement_shape_rc[0]))
+    grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), int(displacement_shape_rc[1])),
+                  (0.0, float(displacement_shape_rc[0]-1), int(displacement_shape_rc[0])))
 
     dx_cubic_coeffs = filter_cubic(grid, fwd_dxdy[0]).T
     dy_cubic_coeffs = filter_cubic(grid, fwd_dxdy[1]).T
@@ -3048,8 +2835,8 @@ def untangle(dxdy, n_grid_pts=50, penalty=10e-6, mask=None):
     untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
 
     padded_shape = mesh.padded_shape
-    grid = UCGrid((0.0, float(padded_shape[1]), mesh.nc),
-                  (0.0, float(padded_shape[0]), mesh.nr))
+    grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
+                  (0.0, float(padded_shape[0]), int(mesh.nr)))
 
     dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
     dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T
@@ -3154,8 +2941,8 @@ def remove_folds_in_dxdy(dxdy, n_grid_pts=50, method="inpaint", paint_size=5000,
         untangled_dx = (mesh.sample_pos_xy[:, 0] - untangled_coords[:, 0]).reshape((mesh.nr, mesh.nc))
         untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
 
-        grid = UCGrid((0.0, float(padded_shape[1]), mesh.nc),
-                      (0.0, float(padded_shape[0]), mesh.nr))
+        grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
+                      (0.0, float(padded_shape[0]), int(mesh.nr)))
 
         dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
         dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T

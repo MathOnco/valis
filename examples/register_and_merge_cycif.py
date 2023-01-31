@@ -53,7 +53,7 @@ method.
 import time
 import os
 import sys
-sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+
 from valis import registration, valtils
 
 slide_src_dir = "./example_datasets/cycif"

@@ -2,7 +2,19 @@ Installation
 ************
 
 .. note::
-    VALIS requires Python >=3.7
+    Currently, VALIS requires Python 3.9 or 3.10
+
+DockerHub
+=========
+VALIS is available as a Docker image and can be downloaded from `DockerHub <https://hub.docker.com/r/cdgatenbee/valis-wsi>`_. Starting a container will launch an Ubuntu shell, and so Python needs to be called when executing the script. In this example, the user has a file called "register.py" that takes :code:`src_dir` and :code:`dst_dir` arguments, which registers all of the images in :code:`src_dir` and saves the results in :code:`dst_dir`. This example bind mounts the home directory, and thus the full paths need to be specified.
+
+.. code-block:: bash
+  
+    $ docker run --memory=20g  -v "$HOME:$HOME" valis-wsi python3 full/path/to/register.py -src_dir full/path/to/images_to_align -dst_dir full/path/to/where_to_save_results
+
+
+.. important::
+    To avoid the container from shutting down prematurely, be sure to set appropriately high memory limits (including in Docker Desktop).
 
 PyPi
 =====
@@ -68,17 +80,6 @@ The defaults used by VALIS work well, but VALIS also provides optional classes t
 
 To install SimpleElastix, you should probably uninstall the current version of SimpleITK in your environment, and then install SimpleElastix as described in the `SimpleElastix docs <https://simpleelastix.readthedocs.io/GettingStarted.html>`_.
 
-
-Docker
-======
-
-A Docker image of VALIS is is also available on DockerHub.
-
-
-The container created using the image launches a Python interpretor, so that the user can execute a Python script using command line arguments. In this example, the user has a file called "register.py" that takes :code:`src_dir` and :code:`dst_dir` arguments, which registers all of the images in :code:`src_dir` and saves the results in :code:`dst_dir`. This example assumes that the Python script is in a different directory than :code:`src_dir` and :code:`dst_dir`, and so it mounts the home directory, and thus the full paths need to be specified.
-
-
-.. code-block:: bash
-
-    $ docker run -d --rm -v "$HOME:$HOME" valis /full/path/to/pycode/register.py -src_dir /full/path/to/src_dir -dst_dir /full/path/to/dst_dir
-
+From source
+============
+One will need to install and use `Poetry <https://python-poetry.org/>`_ to install VALIS from the source code. As Poetry only installs the Python dependencies, one will also need to follow the steps above to install the JDK, Maven, libvips, and openslide. Note that the poetry lock file is included in the repository, which can be deleted before installation if so desired.
