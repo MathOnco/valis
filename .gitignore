@@ -166,8 +166,6 @@ cython_debug/
 examples/expected_results/registration/cycif/data/cycif_registrar.pickle
 examples/expected_results/registration/ihc/data/ihc_registrar.pickle
 
-docs/_images/
-
 docs/html/
 
 .DS_Store
