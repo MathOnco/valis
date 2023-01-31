@@ -235,11 +235,11 @@ def filter_matches_tukey(src_xy, dst_xy):
     inner_fence = 1.5*iqr
     outer_fence = 3*iqr
 
-    #inner fence lower and upper end
+    # inner fence lower and upper end
     inner_fence_le = q1-inner_fence
     inner_fence_ue = q3+inner_fence
 
-    #outer fence lower and upper end
+    # outer fence lower and upper end
     outer_fence_le = q1-outer_fence
     outer_fence_ue = q3+outer_fence
 

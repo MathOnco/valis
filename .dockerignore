@@ -1,0 +1,16 @@
+conda_recipe/
+dist/
+docs/
+examples/
+tests/
+valis_wsi.egg-info/
+tox.ini
+.github
+.pytest_cache
+.tox
+.vscode
+.gitignore
+.readthedocs.yaml
+.DS_Store
+
+

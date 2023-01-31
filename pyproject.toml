@@ -1,6 +1,39 @@
+[tool.poetry]
+name = "valis-wsi"
+version = "1.0.0rc13"
+description = ""
+authors = ["Chandler Gatenbee <chandlergatenbee@gmail.com>"]
+license = "MIT"
+readme = "README.rst"
+packages = [{include = "valis"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.11"
+beautifulsoup4 = "^4.11.1"
+scyjava = "^1.8.1"
+colorama = "^0.4.6"
+colour-science = "^0.4.2"
+fastcluster = "^1.2.6"
+interpolation = "^2.2.4"
+joblib = "^1.2.0"
+jpype1 = "^1.4.1"
+matplotlib = "^3.6.3"
+numba = "^0.56.4"
+numpy = "<1.24"
+ome-types = "^0.3.2"
+opencv-contrib-python-headless = "4.6.0.66"
+pandas = "^1.5.2"
+pillow = "^9.4.0"
+pyvips = "^2.2.1"
+scikit-image = "^0.19.3"
+scikit-learn = "^1.2.0"
+scipy = "^1.10.0"
+shapely = "^2.0.0"
+simpleitk = "^2.2.1"
+tqdm = "^4.64.1"
+weightedstats = "^0.4.1"
+
+
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -14,6 +14,9 @@ Docmentation
 .. toctree::
    :maxdepth: 3
 
+   installation
+   examples
+   datasets
    registration
    slide_io
    preprocessing
@@ -24,6 +27,7 @@ Docmentation
    serial_rigid
    serial_non_rigid
    viz
+   changelog
 
 Indices and tables
 ==================

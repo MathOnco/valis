@@ -20,6 +20,7 @@ from . import non_rigid_registrars
 from . import valtils
 from . import serial_rigid
 from . import viz
+from . import preprocessing
 
 IMG_LIST_KEY = "img_list"
 IMG_F_LIST_KEY = "img_f_list"
@@ -148,7 +149,8 @@ def get_imgs_rigid_reg(serial_rigid_reg):
         # Moving mask
         temp_mask = np.full_like(img_obj.image, 255)
         img_mask = warp_tools.warp_img(temp_mask, M=img_obj.M,
-                                       out_shape_rc=img_obj.registered_img.shape)
+                                       out_shape_rc=img_obj.registered_img.shape,
+                                       interp_method="nearest")
         mask_list[i] = img_mask
 
     return img_list, img_f_list, img_names, mask_list
@@ -392,30 +394,19 @@ class NonRigidZImage(object):
             og_reg_shape_rc = rigid_img_obj.registered_shape_rc
 
         if mask is not None:
-            if self.mask is not None:
-                if isinstance(self.mask, pyvips.Image):
-                    if not isinstance(mask, pyvips.Image):
-                        vips_mask = warp_tools.numpy2vips(mask)
-                    else:
-                        vips_mask = mask
-
-                    combo_mask = vips_mask.bandjoin(self.mask)
-                    reg_mask = combo_mask.bandand()
-
-                else:
-                    reg_mask = np.zeros(self.mask.shape, dtype=np.uint8)
-                    reg_mask[(mask > 0) & (self.mask > 0)] = 255
+            if isinstance(mask, pyvips.Image):
+                reg_mask = warp_tools.vips2numpy(mask)
             else:
-                reg_mask = mask
+                reg_mask =  mask.copy()
         else:
-            reg_mask = self.mask
+            reg_mask = None
 
         if bk_dxdy is not None:
             if isinstance(bk_dxdy, list):
                 bk_dxdy = np.array(bk_dxdy)
 
-            if self.mask is not None:
-                for_reg_dxdy = self.mask_dxdy(bk_dxdy, self.mask)
+            if reg_mask is not None:
+                for_reg_dxdy = self.mask_dxdy(bk_dxdy, reg_mask)
             else:
                 for_reg_dxdy = bk_dxdy
 
@@ -474,19 +465,19 @@ class NonRigidZImage(object):
                                                                       )
 
         if not self.check_if_vips(moving_bk_dxdy):
-            if self.mask is not None:
+            if reg_mask is not None:
                 # Only add new transformations
                 moving_bk_dxdy = self.mask_dxdy(moving_bk_dxdy, reg_mask)
             bk_dxdy_from_ref = np.array([bk_dxdy[0] + moving_bk_dxdy[0],
                                          bk_dxdy[1] + moving_bk_dxdy[1]])
         else:
-            if self.mask is not None:
+            if reg_mask is not None:
                 moving_bk_dxdy = self.mask_dxdy(moving_bk_dxdy, reg_mask)
                 bk_dxdy_from_ref = bk_dxdy + moving_bk_dxdy
 
         img_bk_dxdy = bk_dxdy_from_ref.copy()
-        if self.mask is not None:
-            img_bk_dxdy = self.mask_dxdy(img_bk_dxdy, self.mask)
+        if reg_mask is not None:
+            img_bk_dxdy = self.mask_dxdy(img_bk_dxdy, reg_mask)
 
         if self.reg_obj.from_rigid_reg:
             img_bk_dxdy = warp_tools.remove_invasive_displacements(img_bk_dxdy,
@@ -666,6 +657,7 @@ class SerialNonRigidRegistrar(object):
         self.non_rigid_reg_params = None
         self.summary = None
         self.mask = mask
+
         self.reference_img_f = None
         self.ref_img_name = None
         self.ref_img_idx = None
@@ -769,12 +761,7 @@ class SerialNonRigidRegistrar(object):
 
             img_name = img_names[i]
             mask = mask_list[i]
-            if self.mask is not None:
-                if isinstance(self.mask, pyvips.Image):
-                    mask = self.mask.bandjoin(mask).bandand()
-                else:
-                    mask = cv2.bitwise_and(self.mask, mask)
-
+            
             moving_xy = None
             fixed_xy = None
             if moving_to_fixed_xy is not None and img_name != reference_img_f:
@@ -859,12 +846,26 @@ class SerialNonRigidRegistrar(object):
                 else:
                     current_dxdy = updated_dxdy
 
-            nr_reg_params = self.update_img_params(non_rigid_reg_params, img_params, moving_obj.name)
+            if moving_obj.mask is not None:
+                if self.mask is not None:
+                    reg_mask = warp_tools.combine_masks(self.mask, moving_obj.mask, op="and")
+                else:
+                    reg_mask = moving_obj.mask
 
+            elif self.mask is not None:
+                reg_mask = self.mask
+
+            else:
+                reg_mask is None
+
+            nr_reg_params = self.update_img_params(non_rigid_reg_params, img_params, moving_obj.name)
             updated_dxdy = moving_obj.calc_deformation(registered_fixed_image=fixed_obj.registered_img,
                                         non_rigid_reg_class=non_rigid_reg_class,
                                         bk_dxdy=current_dxdy,
-                                        params=nr_reg_params)
+                                        params=nr_reg_params,
+                                        mask=reg_mask
+                                        )
+
 
     def register_to_ref(self, non_rigid_reg_class, non_rigid_reg_params=None, img_params=None):
         """Non-rigidly align images to a reference image

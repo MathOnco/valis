@@ -52,6 +52,8 @@ method.
 
 import time
 import os
+import sys
+
 from valis import registration, valtils
 
 slide_src_dir = "./example_datasets/cycif"
@@ -85,7 +87,6 @@ dst_f = os.path.join("./expected_results/registered_slides", registrar.name, reg
 start = time.time()
 merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
                                       channel_name_dict=channel_name_dict,
-                                      perceputally_uniform_channel_colors=True,
                                       drop_duplicates=True)
 stop = time.time()
 elapsed = stop - start

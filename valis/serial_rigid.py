@@ -639,9 +639,8 @@ class SerialRigidRegistrar(object):
         xy_to_next_idx = warp_tools.index2d_to_1d(xy_to_next[:, 1], xy_to_next[:, 0], img_obj.image.shape[1])
 
         shared_pts, nf_prev_idx, nf_next_idx  = np.intersect1d(xy_to_prev_idx, xy_to_next_idx, return_indices=True)
-        # assert np.all(xy_to_prev[nf_prev_idx, :] == xy_to_next[nf_next_idx, :])
 
-        #trying to remove diff features if they are different... (possible due to some very rare rounding errors?)
+        # trying to remove diff features if they are different... (possible due to some very rare rounding errors?)
         diff = np.where(xy_to_prev[nf_prev_idx, :] != xy_to_next[nf_next_idx, :])
         if diff[0].any():
             diff = list(np.unique(diff[0]))
