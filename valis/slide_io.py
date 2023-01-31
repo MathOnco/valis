@@ -196,19 +196,6 @@ def init_jvm(jar=None, mem_gb=10):
         global ome
         global loci
 
-        # if jar is not None:
-        #     jpype.addClassPath(jar)
-        # elif jar is None and hasattr(bioformats_jar, "JAR"):
-        #     jpype.addClassPath(bioformats_jar.JAR)
-        # else:
-        #     scyjava.config.endpoints.append('ome:formats-gpl')
-
-        # try:
-        #     # jpype.startJVM(f"-Djava.awt.headless=true -Xmx{mem_gb}G", classpath=bioformats_jar.JAR)
-        #     scyjava.start_jvm([f"-Xmx{mem_gb}G"])
-        # except ModuleNotFoundError:
-        #     bioformats_jar.start_jvm(memory=f"{mem_gb}G")
-
         if jar is not None:
             jpype.addClassPath(jar)
             jpype.startJVM(f"-Djava.awt.headless=true -Xmx{mem_gb}G", classpath=jar)
@@ -875,9 +862,6 @@ class BioFormatsSlideReader(SlideReader):
             tile = self.slide2image(level, series, xywh=tuple(xywh))
             # javabridge.detach()
             jpype.detachThreadFromJVM()
-
-            # if np.issubdtype(pixel_type, np.unsignedinteger):
-            #     tile = util.img_as_ubyte(tile)
 
             tile_array[idx] = slide_tools.numpy2vips(tile, self.metadata.pyvips_interpretation)
 

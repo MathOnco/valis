@@ -19,4 +19,3 @@ Slide
 -----
 .. autoclass:: valis.registration::Slide
     :members: __init__, slide2image, slide2vips, warp_img, warp_slide, warp_and_save_slide, warp_xy, warp_xy_from_to
-

@@ -351,179 +351,6 @@ class NonRigidZImage(object):
 
         return init_kwargs, reg_kwargs
 
-
-
-    # def calc_deformation(self, registered_fixed_image, non_rigid_reg_class,
-    #                      bk_dxdy=None, params=None, mask=None):
-    #     """
-    #     Finds the non-rigid deformation fields that align this ("moving") image
-    #     to the "fixed" image
-
-    #     Parameters
-    #     ----------
-    #     registered_fixed_image : ndarray
-    #         Adjacent, aligned image in the stack that this image is being
-    #         aligned to. Has shape (P, Q)
-
-    #     non_rigid_reg_class : NonRigidRegistrar
-    #         Uninstantiated NonRigidRegistrar class that will be used to
-    #         calculate the deformation fields between images
-
-    #     bk_dxdy : ndarray, optional
-    #         (2, P, Q) numpy array of pixel displacements in
-    #         the x and y directions. dx = dxdy[0], and dy=dxdy[1].
-    #         Used to warp the registered_img before finding deformation fields.
-
-    #     params : dictionary, optional
-    #         Keyword: value dictionary of parameters to be used in reigstration.
-    #         Passed to the non_rigid_reg_class' init() method.
-
-    #         In the case where simple ITK will be used, params should be
-    #         a SimpleITK.ParameterMap. Note that numeric values needd to be
-    #         converted to strings.
-
-    #     mask : ndarray, optional
-    #         2D array with shape (P,Q) where non-zero pixel values are foreground,
-    #         and 0 is background, which is ignnored during registration. If None,
-    #         then all non-zero pixels in images will be used to create the mask.
-
-    #     """
-
-    #     if self.reg_obj.from_rigid_reg:
-    #         rigid_img_obj = self.reg_obj.src.img_obj_dict[self.name]
-    #         M = rigid_img_obj.M
-    #         unwarped_shape = rigid_img_obj.image.shape[0:2]
-    #         og_reg_shape_rc = rigid_img_obj.registered_shape_rc
-
-    #     # if mask is not None:
-    #     #     reg_mask = mask.copy()
-    #     # #     if self.mask is not None:
-    #     # #         if isinstance(self.mask, pyvips.Image):
-    #     # #             if not isinstance(mask, pyvips.Image):
-    #     # #                 vips_mask = warp_tools.numpy2vips(mask)
-    #     # #             else:
-    #     # #                 vips_mask = mask
-
-    #     # #             combo_mask = vips_mask.bandjoin(self.mask)
-    #     # #             # reg_mask = combo_mask.bandand()
-    #     # #             reg_mask = combo_mask.bandor()
-
-    #     # #         else:
-    #     # #             reg_mask = np.zeros(self.mask.shape, dtype=np.uint8)
-    #     # #             reg_mask[(mask > 0) & (self.mask > 0)] = 255
-    #     # #     else:
-    #     # #         reg_mask = mask
-    #     # else:
-    #     #     reg_mask = self.mask
-
-    #     if mask is not None:
-    #         reg_mask = mask.copy()
-    #     else:
-    #         reg_mask = None
-
-    #     if bk_dxdy is not None:
-    #         if isinstance(bk_dxdy, list):
-    #             bk_dxdy = np.array(bk_dxdy)
-
-    #         if reg_mask is not None:
-    #             for_reg_dxdy = self.mask_dxdy(bk_dxdy, reg_mask)
-    #         else:
-    #             for_reg_dxdy = bk_dxdy
-
-    #         if self.reg_obj.from_rigid_reg:
-    #             for_reg_dxdy = warp_tools.remove_invasive_displacements(for_reg_dxdy,
-    #                                                                     M=M,
-    #                                                                     src_shape_rc=unwarped_shape,
-    #                                                                     out_shape_rc=og_reg_shape_rc
-    #                                                                     )
-
-    #         moving_img = warp_tools.warp_img(self.image, bk_dxdy=for_reg_dxdy)
-    #         if mask is not None:
-    #             # Update mask too
-    #             reg_mask = warp_tools.warp_img(mask, bk_dxdy=for_reg_dxdy)
-
-    #     else:
-    #         moving_img = self.image.copy()
-    #         for_reg_dxdy = None
-    #         if self.is_vips:
-    #             bk_dxdy = pyvips.Image.black(self.shape[1], self.shape[0], bands=2)
-    #         else:
-    #             bk_dxdy = np.array([np.zeros(self.shape[0:2]), np.zeros(self.shape[0:2])])
-
-    #     init_kwargs, reg_kwargs = self.split_params(params, non_rigid_reg_class)
-
-    #     non_rigid_reg = non_rigid_reg_class(params=init_kwargs)
-
-    #     if self.moving_xy is not None and self.fixed_xy is not None and \
-    #        issubclass(non_rigid_reg_class, non_rigid_registrars.NonRigidRegistrarXY):
-    #         if for_reg_dxdy is not None:
-    #             # Update positions #
-    #             fwd_dxdy = warp_tools.get_inverse_field(for_reg_dxdy)
-    #             fixed_xy = warp_tools.warp_xy(self.fixed_xy, M=None, fwd_dxdy=fwd_dxdy)
-    #             moving_xy = warp_tools.warp_xy(self.moving_xy, M=None, fwd_dxdy=fwd_dxdy)
-    #         else:
-    #             fixed_xy = self.fixed_xy
-    #             moving_xy = self.moving_xy
-    #     else:
-    #         fixed_xy = None
-    #         moving_xy = None
-
-    #     xy_args = {"moving_xy": moving_xy, "fixed_xy": fixed_xy}
-    #     reg_kwargs.update(xy_args)
-
-    #     warped_moving, moving_grid_img, moving_bk_dxdy = \
-    #         non_rigid_reg.register(moving_img=moving_img,
-    #                                fixed_img=registered_fixed_image,
-    #                                mask=reg_mask,
-    #                                **reg_kwargs)
-
-    #     if self.reg_obj.from_rigid_reg:
-    #         moving_bk_dxdy = warp_tools.remove_invasive_displacements(moving_bk_dxdy,
-    #                                                                   M=M,
-    #                                                                   src_shape_rc=unwarped_shape,
-    #                                                                   out_shape_rc=og_reg_shape_rc
-    #                                                                   )
-
-    #     if not self.check_if_vips(moving_bk_dxdy):
-    #         if self.mask is not None:
-    #             # Only add new transformations
-    #             moving_bk_dxdy = self.mask_dxdy(moving_bk_dxdy, reg_mask)
-    #         bk_dxdy_from_ref = np.array([bk_dxdy[0] + moving_bk_dxdy[0],
-    #                                      bk_dxdy[1] + moving_bk_dxdy[1]])
-    #     else:
-    #         if self.mask is not None:
-    #             moving_bk_dxdy = self.mask_dxdy(moving_bk_dxdy, reg_mask)
-    #             bk_dxdy_from_ref = bk_dxdy + moving_bk_dxdy
-
-    #     img_bk_dxdy = bk_dxdy_from_ref.copy()
-    #     if self.mask is not None:
-    #         img_bk_dxdy = self.mask_dxdy(img_bk_dxdy, self.mask)
-
-    #     if self.reg_obj.from_rigid_reg:
-    #         img_bk_dxdy = warp_tools.remove_invasive_displacements(img_bk_dxdy,
-    #                                                                M=M,
-    #                                                                src_shape_rc=unwarped_shape,
-    #                                                                out_shape_rc=og_reg_shape_rc
-    #                                                                )
-    #     self.bk_dxdy = img_bk_dxdy
-    #     if hasattr(non_rigid_reg, "fwd_dxdy"):
-    #         # Already calculated
-    #         self.fwd_dxdy = non_rigid_reg.fwd_dxdy
-    #     else:
-    #         self.fwd_dxdy = warp_tools.get_inverse_field(self.bk_dxdy)
-
-    #     if not self.is_vips:
-    #         # If dxdy is a pyvips.Image, it's likely the displacement is too large to draw
-    #         self.warped_grid = viz.color_displacement_grid(*self.bk_dxdy)
-
-    #     self.registered_img = warp_tools.warp_img(self.image,
-    #                                               bk_dxdy=self.bk_dxdy,
-    #                                               out_shape_rc=self.shape)
-
-    #     return bk_dxdy_from_ref
-
-
-
     def calc_deformation(self, registered_fixed_image, non_rigid_reg_class,
                          bk_dxdy=None, params=None, mask=None):
         """
@@ -934,16 +761,7 @@ class SerialNonRigidRegistrar(object):
 
             img_name = img_names[i]
             mask = mask_list[i]
-            # if self.mask is not None:
-            #     # if isinstance(self.mask, pyvips.Image):
-            #     #     mask = self.mask.bandjoin(mask).bandand()
-            #     # else:
-            #     #     mask = cv2.bitwise_and(self.mask, mask)
-
-            #     img_mask = preprocessing.combine_masks(self.mask, mask)
-            # else:
-            #     img_mask = mask
-
+            
             moving_xy = None
             fixed_xy = None
             if moving_to_fixed_xy is not None and img_name != reference_img_f:
@@ -1028,22 +846,6 @@ class SerialNonRigidRegistrar(object):
                 else:
                     current_dxdy = updated_dxdy
 
-            # if self.mask is not None:
-            #     print("using reg mask")
-            #     # reg_mask = self.mask #preprocessing.combine_masks_by_hysteresis([moving_obj.mask, self.mask])
-            #     # reg_mask = preprocessing.combine_masks_by_hysteresis([moving_obj.mask, self.mask])
-            #     reg_mask = preprocessing.combine_masks(moving_obj.mask, self.mask, op="and")
-
-            # elif fixed_obj.mask is not None:
-            #     print("combining masks")
-            #     # Note fixed mask will be combined
-            #     fixed_mask = warp_tools.warp_img(fixed_obj.mask, bk_dxdy=fixed_obj.bk_dxdy, interp_method="nearest")
-            #     reg_mask = preprocessing.combine_masks(moving_obj.mask, fixed_mask)
-            #     # reg_mask = preprocessing.combine_masks_by_hysteresis([moving_obj.mask, fixed_mask])
-
-            # else:
-            #     reg_mask = None
-
             if moving_obj.mask is not None:
                 if self.mask is not None:
                     reg_mask = warp_tools.combine_masks(self.mask, moving_obj.mask, op="and")
@@ -1056,20 +858,7 @@ class SerialNonRigidRegistrar(object):
             else:
                 reg_mask is None
 
-            # reg_mask = warp_tools.warp_img(fixed_obj.mask, bk_dxdy=fixed_obj.bk_dxdy, interp_method="nearest")
-            # reg_mask = None
-            # print("NO MASK!")
-            # fixed_obj.mask.height, fixed_obj.mask.width
-            # print("moving", moving_obj.mask.height, moving_obj.mask.width)
-            # print("fixed", fixed_mask.height, fixed_mask.width)
-
-            # warp_tools.save_img(f"mask_{moving_obj.name}_to_{fixed_obj.name}.png", reg_mask)
-            # warp_tools.save_img(f"mask_{moving_obj.name}_moving.png", moving_obj.mask)
-            # warp_tools.save_img(f"mask_{moving_obj.name}_fixed.png", fixed_mask)
-
-
             nr_reg_params = self.update_img_params(non_rigid_reg_params, img_params, moving_obj.name)
-
             updated_dxdy = moving_obj.calc_deformation(registered_fixed_image=fixed_obj.registered_img,
                                         non_rigid_reg_class=non_rigid_reg_class,
                                         bk_dxdy=current_dxdy,

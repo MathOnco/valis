@@ -10,11 +10,11 @@ Slide registration
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/challenging_dataset_adincar33.png
 
 .. important::
-    One of the most imporant parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values will be needed so that the tissue is at a high enough resolution. Finally, larger values can potentially generate more accurate registrations, but will be slower, require more memory, and won't always produce better results.
+    One of the most imporant parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values may be needed so that the tissue is at a high enough resolution. Finally, larger values can potentially generate more accurate registrations, but will be slower, require more memory, and won't always produce better results.
 
 
 .. important::
-    If the order of slices is known and needs to be preserved, such as building a 3D image, set :code:`imgs_ordered=True` when intialzing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, be sure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff ... 10.tiff, etc...
+    If the order of slices is known and needs to be preserved, such as building a 3D image, set :code:`imgs_ordered=True` when intialzing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, ensure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff ... 10.tiff, etc...
 
 
 In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process involves creating a Valis object, which is what conducts the registration. In this example no reference image is specfied, and so all images will be aligned towards the center of the image stack. In this case, the resulting images will be cropped to the region where all of the images overlap. However, one can specify the reference image when intialzing the :code:`Valis` object, by setting :code:`reference_img_f` to the filename of the image the others should be aligned towards. When the reference image is specifed, the images will be cropped such that only the regions which overlap with the reference image will be saved. While this is the default behavior, one can also specify the cropping method by setting the :code:`crop` parameter value when initialzing the :code:`Valis` object. The cropping method can also be changed when saving the registered images (see below).
@@ -306,7 +306,7 @@ In this example, VALIS uses the registration parameters to transfer annotations 
 
 
 
-.. image:: _images/annotation_transfer.png
+.. image:: https://github.com/MathOnco/valis/raw/main/docs/_images/annotation_transfer.png
 
 
 Converting slides to ome.tiff

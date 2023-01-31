@@ -37,35 +37,14 @@ RUN apt-get install --no-install-recommends -y \
     libgirepository1.0-dev \
 	libopenslide-dev
 
-# Openslide dependencies
-# RUN apt-get install --no-install-recommends -y \
-# 	libc6 \
-# 	libglib2.0-0 \
-# 	libopenslide0 \
-# 	libopenjp2-7-dev \
-# 	libxml++2.6-dev \
-# 	libsqlite3-dev
 
-
-# Install Openslide and libvips from source
+# Install libvips from source to get latest version
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
 
 ARG VIPS_VERSION=8.14.1
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 
-# ARG OPENSLIDE_VERSION=3.4.1
-# ARG OPENSLIDE_URL=https://github.com/openslide/openslide/releases/download
-
-# RUN wget ${OPENSLIDE_URL}/v${OPENSLIDE_VERSION}/openslide-${OPENSLIDE_VERSION}.tar.gz --no-check-certificate \
-# 	&& tar xf openslide-${OPENSLIDE_VERSION}.tar.gz \
-# 	&& cd openslide-${OPENSLIDE_VERSION} \
-# 	&& ./configure \
-# 	&& make \
-# 	&& make install 
-
-# RUN rm openslide-${OPENSLIDE_VERSION}.tar.gz
-# RUN rm -r openslide-${OPENSLIDE_VERSION}
 
 # build the head of the stable 8.14 branch
 RUN wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz --no-check-certificate \
@@ -78,6 +57,8 @@ RUN wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz --no-check-cer
 
 RUN rm vips-${VIPS_VERSION}.tar.xz
 RUN rm -r vips-${VIPS_VERSION}
+
+
 
 # Install python packages using poetry
 COPY . .
@@ -133,5 +114,3 @@ RUN apt-get update \
 RUN apt-get install -y \
  	maven \
     openjdk-11-jre
-
-# ENTRYPOINT ["python3"]

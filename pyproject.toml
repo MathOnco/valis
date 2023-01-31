@@ -10,7 +10,6 @@ packages = [{include = "valis"}]
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
 beautifulsoup4 = "^4.11.1"
-bioformats-jar = "^2020.5.27"
 scyjava = "^1.8.1"
 colorama = "^0.4.6"
 colour-science = "^0.4.2"
