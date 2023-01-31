@@ -37,12 +37,12 @@ jobs:
       # Cache your dependencies (i.e. all the stuff in your `pyproject.toml`). Note the cache
       # key: if you're using multiple Python versions, or multiple OSes, you'd need to include
       # them in the cache key. I'm not, so it can be simple and just depend on the poetry.lock.
-      # - name: cache deps
-      #   id: cache-deps
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: .venv
-      #     key: pydeps-${{ hashFiles('**/poetry.lock') }}
+      - name: cache deps
+        id: cache-deps
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: pydeps-${{ hashFiles('**/poetry.lock') }-${{ matrix.python-version }-${{ runner.os }}
 
       # Install dependencies. `--no-root` means "install all dependencies but not the project
       # itself", which is what you want to avoid caching _your_ code. The `if` statement
