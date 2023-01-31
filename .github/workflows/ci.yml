@@ -42,7 +42,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .venv
-          key: pydeps-${{ hashFiles('**/poetry.lock') }-${{ matrix.python-version }-${{ runner.os }}
+          # key: pydeps-${{ hashFiles('**/poetry.lock') }-${{ matrix.python-version }-${{ runner.os }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pydeps-${{ hashFiles('**/poetry.lock') }}
 
       # Install dependencies. `--no-root` means "install all dependencies but not the project
       # itself", which is what you want to avoid caching _your_ code. The `if` statement
