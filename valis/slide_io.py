@@ -231,6 +231,12 @@ def kill_jvm():
         pass
 
 
+def get_bioformats_version():
+    v = loci.formats.FormatTools.VERSION
+    
+    return v
+
+
 def get_bf_readable_formats():
     """Get extensions of formats that BioFormats can read
 
