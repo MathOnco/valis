@@ -458,7 +458,7 @@ def match_descriptors(descriptors1, descriptors2, metric=None,
 
 
 def match_desc_and_kp(desc1, kp1_xy, desc2, kp2_xy, metric=None,
-                      metric_type=None, metric_kwargs=None,
+                      metric_type=None, metric_kwargs=None, max_ratio=1.0,
                       filter_method=DEFAULT_MATCH_FILTER,
                       filtering_kwargs=None):
     """Match the descriptors of image 1 with those of image 2 and remove outliers.
@@ -491,6 +491,15 @@ def match_desc_and_kp(desc1, kp1_xy, desc2, kp2_xy, metric=None,
             Optionl keyword arguments to be passed into pairwise_distances()
             or pairwise_kernels() from the sklearn.metrics.pairwise module
 
+        max_ratio : float, optional
+            Maximum ratio of distances between first and second closest descriptor
+            in the second set of descriptors. This threshold is useful to filter
+            ambiguous matches between the two descriptor sets. The choice of this
+            value depends on the statistics of the chosen descriptor, e.g.,
+            for SIFT descriptors a value of 0.8 is usually chosen, see
+            D.G. Lowe, "Distinctive Image Features from Scale-Invariant Keypoints",
+            International Journal of Computer Vision, 2004.
+        
         filter_method: str
             "GMS" will use uses the Grid-based Motion Statistics
             "RANSAC" will use RANSAC
@@ -543,6 +552,7 @@ def match_desc_and_kp(desc1, kp1_xy, desc2, kp2_xy, metric=None,
         match_descriptors(desc1, desc2, metric=metric,
                           metric_type=metric_type,
                           metric_kwargs=metric_kwargs,
+                          max_ratio=max_ratio,
                           cross_check=cross_check)
 
     desc1_match_idx = matches[:, 0]

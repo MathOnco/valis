@@ -1,6 +1,10 @@
 Change Log
 **********
 
+Version 1.0.0rc14 
+-------------------------------------
+#. Added :code:`max_ratio` as an argument for :code:`feature_matcher.match_desc_and_kp` (github issue 36).
+
 Version 1.0.0rc13 (January 31, 2023)
 -------------------------------------
 #. Now available as a Docker image
