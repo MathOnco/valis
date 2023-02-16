@@ -197,11 +197,16 @@ def init_jvm(jar=None, mem_gb=10):
         global loci
 
         if jar is not None:
+            print(f"using {jar}")
             jpype.addClassPath(jar)
             jpype.startJVM(f"-Djava.awt.headless=true -Xmx{mem_gb}G", classpath=jar)
 
         else:
-            scyjava.config.endpoints.append('ome:formats-gpl')
+            # scyjava.config.endpoints.append('ome:jxrlib-all')
+            # scyjava.config.endpoints.append('ome:formats-gpl')
+            scyjava.config.endpoints.extend(['ome:formats-gpl', 'ome:jxrlib-all'])
+            # scyjava.config.endpoints.append('ome:bio-formats_plugins')
+            
             scyjava.start_jvm([f"-Xmx{mem_gb}G"])
 
         loci = jpype.JPackage("loci")
@@ -223,7 +228,8 @@ def kill_jvm():
     """Kill JVM for BioFormats
     """
     try:
-        jpype.shutdownJVM()
+        # jpype.shutdownJVM()
+        scyjava.shutdown_jvm()
         msg = "JVM has been killed. If this was due to an error, then a new Python session will need to be started"
         valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
 
@@ -1019,6 +1025,7 @@ class BioFormatsSlideReader(SlideReader):
                     series_meta.pyvips_interpretation = 'b-w'
                 else:
                     series_meta.pyvips_interpretation = 'multiband'
+                
                 series_meta.pixel_physical_size_xyu = self._get_pixel_physical_size(rdr, meta)
                 series_meta.bf_pixel_type = str(rdr.getPixelType())
                 series_meta.is_little_endian = rdr.isLittleEndian()

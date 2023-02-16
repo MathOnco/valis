@@ -1,4 +1,5 @@
-FROM ubuntu:lunar as builder
+FROM ubuntu:kinetic as builder
+# Using kinetic to get Python 3.10, used by Poetry
 
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
@@ -80,7 +81,7 @@ RUN  apt-get remove -y wget build-essential ninja-build && \
 
 
 # Copy over only what is needed to run, but not build, the package. Saves about 0.75GB
-FROM ubuntu:lunar
+FROM ubuntu:kinetic
 
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
@@ -107,8 +108,9 @@ RUN apt-get update \
 	liblcms2-dev \
 	libheif-dev \
 	liborc-dev \
-    libgirepository1.0-dev \
-	libopenslide-dev
+	libgirepository1.0-dev \
+	libopenslide-dev \
+	libjxr-dev
 
 # Install other non-Python dependencies
 RUN apt-get install -y \
