@@ -2368,6 +2368,8 @@ def _warp_shapely(geom, warp_fxn, warp_kwargs, shift_xy=None):
     else:
         dst_shape_rc  = None
 
+    if geom.is_empty:
+        return type(geom)([])
     if geom.geom_type in ("Point", "LineString", "LinearRing", "Polygon"):
         if geom.geom_type in ("Point", "LineString", "LinearRing"):
             warped_xy = warp_fxn(np.vstack(geom.coords), **warp_kwargs)

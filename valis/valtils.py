@@ -10,6 +10,7 @@ from colorama import Fore, Style
 import functools
 import warnings
 import pyvips
+from collections import defaultdict
 
 color_init()
 
@@ -111,6 +112,35 @@ def get_elapsed_time_string(elapsed_time, rounding=3):
     processing_time = round(processing_time, rounding)
 
     return processing_time, processing_time_unit
+
+
+def hex_to_rgb(value):
+    value = value.lstrip('#')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
+
+def etree_to_dict(t):
+    d = {t.tag: {} if t.attrib else None}
+    children = list(t)
+    if children:
+        dd = defaultdict(list)
+        for dc in map(etree_to_dict, children):
+            for k, v in dc.items():
+                dd[k].append(v)
+        d = {t.tag: {k: v[0] if len(v) == 1 else v
+                     for k, v in dd.items()}}
+    if t.attrib:
+        d[t.tag].update(('@' + k, v)
+                        for k, v in t.attrib.items())
+    if t.text:
+        text = t.text.strip()
+        if children or t.attrib:
+            if text:
+                d[t.tag]['#text'] = text
+        else:
+            d[t.tag] = text
+    return d
 
 
 def deprecated_args(**aliases):

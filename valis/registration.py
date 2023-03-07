@@ -1243,6 +1243,8 @@ class Slide(object):
         warped_features = [None]*len(annotation_geojson["features"])
         for i, ft in tqdm.tqdm(enumerate(annotation_geojson["features"])):
             geom = shapely.geometry.shape(ft["geometry"])
+            # if geom.is_empty:
+            #     print(f"Geom {i + 1} is empty")
             warped_geom = warp_tools.warp_shapely_geom(geom, M=M,
                                             transformation_src_shape_rc=self.processed_img_shape_rc,
                                             transformation_dst_shape_rc=self.reg_img_shape_rc,

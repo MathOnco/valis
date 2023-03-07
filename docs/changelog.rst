@@ -4,6 +4,9 @@ Change Log
 Version 1.0.0rc14 
 -------------------------------------
 #. Added :code:`max_ratio` as an argument for :code:`feature_matcher.match_desc_and_kp` (github issue 36).
+#. Added :code:`CziJpgxrReader` to read CZI images that have JPGXR compression but can't be opened with Bioformats. It's very limited and experimental, but may be an issue specific to Apple silcon?
+#. Fixed bug that threw error when trying to warp an empty shapely polygon
+
 
 Version 1.0.0rc13 (January 31, 2023)
 -------------------------------------
