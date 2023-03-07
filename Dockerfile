@@ -39,6 +39,7 @@ RUN apt-get install --no-install-recommends -y \
 	libopenslide-dev
 
 
+RUN update-ca-certificates
 # Install libvips from source to get latest version
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
