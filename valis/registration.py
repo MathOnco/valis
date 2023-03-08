@@ -2953,7 +2953,7 @@ class Valis(object):
             vips_micro_reg_mask = warp_tools.resize_img(vips_micro_reg_mask, full_out_shape, interp_method="nearest")
             vips_micro_reg_mask = warp_tools.crop_img(img=vips_micro_reg_mask, xywh=mask_bbox_xywh)
 
-        use_tiler = False
+        
         if ref_slide.reader.metadata.bf_datatype is not None:
             np_dtype = slide_tools.BF_FORMAT_NUMPY_DTYPE[ref_slide.reader.metadata.bf_datatype]
         else:
@@ -2966,7 +2966,7 @@ class Valis(object):
 
         # Size of full displacement fields, all larger processed images, and an image that will be processed
         estimated_gb = img_gb + displacement_gb + processed_img_gb
-
+        use_tiler = False
         if estimated_gb > TILER_THRESH_GB:
             # Avoid having huge displacement fields saved in registrar. Would make it difficult to open
             use_tiler = True
@@ -2978,7 +2978,7 @@ class Valis(object):
 
         print("\n======== Preparing images for non-rigid registration\n")
         for slide_obj in tqdm.tqdm(self.slide_dict.values()):
-
+            # continue
             # Get image to warp. Likely a larger image scaled down to specified shape #
             src_img_shape_rc, src_M = warp_tools.get_src_img_shape_and_M(transformation_src_shape_rc=slide_obj.processed_img_shape_rc,
                                                                             transformation_dst_shape_rc=slide_obj.reg_img_shape_rc,
@@ -3051,7 +3051,7 @@ class Valis(object):
                 processed_img[np_mask==0] = 0
 
                 # Normalize images using stats collected for rigid registration #
-                warped_img = preprocessing.norm_img_stats(processed_img, self.target_processing_stats, mask=slide_mask)
+                warped_img = preprocessing.norm_img_stats(img=processed_img, target_stats=self.target_processing_stats, mask=np_mask)
                 warped_img = exposure.rescale_intensity(warped_img, out_range=(0, 255)).astype(np.uint8)
 
             else:
