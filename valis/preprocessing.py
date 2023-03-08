@@ -726,7 +726,13 @@ def norm_img_stats(img, target_stats, mask=None):
     if mask is None:
         src_stats_flat = get_channel_stats(img)
     else:
-        src_stats_flat = get_channel_stats(img[mask > 0])
+
+        if isinstance(mask, pyvips.Image):
+            np_mask = warp_tools.vips2numpy(mask)
+        else:
+            np_mask = mask
+
+        src_stats_flat = get_channel_stats(img[np_mask > 0])
 
     # Avoid duplicates and keep in ascending order
     lower_knots = np.array([0])
@@ -751,7 +757,8 @@ def norm_img_stats(img, target_stats, mask=None):
         normed_img = cs(img.reshape(-1)).reshape(img.shape)
     else:
         normed_img = img.copy()
-        normed_img[mask > 0] = cs(img[mask > 0])
+        fg_px = np.where(np_mask > 0)
+        normed_img[fg_px] = cs(img[fg_px])
 
     if img.dtype == np.uint8:
         normed_img = np.clip(normed_img, 0, 255)
