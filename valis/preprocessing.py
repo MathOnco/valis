@@ -454,7 +454,7 @@ def deconvolution_he(img: np.array, normalized_concentrations: np.array, stain: 
     elif stain == "eos":
         out = np.multiply(Io, normalized_concentrations[1,:])
     else:
-        raise ValueError(f"Stain {stain} is unknown.")
+        raise ValueError(f"Stain ``{stain}`` is unknown.")
 
     np.clip(out, a_min=0, a_max=255, out=out)
     out = np.reshape(out, (h, w)).astype(np.float32)
