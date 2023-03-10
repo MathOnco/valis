@@ -133,6 +133,9 @@ venv.bak/
 .vscode/
 .vscode/**
 
+# VS code devcontainer settings
+.devcontainer/
+.devcontainer/**
 
 #PyCharm project settings
 .idea/

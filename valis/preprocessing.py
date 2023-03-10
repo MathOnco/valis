@@ -373,10 +373,10 @@ def normalize_he(img: np.array, Io: int = 240, alpha: int = 1, beta: int = 0.15)
         Threshold value used to remove the pixels with a low OD for stability reasons.
         The default value, found empirically, is ``0.15``.
     
-    Returns (TODO)
+    Returns
     -------
-    out : ndarray
-        2D transformed image, np.array<height, width>.
+    normalized_stains_conc : ndarray
+        The normalized stains vector, np.array<2, im_height*im_width>.
     
     """
         
@@ -457,7 +457,7 @@ def deconvolution_he(img: np.array, normalized_concentrations: np.array, stain: 
         raise ValueError(f"Stain {stain} is unknown.")
 
     np.clip(out, a_min=0, a_max=255, out=out)
-    out = 255 - np.reshape(out, (h, w)).astype(np.float32)
+    out = np.reshape(out, (h, w)).astype(np.float32)
 
     return out
 
