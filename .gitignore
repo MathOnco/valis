@@ -169,3 +169,5 @@ examples/expected_results/registration/ihc/data/ihc_registrar.pickle
 docs/html/
 
 .DS_Store
+
+valis.zip

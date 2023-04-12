@@ -848,7 +848,7 @@ class SerialNonRigidRegistrar(object):
 
             if moving_obj.mask is not None:
                 if self.mask is not None:
-                    reg_mask = warp_tools.combine_masks(self.mask, moving_obj.mask, op="and")
+                    reg_mask = preprocessing.combine_masks(self.mask, moving_obj.mask, op="and")
                 else:
                     reg_mask = moving_obj.mask
 
