@@ -26,7 +26,7 @@ import jpype
 # import bioformats_jar
 from tqdm import tqdm
 import scyjava
-from aicspylibczi import CziFile
+
 
 from . import valtils
 from . import slide_tools
@@ -493,7 +493,8 @@ def check_flattened_pyramid_tiff(src_f):
             levels_start_idx = np.arange(0, len(slide_dimensions))
             n_channels = most_common_channel_count
 
-
+    else:
+        return False, None, None, None, None
     # Now check if Bioformats reads it similarly #
     with valtils.HiddenPrints():
         bf_reader = BioFormatsSlideReader(src_f)
@@ -1870,6 +1871,13 @@ class CziJpgxrReader(SlideReader):
             will be set to the series associated with the largest image.
 
         """
+        try:
+            from aicspylibczi import CziFile
+        except Exception as e:
+            msg = "Please install aicspylibczi"
+            print(e)
+            valtils.print_warning(msg)
+
 
         czi_reader = CziFile(src_f)
         self.original_meta_dict = valtils.etree_to_dict(czi_reader.meta)

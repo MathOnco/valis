@@ -17,6 +17,7 @@ import pyvips
 from scipy import ndimage
 import shapely
 from copy import deepcopy
+from pprint import pformat
 import json
 
 from . import feature_matcher
@@ -294,7 +295,7 @@ class Slide(object):
 
     """
 
-    def __init__(self, src_f, image, val_obj, reader):
+    def __init__(self, src_f, image, val_obj, reader, name=None):
         """
         Parameters
         ----------
@@ -311,6 +312,9 @@ class Slide(object):
 
         reader : SlideReader
             Object that can read slides and collect metadata.
+        
+        name : str, optional
+            Name of slide. If None, it will be `src_f` with the extension removed
 
         """
 
@@ -329,7 +333,10 @@ class Slide(object):
         self.units = reader.metadata.pixel_physical_size_xyu[2]
         self.original_xml = reader.metadata.original_xml
 
-        self.name = valtils.get_name(src_f)
+        if name is None:
+            name = valtils.get_name(src_f)
+        
+        self.name = name
 
         # To be filled in during registration #
         self.processed_img = None
@@ -513,7 +520,8 @@ class Slide(object):
             Mask, before crop
         """
 
-        ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+        # ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+        ref_slide = self.val_obj.get_ref_slide()
         if crop == CROP_REF:
             transformation_shape_rc = np.array(ref_slide.processed_img_shape_rc)
             crop_xywh, mask = self.get_aligned_to_ref_slide_crop_xywh(ref_img_shape_rc=transformation_shape_rc,
@@ -689,7 +697,8 @@ class Slide(object):
             crop_method = self.get_crop_method(crop)
             if crop_method is not False:
                 if crop_method == CROP_REF:
-                    ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                    # ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                    ref_slide = self.val_obj.get_ref_slide()
                     if not same_shape:
                         scaled_shape_rc = np.array(ref_slide.processed_img_shape_rc)*img_scale_rc
                     else:
@@ -786,8 +795,6 @@ class Slide(object):
 
         return warped_img
 
-
-
     @valtils.deprecated_args(crop_to_overlap="crop")
     def warp_slide(self, level, non_rigid=True, crop=True,
                    src_f=None, interp_method="bicubic"):
@@ -840,7 +847,8 @@ class Slide(object):
             crop_method = self.get_crop_method(crop)
             if crop_method is not False:
                 if crop_method == CROP_REF:
-                    ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                    # ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                    ref_slide = self.val_obj.get_ref_slide()
                     scaled_aligned_shape_rc = ref_slide.slide_dimensions_wh[level][::-1]
                 elif crop_method == CROP_OVERLAP:
                     scaled_aligned_shape_rc = aligned_slide_shape
@@ -1054,7 +1062,8 @@ class Slide(object):
         crop_method = self.get_crop_method(crop)
         if crop_method is not False:
             if crop_method == CROP_REF:
-                ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                # ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                ref_slide = self.val_obj.get_ref_slide()
                 if isinstance(slide_level, int):
                     scaled_aligned_shape_rc = ref_slide.slide_dimensions_wh[slide_level][::-1]
                 else:
@@ -1226,7 +1235,8 @@ class Slide(object):
         crop_method = self.get_crop_method(crop)
         if crop_method is not False:
             if crop_method == CROP_REF:
-                ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                # ref_slide = self.val_obj.slide_dict[valtils.get_name(self.val_obj.reference_img_f)]
+                ref_slide = self.val_obj.get_ref_slide()
                 if isinstance(slide_level, int):
                     scaled_aligned_shape_rc = ref_slide.slide_dimensions_wh[slide_level][::-1]
                 else:
@@ -1418,7 +1428,10 @@ class Valis(object):
 
     original_img_list : list of ndarray
         List of images converted from the slides in `src_dir`
-
+    
+    name_dict : dictionary
+        Key=full path to image, value = name used to look up `Slide` in `Valis.slide_dict`
+    
     slide_dims_dict_wh :
         Dictionary of slide dimensions. Only needed if dimensions not
         available in the slide/image's metadata.
@@ -1554,6 +1567,11 @@ class Valis(object):
 
     qt_emitter : PySide2.QtCore.Signal
         Used to emit signals that update the GUI's progress bars
+
+    _dup_names_dict : dictionary
+        Dictionary describing which images would have been assigned duplicate
+        names. Key= duplicated name, value=list of paths to images which 
+        would have been assigned the same name
 
     Examples
     --------
@@ -1710,6 +1728,12 @@ class Valis(object):
             non-rigidly aligned image. This can reduce unwanted deformations, but
             may not bring distant features together.
 
+        img_list : list, dictionary, optional
+            List of images to be registered. However, it can also be a dictionary, 
+            in which case the key: value pairs are full_path_to_image: name_of_image, 
+            where name_of_image is the key that can be used to access the image from 
+            Valis.slide_dict.
+
         do_rigid: bool, dictionary, optional
             Whether or not to perform rigid registration. If `False`, rigid
             registration will be skipped.
@@ -1813,10 +1837,22 @@ class Valis(object):
         # Set paths #
         self.src_dir = src_dir
         self.dst_dir = os.path.join(dst_dir, self.name)
+        self.name_dict = None
         if img_list is not None:
-            self.original_img_list = img_list
+            if isinstance(img_list, dict):
+                # Key=original file name, value=name
+                self.original_img_list = list(img_list.keys())
+                self.name_dict = img_list
+            elif isinstance(img_list, list):
+                self.original_img_list = img_list
         else:
             self.get_imgs_in_dir()
+        
+        if self.name_dict is None:
+            self.name_dict = self.get_img_names(self.original_img_list)
+        
+        self.check_for_duplicated_names(self.original_img_list)
+        
         self.set_dst_paths()
 
         # Some information may already be provided #
@@ -2005,10 +2041,141 @@ class Valis(object):
         self.micro_reg_dir = os.path.join(self.dst_dir, MICRO_REG_DIR)
         self.mask_dir = os.path.join(self.dst_dir, MASK_DIR)
 
-    def get_ref_slide(self):
-        ref_slide = self.slide_dict[valtils.get_name(self.reference_img_f)]
+    def get_slide(self, src_f):
+        """Get Slide
 
+        Get the Slide associated with `src_f`.
+        Slide store registration parameters and other metadata about
+        the slide associated with `src_f`. Slide can also:
+
+        * Convert the slide to a numpy array (Slide.slide2image)
+        * Convert the slide to a pyvips.Image (Slide.slide2vips)
+        * Warp the slide (Slide.warp_slide)
+        * Save the warped slide as an ome.tiff (Slide.warp_and_save_slide)
+        * Warp an image of the slide (Slide.warp_img)
+        * Warp points (Slide.warp_xy)
+        * Warp points in one slide to their position in another unwarped slide (Slide.warp_xy_from_to)
+        * Access slide ome-xml (Slide.original_xml)
+
+        See Slide for more details.
+
+        Parameters
+        ----------
+        src_f : str
+            Path to the slide, or name assigned to slide (see Valis.name_dict)
+
+        Returns
+        -------
+        slide_obj : Slide
+            Slide associated with src_f
+
+        """
+
+        default_name = valtils.get_name(src_f)
+        
+        if src_f in self.name_dict.keys():
+            # src_f is full path to image
+            assigned_name = self.name_dict[src_f]
+        elif src_f in self.name_dict.values():
+            # src_f is name of image
+            assigned_name = src_f
+        else:
+            # src_f isn't in name_dict
+            assigned_name = None
+
+        if default_name in self.slide_dict:
+            # src_f is the image name or file name
+            slide_obj = self.slide_dict[default_name]
+        
+        elif assigned_name in self.slide_dict:
+            # src_f is full path and name was looked up 
+            slide_obj = self.slide_dict[assigned_name]
+        
+        elif src_f in self.slide_dict:
+            # src_f is the name of the slide
+            slide_obj = self.slide_dict[src_f]
+        
+        elif default_name in self._dup_names_dict:
+            # default name has multiple matches
+            n_matching = len(self._dup_names_dict[default_name])
+            possible_names_dict = {f: self.name_dict[f] for f in self._dup_names_dict[default_name]}
+
+            msg = (f"\n{src_f} matches {n_matching} images in this dataset:\n"
+                   f"{pformat(self._dup_names_dict[default_name])}"
+                   f"\n\nPlease see `Valis.name_dict` to find correct name in " 
+                   f"the dictionary. Either key (filenmae) or value (assigned name) will work:\n"
+                   f"{pformat(possible_names_dict)}")
+            
+            valtils.print_warning(msg)
+            slide_obj = None
+        
+        return slide_obj
+        
+    def get_ref_slide(self):
+        # ref_name = self.name_dict[self.reference_img_f]
+        ref_slide = self.get_slide(self.reference_img_f)
+        
         return ref_slide
+
+    def get_img_names(self, img_list):
+        """
+        Check that each image will have a unique name, which is based on the file name.
+        Images that would otherwise have the same name are assigned extra ids, starting at 0.
+        For example, if there were three images named "HE.tiff", they would be 
+        named "HE_0", "HE_1", and "HE_2". 
+
+        Parameters
+        ----------
+
+        img_list : list
+            List of image names
+
+        Returns
+        -------
+        name_dict : dict
+            Dictionary, where key= full path to image, value = image name used as
+            key in Valis.slide_dict
+
+        """
+        
+        img_df = pd.DataFrame({"img_f": img_list, 
+                               "name": [valtils.get_name(f) for f in img_list]})
+        
+        names_dict = {f: valtils.get_name(f) for f in img_list}
+        count_df = img_df["name"].value_counts()
+        dup_idx = np.where(count_df.values > 1)[0]
+        if len(dup_idx) > 0:
+            for i in dup_idx:
+                dup_name = count_df.index[i]                
+                dup_paths = img_df["img_f"][img_df["name"] == dup_name]
+                z = len(str(len(dup_paths)))
+                
+                msg = f"Detected {len(dup_paths)} images that would be named {dup_name}"
+                valtils.print_warning(msg)
+                
+                for j, p in enumerate(dup_paths):
+                    new_name = f"{names_dict[p]}_{str(j).zfill(z)}"  
+                    msg = f"Renmaing {p} to {new_name} in Valis.slide_dict)"
+                    valtils.print_warning(msg)
+                    names_dict[p] = new_name
+                        
+        return names_dict
+    
+    def check_for_duplicated_names(self, img_list):
+        """
+        Create dictionary that tracks which files 
+        might be assigned the same name, which 
+        can happen if the filenames (minus the rest of the path) are the same
+        """
+        default_names_dict = {}
+        for f in img_list:
+            default_name = valtils.get_name(f)
+            if default_name not in default_names_dict:
+                default_names_dict[default_name] = [f]
+            else:
+                default_names_dict[default_name].append(f)
+
+        self._dup_names_dict = {k: v for k, v in default_names_dict.items() if len(v) > 1}
 
     def convert_imgs(self, series=None, reader_cls=None):
         """Convert slides to images and create dictionary of Slides.
@@ -2026,9 +2193,11 @@ class Valis(object):
         self.size = 0
         for f in tqdm.tqdm(self.original_img_list):
             if reader_cls is None:
-                reader_cls = slide_io.get_slide_reader(f, series=series)
+                slide_reader_cls = slide_io.get_slide_reader(f, series=series)
+            else:
+                slide_reader_cls = reader_cls
 
-            reader = reader_cls(f, series=series)
+            reader = slide_reader_cls(f, series=series)
 
             slide_dims = reader.metadata.slide_dimensions
             levels_in_range = np.where(slide_dims.max(axis=1) < self.max_image_dim_px)[0]
@@ -2045,7 +2214,8 @@ class Valis(object):
 
             img = warp_tools.vips2numpy(vips_img)
 
-            slide_obj = Slide(f, img, self, reader)
+            slide_name = self.name_dict[f]
+            slide_obj = Slide(f, img, self, reader, name=slide_name)
             slide_obj.crop = self.crop
             img_types.append(slide_obj.img_type)
 
@@ -2097,7 +2267,7 @@ class Valis(object):
                 scaling = self.max_image_dim_px/max(slide_obj.image.shape[0:2])
                 assert scaling <= self.max_image_dim_px
                 if scaling < 1:
-                    slide_obj.image =  warp_tools.rescale_img(slide_obj.image, scaling)
+                    slide_obj.image = warp_tools.rescale_img(slide_obj.image, scaling)
 
         if self.max_processed_image_dim_px > self.max_image_dim_px:
             msg = f"parameter max_processed_image_dim_px also being updated to {self.max_image_dim_px}"
@@ -2360,7 +2530,9 @@ class Valis(object):
             XYWH of mask in reference image
 
         """
-        ref_slide = rigid_registrar.img_obj_dict[valtils.get_name(self.reference_img_f)]
+        # ref_slide = rigid_registrar.img_obj_dict[valtils.get_name(self.reference_img_f)]
+        ref_name = self.name_dict[self.reference_img_f]
+        ref_slide = rigid_registrar.img_obj_dict[ref_name]
         ref_shape_wh = ref_slide.image.shape[0:2][::-1]
 
         uw_mask = np.full(ref_shape_wh[::-1], 255, dtype=np.uint8)
@@ -2385,7 +2557,9 @@ class Valis(object):
 
         """
 
-        ref_slide = rigid_registrar.img_obj_dict[valtils.get_name(self.reference_img_f)]
+        # ref_slide = rigid_registrar.img_obj_dict[valtils.get_name(self.reference_img_f)]
+        ref_name = self.name_dict[self.reference_img_f]
+        ref_slide = rigid_registrar.img_obj_dict[ref_name]
         combo_mask = np.zeros(ref_slide.registered_shape_rc, dtype=int)
         for img_obj in rigid_registrar.img_obj_list:
 
@@ -2510,7 +2684,8 @@ class Valis(object):
             rigid_registrar.update_match_dicts_with_neighbor_filter(transformer, matcher)
 
         if self.reference_img_f is not None:
-            ref_name = valtils.get_name(self.reference_img_f)
+            # ref_name = valtils.get_name(self.reference_img_f)
+            ref_name = self.name_dict[self.reference_img_f]
         else:
             ref_name = valtils.get_name(rigid_registrar.reference_img_f)
             if self.do_rigid is not False:
@@ -2527,7 +2702,8 @@ class Valis(object):
 
         # Get output shapes #
         rigid_ref_obj = rigid_registrar.img_obj_dict[ref_name]
-        ref_slide_obj = self.slide_dict[ref_name]
+        # ref_slide_obj = self.slide_dict[ref_name]
+        ref_slide_obj = self.get_ref_slide()
         if ref_name in named_tform_dict.keys():
             ref_tforms = named_tform_dict[ref_name]
             if TFORM_SRC_SHAPE_KEY in ref_tforms:
@@ -2653,6 +2829,7 @@ class Valis(object):
         # Draw and save overlap image #
         self.aligned_img_shape_rc = rigid_registrar.img_obj_list[0].registered_shape_rc
         self.reference_img_idx = rigid_registrar.reference_img_idx
+
         ref_slide = self.slide_dict[valtils.get_name(rigid_registrar.reference_img_f)]
         self.reference_img_f = ref_slide.src_f
 
@@ -2660,7 +2837,6 @@ class Valis(object):
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
 
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
-
 
         # Create original overlap image #
         self.original_overlap_img = self.create_original_composite_img(rigid_registrar)
@@ -3888,40 +4064,6 @@ class Valis(object):
 
         return aligned_out_shape_rc
 
-    def get_slide(self, src_f):
-        """Get Slide
-
-        Get the Slide associated with `src_f`.
-        Slide store registration parameters and other metadata about
-        the slide associated with `src_f`. Slide can also:
-
-        * Convert the slide to a numpy array (Slide.slide2image)
-        * Convert the slide to a pyvips.Image (Slide.slide2vips)
-        * Warp the slide (Slide.warp_slide)
-        * Save the warped slide as an ome.tiff (Slide.warp_and_save_slide)
-        * Warp an image of the slide (Slide.warp_img)
-        * Warp points (Slide.warp_xy)
-        * Warp points in one slide to their position in another unwarped slide (Slide.warp_xy_from_to)
-        * Access slide ome-xml (Slide.original_xml)
-
-        See Slide for more details.
-
-        Parameters
-        ----------
-        src_f : str
-            Path to the slide
-
-        Returns
-        -------
-        slide_obj : Slide
-            Slide associated with src_f
-
-        """
-
-        slide_name = valtils.get_name(src_f)
-        slide_obj =  self.slide_dict[slide_name]
-
-        return slide_obj
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_save_slides(self, dst_dir, level = 0, non_rigid=True,
