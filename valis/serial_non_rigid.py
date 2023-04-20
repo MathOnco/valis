@@ -761,7 +761,7 @@ class SerialNonRigidRegistrar(object):
 
             img_name = img_names[i]
             mask = mask_list[i]
-            
+
             moving_xy = None
             fixed_xy = None
             if moving_to_fixed_xy is not None and img_name != reference_img_f:
@@ -796,7 +796,10 @@ class SerialNonRigidRegistrar(object):
     def update_img_params(self, non_rigid_reg_params=None, img_params=None, name=None):
 
         if img_params is not None and name is not None:
-            indv_img_params = img_params[name]
+            if len(img_params) == 0:
+                indv_img_params = None
+            else:
+                indv_img_params = img_params[name]
         else:
             indv_img_params = img_params
 
