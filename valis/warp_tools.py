@@ -386,6 +386,62 @@ def get_img_dimensions(img_f):
     return img.size[0:2]
 
 
+def get_shape(img):
+    """ Get shape of image (row, col, nchannels)
+    
+    Parameters
+    ----------
+    
+    img : numpy.array, pyvips.Image
+        Image to get shape of
+
+    Returns
+    -------
+    shape_rc : numpy.array
+        Number of rows and columns and channels in the image
+    
+    """
+
+    if isinstance(img, pyvips.Image):
+        shape_rc = np.array([img.height, img.width])
+        ndim = img.bands
+    else:
+        shape_rc = np.array(img.shape)
+    
+        if img.ndim > 2:
+            ndim = img.shape[2]
+        else:
+            ndim = 1
+    
+    shape = np.array([*shape_rc, ndim])
+    
+    return shape
+
+
+def apply_mask(img, mask):
+    """Mask an image
+    
+    """
+    mask_is_vips = isinstance(mask, pyvips.Image)
+    if not mask_is_vips:
+        vips_mask = numpy2vips(mask)
+    else:
+        vips_mask = mask
+        
+    img_is_vips = isinstance(img, pyvips.Image)
+    if not img_is_vips:
+        vips_img = numpy2vips(img)
+    else:
+        vips_img = img.copy()
+    
+    masked_img = (vips_mask == 0).ifthenelse(0, vips_img)
+
+    if not img_is_vips:
+        masked_img = vips2numpy(masked_img)
+    
+    return masked_img
+
+
 def get_grid_bboxes(shape_rc, bbox_w, bbox_h, inclusive=False):
     """
     Get list of bbox xywh for an image with shape shape_rc. Returned array ordered such that the bounding boxes go

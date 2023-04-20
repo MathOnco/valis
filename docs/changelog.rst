@@ -1,11 +1,12 @@
 Change Log
 **********
 
-Version 1.0.0rc14 
+Version 1.0.0rc14
 -------------------------------------
 #. Added :code:`max_ratio` as an argument for :code:`feature_matcher.match_desc_and_kp` (github issue 36).
 #. Added :code:`CziJpgxrReader` to read CZI images that have JPGXR compression but can't be opened with Bioformats. It's very limited and experimental (only tested with single scence RGB), but may be an issue specific to Apple silcon?
 #. Supports scenario where images might be assigned the same name (e.g. same file names, but different directories).
+#. Support tiling for initial non-rigid registration.
 #. Fixed bug that threw error when trying to warp an empty Shapely polygon
 #. Fixed bug in micro-registration, related to trying to combine numpy and pyvips images (github issue 40)
 #. Fixed typo in "max_non_rigid_registration_dim_px", which was "max_non_rigid_registartion_dim_px" (github issue 39)
