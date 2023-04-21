@@ -4,7 +4,8 @@ from colorama import init as color_init
 from colorama import Fore, Style
 import functools
 import pyvips
-from contextlib import redirect_stdout
+import warnings
+import contextlib
 
 color_init()
 
@@ -47,7 +48,7 @@ def rename_kwargs(func_name, kwargs, aliases):
 
 @contextlib.contextmanager
 def HiddenPrints():
-    with redirect_stdout(open(os.devnull, 'w')):
+    with contextlib.redirect_stdout(open(os.devnull, 'w')):
         yield
 
 
