@@ -119,5 +119,4 @@ RUN apt-get update \
 
 # Install other non-Python dependencies
 RUN apt-get install -y \
- 	# maven \
     openjdk-11-jre

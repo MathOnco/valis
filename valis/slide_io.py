@@ -207,7 +207,6 @@ def init_jvm(jar=None, mem_gb=10):
                 jar = local_bf_jar
 
         if jar is not None:
-            print(f"using {jar}")
             jpype.addClassPath(jar)
             jpype.startJVM(f"-Djava.awt.headless=true -Xmx{mem_gb}G", classpath=jar)
 
