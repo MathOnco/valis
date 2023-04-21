@@ -72,6 +72,10 @@ RUN poetry install --only main
 # Set path to use .venv Python
 ENV PATH="${WKDIR}/.venv/bin:$PATH"
 
+# Install bioformats.jar in valis
+ARG BF_VERSION=6.12.0
+RUN wget https://downloads.openmicroscopy.org/bio-formats/${BF_VERSION}/artifacts/bioformats_package.jar -P valis
+
 # Clean up
 RUN  apt-get remove -y wget build-essential ninja-build && \
   apt-get autoremove -y && \
@@ -115,5 +119,5 @@ RUN apt-get update \
 
 # Install other non-Python dependencies
 RUN apt-get install -y \
- 	maven \
+ 	# maven \
     openjdk-11-jre
