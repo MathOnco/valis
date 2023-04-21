@@ -9,6 +9,7 @@ Version 1.0.0rc14
 #. Support tiling for initial non-rigid registration, making it possible to perform non-rigid on much larger images
 #. Can now specify an :code:`ImageProcesser` for each image by passing a dicitonary to the :code:`processor_dict` argrument of :code:`Valis.register`. Keys should be the filename of the image, and values a list, where the first element is the :code:`ImageProcesser` to use, and the second element is a dictionary of keyword argruments passed to :code:`ImageProcesser.process_image`. This should make it easier to register different image modalities.
 #. Added an H&E color deconvolution :code:`ImageProcesser` using the method described in M. Macenko et al., ISBI 2009. Generously provided by Github user aelskens (Arthur Elskenson) (PR 42).
+#. Small improvements in :code:`valtils` functions, provided by Github user ajinkya-kulkarni (Ajinkya Kulkarni) (PR 46).
 #. Fixed bug that threw error when trying to warp an empty Shapely polygon
 #. Fixed bug in micro-registration, related to trying to combine numpy and pyvips images (github issue 40)
 #. Fixed typo in "max_non_rigid_registration_dim_px", which was "max_non_rigid_registartion_dim_px" (github issue 39)
