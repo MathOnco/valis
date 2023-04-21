@@ -1814,9 +1814,10 @@ class Valis(object):
 
         norm_method : str
             Name of method used to normalize the processed images. Options
-            are "histo_match" for histogram matching, "img_stats" for normalizing by
-            image statistics. See preprocessing.match_histograms
-            and preprocessing.norm_khan for details.
+            are None when normalization is not desired, "histo_match" for
+            histogram matching and "img_stats" for normalizing by image statistics.
+            See preprocessing.match_histograms and preprocessing.norm_khan
+            for details.
 
         _non_rigid_bbox : list
             Bounding box of area in which non-rigid registration was conducted
@@ -3319,8 +3320,10 @@ class Valis(object):
                 processed_img[np_mask == 0] = 0
 
                 # Normalize images using stats collected for rigid registration #
-                warped_img = preprocessing.norm_img_stats(img=processed_img, target_stats=self.target_processing_stats, mask=np_mask)
-                warped_img = exposure.rescale_intensity(warped_img, out_range=(0, 255)).astype(np.uint8)
+                if self.norm_method is not None:
+                    processed_img = preprocessing.norm_img_stats(img=processed_img, target_stats=self.target_processing_stats, mask=np_mask)
+
+                warped_img = exposure.rescale_intensity(processed_img, out_range=(0, 255)).astype(np.uint8)
 
             else:
                 if not warp_full_img:

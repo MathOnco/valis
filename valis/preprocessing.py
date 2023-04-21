@@ -198,6 +198,44 @@ class BgColorDistance(ImageProcesser):
         return processed_img
 
 
+class HEDeconvolution(ImageProcesser):
+    """Normalize staining appearence of hematoxylin and eosin (H&E) stained image
+    and get the H or E deconvolution image.
+
+    Reference
+    ---------
+    A method for normalizing histology slides for quantitative analysis. M. Macenko et al., ISBI 2009.
+
+    """
+
+    def __init__(self, image, src_f, level, series, *args, **kwargs):
+        super().__init__(image=image, src_f=src_f, level=level,
+                         series=series, *args, **kwargs)
+
+    def create_mask(self):
+        _, tissue_mask = create_tissue_mask_from_rgb(self.image)
+
+        return tissue_mask
+
+
+    def process_image(self, stain="hem", Io=240, alpha=1, beta=0.15, *args, **kwargs):
+        """
+        Reference
+        ---------
+        A method for normalizing histology slides for quantitative analysis. M. Macenko et al., ISBI 2009.
+
+        Note
+        ----
+        Adaptation of the code from https://github.com/schaugf/HEnorm_python.
+
+        """
+
+        normalized_stains_conc = normalize_he(self.image, Io=Io, alpha=alpha, beta=beta)
+        processed_img = deconvolution_he(self.image, Io=Io, normalized_concentrations=normalized_stains_conc, stain=stain)
+
+        return processed_img
+
+
 def denoise_img(img, mask=None, weight=None):
     if mask is None:
         sigma = restoration.estimate_sigma(img)
@@ -320,6 +358,112 @@ def calc_background_color_dist(img, brightness_q=0.99, mask=None):
     cam_d = np.sqrt(np.sum((cam - bright_cam)**2, axis=2))
 
     return cam_d, cam
+
+
+def normalize_he(img: np.array, Io: int = 240, alpha: int = 1, beta: int = 0.15):
+    """ Normalize staining appearence of H&E stained images.
+
+    Parameters
+    ----------
+    img : ndarray
+        2D RGB image to be transformed, np.array<height, width, ch>.
+    Io : int, optional
+        The transmitted light intensity. The default value is ``240``.
+    alpha : int, optional
+        This value is used to get the alpha(th) and (100-alpha)(th) percentile
+        as robust approximations of the intensity histogram min and max values.
+        The default value, found empirically, is ``1``.
+    beta : float, optional
+        Threshold value used to remove the pixels with a low OD for stability reasons.
+        The default value, found empirically, is ``0.15``.
+
+    Returns
+    -------
+    normalized_stains_conc : ndarray
+        The normalized stains vector, np.array<2, im_height*im_width>.
+
+    """
+
+    max_conc_ref = np.array([1.9705, 1.0308])
+
+    # reshape image
+    img = img.reshape((-1, 3))
+
+    # calculate optical density
+    opt_density = -np.log((img.astype(np.float)+1)/Io)
+
+    # remove transparent pixels
+    opt_density_hat = opt_density[~np.any(opt_density<beta, axis=1)]
+
+    # compute eigenvectors
+    _, eigvecs = np.linalg.eigh(np.cov(opt_density_hat.T))
+
+    # project on the plane spanned by the eigenvectors corresponding to the two
+    # largest eigenvalues
+    t_hat = opt_density_hat.dot(eigvecs[:, 1:3])
+
+    phi = np.arctan2(t_hat[:, 1], t_hat[:, 0])
+
+    min_phi = np.percentile(phi, alpha)
+    max_phi = np.percentile(phi, 100-alpha)
+
+    v_min = eigvecs[:, 1:3].dot(np.array([(np.cos(min_phi), np.sin(min_phi))]).T)
+    v_max = eigvecs[:, 1:3].dot(np.array([(np.cos(max_phi), np.sin(max_phi))]).T)
+
+    # a heuristic to make the vector corresponding to hematoxylin first and the
+    # one corresponding to eosin second
+    if v_min[0] > v_max[0]:
+        h_e_vector = np.array((v_min[:, 0], v_max[:, 0])).T
+    else:
+        h_e_vector = np.array((v_max[:, 0], v_min[:, 0])).T
+
+    # rows correspond to channels (RGB), columns to OD values
+    y = np.reshape(opt_density, (-1, 3)).T
+
+    # determine concentrations of the individual stains
+    stains_conc = np.linalg.lstsq(h_e_vector, y, rcond=None)[0]
+
+    # normalize stains concentrations
+    max_conc = np.array([np.percentile(stains_conc[0, :], 99), np.percentile(stains_conc[1, :],99)])
+    tmp = np.divide(max_conc, max_conc_ref)
+    normalized_stains_conc = np.divide(stains_conc, tmp[:, np.newaxis])
+
+    return normalized_stains_conc
+
+
+def deconvolution_he(img: np.array, normalized_concentrations: np.array, stain: str = "hem", Io: int = 240):
+    """ Unmix the hematoxylin or eosin channel based on their respective normalized concentrations.
+
+    Parameters
+    ----------
+    img : ndarray
+        2D RGB image to be transformed, np.array<height, width, ch>.
+    stain : str
+        Either ``hem`` for the hematoxylin stain or ``eos`` for the eosin one.
+    Io : int, optional
+        The transmitted light intensity. The default value is ``240``.
+
+    Returns
+    -------
+    out : ndarray
+        2D image with a single channel corresponding to the desired stain, np.array<height, width>.
+
+    """
+    # define height and width of image
+    h, w, _ = img.shape
+
+    # unmix hematoxylin or eosin
+    if stain == "hem":
+        out = np.multiply(Io, normalized_concentrations[0,:])
+    elif stain == "eos":
+        out = np.multiply(Io, normalized_concentrations[1,:])
+    else:
+        raise ValueError(f"Stain ``{stain}`` is unknown.")
+
+    np.clip(out, a_min=0, a_max=255, out=out)
+    out = np.reshape(out, (h, w)).astype(np.float32)
+
+    return out
 
 
 def rgb2jab(rgb, cspace='CAM16UCS'):
