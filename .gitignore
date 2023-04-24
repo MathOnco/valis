@@ -168,9 +168,11 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 examples/expected_results/registration/cycif/data/cycif_registrar.pickle
 examples/expected_results/registration/ihc/data/ihc_registrar.pickle
+examples/expected_results/registered_slides
 
 docs/html/
 
 .DS_Store
 
 valis.zip
+
