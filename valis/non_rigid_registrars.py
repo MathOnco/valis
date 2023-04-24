@@ -209,8 +209,6 @@ class NonRigidRegistrar(object):
 
         moving_shape = warp_tools.get_shape(moving_img)[0:2]
         fixed_shape = warp_tools.get_shape(fixed_img)[0:2]
-        # assert moving_img.shape == fixed_img.shape,\
-        #     print("Images have differernt shapes")
 
         assert np.all(moving_shape == fixed_shape), \
             print("Images have differernt shapes")
@@ -1341,32 +1339,13 @@ class NonRigidTileRegistrar(object):
 
             moving_normed, fixed_normed = self.norm_tiles(moving_processed, fixed_processed, np_mask)
 
-            # if np_mask is not None:
-            #     moving_normed[np_mask == 0] = 0
-            #     fixed_normed[np_mask == 0] = 0
-
-            # Register tiles #
-            # print("1364 comment out")
-            # view_img = np.hstack([fixed_normed, moving_normed])
-            # from time import time
-            # warp_tools.save_img(f"{tile_idx}_{round(time())}_processed.png", view_img)
-
             tile_non_rigid_reg_obj = self.non_rigid_registrar_cls()
-            # _, _, bk_dxdy = tile_non_rigid_reg_obj.register(moving_normed, fixed_normed, mask=np_mask)
-            # bk_dxdy = warp_tools.remove_invasive_displacements(bk_dxdy, M=None, src_shape_rc=None, out_shape_rc=moving_normed.shape[0:2])
+
             _, _, bk_dxdy = tile_non_rigid_reg_obj.register(moving_normed, fixed_normed)
-            vips_tile_bk_dxdy = warp_tools.numpy2vips(np.dstack(bk_dxdy).astype(np.float32))
-
             fwd_dxdy = warp_tools.get_inverse_field(bk_dxdy)
-            vips_tile_fwd_dxdy = warp_tools.numpy2vips(np.dstack(fwd_dxdy).astype(np.float32))
 
-            # if np_mask is not None:
-            #     temp_tile_mask = warp_tools.numpy2vips(np_mask)
-            #     vips_tile_bk_dxdy = (temp_tile_mask == 0).ifthenelse(0, vips_tile_bk_dxdy)
-            #     vips_tile_fwd_dxdy = (temp_tile_mask == 0).ifthenelse(0, vips_tile_fwd_dxdy)
-            # print("1381 comment out")
-            # warped = warp_tools.warp_img(img=moving_normed, bk_dxdy=vips_tile_bk_dxdy)
-            # warp_tools.save_img(f"{tile_idx}_{round(time())}_reg.png", warped)
+            vips_tile_bk_dxdy = warp_tools.numpy2vips(np.dstack(bk_dxdy).astype(np.float32))
+            vips_tile_fwd_dxdy = warp_tools.numpy2vips(np.dstack(fwd_dxdy).astype(np.float32))
 
             self.bk_dxdy_tiles[tile_idx] = vips_tile_bk_dxdy
             self.fwd_dxdy_tiles[tile_idx] = vips_tile_fwd_dxdy
@@ -1387,10 +1366,6 @@ class NonRigidTileRegistrar(object):
 
         bk_dxdy = warp_tools.stitch_tiles(self.bk_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
         fwd_dxdy = warp_tools.stitch_tiles(self.fwd_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
-
-        # if self.mask is not None:
-        #     bk_dxdy = (self.mask == 0).ifthenelse(0, bk_dxdy)
-        #     fwd_dxdy = (self.mask == 0).ifthenelse(0, fwd_dxdy)
 
         return bk_dxdy, fwd_dxdy
 

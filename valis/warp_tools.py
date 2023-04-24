@@ -388,10 +388,10 @@ def get_img_dimensions(img_f):
 
 def get_shape(img):
     """ Get shape of image (row, col, nchannels)
-    
+
     Parameters
     ----------
-    
+
     img : numpy.array, pyvips.Image
         Image to get shape of
 
@@ -399,7 +399,7 @@ def get_shape(img):
     -------
     shape_rc : numpy.array
         Number of rows and columns and channels in the image
-    
+
     """
 
     if isinstance(img, pyvips.Image):
@@ -407,38 +407,38 @@ def get_shape(img):
         ndim = img.bands
     else:
         shape_rc = np.array(img.shape)
-    
+
         if img.ndim > 2:
             ndim = img.shape[2]
         else:
             ndim = 1
-    
+
     shape = np.array([*shape_rc, ndim])
-    
+
     return shape
 
 
 def apply_mask(img, mask):
     """Mask an image
-    
+
     """
     mask_is_vips = isinstance(mask, pyvips.Image)
     if not mask_is_vips:
         vips_mask = numpy2vips(mask)
     else:
         vips_mask = mask
-        
+
     img_is_vips = isinstance(img, pyvips.Image)
     if not img_is_vips:
         vips_img = numpy2vips(img)
     else:
         vips_img = img.copy()
-    
+
     masked_img = (vips_mask == 0).ifthenelse(0, vips_img)
 
     if not img_is_vips:
         masked_img = vips2numpy(masked_img)
-    
+
     return masked_img
 
 
@@ -515,7 +515,6 @@ def expand_bbox(bbox_xywh, expand, shape_rc=None):
             new_h = h - new_y
 
     return np.array([*new_xy, new_w, new_h])
-
 
 
 def stitch_tiles(tile_list, tile_bboxes, nrow, ncol, overlap):
@@ -989,11 +988,8 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
                                                                      src_shape_rc=src_shape_rc, dst_shape_rc=out_shape_rc,
                                                                      bk_dxdy=bk_dxdy)
     if bbox_xywh is not None:
-        # crop_x, crop_y, out_w, out_h = bbox_xywh
         do_crop = True
     else:
-        # out_h, out_w = out_shape_rc
-        # crop_x, crop_y = 0, 0
         do_crop = False
 
     # Determine if any transformations need to be done
@@ -3368,12 +3364,8 @@ class _TriUntangler(object):
                         G[v+ dim*self.n] += (self.ref_tri[t][i] @ np.transpose(dfda*(1.-theta) + dgda*theta))*self.area[t]
                         # new_pos = G[v+ dim*self.n]
                         # print(new_pos - og_pos)
-            # np.min(G - self.mesh.x)
-            # np.max(G - self.mesh.x)
             return F, G
 
-        # self.mesh.x.max()
-        # self.mesh.vert.max()
         n_iter = 3
 
         for i in range(n_iter):

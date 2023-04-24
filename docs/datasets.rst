@@ -38,7 +38,7 @@ Another potential use of image registration is to construct a 3D tissue from ser
 
 VALIS was used to register both datasets, and error was measured as the physical distance (μm), i.e. TRE, between the fiducial points. These values can then be comapred to those presented in Tables 1 and 2 of the manuscript, which provide the mean TRE using observer 1's landmarks (i.e. the "TRE μ" column). Benchmarking using the liver dataset indcates that VALIS produces a mean TRE of 52.98, compared to the compared to the baseline reference value of 27.3 (LS 1). In the case of prostate, VALIS scored 11.41, compared to the baseline reference value of 15.6 (LS 1). According to the authors, methods with scores apporaching the LS 1 value can be considered "highly accurate", indicating that VALIS is suitable for 3D reconstruction. Below is a picture of the prostate tumor reconstructed from all 260 serial slices.
 
-.. image:: https://github.com/MathOnco/valis/raw/main/docs/_images/3d_recon.png
+.. image:: https://github.com/MathOnco/valis/raw/main/docs/_images/3d_recon.gif
 
 
 Similar to ACROBAT, this dataset provides the opportuinty to compare VALIS' error estimate to those based on manual measurements (e.g. the fiducial points). For the same reasons as before, it appears that VALIS over-estimates the error, as shown in the plots below.
