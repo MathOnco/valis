@@ -120,18 +120,9 @@ class NonRigidRegistrar(object):
             self._params_provided = False
 
     def apply_mask(self, mask):
-        masked_moving = self.moving_img.copy()
-        masked_fixed = self.fixed_img.copy()
 
-        if masked_moving.ndim > 2:
-            masked_moving[mask == 0] = [0] * masked_moving.shape[2]
-        else:
-            masked_moving[mask == 0] = 0
-
-        if masked_fixed.ndim > 2:
-            masked_fixed[mask == 0] = [0] * masked_fixed.shape[2]
-        else:
-            masked_fixed[mask == 0] = 0
+        masked_moving = warp_tools.apply_mask(self.moving_img, mask)
+        masked_fixed = warp_tools.apply_mask(self.fixed_img, mask)
 
         return masked_moving, masked_fixed
 
@@ -216,15 +207,18 @@ class NonRigidRegistrar(object):
 
         """
 
-        assert moving_img.shape == fixed_img.shape,\
+        moving_shape = warp_tools.get_shape(moving_img)[0:2]
+        fixed_shape = warp_tools.get_shape(fixed_img)[0:2]
+
+        assert np.all(moving_shape == fixed_shape), \
             print("Images have differernt shapes")
 
-        self.shape = moving_img.shape[:2]
+        self.shape = moving_shape
         self.moving_img = moving_img
         self.fixed_img = fixed_img
 
         if mask is None:
-            mask = np.full(self.moving_img.shape[0:2], 255, dtype=np.uint8)
+            mask = np.full(self.shape, 255, dtype=np.uint8)
 
         self.mask = mask
 
@@ -1282,7 +1276,6 @@ class NonRigidTileRegistrar(object):
 
         return processed_img
 
-
     def reg_tile(self, tile_idx, lock):
 
         with lock:
@@ -1346,23 +1339,13 @@ class NonRigidTileRegistrar(object):
 
             moving_normed, fixed_normed = self.norm_tiles(moving_processed, fixed_processed, np_mask)
 
-            if np_mask is not None:
-                moving_normed[np_mask == 0] = 0
-                fixed_normed[np_mask == 0] = 0
-
-            # Register tiles #
             tile_non_rigid_reg_obj = self.non_rigid_registrar_cls()
-            _, _, bk_dxdy = tile_non_rigid_reg_obj.register(moving_normed, fixed_normed, mask=np_mask)
-            bk_dxdy = warp_tools.remove_invasive_displacements(bk_dxdy, M=None, src_shape_rc=None, out_shape_rc=moving_normed.shape[0:2])
-            vips_tile_bk_dxdy = warp_tools.numpy2vips(np.dstack(bk_dxdy).astype(np.float32))
 
+            _, _, bk_dxdy = tile_non_rigid_reg_obj.register(moving_normed, fixed_normed)
             fwd_dxdy = warp_tools.get_inverse_field(bk_dxdy)
-            vips_tile_fwd_dxdy = warp_tools.numpy2vips(np.dstack(fwd_dxdy).astype(np.float32))
 
-            if np_mask is not None:
-                temp_tile_mask = warp_tools.numpy2vips(np_mask)
-                vips_tile_bk_dxdy = (temp_tile_mask == 0).ifthenelse(0, vips_tile_bk_dxdy)
-                vips_tile_fwd_dxdy = (temp_tile_mask == 0).ifthenelse(0, vips_tile_fwd_dxdy)
+            vips_tile_bk_dxdy = warp_tools.numpy2vips(np.dstack(bk_dxdy).astype(np.float32))
+            vips_tile_fwd_dxdy = warp_tools.numpy2vips(np.dstack(fwd_dxdy).astype(np.float32))
 
             self.bk_dxdy_tiles[tile_idx] = vips_tile_bk_dxdy
             self.fwd_dxdy_tiles[tile_idx] = vips_tile_fwd_dxdy
@@ -1383,10 +1366,6 @@ class NonRigidTileRegistrar(object):
 
         bk_dxdy = warp_tools.stitch_tiles(self.bk_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
         fwd_dxdy = warp_tools.stitch_tiles(self.fwd_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
-
-        if self.mask is not None:
-            bk_dxdy = (self.mask == 0).ifthenelse(0, bk_dxdy)
-            fwd_dxdy = (self.mask == 0).ifthenelse(0, fwd_dxdy)
 
         return bk_dxdy, fwd_dxdy
 
@@ -1464,13 +1443,18 @@ class NonRigidTileRegistrar(object):
 
         if self.is_array:
             moving_img = warp_tools.numpy2vips(moving_img)
+
+        if not isinstance(fixed_img, pyvips.Image):
             fixed_img = warp_tools.numpy2vips(fixed_img)
-            if mask is not None:
+
+        if mask is not None:
+            if not isinstance(mask, pyvips.Image):
                 mask = warp_tools.numpy2vips(mask)
 
         self.moving_img = moving_img
         self.fixed_img = fixed_img
         self.mask = mask
+
 
         temp_tile_bboxes = warp_tools.get_grid_bboxes(self.shape, self.tile_wh, self.tile_wh, inclusive=True)
         self.expanded_bboxes = np.array([warp_tools.expand_bbox(bbox_xywh, self.tile_buffer, self.shape) for bbox_xywh in temp_tile_bboxes])

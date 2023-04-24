@@ -59,6 +59,18 @@ NUMPY_FORMAT_BF_DTYPE = {'uint8': 'uint8',
                          'float32': 'float',
                          'float64': 'double'}
 
+CZI_FORMAT_NUMPY_DTYPE = {
+    "gray8": "uint8",
+    "gray16": "uint16",
+    "gray32": "uint32",
+    "gray32float": "float32",
+    "bgr24": "uint8",
+    "bgr48": "uint16",
+    "invalid": "uint8",
+}
+
+CZI_FORMAT_TO_BF_FORMAT = {k:NUMPY_FORMAT_BF_DTYPE[v] for k,v in CZI_FORMAT_NUMPY_DTYPE.items()}
+
 BF_FORMAT_NUMPY_DTYPE = {v:k for k, v in NUMPY_FORMAT_BF_DTYPE.items()}
 
 

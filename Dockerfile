@@ -1,4 +1,5 @@
-FROM ubuntu:lunar as builder
+FROM ubuntu:kinetic as builder
+# Using kinetic to get Python 3.10, used by Poetry
 
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
@@ -38,6 +39,7 @@ RUN apt-get install --no-install-recommends -y \
 	libopenslide-dev
 
 
+RUN update-ca-certificates
 # Install libvips from source to get latest version
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
@@ -70,6 +72,10 @@ RUN poetry install --only main
 # Set path to use .venv Python
 ENV PATH="${WKDIR}/.venv/bin:$PATH"
 
+# Install bioformats.jar in valis
+ARG BF_VERSION=6.12.0
+RUN wget https://downloads.openmicroscopy.org/bio-formats/${BF_VERSION}/artifacts/bioformats_package.jar -P valis
+
 # Clean up
 RUN  apt-get remove -y wget build-essential ninja-build && \
   apt-get autoremove -y && \
@@ -80,7 +86,7 @@ RUN  apt-get remove -y wget build-essential ninja-build && \
 
 
 # Copy over only what is needed to run, but not build, the package. Saves about 0.75GB
-FROM ubuntu:lunar
+FROM ubuntu:kinetic
 
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
@@ -107,10 +113,10 @@ RUN apt-get update \
 	liblcms2-dev \
 	libheif-dev \
 	liborc-dev \
-    libgirepository1.0-dev \
-	libopenslide-dev
+	libgirepository1.0-dev \
+	libopenslide-dev \
+	libjxr-dev
 
 # Install other non-Python dependencies
 RUN apt-get install -y \
- 	maven \
     openjdk-11-jre

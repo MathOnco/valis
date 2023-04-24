@@ -133,6 +133,9 @@ venv.bak/
 .vscode/
 .vscode/**
 
+# VS code devcontainer settings
+.devcontainer/
+.devcontainer/**
 
 #PyCharm project settings
 .idea/
@@ -169,3 +172,5 @@ examples/expected_results/registration/ihc/data/ihc_registrar.pickle
 docs/html/
 
 .DS_Store
+
+valis.zip
