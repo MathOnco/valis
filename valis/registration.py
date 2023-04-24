@@ -293,6 +293,9 @@ class Slide(object):
     bg_color : list, optional
         Color of background pixels
 
+    is_empty : bool
+        True if the image is empty (i.e. contains only 1 value)
+
     """
 
     def __init__(self, src_f, image, val_obj, reader, name=None):
@@ -369,6 +372,24 @@ class Slide(object):
         self.crop = None
         self.bg_px_pos_rc = (0, 0)
         self.bg_color = None
+
+        self.is_empty = self.check_if_empty(image)
+
+    def check_if_empty(self, img):
+        """Check if the image is empty
+
+        Return
+        ------
+        is_empty : bool
+            Whether or not the image is empty
+
+        """
+
+        is_empty = img.min() == img.max()
+
+        return is_empty
+
+
 
     def slide2image(self, level, series=None, xywh=None):
         """Convert slide to image
@@ -729,7 +750,6 @@ class Slide(object):
                                 interp_method=interp_method)
 
         return warped_img
-
 
     def warp_img_from_to(self, img, to_slide_obj,
                         dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
@@ -1563,10 +1583,22 @@ class Valis(object):
     qt_emitter : PySide2.QtCore.Signal
         Used to emit signals that update the GUI's progress bars
 
+    _non_rigid_bbox : list
+        Bounding box of area in which non-rigid registration was conducted
+
+    _full_displacement_shape_rc : tuple
+        Shape of full displacement field. Would be larger than `_non_rigid_bbox`
+        if non-rigid registration only performed in a masked region
+
     _dup_names_dict : dictionary
         Dictionary describing which images would have been assigned duplicate
         names. Key= duplicated name, value=list of paths to images which
         would have been assigned the same name
+
+    _empty_slides : dictionary
+        Dictionary of `Slide` objects that have empty images. Ignored during
+        registration but added back at the end
+
 
     Examples
     --------
@@ -1814,13 +1846,6 @@ class Valis(object):
             See preprocessing.match_histograms and preprocessing.norm_khan
             for details.
 
-        _non_rigid_bbox : list
-            Bounding box of area in which non-rigid registration was conducted
-
-        _full_displacement_shape_rc : tuple
-            Shape of full displacement field. Would be larger than `_non_rigid_bbox`
-            if non-rigid registration only performed in a masked region
-
         qt_emitter : PySide2.QtCore.Signal, optional
             Used to emit signals that update the GUI's progress bars
 
@@ -1932,6 +1957,8 @@ class Valis(object):
         self.end_rigid_time = None
         self.end_non_rigid_time = None
 
+        self._empty_slides = {}
+
     def _set_rigid_reg_kwargs(self, name, feature_detector, similarity_metric,
                               match_filter_method, transformer, affine_optimizer,
                               imgs_ordered, reference_img_f, check_for_reflections, qt_emitter):
@@ -1983,6 +2010,26 @@ class Valis(object):
                                      }
 
         self.non_rigid_reg_class_str = self.non_rigid_reg_kwargs[NON_RIGID_REG_CLASS_KEY].__name__
+
+    def _add_empty_slides(self):
+
+        # Fill in missing attributes
+        for slide_name, slide_obj in self._empty_slides.items():
+
+            slide_obj.processed_img_shape_rc = slide_obj.image.shape[0:2]
+            slide_obj.aligned_slide_shape_rc = self.aligned_slide_shape_rc
+            slide_obj.reg_img_shape_rc = self.aligned_img_shape_rc
+
+            slide_obj.processed_img = np.zeros(slide_obj.processed_img_shape_rc)
+            slide_obj.rigid_reg_mask = np.full(slide_obj.processed_img_shape_rc, 255)
+            slide_obj.non_rigid_reg_mask = np.full(slide_obj.reg_img_shape_rc, 255)
+
+            slide_obj.M = np.eye(3)
+
+            slide_obj.stack_idx = self.size
+            self.size += 1
+            self.slide_dict[slide_name] = slide_obj
+
 
     def get_imgs_in_dir(self):
         """Get all images in Valis.src_dir
@@ -2220,7 +2267,6 @@ class Valis(object):
             slide_name = self.name_dict[f]
             slide_obj = Slide(f, img, self, reader, name=slide_name)
             slide_obj.crop = self.crop
-            img_types.append(slide_obj.img_type)
 
             # Will overwrite data if provided. Can occur if reading images, not the actual slides #
             if self.slide_dims_dict_wh is not None:
@@ -2236,6 +2282,13 @@ class Valis(object):
                 slide_obj.resolution = np.mean(self.resolution_xyu[0:2])
                 slide_obj.units = self.resolution_xyu[2]
 
+            if slide_obj.is_empty:
+                msg = f"{slide_obj.name} appears to be empty and will be skipped during registration"
+                valtils.print_warning(msg)
+                self._empty_slides[slide_obj.name] = slide_obj
+                continue
+
+            img_types.append(slide_obj.img_type)
             self.slide_dict[slide_obj.name] = slide_obj
             self.size += 1
 
@@ -2410,7 +2463,7 @@ class Valis(object):
         return named_processing_dict
 
     def process_imgs(self, processor_dict):
-        f"""Process images to make them look as similar as possible
+        """Process images to make them look as similar as possible
 
         Images will also be normalized after images are processed
 
@@ -3601,6 +3654,7 @@ class Valis(object):
         ref_slide = self.get_ref_slide()
         ref_diagonal = np.sqrt(np.sum(np.power(ref_slide.processed_img_shape_rc, 2)))
 
+        measure_idx = []
         for slide_obj in tqdm.tqdm(self.slide_dict.values()):
             i = slide_obj.stack_idx
             slide_name = slide_obj.name
@@ -3612,9 +3666,10 @@ class Valis(object):
             from_list[i] = slide_name
             path_list[i] = slide_obj.src_f
 
-            if slide_obj.name == ref_slide.name:
+            if slide_obj.name == ref_slide.name or slide_obj.is_empty:
                 continue
 
+            measure_idx.append(i)
             prev_slide_obj = slide_obj.fixed_slide
             to_list[i] = prev_slide_obj.name
 
@@ -3689,16 +3744,12 @@ class Valis(object):
                 all_nr_d[i] = median_d_nr
                 all_nr_tre[i] = mean_nr_tre
 
+        weights = np.array(all_n)[measure_idx]
+        mean_og_d = np.average(np.array(all_og_d)[measure_idx], weights=weights)
+        median_og_tre = np.average(np.array(all_og_tre)[measure_idx], weights=weights)
 
-        non_ref_idx = list(range(self.size))
-        non_ref_idx.remove(self.reference_img_idx)
-
-        non_ref_weights = np.array(all_n)[non_ref_idx]
-        mean_og_d = np.average(np.array(all_og_d)[non_ref_idx], weights=non_ref_weights)
-        median_og_tre = np.average(np.array(all_og_tre)[non_ref_idx], weights=non_ref_weights)
-
-        mean_rigid_d = np.average(np.array(all_rigid_d)[non_ref_idx], weights=non_ref_weights)
-        median_rigid_tre = np.average(np.array(all_rigid_tre)[non_ref_idx], weights=non_ref_weights)
+        mean_rigid_d = np.average(np.array(all_rigid_d)[measure_idx], weights=weights)
+        median_rigid_tre = np.average(np.array(all_rigid_tre)[measure_idx], weights=weights)
 
         rigid_min = (self.end_rigid_time - self.start_time)/60
 
@@ -3723,9 +3774,9 @@ class Valis(object):
             "rigid_time_minutes" : [rigid_min]*self.size
         })
 
-        if slide_obj.bk_dxdy is not None:
-            mean_nr_d = np.average(np.array(all_nr_d)[non_ref_idx], weights=non_ref_weights)
-            mean_nr_tre = np.average(np.array(all_nr_tre)[non_ref_idx], weights=non_ref_weights)
+        if any([d for d in all_nr_d if d is not None]):
+            mean_nr_d = np.average(np.array(all_nr_d)[measure_idx], weights=weights)
+            mean_nr_tre = np.average(np.array(all_nr_tre)[measure_idx], weights=weights)
             non_rigid_min = (self.end_non_rigid_time - self.start_time)/60
 
             self.summary_df["mean_non_rigid_D"] = [mean_nr_d]*self.size
@@ -3887,6 +3938,8 @@ class Valis(object):
             for slide_obj in self.slide_dict.values():
                 slide_obj.aligned_slide_shape_rc = aligned_slide_shape_rc
 
+            self._add_empty_slides()
+
             error_df = self.measure_error()
             self.cleanup()
 
@@ -3980,6 +4033,12 @@ class Valis(object):
             methods and arguments.
 
         """
+
+
+        # Remove empty slides
+        for empty_slide_name, empty_slide in self._empty_slides.items():
+            del self.slide_dict[empty_slide_name]
+            self.size -= 1
 
         ref_slide = self.get_ref_slide()
         if mask is None:
@@ -4132,12 +4191,18 @@ class Valis(object):
             micro_reg_imgs[slide_obj.stack_idx] = processed_micro_reg_img
 
 
+        # Add empty slides back and save results
+        for empty_slide_name, empty_slide in self._empty_slides.items():
+            self.slide_dict[empty_slide_name] = empty_slide
+            self.size += 1
+
         pickle.dump(self, open(self.reg_f, 'wb'))
 
         micro_overlap = self.draw_overlap_img(micro_reg_imgs)
         self.micro_reg_overlap_img = micro_overlap
         overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_micro_reg.png")
         warp_tools.save_img(overlap_img_fout, micro_overlap, thumbnail_size=self.thumbnail_size)
+
 
         print("\n==== Measuring error\n")
         error_df = self.measure_error()
