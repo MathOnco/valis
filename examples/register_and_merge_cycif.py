@@ -52,7 +52,6 @@ method.
 
 import time
 import os
-import sys
 
 from valis import registration, valtils
 
