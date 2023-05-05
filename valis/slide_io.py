@@ -23,7 +23,7 @@ import xml.etree.ElementTree as elementTree
 import unicodedata
 import ome_types
 import jpype
-# import bioformats_jar
+from aicspylibczi import CziFile
 from tqdm import tqdm
 import scyjava
 

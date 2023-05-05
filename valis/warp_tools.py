@@ -406,7 +406,7 @@ def get_shape(img):
         shape_rc = np.array([img.height, img.width])
         ndim = img.bands
     else:
-        shape_rc = np.array(img.shape)
+        shape_rc = np.array(img.shape[0:2])
 
         if img.ndim > 2:
             ndim = img.shape[2]

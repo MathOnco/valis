@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valis-wsi"
-version = "1.0.0rc14"
+version = "1.0.0rc15"
 description = ""
 authors = ["Chandler Gatenbee <chandlergatenbee@gmail.com>"]
 license = "MIT"
@@ -32,6 +32,7 @@ shapely = "^2.0.0"
 simpleitk = "^2.2.1"
 tqdm = "^4.64.1"
 weightedstats = "^0.4.1"
+aicspylibczi = "^3.1.2"
 
 
 [build-system]

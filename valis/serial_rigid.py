@@ -556,7 +556,7 @@ class SerialRigidRegistrar(object):
             img_obj_2.match_dict[img_obj_1] = filtered_match_info21
 
             if qt_emitter is not None:
-                    qt_emitter.emit(1)
+                qt_emitter.emit(1)
 
         n_cpu = multiprocessing.cpu_count() - 1
         with parallel_backend("threading", n_jobs=n_cpu):

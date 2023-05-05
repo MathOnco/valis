@@ -10,14 +10,14 @@ Slide registration
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/challenging_dataset_adincar33.png
 
 .. important::
-    One of the most imporant parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values may be needed so that the tissue is at a high enough resolution. Finally, larger values can potentially generate more accurate registrations, but will be slower, require more memory, and won't always produce better results.
+    One of the most important parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values may be needed so that the tissue is at a high enough resolution. Finally, larger values can potentially generate more accurate registrations, but will be slower, require more memory, and won't always produce better results.
 
 
 .. important::
-    If the order of slices is known and needs to be preserved, such as building a 3D image, set :code:`imgs_ordered=True` when intialzing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, ensure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff ... 10.tiff, etc...
+    If the order of slices is known and needs to be preserved, such as building a 3D image, set :code:`imgs_ordered=True` when initializing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, ensure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff ... 10.tiff, etc...
 
 
-In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process involves creating a Valis object, which is what conducts the registration. In this example no reference image is specfied, and so all images will be aligned towards the center of the image stack. In this case, the resulting images will be cropped to the region where all of the images overlap. However, one can specify the reference image when intialzing the :code:`Valis` object, by setting :code:`reference_img_f` to the filename of the image the others should be aligned towards. When the reference image is specifed, the images will be cropped such that only the regions which overlap with the reference image will be saved. While this is the default behavior, one can also specify the cropping method by setting the :code:`crop` parameter value when initialzing the :code:`Valis` object. The cropping method can also be changed when saving the registered images (see below).
+In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process involves creating a Valis object, which is what conducts the registration. In this example no reference image is specified, and so all images will be aligned towards the center of the image stack. In this case, the resulting images will be cropped to the region where all of the images overlap. However, one can specify the reference image when initializing the :code:`Valis` object, by setting :code:`reference_img_f` to the filename of the image the others should be aligned towards. When the reference image is specified, the images will be cropped such that only the regions which overlap with the reference image will be saved. While this is the default behavior, one can also specify the cropping method by setting the :code:`crop` parameter value when initializing the :code:`Valis` object. The cropping method can also be changed when saving the registered images (see below).
 
 .. code-block:: python
 
@@ -30,7 +30,7 @@ In this example, the slides that need to be registered are located in :code:`/pa
     registrar = registration.Valis(slide_src_dir, results_dst_dir)
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
-The next example shows how align each image to a reference image, followed up by micro-registration. The reference image the others should be aligned towards is set with the :code:`reference_img_f` argument when initialzing the :code:`Valis` object. This initial registration is followed up by micro-registration in order to better align features that were not present in the smaller images used for the first registration (The size of the images used for micro-registration can is set with the :code:`max_non_rigid_registartion_dim_px` argument in :code:`Valis.register_micro`). Setting :code:`align_to_reference` to `True` will align each image directly *to* the reference image, as opposed to *towards* it.
+The next example shows how align each image to a reference image, followed up by micro-registration. The reference image the others should be aligned towards is set with the :code:`reference_img_f` argument when initializing the :code:`Valis` object. This initial registration is followed up by micro-registration in order to better align features that were not present in the smaller images used for the first registration (The size of the images used for micro-registration can is set with the :code:`max_non_rigid_registartion_dim_px` argument in :code:`Valis.register_micro`). Setting :code:`align_to_reference` to `True` will align each image directly *to* the reference image, as opposed to *towards* it.
 
 
 .. code-block:: python
@@ -46,7 +46,7 @@ The next example shows how align each image to a reference image, followed up by
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
     # Perform micro-registration on higher resolution images, aligning directly to the reference image
-    registrar.register_micro(max_non_rigid_registartion_dim_px=2000, align_to_reference=True)
+    registrar.register_micro(max_non_rigid_registration_dim_px=2000, align_to_reference=True)
 
 
 After registration is complete, one can view the results to determine if they are acceptable. In this example, the results are located in  :code:`./slide_registration_example`. Inside this folder will be 6 subfolders:
@@ -56,7 +56,7 @@ After registration is complete, one can view the results to determine if they ar
 
    * a summary spreadsheet of the alignment results, such as the registration error between each pair of slides, their dimensions, physical units, etc...
 
-   * a pickled version of the registrar. This can be reloaded (unpickled) and used later. For example, one could perfom the registration locally, but then use the pickled object to warp and save the slides on an HPC. Or, one could perform the registration and use the registrar later to warp points found in the (un-registered) slide.
+   * a pickled version of the registrar. This can be reloaded (unpickled) and used later. For example, one could perform the registration locally, but then use the pickled object to warp and save the slides on an HPC. Or, one could perform the registration and use the registrar later to warp points found in the (un-registered) slide.
 
 
 #. **overlaps** contains thumbnails showing the how the images would look if stacked without being registered, how they look after rigid registration, and how they look after non-rigid registration. The rightmost images in the figure above provide examples of these overlap images.
@@ -65,13 +65,13 @@ After registration is complete, one can view the results to determine if they ar
 #. **rigid_registration** shows thumbnails of how each image looks after performing rigid registration. These would be similar to the bottom row in the figure above.
 
 
-#. **non_rigid_registration** shows thumbnaials of how each image looks after non-rigid registration. These would be similar to the bottom row in the figure above.
+#. **non_rigid_registration** shows thumbnails of how each image looks after non-rigid registration. These would be similar to the bottom row in the figure above.
 
 
 #. **deformation_fields** contains images showing what the non-rigid deformation would do to a triangular mesh. These can be used to get a sense of how the images were altered by non-rigid warping. In these images, the color indicates the direction of the displacement, while brightness indicates it's magnitude. These would be similar to those in the middle row in the figure above.
 
 
-#. **processed** shows thumnails of the processed images. These are thumbnails of the images that were actually used to perform the registration. The pre-processing and normalization methods should try to make these images look as similar as possible.
+#. **processed** shows thumbnails of the processed images. These are thumbnails of the images that were actually used to perform the registration. The pre-processing and normalization methods should try to make these images look as similar as possible.
 
 
 #. **masks** show the images with outlines of their rigid registration mask drawn around them. If non-rigid registration is being performed, there will also be an image of the reference image with the non-rigid registration mask drawn around it.
@@ -81,7 +81,7 @@ If the results look good, then one can warp and save all of the slides as ome.ti
 
 #. :code:`crop="overlap"` will crop the images to the region where all of the images overlap.
 #. :code:`crop="reference"` will crop the images to the region where they overlap with the reference image.
-#. :code:`crop="all"` will not perform any cropping. While this keep the all of the image, the dimensions of the registered image can be substantially larger than one that was cropped, as it will need to be large enough accomodate all of the other images.
+#. :code:`crop="all"` will not perform any cropping. While this keep the all of the image, the dimensions of the registered image can be substantially larger than one that was cropped, as it will need to be large enough accommodate all of the other images.
 
 While the cropping setting can also be set when initializing the :code:`Valis` object, any of the above cropping methods can be used when saving the images.
 
@@ -105,7 +105,7 @@ One can also choose to save individual slides. This is accomplished by accessing
     slide_obj = registrar.get_slide(slide_f)
     slide_obj.warp_and_save_slide("out_f.ome.tiff")
 
-Finally, if the non-rigid registration is deemed to have distored the image too much, one can apply only the rigid transformation by setting :code:`non_rigid=False` in :code:`slide_obj.warp_and_save_slide` or :code:`registrar.warp_and_save_slides`.
+Finally, if the non-rigid registration is deemed to have distorted the image too much, one can apply only the rigid transformation by setting :code:`non_rigid=False` in :code:`slide_obj.warp_and_save_slide` or :code:`registrar.warp_and_save_slides`.
 
 Create multiplex image from immunofluorescence images
 ======================================================
@@ -157,7 +157,7 @@ Warping points
 Once the registration parameters have been found, VALIS can be used to warp point data, such as cell coordinates, mask polygon vertices, etc... In this example, slides will be registered, and the registration parameters will then be used warp cell positions located in a separate .csv. This accomplished by accessing the :code:`Slide` object associated with each registered slide. This is done by passing the slide's filename (with or without the extension) to :code:`registrar.get_slide`. This :code:`Slide` object can the be used to warp the individual slide and/or points associated with the un-registered slide. This can be useful in cases where one has already performed an analysis on the un-registered slides, as one can just warp the point data, as opposed to warping each slide and re-conducting the analysis.
 
 .. important::
-    It is essential that the image from which the coordinates are derived has the same aspect ratio as the image used for registration. That is, the images used for registration must be scaled up/down versions of the image from which the coordinates are taken. For example, registration may be performed on lower resolution images (an upper image pyramid level), and applied to cell coordinates found by performing cell segmenation on the full resolution (pyramid level 0) image. The default is to assume that the points came from the highest resolution image, but this can be changed by setting :code:`pt_level` to either the pyramid level of the image the points originated, or its dimensions (width, height, in pixels). Also, the coordinates need to be in pixel units, not physical units. Finally, be sure that the coordinates are X,Y (column, row), with the origin being the top left corner of the image.
+    It is essential that the image from which the coordinates are derived has the same aspect ratio as the image used for registration. That is, the images used for registration must be scaled up/down versions of the image from which the coordinates are taken. For example, registration may be performed on lower resolution images (an upper image pyramid level), and applied to cell coordinates found by performing cell segmentation on the full resolution (pyramid level 0) image. The default is to assume that the points came from the highest resolution image, but this can be changed by setting :code:`pt_level` to either the pyramid level of the image the points originated, or its dimensions (width, height, in pixels). Also, the coordinates need to be in pixel units, not physical units. Finally, be sure that the coordinates are X,Y (column, row), with the origin being the top left corner of the image.
 
 In this first example, cell segmentation and phenotyping has already been performed on the unregistered images. We can now use the :code:`Valis` object that performed the registration to warp the cell positions to their location in the registered images.
 
@@ -212,7 +212,7 @@ Here is a comparison of before and after applying registration to cell positions
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/point_warping.png
 
-In this second example, a region of interest (ROI) was marked in one of the unregistered images, in this case "ihc_2.ome.tiff" . Using the :code:`Slide` object associated with "ihc_2.ome.tiff", we can warp those ROI coordinates to their position in the registered images, and then use those to slice the registered ROI from each slide. Because VALIS uses pyvips to read and warp the slides, this process does not require the whole image to be loaded into memory and warped. As such, this is fast and does not require much memory. It's also worth noting that because the points are being warped to the registred coordinate system, the slide that is the source of the ROI coordinates does not have to be the same slide that was treated as the reference image during registration.
+In this second example, a region of interest (ROI) was marked in one of the unregistered images, in this case "ihc_2.ome.tiff" . Using the :code:`Slide` object associated with "ihc_2.ome.tiff", we can warp those ROI coordinates to their position in the registered images, and then use those to slice the registered ROI from each slide. Because VALIS uses pyvips to read and warp the slides, this process does not require the whole image to be loaded into memory and warped. As such, this is fast and does not require much memory. It's also worth noting that because the points are being warped to the registered coordinate system, the slide that is the source of the ROI coordinates does not have to be the same slide that was treated as the reference image during registration.
 
 .. code-block:: python
 
@@ -280,7 +280,7 @@ The extracted and registered ROI are shown below:
 
 Transferring annotations
 ========================
-In this example, VALIS uses the registration parameters to transfer annotations found from one image to another. In this case, the annotation were performed in QuPath and exported as a geojson file. Given the geojson file, VALIS can then warp each shape in the file from the reference slide to its position on the un-registered target slide. The registered annotations can then be saved and loaded into QuPath along with the target image. Below, :code:`annotation_img_f` refers to the filename associated with the image on which the original annoation was performed, :code:`target_img_f` is the filename of the image associated with the image the annotations will be transferred to, :code:`annotation_geojson_f` is the name of the file with the annoation shapes, and :code:`warped_geojson_annotation_f` is the name of geojson file the registered annotations will be saved to.
+In this example, VALIS uses the registration parameters to transfer annotations found from one image to another. In this case, the annotation were performed in QuPath and exported as a geojson file. Given the geojson file, VALIS can then warp each shape in the file from the reference slide to its position on the un-registered target slide. The registered annotations can then be saved and loaded into QuPath along with the target image. Below, :code:`annotation_img_f` refers to the filename associated with the image on which the original annotation was performed, :code:`target_img_f` is the filename of the image associated with the image the annotations will be transferred to, :code:`annotation_geojson_f` is the name of the file with the annotation shapes, and :code:`warped_geojson_annotation_f` is the name of geojson file the registered annotations will be saved to.
 
 
 .. code-block:: python
@@ -329,7 +329,7 @@ In addition to registering slide, VALIS can convert slides to ome.tiff, maintain
 
 Reading slides
 ===============
-VALIS also provides functions to read images/slides using libvips, Bio-Formats, or Openslide. These reader objects also contain some of the slide's metatadata. The :code:`slide2image` method will return a numpy array of the slide, while :code:`slide2vips` will return a :code:`pyvips.Image`, which is ideal when working with very large images. The user can specify the pyramid level, series, and bounding box, but the default is level 0, series 0, and the whole image. See :code:`slide_io.SlideReader` and :code:`slide_io.MetaData` for more details.
+VALIS also provides functions to read images/slides using libvips, Bio-Formats, or Openslide. These reader objects also contain some of the slide's metadata. The :code:`slide2image` method will return a numpy array of the slide, while :code:`slide2vips` will return a :code:`pyvips.Image`, which is ideal when working with very large images. The user can specify the pyramid level, series, and bounding box, but the default is level 0, series 0, and the whole image. See :code:`slide_io.SlideReader` and :code:`slide_io.MetaData` for more details.
 
 
 .. code-block:: python
