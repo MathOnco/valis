@@ -3562,9 +3562,10 @@ class Valis(object):
             warp_tools.save_img(slide_obj.nr_rigid_reg_img_f, warped_img, thumbnail_size=self.thumbnail_size)
 
             # Draw displacements on image actually used in non-rigid. Might be higher resolution
-            if isinstance(slide_nr_reg_obj.bk_dxdy, np.ndarray):
+            if not isinstance(slide_nr_reg_obj.bk_dxdy, pyvips.Image):
                 draw_dxdy = np.dstack(slide_nr_reg_obj.bk_dxdy)
             else:
+                #pyvips
                 draw_dxdy = slide_nr_reg_obj.bk_dxdy
 
             if nr_on_scaled_img:
