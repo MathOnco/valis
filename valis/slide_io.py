@@ -880,10 +880,15 @@ class BioFormatsSlideReader(SlideReader):
         def tile2vips_threaded(idx):
             xywh = tile_bbox_list[idx]
             # javabridge.attach()
-            jpype.attachThreadToJVM()
-            tile = self.slide2image(level, series, xywh=tuple(xywh))
+            # jpype.attachThreadToJVM()
+            jpype.java.lang.Thread.attach()
+            try:
+                tile = self.slide2image(level, series, xywh=tuple(xywh))
+            except Exception as e:
+                pass
             # javabridge.detach()
-            jpype.detachThreadFromJVM()
+            # jpype.detachThreadFromJVM()
+            jpype.java.lang.Thread.detach()
 
             tile_array[idx] = slide_tools.numpy2vips(tile, self.metadata.pyvips_interpretation)
 
@@ -2335,16 +2340,15 @@ def get_slide_reader(src_f, series=None):
         is_rgb = bf_reader.metadata.is_rgb
 
         if f_extension == ".czi":
-            # Sometimes bioformats has issues reading CZI with JPGXR compression
-            czi = CziFile(src_f)
-            comp_tree = czi.meta.findall(".//OriginalCompressionMethod")[0]
-            is_jpgxr = comp_tree.text.lower() == "jpgxr"
-            if is_jpgxr:
-                try:
-                    with valtils.HiddenPrints():
-                        bf_reader.slide2vips(level=0, xywh=(0, 0, 5, 5))
-                except:
-                    can_use_bf = False
+            try:
+                with valtils.HiddenPrints():
+                    bf_reader.slide2vips(level=0, xywh=(0, 0, 5, 5))
+            except Exception as e:
+                can_use_bf = False
+                # Sometimes bioformats has issues reading CZI with JPGXR compression
+                czi = CziFile(src_f)
+                comp_tree = czi.meta.findall(".//OriginalCompressionMethod")[0]
+                is_jpgxr = comp_tree.text.lower() == "jpgxr"
 
         if series is None:
             series = bf_reader.series

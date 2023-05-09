@@ -169,6 +169,9 @@ cython_debug/
 examples/expected_results/registration/cycif/data/cycif_registrar.pickle
 examples/expected_results/registration/ihc/data/ihc_registrar.pickle
 examples/expected_results/registered_slides
+tests/tmp
+tests/test_difficult_cases.py
+tests/test_read_czi_jpgxr.py
 
 docs/html/
 
