@@ -52,7 +52,6 @@ import numpy as np
 
 import shutil
 import sys
-sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import registration, valtils
 
 

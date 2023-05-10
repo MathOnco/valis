@@ -1,7 +1,7 @@
 Change Log
 **********
 
-Version 1.0.0rc15
+Version 1.0.0rc15 (May 10, 2023)
 -------------------------------------
 #. Added import for :code:`aicspylibczi.CziFile` in :code:`slide_io` (found in github issue 44). Also added :code:`aicspylibczi` to the poetry lock file.
 #. Added :code:`src_f` argument in :code:`Slide.warp_and_save_slide`. Previously would end up using the :code:`Slide.src_f`, and preventing one from being able to warp and save other images using the same transformations (github issue 49).

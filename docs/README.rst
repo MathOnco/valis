@@ -22,13 +22,22 @@
 .. |pypi| image:: https://badge.fury.io/py/valis-wsi.svg
     :target: https://badge.fury.io/py/valis-wsi
 
+.. image:: https://zenodo.org/badge/444523406.svg
+   :target: https://zenodo.org/badge/latestdoi/444523406
+
+
 .. .. |coverage| image:: https://codecov.io/gh/readthedocs/readthedocs.org/branch/master/graph/badge.svg
 ..     :alt: Test coverage
 ..     :scale: 100%
 ..     :target: https://codecov.io/gh/readthedocs/readthedocs.org
 
+|
+|
 
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/banner.gif
+
+|
+|
 
 
 VALIS, which stands for Virtual Alignment of pathoLogy Image Series, is a fully automaated pipeline to register whole slide images (WSI) using rigid and/or non-rigid transformtions. A full description of the method is described in the paper by `Gatenbee et al. 2021 <https://www.biorxiv.org/content/10.1101/2021.11.09.467917v1>`_. VALIS uses `Bio-Formats <https://www.openmicroscopy.org/bio-formats/>`_, `OpenSlide <https://openslide.org/>`__, `libvips <https://www.libvips.org/>`_, and `scikit-image <https://scikit-image.org/>`_ to read images and slides, and so is able to work with over 300 image formats. Registered images can be saved as `ome.tiff <https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/>`_ slides that can be used in downstream analyses. ome.tiff format is opensource and widely supported, being readable in several different programming languages (Python, Java, Matlab, etc...) and software, such as `QuPath <https://qupath.github.io/>`_, `HALO by Idica Labs <https://indicalab.com/halo/>`_, etc...
