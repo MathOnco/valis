@@ -17,7 +17,9 @@ RUN apt-get update \
 		python3-pip \
 		bc \
 		wget \
-		ca-certificates
+		ca-certificates \
+		git-all \
+		cmake
 
 
 # we need meson for libvips build
@@ -65,12 +67,27 @@ RUN rm -r vips-${VIPS_VERSION}
 # Install python packages using poetry
 COPY . .
 
-
+RUN pip3 install --upgrade pip
 RUN pip3 install poetry && poetry config virtualenvs.in-project true
+
+
+RUN pip3 install poetry
+RUN poetry remove aicspylibczi
 RUN poetry install --only main
 
 # Set path to use .venv Python
 ENV PATH="${WKDIR}/.venv/bin:$PATH"
+
+# Install python packages that can't be installed with poetry/pip (pep517)
+RUN . .venv/bin/activate
+ARG CZI_DIR=./aicspylibczi
+RUN git config --global http.sslVerify false
+RUN git clone https://github.com/AllenCellModeling/aicspylibczi.git ${CZI_DIR} --recurse-submodules
+WORKDIR ${CZI_DIR}
+RUN pip install -e .[dev] # for development (-e means editable so changes take effect when made)
+
+WORKDIR ${WKDIR}
+
 
 # Install bioformats.jar in valis
 ARG BF_VERSION=6.12.0
@@ -85,7 +102,7 @@ RUN  apt-get remove -y wget build-essential ninja-build && \
   rm -rf /usr/local/lib/python*
 
 
-# Copy over only what is needed to run, but not build, the package. Saves about 0.75GB
+# Copy over only what is needed to run, but not build, the package.
 FROM ubuntu:kinetic
 
 ARG WKDIR=/usr/local/src

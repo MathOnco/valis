@@ -140,12 +140,16 @@ class ColorfulStandardizer(ImageProcesser):
 
         return tissue_mask
 
-    def process_image(self, c=DEFAULT_COLOR_STD_C, invert=True, *args, **kwargs):
+    def process_image(self, c=DEFAULT_COLOR_STD_C, invert=True, adaptive_eq=False, *args, **kwargs):
         std_rgb = standardize_colorfulness(self.image, c)
         std_g = skcolor.rgb2gray(std_rgb)
 
         if invert:
             std_g = 255 - std_g
+
+        if adaptive_eq:
+            std_g = exposure.equalize_adapthist(std_g/255)
+
         processed_img = exposure.rescale_intensity(std_g, in_range="image", out_range=(0, 255)).astype(np.uint8)
 
         return processed_img

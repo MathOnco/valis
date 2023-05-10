@@ -65,7 +65,7 @@ DEFAULT_THUMBNAIL_SIZE = 500
 DEFAULT_MAX_NON_RIGID_REG_SIZE = 3000
 
 # Tiled non-rigid registration arguments
-TILER_THRESH_GB = 2
+TILER_THRESH_GB = 10
 DEFAULT_NR_TILE_WH = 512
 
 # Rigid registration kwarg keys #
@@ -389,8 +389,6 @@ class Slide(object):
 
         return is_empty
 
-
-
     def slide2image(self, level, series=None, xywh=None):
         """Convert slide to image
 
@@ -696,18 +694,22 @@ class Slide(object):
 
         if isinstance(img, pyvips.Image):
             img_shape_rc = (img.width, img.height)
+            img_dim = img.bands
         else:
             img_shape_rc = img.shape[0:2]
+            img_dim = img.ndim
+
         if not np.all(img_shape_rc == self.processed_img_shape_rc):
             msg = ("scaling transformation for image with different shape. "
                    "However, without knowing all of other image's shapes, "
-                   "the scaling may not be the same for all images, and so"
+                   "the scaling may not be the same for all images, and so "
                    "may not overlap."
                    )
             valtils.print_warning(msg)
             same_shape = False
             img_scale_rc = np.array(img_shape_rc)/(np.array(self.processed_img_shape_rc))
             out_shape_rc = self.val_obj.get_aligned_slide_shape(img_scale_rc)
+
 
         else:
             same_shape = True
@@ -734,7 +736,7 @@ class Slide(object):
         else:
             bbox_xywh = None
 
-        if img.ndim == self.image.ndim:
+        if img_dim == self.image.ndim:
             bg_color = self.bg_color
         else:
             bg_color = None
@@ -927,7 +929,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         channel_names : list, optional
             List of channel names. If None, then Slide.reader
@@ -939,7 +941,7 @@ class Slide(object):
             If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
         src_f : str, optional
-           Path of slide to be warped. If None (the deffault), Slide.src_f
+           Path of slide to be warped. If None (the default), Slide.src_f
            will be used. Otherwise, the file to which `src_f` points to should
            be an alternative copy of the slide, such as one that has undergone
            processing (e.g. stain segmentation), has a mask applied, etc...
@@ -958,7 +960,8 @@ class Slide(object):
 
         warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
                                        crop=crop,
-                                       interp_method=interp_method)
+                                       interp_method=interp_method,
+                                       src_f=src_f)
 
         # Get ome-xml #
         slide_meta = self.reader.metadata
@@ -2604,14 +2607,25 @@ class Valis(object):
     def create_thumbnail(self, img, rescale_color=False):
         """Create thumbnail image to view results
         """
-        scaling = np.min(self.thumbnail_size/np.array(img.shape[:2]))
+
+        is_vips = isinstance(img, pyvips.Image)
+
+        img_shape = warp_tools.get_shape(img)
+        scaling = np.min(self.thumbnail_size/np.array(img_shape[:2]))
         if scaling < 1:
             thumbnail = warp_tools.rescale_img(img, scaling)
         else:
             thumbnail = img
 
         if rescale_color is True:
+            if is_vips:
+                # Convert to numpy to rescale
+                thumbnail = warp_tools.vips2numpy(img)
             thumbnail = exposure.rescale_intensity(thumbnail, out_range=(0, 255)).astype(np.uint8)
+
+            if is_vips:
+                # Convert back to pyvips
+                thumbnail = warp_tools.numpy2vips(thumbnail)
 
         return thumbnail
 
@@ -2994,7 +3008,6 @@ class Valis(object):
             slide_obj.xy_matched_to_prev_in_bbox =  slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
             slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
 
-
         if denoise:
             # Processed image may have been denoised for rigid registration. Replace with unblurred image
             for img_obj in rigid_registrar.img_obj_list:
@@ -3146,7 +3159,7 @@ class Valis(object):
             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_CLASS_KEY] = processing_cls
             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_KW_KEY] = processing_kwargs
 
-            img_specific_args[slide_obj.src_f] = tiled_non_rigid_reg_params
+            img_specific_args[slide_obj.name] = tiled_non_rigid_reg_params
 
         non_rigid_registrar_cls = non_rigid_registrars.NonRigidTileRegistrar
 
@@ -3548,13 +3561,22 @@ class Valis(object):
             warp_tools.save_img(slide_obj.nr_rigid_reg_img_f, warped_img, thumbnail_size=self.thumbnail_size)
 
             # Draw displacements on image actually used in non-rigid. Might be higher resolution
-            draw_dxdy = np.dstack(slide_nr_reg_obj.bk_dxdy)
+            if not isinstance(slide_nr_reg_obj.bk_dxdy, pyvips.Image):
+                draw_dxdy = np.dstack(slide_nr_reg_obj.bk_dxdy)
+            else:
+                #pyvips
+                draw_dxdy = slide_nr_reg_obj.bk_dxdy
+
             if nr_on_scaled_img:
                 draw_dxdy = warp_tools.crop_img(draw_dxdy, self._non_rigid_bbox)
 
-            thumbnail_scaling = np.min(self.thumbnail_size/np.array(draw_dxdy.shape[0:2]))
+            dxdy_shape = warp_tools.get_shape(draw_dxdy)
+            thumbnail_scaling = np.min(self.thumbnail_size/np.array(dxdy_shape[0:2]))
             thumbnail_bk_dxdy = self.create_thumbnail(draw_dxdy)
-            thumbnail_bk_dxdy *= thumbnail_scaling
+            thumbnail_bk_dxdy *= float(thumbnail_scaling)
+
+            if isinstance(thumbnail_bk_dxdy, pyvips.Image):
+                thumbnail_bk_dxdy = warp_tools.vips2numpy(thumbnail_bk_dxdy)
 
             draw_img = warp_tools.resize_img(slide_nr_reg_obj.registered_img, thumbnail_bk_dxdy[..., 0].shape)
             if isinstance(draw_img, pyvips.Image):
@@ -3564,7 +3586,6 @@ class Valis(object):
 
             if draw_img.ndim == 2:
                 draw_img = np.dstack([draw_img] * 3)
-
 
             thumbanil_deform_grid = viz.color_displacement_tri_grid(bk_dx=thumbnail_bk_dxdy[..., 0],
                                                                     bk_dy=thumbnail_bk_dxdy[..., 1],
@@ -3762,7 +3783,7 @@ class Valis(object):
             "rigid_D": all_rigid_d,
             "rigid_rTRE": all_rigid_tre,
             "non_rigid_D": all_nr_d,
-            "non_rigid_rTRE": all_rigid_tre,
+            "non_rigid_rTRE": all_nr_tre,
             "processed_img_shape": processed_img_shape_list,
             "shape": shape_list,
             "aligned_shape": [tuple(outshape)]*self.size,
@@ -4058,7 +4079,7 @@ class Valis(object):
                                                               mask=mask)
 
         img_specific_args = None
-        write_dxdy = False
+        write_dxdy = isinstance(ref_slide.bk_dxdy, pyvips.Image)
 
         if using_tiler:
             # Have determined that these images will be too big

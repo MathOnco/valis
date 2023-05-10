@@ -1,6 +1,16 @@
 Change Log
 **********
 
+Version 1.0.0rc15
+-------------------------------------
+#. Added import for :code:`aicspylibczi.CziFile` in :code:`slide_io` (found in github issue 44). Also added :code:`aicspylibczi` to the poetry lock file.
+#. Added :code:`src_f` argument in :code:`Slide.warp_and_save_slide`. Previously would end up using the :code:`Slide.src_f`, and preventing one from being able to warp and save other images using the same transformations (github issue 49).
+#. Various bug fixes to allow the initial non-rigid registration to work with larger images (which may be :code:`pyvips.Image` objects).
+#. Fixed bug where errors that occurred while reading images would prevent Python from shutting down.
+#. Updated documentation for :code:`valis.preprocessing`
+#. Added more tests
+#. Fixed many typos in the documentation.
+
 Version 1.0.0rc14 (April 24, 2023)
 -------------------------------------
 #. Added :code:`max_ratio` as an argument for :code:`feature_matcher.match_desc_and_kp` (github issue 36).
