@@ -88,7 +88,6 @@ RUN pip install -e .[dev] # for development (-e means editable so changes take e
 
 WORKDIR ${WKDIR}
 
-# Set path to use .venv Python
 
 # Install bioformats.jar in valis
 ARG BF_VERSION=6.12.0
