@@ -211,7 +211,7 @@ class NonRigidRegistrar(object):
         fixed_shape = warp_tools.get_shape(fixed_img)[0:2]
 
         assert np.all(moving_shape == fixed_shape), \
-            print("Images have differernt shapes")
+            print("Images have different shapes")
 
         self.shape = moving_shape
         self.moving_img = moving_img
@@ -890,7 +890,7 @@ class SimpleElastixWarper(NonRigidRegistrarXY):
         """
 
         assert moving_img.shape == fixed_img.shape,\
-            print("Images have differernt shapes")
+            print("Images have different shapes")
 
         if not self._params_provided:
             self.params = self.get_default_params(self.moving_img.shape)
@@ -1454,7 +1454,6 @@ class NonRigidTileRegistrar(object):
         self.moving_img = moving_img
         self.fixed_img = fixed_img
         self.mask = mask
-
 
         temp_tile_bboxes = warp_tools.get_grid_bboxes(self.shape, self.tile_wh, self.tile_wh, inclusive=True)
         self.expanded_bboxes = np.array([warp_tools.expand_bbox(bbox_xywh, self.tile_buffer, self.shape) for bbox_xywh in temp_tile_bboxes])

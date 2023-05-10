@@ -120,6 +120,7 @@ def get_vips_version():
     v = f"{pyvips.vips_lib.VIPS_MAJOR_VERSION}.{pyvips.vips_lib.VIPS_MINOR_VERSION}.{pyvips.vips_lib.VIPS_MICRO_VERSION}"
     return v
 
+
 def etree_to_dict(t):
     d = {t.tag: {} if t.attrib else None}
     children = list(t)

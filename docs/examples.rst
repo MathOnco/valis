@@ -10,12 +10,11 @@ Slide registration
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/challenging_dataset_adincar33.png
 
 .. important::
-    One of the most important parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values may be needed so that the tissue is at a high enough resolution. Finally, larger values can potentially generate more accurate registrations, but will be slower, require more memory, and won't always produce better results.
+    One of the most important parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`, which determines the size of the image used to find the rigid registration parameters. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values may be needed so that the tissue is at a high enough resolution. To imporove alingment of the finer details in the images, larger images can be used in the non-rigid or micro-registration steps (set via the :code:`max_non_rigid_registration_dim_px` parameter).
 
 
 .. important::
     If the order of slices is known and needs to be preserved, such as building a 3D image, set :code:`imgs_ordered=True` when initializing the VALIS object. Otherwise, VALIS will sort the images based on similarity, which may or may not correspond on the sliced order. If using this option, ensure that the names of the files allow them to be sorted properly, e.g. 01.tiff, 02.tiff ... 10.tiff, etc...
-
 
 In this example, the slides that need to be registered are located in :code:`/path/to/slides`. This process involves creating a Valis object, which is what conducts the registration. In this example no reference image is specified, and so all images will be aligned towards the center of the image stack. In this case, the resulting images will be cropped to the region where all of the images overlap. However, one can specify the reference image when initializing the :code:`Valis` object, by setting :code:`reference_img_f` to the filename of the image the others should be aligned towards. When the reference image is specified, the images will be cropped such that only the regions which overlap with the reference image will be saved. While this is the default behavior, one can also specify the cropping method by setting the :code:`crop` parameter value when initializing the :code:`Valis` object. The cropping method can also be changed when saving the registered images (see below).
 
@@ -30,6 +29,11 @@ In this example, the slides that need to be registered are located in :code:`/pa
     registrar = registration.Valis(slide_src_dir, results_dst_dir)
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
+
+.. important::
+    It is also possible to register a subset of images in :code:`src_dir`, or combinations of images located in different directories. This can be done by passing a list of the image paths to :code:`img_list` when initializing the :code:`Valis` object.
+
+
 The next example shows how align each image to a reference image, followed up by micro-registration. The reference image the others should be aligned towards is set with the :code:`reference_img_f` argument when initializing the :code:`Valis` object. This initial registration is followed up by micro-registration in order to better align features that were not present in the smaller images used for the first registration (The size of the images used for micro-registration can is set with the :code:`max_non_rigid_registartion_dim_px` argument in :code:`Valis.register_micro`). Setting :code:`align_to_reference` to `True` will align each image directly *to* the reference image, as opposed to *towards* it.
 
 
@@ -41,11 +45,11 @@ The next example shows how align each image to a reference image, followed up by
     registered_slide_dst_dir = "./slide_registration_example/registered_slides"
     reference_slide = "HE.tiff"
 
-    # Create a Valis object and use it to register the slides in slide_src_dir, aligning towards the reference slide.
+    # Create a Valis object and use it to register the slides in slide_src_dir, aligning *towards* the reference slide.
     registrar = registration.Valis(slide_src_dir, results_dst_dir, reference_img_f=reference_slide)
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
-    # Perform micro-registration on higher resolution images, aligning directly to the reference image
+    # Perform micro-registration on higher resolution images, aligning *directly to* the reference image
     registrar.register_micro(max_non_rigid_registration_dim_px=2000, align_to_reference=True)
 
 
