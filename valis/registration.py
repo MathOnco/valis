@@ -65,7 +65,7 @@ DEFAULT_THUMBNAIL_SIZE = 500
 DEFAULT_MAX_NON_RIGID_REG_SIZE = 3000
 
 # Tiled non-rigid registration arguments
-TILER_THRESH_GB = 2
+TILER_THRESH_GB = 10
 DEFAULT_NR_TILE_WH = 512
 
 # Rigid registration kwarg keys #
@@ -4080,7 +4080,7 @@ class Valis(object):
                                                               mask=mask)
 
         img_specific_args = None
-        write_dxdy = False
+        write_dxdy = isinstance(ref_slide.bk_dxdy, pyvips.Image)
 
         if using_tiler:
             # Have determined that these images will be too big
