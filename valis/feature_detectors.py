@@ -11,7 +11,11 @@ an example
 import cv2
 from skimage import feature, exposure
 import numpy as np
+import torch
+
 from . import valtils
+from .superglue_models import superpoint
+
 
 DEFAULT_FEATURE_DETECTOR = cv2.BRISK_create()
 """The default OpenCV feature detector"""
@@ -154,7 +158,7 @@ class FeatureDD(object):
         if self.kp_detector is not None:
             detected_kp = self.kp_detector.detect(image)
             kp, desc = self.kp_descriptor.compute(image, detected_kp)
-            type(desc)
+            # type(desc)
 
         else:
             kp, desc = self.kp_descriptor.detectAndCompute(image, mask=mask)
@@ -365,3 +369,135 @@ class SkDaisy(FeatureDD):
         kp_xy = np.dstack([feature_x, feature_y])[0]
 
         return kp_xy, desc2d
+
+
+class SuperPointFD(FeatureDD):
+
+    """SuperPoint `FeatureDD`
+
+    Use SuperPoint to detect and describe features (`detect_and_compute`)
+    Adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py
+
+    References
+    -----------
+    Paul-Edouard Sarlin, Daniel DeTone, Tomasz Malisiewicz, and Andrew
+    Rabinovich. SuperGlue: Learning Feature Matching with Graph Neural
+    Networks. In CVPR, 2020. https://arxiv.org/abs/1911.11763
+
+    """
+
+    def __init__(self, keypoint_threshold=0.005, nms_radius=4, force_cpu=False, kp_descriptor=None, kp_detector=None):
+
+        """
+        Parameters
+        ----------
+
+        keypoint_threshold : float
+            SuperPoint keypoint detector confidence threshold
+
+        nms_radius : int
+            SuperPoint Non Maximum Suppression (NMS) radius (must be positive)
+
+        force_cpu : bool
+            Force pytorch to run in CPU mode
+
+        kp_descriptor : optional, OpenCV feature desrciptor
+
+        References
+        ----------
+
+
+        """
+        super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
+
+        self.keypoint_threshold = keypoint_threshold
+        self.nms_radius = nms_radius
+        self.device = 'cuda' if torch.cuda.is_available() and not force_cpu else "cpu"
+
+        if kp_detector is None:
+            self.kp_detector_name = "SuperPoint"
+            self.kp_detector = None
+        else:
+            self.kp_detector_name = kp_detector.__class__.__name__
+
+        if kp_descriptor is None:
+            self.kp_descriptor_name = "SuperPoint"
+            self.kp_descriptor = None
+        else:
+            self.kp_descriptor_name = kp_descriptor.__class__.__name__
+
+        self.config = {
+            'superpoint': {
+                'nms_radius': self.nms_radius,
+                'keypoint_threshold': self.keypoint_threshold,
+                'max_keypoints': MAX_FEATURES
+            }}
+
+    def frame2tensor(self, img):
+        tensor = torch.from_numpy(img/255.).float()[None, None].to(self.device)
+
+        return tensor
+
+    def detect(self, img):
+        if self.kp_detector is None:
+            kp_pos_xy, _ = self.detect_and_compute_sg(img)
+        else:
+            kp = self.kp_detector.detect(img)
+            kp_pos_xy = np.array([k.pt for k in kp])
+
+        return kp_pos_xy
+
+    def compute(self, img, kp_pos_xy):
+
+        if self.kp_descriptor is None:
+            sp = superpoint.SuperPoint(self.config["superpoint"])
+
+            x = sp.relu(sp.conv1a(self.frame2tensor(img)))
+            x = sp.relu(sp.conv1b(x))
+            x = sp.pool(x)
+            x = sp.relu(sp.conv2a(x))
+            x = sp.relu(sp.conv2b(x))
+            x = sp.pool(x)
+            x = sp.relu(sp.conv3a(x))
+            x = sp.relu(sp.conv3b(x))
+            x = sp.pool(x)
+            x = sp.relu(sp.conv4a(x))
+            x = sp.relu(sp.conv4b(x))
+
+            cDa = sp.relu(sp.convDa(x))
+            descriptors = sp.convDb(cDa)
+            descriptors = torch.nn.functional.normalize(descriptors, p=2, dim=1)
+
+            descriptors = [superpoint.sample_descriptors(k[None], d[None], 8)[0]
+                    for k, d in zip([torch.from_numpy(kp_pos_xy.astype(np.float32))], descriptors)]
+
+            descriptors = descriptors[0].detach().numpy().T
+        else:
+            kp = cv2.KeyPoint_convert(kp_pos_xy.tolist())
+            kp, descriptors = self.kp_descriptor.compute(img, kp)
+            if descriptors.shape[0] > MAX_FEATURES:
+                kp, descriptors = filter_features(kp, descriptors)
+
+            kp_pos_xy = np.array([k.pt for k in kp])
+
+        return descriptors
+
+    def detect_and_compute_sg(self, img):
+        inp = self.frame2tensor(img)
+        superpoint_obj = superpoint.SuperPoint(self.config.get('superpoint', {}))
+        pred = superpoint_obj({'image': inp})
+        pred = {**pred, **{k+'0': v for k, v in pred.items()}}
+        kp_pos_xy = pred['keypoints'][0].detach().numpy()
+        desc = pred['descriptors'][0].detach().numpy().T
+
+        return kp_pos_xy, desc
+
+    def detect_and_compute(self, img):
+        if self.kp_detector is None and self.kp_descriptor is None:
+            kp_pos_xy, desc = self.detect_and_compute_sg(img)
+
+        else:
+            kp_pos_xy = self.detect(img)
+            desc = self.compute(img, kp_pos_xy)
+
+        return kp_pos_xy, desc

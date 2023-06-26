@@ -17,6 +17,7 @@ import pathlib
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
 from time import time
+import inspect
 from . import valtils
 from . import warp_tools
 from .feature_detectors import VggFD
@@ -456,7 +457,6 @@ class SerialRigidRegistrar(object):
             valtils.print_warning(msg)
 
 
-
     def generate_img_obj_list(self, feature_detector, qt_emitter=None):
         """Create a list of ZImage objects
 
@@ -534,10 +534,16 @@ class SerialRigidRegistrar(object):
                 filter_kwargs = {"img1_shape":img_obj_1.image.shape[0:2], "img2_shape": img_obj_2.image.shape[0:2]}
             else:
                 filter_kwargs = None
+
             unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
-                matcher_obj.match_images(img_obj_1.desc, img_obj_1.kp_pos_xy,
-                                            img_obj_2.desc, img_obj_2.kp_pos_xy,
-                                            filter_kwargs)
+                matcher_obj.match_images(img1=img_obj_1.image, desc1=img_obj_1.desc, kp1_xy=img_obj_1.kp_pos_xy,
+                                         img2=img_obj_2.image, desc2=img_obj_2.desc, kp2_xy=img_obj_2.kp_pos_xy,
+                                         additional_filtering_kwargs=filter_kwargs)
+
+            # unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
+            #     matcher_obj.match_images(img_obj_1.desc, img_obj_1.kp_pos_xy,
+            #                                 img_obj_2.desc, img_obj_2.kp_pos_xy,
+            #                                 filter_kwargs)
             if len(filtered_match_info12.matched_kp1_xy) == 0:
                 warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} between {img_obj_1.name} and {img_obj_2.name}")
 
@@ -584,6 +590,7 @@ class SerialRigidRegistrar(object):
         pbar = tqdm(total=n_comparisions)
 
         def match_img_obj(i):
+
             img_obj_1 = self.img_obj_list[i]
             for j in np.arange(i+1, self.size):
                 img_obj_2 = self.img_obj_list[j]
@@ -593,9 +600,15 @@ class SerialRigidRegistrar(object):
                     filter_kwargs = None
 
                 unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
-                    matcher_obj.match_images(img_obj_1.desc, img_obj_1.kp_pos_xy,
-                                                img_obj_2.desc, img_obj_2.kp_pos_xy,
-                                                filter_kwargs)
+                    matcher_obj.match_images(img1=img_obj_1.image, desc1=img_obj_1.desc, kp1_xy=img_obj_1.kp_pos_xy,
+                                             img2=img_obj_2.image, desc2=img_obj_2.desc, kp2_xy=img_obj_2.kp_pos_xy,
+                                             additional_filtering_kwargs=filter_kwargs)
+
+                # unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
+                #     matcher_obj.match_images(img_obj_1.desc, img_obj_1.kp_pos_xy,
+                #                                 img_obj_2.desc, img_obj_2.kp_pos_xy,
+                #                                 filter_kwargs)
+
                 if len(filtered_match_info12.matched_kp1_xy) == 0:
                     warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} between {img_obj_1.name} and {img_obj_2.name}")
                 # Update match dictionaries #
@@ -976,9 +989,14 @@ class SerialRigidRegistrar(object):
                     reflected_src_xy, reflected_desc = feature_detector.detect_and_compute(reflected_img)
 
                     unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
-                        matcher_obj.match_images(reflected_desc, reflected_src_xy,
-                                                    prev_img_obj.desc, dst_xy,
-                                                    filter_kwargs)
+                        matcher_obj.match_images(img1=reflected_img, desc1=reflected_desc, kp1_xy=reflected_src_xy,
+                                                 img2=prev_img_obj.image, desc2=prev_img_obj.desc, kp2_xy=dst_xy,
+                                                 additional_filtering_kwargs=filter_kwargs)
+
+                    # unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
+                    #     matcher_obj.match_images(reflected_desc, reflected_src_xy,
+                    #                                 prev_img_obj.desc, dst_xy,
+                    #                                 filter_kwargs)
 
                     # Record info #
                     _ = transformer.estimate(filtered_match_info12.matched_kp2_xy, filtered_match_info12.matched_kp1_xy)

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valis-wsi"
-version = "1.0.0rc15"
+version = "1.0.0rc16"
 description = ""
 authors = ["Chandler Gatenbee <chandlergatenbee@gmail.com>"]
 license = "MIT"

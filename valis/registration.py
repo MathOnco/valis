@@ -56,7 +56,7 @@ DEFAULT_NORM_METHOD = "img_stats"
 # Default rigid registration parameters #
 DEFAULT_FD = feature_detectors.VggFD
 DEFAULT_TRANSFORM_CLASS = transform.SimilarityTransform
-DEFAULT_MATCH_FILTER = feature_matcher.RANSAC_NAME
+DEFAULT_MATCH_FILTER = feature_matcher.Matcher(match_filter_method=feature_matcher.RANSAC_NAME)
 DEFAULT_SIMILARITY_METRIC = "n_matches"
 DEFAULT_AFFINE_OPTIMIZER_CLASS = None
 DEFAULT_MAX_PROCESSED_IMG_SIZE = 850
@@ -1640,13 +1640,13 @@ class Valis(object):
     View ome.tiff, located at merged_slide_dst_f
 
     """
-    @valtils.deprecated_args(max_non_rigid_registartion_dim_px="max_non_rigid_registration_dim_px")
-    def __init__(self, src_dir, dst_dir, series=None, name=None, img_type=None,
+    @valtils.deprecated_args(max_non_rigid_registartion_dim_px="max_non_rigid_registration_dim_px", img_type="image_type")
+    def __init__(self, src_dir, dst_dir, series=None, name=None, image_type=None,
                  feature_detector_cls=DEFAULT_FD,
                  transformer_cls=DEFAULT_TRANSFORM_CLASS,
                  affine_optimizer_cls=DEFAULT_AFFINE_OPTIMIZER_CLASS,
                  similarity_metric=DEFAULT_SIMILARITY_METRIC,
-                 match_filter_method=DEFAULT_MATCH_FILTER,
+                 matcher=DEFAULT_MATCH_FILTER,
                  imgs_ordered=False,
                  non_rigid_registrar_cls=DEFAULT_NON_RIGID_CLASS,
                  non_rigid_reg_params=DEFAULT_NON_RIGID_KWARGS,
@@ -1678,12 +1678,12 @@ class Valis(object):
         series : int, optional
             Slide series to that was read. If None, series will be set to 0.
 
-        img_type : str, optional
+        image_type : str, optional
             The type of image, either "brightfield", "fluorescence",
-            or "multi". If None, VALIS will guess `img_type`
+            or "multi". If None, VALIS will guess `image_type`
             of each image, based on the number of channels and datatype.
             Will assume that RGB = "brightfield",
-            otherwise `img_type` will be set to "fluorescence".
+            otherwise `image_type` will be set to "fluorescence".
 
         feature_detector_cls : FeatureDD, optional
             Uninstantiated FeatureDD object that detects and computes
@@ -1882,7 +1882,7 @@ class Valis(object):
         # Some information may already be provided #
         self.slide_dims_dict_wh = slide_dims_dict_wh
         self.resolution_xyu = resolution_xyu
-        self.image_type = img_type
+        self.image_type = image_type
 
         # Results fields #
         self.series = series
@@ -1914,7 +1914,7 @@ class Valis(object):
         self._set_rigid_reg_kwargs(name=name,
                                    feature_detector=feature_detector_cls,
                                    similarity_metric=similarity_metric,
-                                   match_filter_method=match_filter_method,
+                                   matcher=matcher,
                                    transformer=transformer_cls,
                                    affine_optimizer=affine_optimizer_cls,
                                    imgs_ordered=imgs_ordered,
@@ -1963,7 +1963,7 @@ class Valis(object):
         self._empty_slides = {}
 
     def _set_rigid_reg_kwargs(self, name, feature_detector, similarity_metric,
-                              match_filter_method, transformer, affine_optimizer,
+                              matcher, transformer, affine_optimizer,
                               imgs_ordered, reference_img_f, check_for_reflections, qt_emitter):
 
         """Set rigid registration kwargs
@@ -1971,7 +1971,11 @@ class Valis(object):
 
         """
 
-        matcher = feature_matcher.Matcher(match_filter_method=match_filter_method)
+        # if isinstance(match_filter_method, str):
+        #     matcher = feature_matcher.Matcher(match_filter_method=match_filter_method)
+        # else:
+        #     matcher = match_filter_method
+
         if affine_optimizer is not None:
             afo = affine_optimizer(transform=transformer.__name__)
         else:
@@ -1994,7 +1998,7 @@ class Valis(object):
         self.feature_detector_str = self.rigid_reg_kwargs[FD_KEY].kp_detector_name
         self.transform_str = self.rigid_reg_kwargs[TRANSFORMER_KEY].__class__.__name__
         self.similarity_metric = self.rigid_reg_kwargs[SIM_METRIC_KEY]
-        self.match_filter_method = match_filter_method
+        self.match_filter_method = matcher.__class__.__name__
         self.imgs_ordered = imgs_ordered
 
     def _set_non_rigid_reg_kwargs(self, name, non_rigid_reg_class, non_rigid_reg_params,
