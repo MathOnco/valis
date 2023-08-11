@@ -1584,7 +1584,7 @@ class VipsSlideReader(SlideReader):
                 all_channels[i] = c
 
             all_dims = np.array(all_dims)
-            most_common_channel_count = stats.mode(all_channels)[0][0]
+            most_common_channel_count = stats.mode(all_channels, keepdims=True)[0][0]
             keep_idx = np.where(all_channels == most_common_channel_count)[0]
             slide_dims = all_dims[keep_idx]
 
@@ -2485,7 +2485,14 @@ def create_channel(channel_id, name=None, color=None):
     if name is not None:
         new_channel.name = decoded_name
     if color is not None:
-        new_channel.color = tuple([*color, 1])
+
+        if len(color) == 3:
+            new_channel.color = tuple([*color, 1])
+        elif len(color) == 4:
+            if color[3] == 0:
+                # color has alpha, won't be shown because it's 0
+                color = tuple([*color[:3], 1])
+        new_channel.color = tuple(color)
 
     return new_channel
 
@@ -2804,6 +2811,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
     if img.format in ["float", "double"] and compression != "lzw":
         msg = f"Image has type {img.format} but compression method {compression} will convert image to uint8. To avoid this, compression is being changed to 'lzw"
         compression = "lzw"
+        valtils.print_warning(msg)
 
     dst_f_extension = slide_tools.get_slide_extension(dst_f)
     if dst_f_extension != ".ome.tiff":

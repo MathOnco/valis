@@ -1,6 +1,12 @@
 Change Log
 **********
 
+Version 1.0.0rc16 (May 10, 2023)
+-------------------------------------
+#. Added support for SuperPoint and SuperGlue feature detection and matching
+#. Fixed issue converting big-endian WSI to :code:`pyvips.Image` (reported on `image.sc <https://forum.image.sc/t/problems-registering-fluorescence-ome-tiffs-using-valis/82685>_`)
+
+
 Version 1.0.0rc15 (May 10, 2023)
 -------------------------------------
 #. Added import for :code:`aicspylibczi.CziFile` in :code:`slide_io` (found in github issue 44). Also added :code:`aicspylibczi` to the poetry lock file.

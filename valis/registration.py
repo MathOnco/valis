@@ -964,7 +964,10 @@ class Slide(object):
                                        src_f=src_f)
 
         # Get ome-xml #
-        slide_meta = self.reader.metadata
+        # slide_meta = self.reader.metadata
+        slide_reader_cls = slide_io.get_slide_reader(src_f)
+        slide_reader = slide_reader_cls(src_f)
+        slide_meta = slide_reader.metadata
         if slide_meta.pixel_physical_size_xyu[2] == slide_io.PIXEL_UNIT:
             px_phys_size = None
         else:
@@ -4272,7 +4275,7 @@ class Valis(object):
 
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
-    def warp_and_save_slides(self, dst_dir, level = 0, non_rigid=True,
+    def warp_and_save_slides(self, dst_dir, level=0, non_rigid=True,
                              crop=True,
                              colormap=None,
                              interp_method="bicubic",
@@ -4333,7 +4336,7 @@ class Valis(object):
                         valtils.print_warning(msg)
 
             dst_f = os.path.join(dst_dir, slide_obj.name + ".ome.tiff")
-            slide_obj.warp_and_save_slide(dst_f=dst_f, level = level,
+            slide_obj.warp_and_save_slide(dst_f=dst_f, level=level,
                                           non_rigid=non_rigid,
                                           crop=crop,
                                           interp_method=interp_method,
@@ -4470,6 +4473,7 @@ class Valis(object):
         else:
             cmap_dict = None
 
+        slide_obj = self.get_ref_slide()
         px_phys_size = slide_obj.reader.scale_physical_size(level)
         bf_dtype = slide_io.vips2bf_dtype(merged_slide.format)
         out_xyczt = slide_io.get_shape_xyzct((merged_slide.width, merged_slide.height), merged_slide.bands)
@@ -4499,4 +4503,6 @@ class Valis(object):
                                    compression=compression)
 
         return merged_slide, all_channel_names, ome_xml
+
+
 

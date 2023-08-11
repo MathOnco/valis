@@ -10,6 +10,7 @@ import colour
 from matplotlib import cm
 import re
 import imghdr
+import sys
 from collections import Counter
 from . import warp_tools
 from . import slide_io
@@ -101,8 +102,12 @@ def numpy2vips(a, pyvips_interpretation=None):
         bands = 1
 
     linear = a.reshape(width * height * bands)
+    if linear.dtype.byteorder == ">":
+        #vips seems to expect the array to be little endian, but `a` is big endian
+        linear.byteswap(inplace=True)
+
     vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,
-                                      NUMPY_FORMAT_VIPS_DTYPE[str(a.dtype)])
+                                      NUMPY_FORMAT_VIPS_DTYPE[a.dtype.name])
 
     if pyvips_interpretation is not None:
         vi = vi.copy(interpretation=pyvips_interpretation)
