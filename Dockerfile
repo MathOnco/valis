@@ -90,7 +90,7 @@ WORKDIR ${WKDIR}
 
 
 # Install bioformats.jar in valis
-ARG BF_VERSION=6.12.0
+ARG BF_VERSION=7.0.0
 RUN wget https://downloads.openmicroscopy.org/bio-formats/${BF_VERSION}/artifacts/bioformats_package.jar -P valis
 
 # Clean up
