@@ -885,12 +885,14 @@ class BioFormatsSlideReader(SlideReader):
             try:
                 tile = self.slide2image(level, series, xywh=tuple(xywh))
             except Exception as e:
+                print(e)
                 pass
             # javabridge.detach()
             # jpype.detachThreadFromJVM()
             jpype.java.lang.Thread.detach()
 
             tile_array[idx] = slide_tools.numpy2vips(tile, self.metadata.pyvips_interpretation)
+
 
         n_cpu = multiprocessing.cpu_count() - 1
         with parallel_backend("threading", n_jobs=n_cpu):
@@ -944,7 +946,7 @@ class BioFormatsSlideReader(SlideReader):
             tile_wh = rdr.getOptimalTileWidth()
         rdr.close()
 
-        tile_wh = MAX_TILE_SIZE
+        tile_wh = min(tile_wh, MAX_TILE_SIZE)
         if np.any(slide_shape_wh < tile_wh):
             tile_wh = min(slide_shape_wh)
 
@@ -2331,6 +2333,7 @@ def get_slide_reader(src_f, series=None):
 
     n_series = 1
     is_rgb = None
+    is_czi_jpgxr = False
     if can_use_bf:
         with valtils.HiddenPrints():
             bf_reader = BioFormatsSlideReader(src_f)
@@ -2348,7 +2351,7 @@ def get_slide_reader(src_f, series=None):
                 # Sometimes bioformats has issues reading CZI with JPGXR compression
                 czi = CziFile(src_f)
                 comp_tree = czi.meta.findall(".//OriginalCompressionMethod")[0]
-                is_jpgxr = comp_tree.text.lower() == "jpgxr"
+                is_czi_jpgxr = comp_tree.text.lower() == "jpgxr"
 
         if series is None:
             series = bf_reader.series
@@ -2391,7 +2394,7 @@ def get_slide_reader(src_f, series=None):
 
         reader = BioFormatsSlideReader
 
-    elif f_extension == ".czi":
+    elif f_extension == ".czi" and is_czi_jpgxr:
         msg = "CZI was compressed with JPGXR and could not be opened with Bioformats. Using CziJpgxrReader, which is experimental"
         valtils.print_warning(msg)
         reader = CziJpgxrReader
