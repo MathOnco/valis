@@ -10,7 +10,7 @@ VALIS :sup:`1` was used to perform registration of the test images provided as p
 Preprocessing
 *************
 
-.. image:: /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/benchmarking/acrobat_2023/for_github/acrobat_2023/_images/processing_example.png
+.. image:: https://github.com/MathOnco/valis/raw/main/examples/acrobat_2023/_images/processing_example.png
 
 **Figure 1** Image pre-processing. a) Original moving image (top) and fixed image (bottom) b) Processed moving image (top) and processed fixed image (bottom).
 
@@ -21,7 +21,7 @@ The goal of this preprocessing method is to “flatten” the image, such that l
 High resolution rigid registration
 **********************************
 
-.. image:: /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/benchmarking/acrobat_2023/for_github/acrobat_2023/_images/mico_rigid_reg.png
+.. image:: https://github.com/MathOnco/valis/raw/main/examples/acrobat_2023/_images/mico_rigid_reg.png
 
 **Figure 2** High resolution rigid registration. Left and right insets show which features were matched in the tiles extracted from the images aligned using preliminary rigid transforms (center). Fixed images are on the top, while the moving images are on the bottom.
 
