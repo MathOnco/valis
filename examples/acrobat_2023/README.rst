@@ -1,80 +1,44 @@
+VALIS for ACROBAT 2023
+======================
 
-|docs| |CI| |pypi|
+Chandler Gatenbee :sup:`1`, Alexander R.A. Anderson :sup:`1`
 
-.. .. |Upload Python Package| image:: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml/badge.svg
-    :target: https://github.com/MathOnco/valis/actions/workflows/python-publish.yml
+:sup:`1` Department of Integrated Mathematical Oncology, H. Lee Moffitt Cancer Center & Research Institute, 12902 Magnolia Drive, SRB 4, Tampa, Florida, 336122
 
-.. .. |build-status| image:: https://circleci.com/gh/readthedocs/readthedocs.org.svg?style=svg
-..     :alt: build status
-..     :target: https://circleci.com/gh/readthedocs/readthedocs.org
+VALIS :sup:`1` was used to perform registration of the test images provided as part of the ACROBAT 2023 grand challenge, although with a few updates. In particular, a different preprocessing method was used, and a second higher-resolution rigid registration was performed prior to non-rigid registration. These updates will be included as options in the next release of VALIS. The code used for the grand challenge, which includes these updates, can found on GitHub.
 
-.. |docs| image:: https://readthedocs.org/projects/valis/badge/?version=latest
-    :target: https://valis.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+Preprocessing
+*************
 
-.. |CI| image:: https://github.com/MathOnco/valis/workflows/CI/badge.svg?branch=main
-    :target: https://github.com/MathOnco/valis/actions?workflow=CI
-    :alt: CI Status
+.. image:: /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/benchmarking/acrobat_2023/for_github/acrobat_2023/_images/processing_example.png
 
-.. .. |conda| image:: https://img.shields.io/conda/vn/conda-forge/valis_wsi
-    :alt: Conda (channel only)
+**Figure 1** Image pre-processing. a) Original moving image (top) and fixed image (bottom) b) Processed moving image (top) and processed fixed image (bottom).
 
-.. |pypi| image:: https://badge.fury.io/py/valis-wsi.svg
-    :target: https://badge.fury.io/py/valis-wsi
-
-.. image:: https://zenodo.org/badge/444523406.svg
-   :target: https://zenodo.org/badge/latestdoi/444523406
-|
-|
-.. .. |coverage| image:: https://codecov.io/gh/readthedocs/readthedocs.org/branch/master/graph/badge.svg
-..     :alt: Test coverage
-..     :scale: 100%
-..     :target: https://codecov.io/gh/readthedocs/readthedocs.org
+The goal of this preprocessing method is to “flatten” the image, such that lightly stained regions get enhanced while heavily stained or very dark regions (often artifacts) get lightened. To accomplish this, the image is first converted to the polar CAM16-UCS colorspace to create a JCH image :sup:`2`. The JCH colors are then then clustered into 100 groups using K-means clustering, and the centroids of each cluster then converted back to RGB. The RGB centroids are used to create a “color matrix” for the image, which is in turn used to deconvolve the image into 100 channels using color deconvolution :sup:`3`. The mean for each pixel is calculated using all channels, creating a single channel image, which further undergoes adaptive histogram equalization. The results of the preprocessing can be seen in Figure 1.
 
 
-.. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/banner.gif
 
-|
-|
+High resolution rigid registration
+**********************************
 
-VALIS, which stands for Virtual Alignment of pathoLogy Image Series, is a fully automated pipeline to register whole slide images (WSI) using rigid and/or non-rigid transformations. A full description of the method is descriped in the paper by `Gatenbee et al. 2021 <https://www.biorxiv.org/content/10.1101/2021.11.09.467917v1>`_. VALIS uses `Bio-Formats <https://www.openmicroscopy.org/bio-formats/>`_, `OpenSlide <https://openslide.org/>`__, `libvips <https://www.libvips.org/>`_, and `scikit-image <https://scikit-image.org/>`_ to read images and slides, and so is able to work with over 300 image formats. Registered images can be saved as `ome.tiff <https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/>`_ slides that can be used in downstream analyses. ome.tiff format is opensource and widely supported, being readable in several different programming languages (Python, Java, Matlab, etc...) and software, such as `QuPath <https://qupath.github.io/>`_, `HALO by Idica Labs <https://indicalab.com/halo/>`_, etc...
+.. image:: /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/benchmarking/acrobat_2023/for_github/acrobat_2023/_images/mico_rigid_reg.png
 
-The registration pipeline is fully automated and goes as follows:
+**Figure 2** High resolution rigid registration. Left and right insets show which features were matched in the tiles extracted from the images aligned using preliminary rigid transforms (center). Fixed images are on the top, while the moving images are on the bottom.
 
-    .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/pipeline.png
+The images used for the initial rigid registration are much lower resolution than the original WSI. While this allows VALIS to attain a good initial alignment, using features from the higher resolution may improve the rigid registration, potentially reducing unwanted/excessive non-rigid deformations, both of which should result in more accurate alignments. Higher resolution feature detection should also improve VALIS’ error estimates, which were not very accurate. As such, we have introduced a second rigid registration step that is performed on higher resolution images warped using the initial rigid transforms (1/8th the size of the full resolution registered WSI) (see Figure 2). The moving and fixed images are then divided into tiles (512 x 512 pixels), each of which is processed with the preprocessing method described above. After processing, each pair of tiles is normalized to one another using the approach described in the VALIS manuscript. Next, Super Point and Super Glue :sup:`4` are used to detect and match features in the moving and fixed tiles. After all tiles have gone through this process, all matched keypoints are combined and filtered using RANSAC and Tukey’s outlier approach (i.e. the same filtering steps conducted during the initial rigid registration). The high-resolution rigid transformation matrix, M', can then be estimated using these matched features. If it is found that this higher resolution rigid registration produced more matches and that the average distances between registered matched features is smaller than before, M' is kept. Otherwise, the rigid transformation matrix found using the lower resolution images is retained.
 
-   #. Images/slides are converted to numpy arrays. As WSI are often too large to fit into memory, these images are usually lower resolution images from different pyramid levels.
-
-   #. Images are processed to single channel images. They are then normalized to make them look as similar as possible. Masks are then created to focus registration on the tissue.
-
-   #. Image features are detected and then matched between all pairs of image.
-
-   #. If the order of images is unknown, they will be optimally ordered based on their feature similarity. This increases the chances of successful registration because each image will be aligned to one that looks very similar.
-
-   #. Images will be aligned *towards* (not to) a reference image. If the reference image is not specified, it will automatically be set to the image at the center of the stack.
-
-   #. Rigid registration is performed serially, with each image being rigidly aligned towards the reference image. That is, if the reference image is the 5th in the stack, image 4 will be aligned to 5 (the reference), and then 3 will be aligned to the now registered version of 4, and so on. Only features found in both neighboring slides are used to align the image to the next one in the stack. VALIS uses feature detection to match and align images, but one can optionally perform a final step that maximizes the mutual information between each pair of images.
-
-   #. The registered rigid masks are combined to create a non-rigid registration mask. The bounding box of this mask is then used to extract higher resolution versions of the tissue from each slide. These higher resolution images are then processed as above and used for non-rigid registration, which is performed either by:
-
-        * aliging each image towards the reference image following the same sequence used during rigid registration.
-        * using groupwise registration that non-rigidly aligns the images to a common frame of reference. Currently this is only possible if `SimpleElastix <https://simpleelastix.github.io>`__ is installed.
-
-   #. One can optionally perform a second non-rigid registration using an even higher resolution versions of each image. This is intended to better align micro-features not visible in the original images, and so is referred to as micro-registration. A mask can also be used to indicate where registration should take place.
-
-   #. Error is estimated by calculating the distance between registered matched features in the full resolution images.
-
-The transformations found by VALIS can then be used to warp the full resolution slides. It is also possible to merge non-RGB registered slides to create a highly multiplexed image. These aligned and/or merged slides can then be saved as ome.tiff images. The transformations can also be use to warp point data, such as cell centroids, polygon vertices, etc...
-
-In addition to registering images, VALIS provides tools to read slides using Bio-Formats and OpenSlide, which can be read at multiple resolutions and converted to numpy arrays or pyvips.Image objects. One can also slice regions of interest from these slides and warp annotated images. VALIS also provides functions to convert slides to the ome.tiff format, preserving the original metadata. Please see examples and documentation for more details.
+After the higher resolution rigid alignment is complete, registration proceeds as described in the VALIS manusript1, with the “micro-registration” being performed on images that are 0.25 of the full resolution WSI. After registration is complete, we estimate the error using only the rigid transform and using the rigid + non-rigid transform by calculating the distance between matched features using each approach. The provided landmarks are then warped using the transform (rigid or rigid + non-rigid) that had the lowest estimated error.
 
 
-Full documentation with installation instructions and examples can be found at `ReadTheDocs <https://valis.readthedocs.io/en/latest/>`_.
+References
+**********
+
+1.	Gatenbee CD, et al. Virtual alignment of pathology image series for multi-gigapixel whole slide images. Nature Communications 14, 4502 (2023).
+
+2.	Li C, et al. Comprehensive color solutions: CAM16, CAT16, and CAM16-UCS. Color Research & Application 42, 703-718 (2017).
+
+3.	Ruifrok AC, Johnston DA. Quantification of histochemical staining by color deconvolution. Anal Quant Cytol Histol 23, 291-299 (2001).
+
+4.	Sarlin P-E, DeTone D, Malisiewicz T, Rabinovich A. SuperGlue: Learning Feature Matching with Graph Neural Networks. In: CVPR) (2020).
 
 
-License
--------
-
-`MIT`_ © 2021-2023 Chandler Gatenbee
-
-.. _MIT: LICENSE.txt
