@@ -485,7 +485,7 @@ class SerialRigidRegistrar(object):
         max_new_w = out_w*np.cos(45) + out_h*np.sin(45)
         max_new_h = out_w*np.sin(45) + out_h*np.cos(45)
 
-        max_dist = np.ceil(np.max([out_w, out_h, max_new_h, max_new_w])).astype(np.int)
+        max_dist = np.ceil(np.max([out_w, out_h, max_new_h, max_new_w])).astype(int)
         out_shape = (max_dist, max_dist)
         img_obj_list = [None] * self.size
 
@@ -1422,7 +1422,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
                     imgs_ordered=False, reference_img_f=None,
                     similarity_metric="n_matches",
                     check_for_reflections=False,
-                    max_scaling=3.0, align_to_reference=False, qt_emitter=None):
+                    max_scaling=3.0, align_to_reference=False, qt_emitter=None, valis_obj=None):
     """
     Rigidly align collection of images
 
@@ -1523,6 +1523,18 @@ def register_images(img_dir, dst_dir=None, name="registrar",
 
     print("\n======== Detecting features\n")
     registrar.generate_img_obj_list(feature_detector, qt_emitter=qt_emitter)
+
+    if valis_obj is not None:
+        if valis_obj.create_masks:
+            # Remove feature points outside of mask
+            for img_obj in registrar.img_obj_dict.values():
+                slide_obj = valis_obj.get_slide(img_obj.name)
+                features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=slide_obj.rigid_reg_mask)
+                n_removed = img_obj.kp_pos_xy.shape[0] - len(features_in_mask_idx)
+                print(f"Removed {n_removed} features outside of the mask for {slide_obj.name}")
+                if len(features_in_mask_idx) > 0:
+                    img_obj.kp_pos_xy = img_obj.kp_pos_xy[features_in_mask_idx, :]
+                    img_obj.desc = img_obj.desc[features_in_mask_idx, :]
 
     print("\n======== Matching images\n")
     if registrar.aleady_sorted:

@@ -447,22 +447,29 @@ def check_flattened_pyramid_tiff(src_f):
 
     if 'n-pages' in vips_fields:
         n_pages = vips_img.get("n-pages")
-        all_areas = [None] * n_pages
-        all_dims = [None] * n_pages
-        all_n_channels = [None] * n_pages
+        # all_areas = [None] * n_pages
+        # all_dims = [None] * n_pages
+        # all_n_channels = [None] * n_pages
+        all_areas = []
+        all_dims = []
+        all_n_channels = []
         level_starts = []
         prev_area = None
         for i in range(n_pages):
-            page = pyvips.Image.new_from_file(src_f, page=i)
+            try:
+                page = pyvips.Image.new_from_file(src_f, page=i)
+            except pyvips.error.Error as e:
+                print(f"error at page {i}: {e}")
+                continue
 
             w = page.width
             h = page.height
             nc = page.bands
             img_area = w*h*nc
 
-            all_areas[i] = img_area
-            all_dims[i] = [w, h]
-            all_n_channels[i] = nc
+            all_areas.append(img_area)
+            all_dims.append([w, h])
+            all_n_channels.append(nc)
 
             if prev_area is None:
                 prev_area = img_area
@@ -1573,20 +1580,31 @@ class VipsSlideReader(SlideReader):
         vips_fields = vips_img.get_fields()
         if 'n-pages' in vips_fields:
             n_pages = vips_img.get("n-pages")
-            all_dims = [None] * n_pages
-            all_channels = [None] * n_pages
+            # all_dims = [None] * n_pages
+            # all_channels = [None] * n_pages
+            all_dims = []
+            all_channels = []
             for i in range(n_pages):
-                page = pyvips.Image.new_from_file(self.src_f, page=i)
+                try:
+                    page = pyvips.Image.new_from_file(self.src_f, page=i)
+                except pyvips.error.Error as e:
+                    print(f"error at page {i}: {e}")
 
                 w = page.width
                 h = page.height
                 c = page.bands
 
-                all_dims[i] = [w, h]
-                all_channels[i] = c
+                all_dims.append([w, h])
+                all_channels.append(c)
+                # all_dims[i] = [w, h]
+                # all_channels[i] = c
+
+            try:
+                most_common_channel_count = stats.mode(all_channels, keepdims=True)[0][0]
+            except:
+                most_common_channel_count = stats.mode(all_channels)[0][0]
 
             all_dims = np.array(all_dims)
-            most_common_channel_count = stats.mode(all_channels, keepdims=True)[0][0]
             keep_idx = np.where(all_channels == most_common_channel_count)[0]
             slide_dims = all_dims[keep_idx]
 
@@ -1897,7 +1915,7 @@ class CziJpgxrReader(SlideReader):
         self.original_meta_dict = valtils.etree_to_dict(czi_reader.meta)
         self.is_bgr = False
         self.meta_list = [None]
-        self._zoom_levels = None
+        # self._zoom_levels = None
         super().__init__(src_f=src_f, *args, **kwargs)
 
         try:
@@ -1994,7 +2012,7 @@ class CziJpgxrReader(SlideReader):
 
         """
 
-        self._get_zoom_levels()
+
         czi_reader = CziFile(self.src_f)
         dims_dict = czi_reader.get_dims_shape()
 
@@ -2031,8 +2049,11 @@ class CziJpgxrReader(SlideReader):
             series_meta.channel_names = self._get_channel_names(series_meta)
             series_meta.pixel_physical_size_xyu = phys_size
             series_meta.original_xml = original_xml
+            series_meta._zoom_levels = self._get_zoom_levels(i)
+
 
             meta_list[i] = series_meta
+
 
         return meta_list
 
@@ -2089,22 +2110,25 @@ class CziJpgxrReader(SlideReader):
             Dimensions of all images in the pyramid (width, height).
 
         """
-        if self._zoom_levels is None:
-            self._get_zoom_levels()
+        # if self._zoom_levels is None:
+        zoom_levels = self._get_zoom_levels(scene)
 
         czi_reader = CziFile(self.src_f)
         scene_bbox = czi_reader.get_all_scene_bounding_boxes()[scene]
         scence_l0_wh = np.array([scene_bbox.w, scene_bbox.h])
-        slide_dimensions = np.round(scence_l0_wh*self._zoom_levels[..., np.newaxis]).astype(int)
+        slide_dimensions = np.round(scence_l0_wh*zoom_levels[..., np.newaxis]).astype(int)
 
         return slide_dimensions
 
-    def _get_zoom_levels(self):
+    def _get_zoom_levels(self, scene=0):
 
         img_dict = self._get_img_meta_dict()
-        n_levels = eval(img_dict["Dimensions"]["S"]["Scenes"]["Scene"]["PyramidInfo"]["PyramidLayersCount"])
-        downsampling = eval(img_dict["Dimensions"]["S"]["Scenes"]["Scene"]["PyramidInfo"]["MinificationFactor"])
-        self._zoom_levels = (1/downsampling)**(np.arange(0, n_levels))
+        pyramid_info = img_dict["Dimensions"]["S"]["Scenes"]["Scene"][scene]["PyramidInfo"]
+        n_levels = eval(pyramid_info["PyramidLayersCount"])
+        downsampling = eval(pyramid_info["MinificationFactor"])
+        zoom_levels = (1/downsampling)**(np.arange(0, n_levels))
+
+        return zoom_levels
 
     def _get_pixel_physical_size(self, *args, **kwargs):
         """Get resolution of slide
@@ -2177,7 +2201,7 @@ class CziJpgxrReader(SlideReader):
             vips_img = vips_img.extract_area(*xywh)
 
         if level != 0:
-            scaling = self._zoom_levels[level]
+            scaling = self.metadata._zoom_levels[level]
             vips_img = warp_tools.rescale_img(vips_img, scaling)
 
         vips_img = vips_img.copy(interpretation="srgb")
