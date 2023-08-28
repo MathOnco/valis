@@ -1,11 +1,14 @@
 import numpy as np
-from skimage import color as skcolor, draw, exposure, transform, io
+from skimage import exposure, transform
 from tqdm import tqdm
+
+import multiprocessing
+from joblib import Parallel, delayed, parallel_backend
 
 from . import feature_matcher
 from . import feature_detectors
 from . import preprocessing
-from . import viz
+# from . import viz
 from . import warp_tools
 
 
@@ -15,10 +18,12 @@ ROI_MATCHES = "matches"
 DEFAULT_ROI = ROI_MASK
 DEFAULT_FD = feature_detectors.SuperPointFD
 DEFAULT_MATCHER = feature_matcher.SuperPointAndGlue
-DEFAULT_PROCESSOR = preprocessing.StainFlattener
-DEFAULT_PROCESSOR_KWARGS = {"adaptive_eq":False, "with_mask":False}
 
+DEFAULT_BF_PROCESSOR = preprocessing.StainFlattener
+DEFAULT_BF_PROCESSOR_KWARGS = {"adaptive_eq":False, "with_mask":False}
 
+DEFAULT_FLOURESCENCE_CLASS = preprocessing.ChannelGetter
+DEFAULT_FLOURESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
 
 class MicroRigidRegistrar(object):
     """Refine rigid registration using higher resolution images
@@ -66,8 +71,7 @@ class MicroRigidRegistrar(object):
     """
 
     def __init__(self, val_obj, feature_detector_cls=DEFAULT_FD,
-                 matcher=DEFAULT_MATCHER, img_processor_cls=DEFAULT_PROCESSOR,
-                 img_processor_kwargs=DEFAULT_PROCESSOR_KWARGS,
+                 matcher=DEFAULT_MATCHER, processor_dict=None,
                  scale=0.5**3, tile_wh=2**9, roi=DEFAULT_ROI):
         """
 
@@ -86,6 +90,12 @@ class MicroRigidRegistrar(object):
         matcher : Matcher
             Matcher object that will be used to match image features
 
+        processor_dict : dict, optional
+            Each key should be the filename of the image, and the value either a subclassed
+            preprocessing.ImageProcessor, or a list, where the 1st element is the processor,
+            and the second element a dictionary of keyword arguments passed to the processor.
+            If `None`, a default processor will be assigned to each image based on its modality.
+
         scale : float
             Degree of downsampling to use for the reigistration, based on the
             registered WSI shape (i.e. Slide.aligned_slide_shape_rc)
@@ -103,8 +113,7 @@ class MicroRigidRegistrar(object):
         self.val_obj = val_obj
         self.feature_detector_cls = feature_detector_cls
         self.matcher = matcher
-        self.img_processor_cls = img_processor_cls
-        self.img_processor_kwargs = img_processor_kwargs
+        self.processor_dict = processor_dict
         self.scale = scale
         self.tile_wh = tile_wh
         self.roi = roi
@@ -129,7 +138,35 @@ class MicroRigidRegistrar(object):
 
         return mask
 
-    def register(self):
+    def register(self,
+                 brightfield_processing_cls=DEFAULT_BF_PROCESSOR, brightfield_processing_kwargs=DEFAULT_BF_PROCESSOR_KWARGS,
+                 if_processing_cls=DEFAULT_FLOURESCENCE_CLASS, if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS):
+        """
+
+        Parameters
+        ----------
+        brightfield_processing_cls : ImageProcesser
+            ImageProcesser to pre-process brightfield images to make them look as similar as possible.
+            Should return a single channel uint8 image.
+
+        brightfield_processing_kwargs : dict
+            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+
+        if_processing_cls : ImageProcesser
+            ImageProcesser to pre-process immunofluorescent images to make them look as similar as possible.
+            Should return a single channel uint8 image.
+
+        if_processing_kwargs : dict
+            Dictionary of keyward arguments to be passed to `if_processing_cls`
+
+        """
+
+        processor_dict = self.val_obj.create_img_processor_dict(brightfield_processing_cls=brightfield_processing_cls,
+                                brightfield_processing_kwargs=brightfield_processing_kwargs,
+                                if_processing_cls=if_processing_cls,
+                                if_processing_kwargs=if_processing_kwargs,
+                                processor_dict=self.processor_dict)
+
         # Get slides in correct order
         slide_idx, slide_names = list(zip(*[[slide_obj.stack_idx, slide_obj.name] for slide_obj in self.val_obj.slide_dict.values()]))
         slide_order = np.argsort(slide_idx) # sorts ascending
@@ -143,9 +180,9 @@ class MicroRigidRegistrar(object):
 
             mask = self.create_mask(moving_slide, fixed_slide)
 
-            self.align_slides(moving_slide, fixed_slide, mask=mask)
+            self.align_slides(moving_slide, fixed_slide, processor_dict=processor_dict, mask=mask)
 
-    def align_slides(self, moving_slide, fixed_slide, mask=None):
+    def align_slides(self, moving_slide, fixed_slide, processor_dict, mask=None):
         moving_img = moving_slide.warp_slide(level=0, non_rigid=False, crop=False)
         moving_img = warp_tools.rescale_img(moving_img, self.scale)
 
@@ -183,26 +220,33 @@ class MicroRigidRegistrar(object):
 
 
         # Collect high rez matches
-        high_rez_moving_match_xy_list = []
-        high_rez_moving_match_desc_list = []
-
-        high_rez_fixed_match_xy_list = []
-        high_rez_fixed_match_desc_list = []
-
         bbox_tiles = self.get_tiles(reg_bbox, self.tile_wh)
-        matcher = self.matcher()
-        fd = self.feature_detector_cls()
-        for bbox_id, bbox_xy in enumerate(tqdm(bbox_tiles)):
+        n_tiles = len(bbox_tiles)
+        high_rez_moving_match_xy_list = [None]*n_tiles
+        high_rez_fixed_match_xy_list = [None]*n_tiles
+
+        moving_processing_cls, moving_processing_kwargs = processor_dict[moving_slide.name]
+        fixed_processing_cls, fixed_processing_kwargs = processor_dict[moving_slide.name]
+
+        pbar = iter(tqdm(range(n_tiles)))
+
+        def _match_tile(bbox_id):
+            bbox_xy = bbox_tiles[bbox_id]
+
+            matcher = self.matcher()
+            fd = self.feature_detector_cls()
+
             region_xywh = warp_tools.xy2bbox(bbox_xy)
             region_mask = slide_mask.extract_area(*region_xywh)
             if region_mask.max() == 0:
-                continue
+                next(pbar)
+                return None
 
             moving_region, moving_processed, moving_bbox_xywh = self.process_roi(img=moving_img,
                                                                             slide_obj=moving_slide,
                                                                             xy=bbox_xy,
-                                                                            processor_cls=self.img_processor_cls,
-                                                                            processor_kwargs=self.img_processor_kwargs,
+                                                                            processor_cls=moving_processing_cls,
+                                                                            processor_kwargs=moving_processing_kwargs,
                                                                             apply_mask=False,
                                                                             scale=1.0
                                                                             )
@@ -210,8 +254,8 @@ class MicroRigidRegistrar(object):
             fixed_region, fixed_processed, fixed_bbox_xywh = self.process_roi(img=fixed_img,
                                                                             slide_obj=fixed_slide,
                                                                             xy=bbox_xy,
-                                                                            processor_cls=self.img_processor_cls,
-                                                                            processor_kwargs=self.img_processor_kwargs,
+                                                                            processor_cls=fixed_processing_cls,
+                                                                            processor_kwargs=fixed_processing_kwargs,
                                                                             apply_mask=False,
                                                                             scale=1.0
                                                                             )
@@ -237,17 +281,18 @@ class MicroRigidRegistrar(object):
                 matched_fixed_desc = filtered_match_info12.matched_desc2
 
                 if filtered_matched_moving_xy.shape[0] < 3:
-                    continue
+                    return None
 
                 filtered_matched_moving_xy, filtered_matched_fixed_xy, tukey_idx = feature_matcher.filter_matches_tukey(filtered_matched_moving_xy, filtered_matched_fixed_xy, tform=transform.EuclideanTransform())
                 matched_moving_desc = matched_moving_desc[tukey_idx, :]
                 matched_fixed_desc = matched_fixed_desc[tukey_idx, :]
                 if filtered_matched_moving_xy.shape[0] < 3:
-                    continue
+                    return None
 
             except Exception as e:
                 print(e)
-                continue
+                next(pbar)
+                return None
 
             matched_moving_xy = filtered_matched_moving_xy.copy()
             matched_fixed_xy = filtered_matched_fixed_xy.copy()
@@ -256,11 +301,16 @@ class MicroRigidRegistrar(object):
             matched_moving_xy += moving_bbox_xywh[0:2]
             matched_fixed_xy += fixed_bbox_xywh[0:2]
 
-            high_rez_moving_match_xy_list.append(matched_moving_xy)
-            high_rez_moving_match_desc_list.append(matched_moving_desc)
+            high_rez_moving_match_xy_list[bbox_id] = matched_moving_xy
+            # high_rez_moving_match_xy_list.append(matched_moving_xy)
+            # high_rez_moving_match_desc_list.append(matched_moving_desc)
 
-            high_rez_fixed_match_xy_list.append(matched_fixed_xy)
-            high_rez_fixed_match_desc_list.append(matched_fixed_desc)
+            high_rez_fixed_match_xy_list[bbox_id] = matched_fixed_xy
+            next(pbar)
+
+            # pbar.update(1)
+            # high_rez_fixed_match_xy_list.append(matched_fixed_xy)
+            # high_rez_fixed_match_desc_list.append(matched_fixed_desc)
 
             # Draw matches in tile #
             # print("saving matches image")
@@ -268,7 +318,24 @@ class MicroRigidRegistrar(object):
             #                              dst_img=fixed_region,  kp2_xy=filtered_matched_fixed_xy,
             #                              rad=3, alignment='horizontal')
 
+            # from skimage import io
+            # import os
             # io.imsave(os.path.join(self.val_obj.dst_dir, f"{self.val_obj.name}_{bbox_id}_{moving_slide.name}_to_{fixed_slide.name}.png"), match_img)
+
+
+        # start = time()
+        n_cpu = multiprocessing.cpu_count() - 1
+        with parallel_backend("threading", n_jobs=n_cpu):
+            Parallel()(delayed(_match_tile)(i) for i in range(n_tiles))
+
+        pbar.close()
+        # stop = time()
+        # elapsed = stop - start
+        # print("multithreading took", *valtils.get_elapsed_time_string(elapsed)) # 46.393 second
+
+        # Remove tiles that didn't have any matches
+        high_rez_moving_match_xy_list = [xy for xy in high_rez_moving_match_xy_list if xy is not None]
+        high_rez_fixed_match_xy_list = [xy for xy in high_rez_fixed_match_xy_list if xy is not None]
 
         high_rez_moving_match_xy = np.vstack(high_rez_moving_match_xy_list)
         high_rez_fixed_match_xy = np.vstack(high_rez_fixed_match_xy_list)
