@@ -155,8 +155,8 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, rad=3, alignment='horizontal'
         circ_rc_1 = draw.ellipse(*xy1[::-1], rad, rad, shape=feature_img.shape)
         circ_rc_2 = draw.ellipse(*xy2[::-1], rad, rad, shape=feature_img.shape)
         line_rc = np.array(draw.line_aa(*np.round(xy1[::-1]).astype(int), *np.round(xy2[::-1]).astype(int)))
-        line_rc[0] = np.clip(line_rc[0], 0, feature_img.shape[0]).astype(int)
-        line_rc[1] = np.clip(line_rc[1], 0, feature_img.shape[1]).astype(int)
+        line_rc[0] = np.clip(line_rc[0], 0, feature_img.shape[0]-1).astype(int)
+        line_rc[1] = np.clip(line_rc[1], 0, feature_img.shape[1]-1).astype(int)
 
         feature_img[line_rc[0].astype(int), line_rc[1].astype(int)] = pt_color*line_rc[2][..., np.newaxis]
         feature_img[circ_rc_1] = pt_color

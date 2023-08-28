@@ -1,6 +1,7 @@
 import multiprocessing
 from scipy.optimize import fmin_l_bfgs_b
 from scipy import ndimage, spatial
+import shapely
 from shapely.ops import unary_union
 from shapely.strtree import STRtree
 from shapely.geometry import Polygon, MultiPolygon
@@ -17,7 +18,6 @@ import warnings
 import pyvips
 from interpolation.splines import UCGrid, filter_cubic, eval_cubic
 import SimpleITK as sitk
-import shapely
 from colorama import Fore
 import os
 import re
@@ -2706,6 +2706,54 @@ def bbox2xy(xywh):
     bbox_xy = np.array([tl, tr, br, bl])
 
     return bbox_xy
+
+
+def get_xy_inside_mask(xy, mask):
+    """Get indices of `xy` that are inside `mask`
+
+    Parameters
+    ----------
+    xy : ndarray
+        [N, 2] array of coordinates to check
+
+    mask : ndarray
+        Binary image where 255 is considered foreground
+
+
+    Returns
+    -------
+    keep_idx : ndarray
+        Indices of `xy` that are inside of `mask`
+    """
+
+    mask_cnt, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    mask_polys = [shapely.geometry.Polygon(np.squeeze(cnt)) for cnt in mask_cnt if len(cnt) > 2]
+    in_mask = np.zeros(xy.shape[0])
+    for i, pt_xy in enumerate(xy):
+        pt = shapely.geometry.Point(pt_xy)
+        for poly in mask_polys:
+            if poly.within(pt) or poly.contains(pt):
+                in_mask[i] = 1
+                break
+
+    keep_idx = np.where(in_mask > 0)[0]
+
+
+    # draw_img = np.dstack([mask]*3)
+    # from skimage import draw
+    # for i in range(xy.shape[0]):
+    #     circ_pos = draw.disk(xy[i][::-1], radius=3)
+    #     if i in keep_idx:
+    #         clr = [0, 255, 0]
+    #     else:
+    #         clr = [255, 0, 0]
+
+    #     draw_img[circ_pos] = clr
+
+    # io.imsave(os.path.join(registrar.dst_dir, f"{slide_obj.name}_pt.png"), draw_img)
+
+
+    return keep_idx
 
 
 def calc_total_error(error):

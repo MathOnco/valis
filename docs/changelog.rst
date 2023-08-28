@@ -1,9 +1,14 @@
 Change Log
 **********
 
-Version 1.0.0rc16 (May 10, 2023)
+Version 1.0.0 (August, 2023)
 -------------------------------------
+#. Added option for high resolution rigid registration using the :code:`micro_rigid_registrar.MicroRigidRegistrar` class. To use this option, pass an uninstantiated :code:`micro_rigid_registrar.MicroRigidRegistrar` to :code:`micro_rigid_registrar_cls` when initializing the :code:`Valis` object. This class refines the rigid registration by detecting and matching features in higher resolution images warped using the initial rigid transforms. This should result in more accurate rigid registration, error estimates, and hopefully fewer unwanted non-rigid deformations.
 #. Added support for SuperPoint and SuperGlue feature detection and matching
+#. Masks not applied to images for rigid registration. Instead, the masks are used to filter the matches (i.e. keep only matches inside masks).
+#. Added support to extract different Z and T using the :code:`slide_io.BioFormatsSlideReader`.
+#. Non-rigid masks found by combining the intensities of the rigidly aligned images, as opposed to combining the rigid masks. Testing indicates these masks fit more tightly around the tissue, which will translates to having higher resolution images being used for non-rigid registration.
+#. Added the :code:`preprocessing.StainFlattener` class, which can be used with brightfield images.
 #. Fixed issue converting big-endian WSI to :code:`pyvips.Image` (reported on `image.sc <https://forum.image.sc/t/problems-registering-fluorescence-ome-tiffs-using-valis/82685>_`)
 
 

@@ -3,6 +3,7 @@ Collection of pre-processing methods for aligning images
 """
 from scipy.interpolate import Akima1DInterpolator
 from skimage import exposure, filters, measure, morphology, restoration
+from sklearn.cluster import estimate_bandwidth, MiniBatchKMeans, MeanShift
 import numpy as np
 import cv2
 from skimage import color as skcolor
@@ -198,6 +199,133 @@ class BgColorDistance(ImageProcesser):
         processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 1))
         processed_img = exposure.equalize_adapthist(processed_img)
         processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 255)).astype(np.uint8)
+
+        return processed_img
+
+class StainFlattener(ImageProcesser):
+    def __init__(self, image, src_f, level, series, *args, **kwargs):
+        super().__init__(image=image, src_f=src_f, level=level,
+                         series=series, *args, **kwargs)
+
+
+    def create_mask(self):
+
+        processed = self.process_image(adaptive_eq=True)
+
+        # Want to ignore black background
+        to_thresh_mask = 255*(np.all(self.image > 25, axis=2)).astype(np.uint8)
+
+        low_t, high_t = filters.threshold_multiotsu(processed[to_thresh_mask > 0])
+        tissue_mask = 255*filters.apply_hysteresis_threshold(processed, low_t, high_t).astype(np.uint8)
+
+        kernel_size=3
+        tissue_mask = mask2contours(tissue_mask, kernel_size)
+
+        return tissue_mask
+
+    def process_image_with_mask(self, n_stains=100, q=95):
+        fg_mask, _ = create_tissue_mask_from_rgb(self.image)
+        mean_bg_rgb = np.mean(self.image[fg_mask == 0], axis=0)
+
+        # Get stain vectors
+        fg_rgb = self.image[fg_mask > 0]
+        fg_to_cluster = rgb2jab(fg_rgb)
+
+        if n_stains > 0:
+            clusterer = MiniBatchKMeans(n_clusters=n_stains,
+                                        reassignment_ratio=0,
+                                        n_init=3)
+        else:
+            bandwidth = estimate_bandwidth(fg_to_cluster, quantile=0.2, n_samples=500)
+            clusterer = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+            # clusterer = MiniBatchKMeans(n_init="auto", reassignment_ratio=0)
+
+        clusterer.fit(fg_to_cluster)
+
+        stain_rgb = jab2rgb(clusterer.cluster_centers_)
+        stain_rgb = np.clip(stain_rgb, 0, 1)
+
+        stain_rgb = np.vstack([255*stain_rgb, mean_bg_rgb])
+        D = stainmat2decon(stain_rgb)
+        deconvolved = deconvolve_img(self.image, D)
+
+        eps = np.finfo("float").eps
+        d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
+        dmax = np.percentile(d_flat, q, axis=0)
+        for i in range(deconvolved.shape[2]):
+            c_dmax  = dmax[i] + eps
+            deconvolved[..., i] = np.clip(deconvolved[..., i], 0, c_dmax)
+            deconvolved[..., i] /= c_dmax
+
+        summary_img = deconvolved.mean(axis=2)
+
+        return summary_img
+
+    def process_image_all(self, n_stains=100, q=95):
+        img_to_cluster = rgb2jch(self.image)
+        if n_stains > 0:
+            clusterer = MiniBatchKMeans(n_clusters=n_stains,
+                                        reassignment_ratio=0,
+                                        n_init=3)
+        else:
+            bandwidth = estimate_bandwidth(img_to_cluster, quantile=0.2, n_samples=500)
+            clusterer = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+            # clusterer = MiniBatchKMeans(n_init="auto", reassignment_ratio=0)
+
+
+        clusterer.fit(img_to_cluster.reshape(-1, img_to_cluster.shape[2]))
+        centers = np.clip(clusterer.cluster_centers_, -1, 1)
+        stain_rgb = jab2rgb(centers)
+
+        stain_rgb = 255*stain_rgb
+        stain_rgb = np.clip(stain_rgb, 0, 255)
+        stain_rgb = np.unique(stain_rgb, axis=0)
+        D = stainmat2decon(stain_rgb)
+        deconvolved = deconvolve_img(self.image, D)
+
+        d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
+        dmax = np.percentile(d_flat, q, axis=0) + np.finfo("float").eps
+        for i in range(deconvolved.shape[2]):
+
+            deconvolved[..., i] = np.clip(deconvolved[..., i], 0, dmax[i])
+            deconvolved[..., i] /= dmax[i]
+
+        summary_img = deconvolved.mean(axis=2)
+
+        return summary_img
+
+    def process_image(self, n_stains=100, q=95, with_mask=True, adaptive_eq=True):
+        if with_mask:
+            processed_img = self.process_image_with_mask(n_stains=n_stains, q=q)
+        else:
+            processed_img = self.process_image_all(n_stains=n_stains, q=q)
+
+        if adaptive_eq:
+            processed_img = exposure.equalize_adapthist(processed_img)
+
+        processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 255)).astype(np.uint8)
+
+        return processed_img
+
+
+class Gray(ImageProcesser):
+    """Get luminosity of an RGB image
+
+    """
+
+    def __init__(self, image, src_f, level, series, *args, **kwargs):
+        super().__init__(image=image, src_f=src_f, level=level,
+                         series=series, *args, **kwargs)
+
+
+    def create_mask(self):
+        _, tissue_mask = create_tissue_mask_from_rgb(self.image)
+
+        return tissue_mask
+
+    def process_image(self,  *args, **kwaargs):
+        g = skcolor.rgb2gray(self.image)
+        processed_img = exposure.rescale_intensity(g, in_range="image", out_range=(0, 255)).astype(np.uint8)
 
         return processed_img
 

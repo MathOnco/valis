@@ -1316,7 +1316,7 @@ class SuperGlueMatcher(Matcher):
 
     def _match_images(self, img1=None, desc1=None, kp1_xy=None, img2=None, desc2=None, kp2_xy=None, additional_filtering_kwargs=None):
 
-        inp1, kp1_xy_inp, desc1_inp, scores1 = self.prep_data(img1, kp1_xy)
+        inp1, kp1_xy_inp, desc1_inp, scores1 = self.prep_data(img=img1, kp_xy=kp1_xy)
         inp2, kp2_xy_inp, desc2_inp, scores2 = self.prep_data(img2, kp2_xy)
 
         data = {"image0":inp1,

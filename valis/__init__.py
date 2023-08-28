@@ -13,6 +13,7 @@ from . import slide_tools
 from . import valtils
 from . import viz
 from . import warp_tools
+from . import micro_rigid_registrar
 
 __all__ = ["affine_optimizer",
            "feature_detectors",
@@ -26,5 +27,6 @@ __all__ = ["affine_optimizer",
            "slide_tools",
            "valtils",
            "viz",
-           "warp_tools"
+           "warp_tools",
+           "micro_rigid_registrar"
            ]
