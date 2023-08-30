@@ -889,7 +889,7 @@ def norm_img_stats(img, target_stats, mask=None):
     target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots]).astype(float)
 
     # Add epsilon to avoid duplicate values
-    eps = 10*np.finfo(float).resolution
+    eps = 100*np.finfo(float).resolution
     eps_array = np.arange(len(src_stats_flat)) * eps
     src_stats_flat = src_stats_flat + eps_array
     target_stats_flat = target_stats_flat + eps_array
