@@ -10,7 +10,7 @@ VALIS is available as a Docker image and can be downloaded from `DockerHub <http
 
 .. code-block:: bash
   
-    $ docker run --memory=20g  -v "$HOME:$HOME" valis-wsi python3 full/path/to/register.py -src_dir full/path/to/images_to_align -dst_dir full/path/to/where_to_save_results
+    $ docker run --memory=20g  -v "$HOME:$HOME" cdgatenbee/valis-wsi python3 full/path/to/register.py -src_dir full/path/to/images_to_align -dst_dir full/path/to/where_to_save_results
 
 
 .. important::
