@@ -905,7 +905,7 @@ class Slide(object):
                             channel_names=None,
                             colormap=None,
                             interp_method="bicubic",
-                            tile_wh=None, compression="lzw"):
+                            tile_wh=None, compression="lzw", Q=100):
 
         """Warp and save a slide
 
@@ -955,6 +955,9 @@ class Slide(object):
         compression : str
             Compression method used to save ome.tiff . Default is lzw, but can also
             be jpeg or jp2k. See pyips for more details.
+
+        Q : int
+            Q factor for lossy compression
 
         """
 
@@ -1006,7 +1009,7 @@ class Slide(object):
                     tile_wh = min(out_xyczt[0:2])
 
         slide_io.save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
-                               tile_wh=tile_wh, compression=compression)
+                               tile_wh=tile_wh, compression=compression, Q=Q)
 
     def warp_xy(self, xy, M=None, slide_level=0, pt_level=0,
                 non_rigid=True, crop=True):
@@ -4467,7 +4470,7 @@ class Valis(object):
                               crop=True, channel_name_dict=None,
                               src_f_list=None, colormap=None,
                               drop_duplicates=True, tile_wh=None,
-                              interp_method="bicubic", compression="lzw"):
+                              interp_method="bicubic", compression="lzw", Q=100):
 
         """Warp and merge registered slides
 
@@ -4520,6 +4523,9 @@ class Valis(object):
         compression : str
             Compression method used to save ome.tiff . Default is lzw, but can also
             be jpeg or jp2k. See pyips for more details.
+
+        Q : int
+            Q factor for lossy compression
 
         Returns
         -------
@@ -4619,7 +4625,7 @@ class Valis(object):
 
             slide_io.save_ome_tiff(merged_slide, dst_f=dst_f,
                                    ome_xml=ome_xml,tile_wh=tile_wh,
-                                   compression=compression)
+                                   compression=compression, Q=Q)
 
         return merged_slide, all_channel_names, ome_xml
 

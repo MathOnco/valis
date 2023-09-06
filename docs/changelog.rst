@@ -9,6 +9,7 @@ Version 1.0.0 (August, 2023)
 #. Added support to extract different Z and T using the :code:`slide_io.BioFormatsSlideReader`.
 #. Non-rigid masks found by combining the intensities of the rigidly aligned images, as opposed to combining the rigid masks. Testing indicates these masks fit more tightly around the tissue, which will translates to having higher resolution images being used for non-rigid registration.
 #. Added the :code:`preprocessing.StainFlattener` class, which can be used with brightfield images.
+#. Added option for lossy compression by setting the :code:`Q` parameter using functions that save slides. Confirmed that RGB images saved using lossy JPEG and JPEG2000 compression open as expected in QuPath. Do note that float images saved using these compression methods will get cast to uint8 images. Addresses request made in `github issue 60 <https://github.com/MathOnco/valis/issues/60>`_.
 #. Fixed issue converting big-endian WSI to :code:`pyvips.Image` (reported on `image.sc <https://forum.image.sc/t/problems-registering-fluorescence-ome-tiffs-using-valis/82685>_`)
 
 

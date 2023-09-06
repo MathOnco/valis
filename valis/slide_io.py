@@ -620,7 +620,7 @@ class SlideReader(object):
 
         """
 
-        self.src_f = src_f
+        self.src_f = str(src_f)
         self.metadata = None
         self.series = 0
 
@@ -2776,6 +2776,7 @@ def get_slide_reader(src_f, series=None):
 
     init_jvm()
 
+    src_f = str(src_f)
     f_extension = slide_tools.get_slide_extension(src_f)
     what_img = imghdr.what(src_f)
     can_use_openslide = check_to_use_openslide(src_f)
@@ -3144,7 +3145,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                         aligned_slide_shape_rc, M=None, dxdy=None,
                         level=0, series=None, interp_method="bicubic",
                         bbox_xywh=None, bg_color=None, colormap=None,
-                        tile_wh=None, compression="lzw"):
+                        tile_wh=None, compression="lzw", Q=100):
 
     """ Warp and save a slide
 
@@ -3208,6 +3209,8 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
         Compression method used to save ome.tiff . Default is lzw, but can also
         be jpeg or jp2k. See https://libvips.github.io/pyvips/enums.html#pyvips.enums.ForeignTiffCompression for more details.
 
+    Q : int
+        Q factor for lossy compression
     """
 
     warped_slide = slide_tools.warp_slide(src_f=src_f,
@@ -3256,10 +3259,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                 tile_wh = min(out_xyczt[0:2])
 
     save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
-                  tile_wh=tile_wh, compression=compression)
+                  tile_wh=tile_wh, compression=compression, Q=Q)
 
 
-def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
+def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=100):
     """Save an image in the ome.tiff format using pyvips
 
     Parameters
@@ -3279,7 +3282,11 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
         Compression method used to save ome.tiff . Default is lzw, but can also
         be jpeg or jp2k. See pyips for more details.
 
+    Q : int
+        Q factor for lossy compression
+
     """
+    compression = compression.lower()
 
     dst_dir = os.path.split(dst_f)[0]
     pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
@@ -3288,9 +3295,15 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
         img = slide_tools.numpy2vips(img)
 
     if img.format in ["float", "double"] and compression != "lzw":
-        msg = f"Image has type {img.format} but compression method {compression} will convert image to uint8. To avoid this, compression is being changed to 'lzw"
-        compression = "lzw"
+        msg = f"Image has type {img.format} but compression method {compression} will convert image to uint8. To avoid this, change compression 'lzw' "
         valtils.print_warning(msg)
+        # compression = "lzw"
+        if compression == "jp2k":
+            compression = "jpeg"
+            msg = f"Float images can't be saved using {compression} compression. Please change to another method, such as 'jpeg' "
+            valtils.print_warning(msg)
+
+            return None
 
     dst_f_extension = slide_tools.get_slide_extension(dst_f)
     if dst_f_extension != ".ome.tiff":
@@ -3382,9 +3395,13 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
         tile_wh = 16
 
     print("")
+
+    lossless = Q == 100
+    rgbjpeg = compression in ["jp2k", "jpeg"] and img.interpretation == "srgb"
     img.tiffsave(dst_f, compression=compression, tile=True,
                  tile_width=tile_wh, tile_height=tile_wh,
-                 pyramid=True, subifd=True, bigtiff=True, lossless=True)
+                 pyramid=True, subifd=True, bigtiff=True,
+                 lossless=lossless, Q=Q, rgbjpeg=rgbjpeg)
 
     # Print total time to completion #
     toc = time.time()
@@ -3400,7 +3417,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
 
 @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
-                        colormap=None, tile_wh=None, compression="lzw"):
+                        colormap=None, tile_wh=None, compression="lzw", Q=100):
     """Convert an image to an ome.tiff image
 
     Saves a new copy of the image as a tiled pyramid ome.tiff with valid ome-xml.
@@ -3438,6 +3455,9 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     compression : str
         Compression method used to save ome.tiff . Default is lzw, but can also
         be jpeg or jp2k. See pyips for more details.
+
+    Q : int
+        Q factor for lossy compression
 
     """
 
@@ -3480,4 +3500,4 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     if tile_wh > MAX_TILE_SIZE:
             tile_wh = MAX_TILE_SIZE
 
-    save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression)
+    save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q)
