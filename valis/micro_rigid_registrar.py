@@ -290,7 +290,7 @@ class MicroRigidRegistrar(object):
                     return None
 
             except Exception as e:
-                print(e)
+                # print(e)
                 next(pbar)
                 return None
 

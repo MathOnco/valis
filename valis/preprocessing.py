@@ -317,6 +317,8 @@ class StainFlattener(ImageProcesser):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
 
+        self.n_colors = -1
+
 
     def create_mask(self):
 
@@ -333,7 +335,7 @@ class StainFlattener(ImageProcesser):
 
         return tissue_mask
 
-    def process_image_with_mask(self, n_colors=100, q=95):
+    def process_image_with_mask(self, n_colors=100, q=95, max_colors=100):
         fg_mask, _ = create_tissue_mask_from_rgb(self.image)
         mean_bg_rgb = np.mean(self.image[fg_mask == 0], axis=0)
 
@@ -345,13 +347,16 @@ class StainFlattener(ImageProcesser):
         x = ss.fit_transform(fg_to_cluster)
 
         if n_colors > 0:
+            self.n_colors = n_colors
             clusterer = MiniBatchKMeans(n_clusters=n_colors,
                                         reassignment_ratio=0,
                                         n_init=3)
             clusterer.fit(x)
         else:
-            k, clusterer = estimate_k(x, max_k=100)
-            # print(f"estimated {k} colors")
+            k, clusterer = estimate_k(x, max_k=max_colors)
+            self.n_colors = k
+            print(f"estimated {k} colors")
+        self.clusterer = clusterer
 
         stain_rgb = jab2rgb(ss.inverse_transform(clusterer.cluster_centers_))
         stain_rgb = np.clip(stain_rgb, 0, 1)
@@ -372,20 +377,23 @@ class StainFlattener(ImageProcesser):
 
         return summary_img
 
-    def process_image_all(self, n_colors=100, q=95):
+    def process_image_all(self, n_colors=100, q=95, max_colors=100):
         img_to_cluster = rgb2jab(self.image)
 
         ss = StandardScaler()
         x = ss.fit_transform(img_to_cluster.reshape(-1, img_to_cluster.shape[2]))
         if n_colors > 0:
+            self.n_colors = n_colors
             clusterer = MiniBatchKMeans(n_clusters=n_colors,
                                         reassignment_ratio=0,
                                         n_init=3)
             clusterer.fit(x)
         else:
-            k, clusterer = estimate_k(x, max_k=100)
-            # print(f"estimated {k} colors")
+            k, clusterer = estimate_k(x, max_k=max_colors)
+            self.n_colors = k
+            print(f"estimated {k} colors")
 
+        self.clusterer = clusterer
         stain_rgb = jab2rgb(ss.inverse_transform(clusterer.cluster_centers_))
         stain_rgb = np.clip(stain_rgb, 0, 1)
 
@@ -406,18 +414,21 @@ class StainFlattener(ImageProcesser):
 
         return summary_img
 
-    def process_image(self, n_colors=100, q=95, with_mask=True, adaptive_eq=True):
+    def process_image(self, n_colors=100, q=95, with_mask=True, adaptive_eq=True, max_colors=100):
         """
         Parameters
         ----------
         n_colors : int
             Number of colors to use for deconvolution. If `n_stains = -1`, then the number
             of colors will be estimated using the K-means "elbow method".
+
+        max_colors : int
+            If `n_colors = -1`, this value sets the maximum number of color clusters
         """
         if with_mask:
-            processed_img = self.process_image_with_mask(n_colors=n_colors, q=q)
+            processed_img = self.process_image_with_mask(n_colors=n_colors, q=q, max_colors=max_colors)
         else:
-            processed_img = self.process_image_all(n_colors=n_colors, q=q)
+            processed_img = self.process_image_all(n_colors=n_colors, q=q, max_colors=max_colors)
 
         if adaptive_eq:
             processed_img = exposure.equalize_adapthist(processed_img)
@@ -770,10 +781,10 @@ def rgb2od(rgb_img):
 
 
 def stainmat2decon(stain_mat_srgb255):
-
     od_mat = rgb2od(stain_mat_srgb255)
 
-    M = od_mat / np.linalg.norm(od_mat, axis=1, keepdims=True)
+    eps = np.finfo("float").eps
+    M = od_mat / np.linalg.norm(od_mat+eps, axis=1, keepdims=True)
     M[np.isnan(M)] = 0
     D = np.linalg.pinv(M)
 

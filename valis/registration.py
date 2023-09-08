@@ -4096,6 +4096,7 @@ class Valis(object):
 
             data_f_out = os.path.join(self.data_dir, self.name + "_summary.csv")
             error_df.to_csv(data_f_out, index=False)
+
         except Exception as e:
             valtils.print_warning(e)
             print(traceback.format_exc())
