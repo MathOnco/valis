@@ -10,6 +10,7 @@ from collections import defaultdict
 
 color_init()
 
+
 def print_warning(msg, warning_type=UserWarning, rgb=Fore.RED):
     """Print warning message with color
     """

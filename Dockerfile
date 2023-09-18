@@ -1,5 +1,4 @@
-FROM ubuntu:kinetic as builder
-# Using kinetic to get Python 3.10, used by Poetry
+FROM ubuntu:jammy as builder
 
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
@@ -19,13 +18,12 @@ RUN apt-get update \
 		wget \
 		ca-certificates \
 		git-all \
-		cmake
-
-
-# we need meson for libvips build
-RUN pip3 install meson
+		cmake \
+		libjxr-dev
 
 # libvips dependencies
+# we need meson for libvips build
+RUN pip3 install meson
 RUN apt-get install --no-install-recommends -y \
 	glib-2.0-dev \
 	libexpat-dev \
@@ -42,11 +40,13 @@ RUN apt-get install --no-install-recommends -y \
 
 
 RUN update-ca-certificates
+
 # Install libvips from source to get latest version
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
 
-ARG VIPS_VERSION=8.14.1
+# ARG VIPS_VERSION=8.14.1
+ARG VIPS_VERSION=8.14.4
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 
 
@@ -63,30 +63,32 @@ RUN rm vips-${VIPS_VERSION}.tar.xz
 RUN rm -r vips-${VIPS_VERSION}
 
 
-
 # Install python packages using poetry
 COPY . .
 
 RUN pip3 install --upgrade pip
-RUN pip3 install poetry && poetry config virtualenvs.in-project true
+# RUN pip3 install poetry && poetry config virtualenvs.in-project true
+RUN pip3 install poetry>=1.6.1
+RUN poetry config virtualenvs.in-project true
 
-
-RUN pip3 install poetry
-RUN poetry remove aicspylibczi
+# RUN pip3 install poetry
+# RUN poetry remove aicspylibczi
+# Will install some packages with Git, so update config
+RUN git config --global http.sslVerify false
 RUN poetry install --only main
 
 # Set path to use .venv Python
 ENV PATH="${WKDIR}/.venv/bin:$PATH"
 
 # Install python packages that can't be installed with poetry/pip (pep517)
-RUN . .venv/bin/activate
-ARG CZI_DIR=./aicspylibczi
-RUN git config --global http.sslVerify false
-RUN git clone https://github.com/AllenCellModeling/aicspylibczi.git ${CZI_DIR} --recurse-submodules
-WORKDIR ${CZI_DIR}
-RUN pip install -e .[dev] # for development (-e means editable so changes take effect when made)
+# RUN . .venv/bin/activate
+# ARG CZI_DIR=./aicspylibczi
+# RUN git config --global http.sslVerify false
+# RUN git clone https://github.com/AllenCellModeling/aicspylibczi.git ${CZI_DIR} --recurse-submodules
+# WORKDIR ${CZI_DIR}
+# RUN pip install -e .[dev] # for development (-e means editable so changes take effect when made)
 
-WORKDIR ${WKDIR}
+# WORKDIR ${WKDIR}
 
 
 # Install bioformats.jar in valis
@@ -103,7 +105,7 @@ RUN  apt-get remove -y wget build-essential ninja-build && \
 
 
 # Copy over only what is needed to run, but not build, the package.
-FROM ubuntu:kinetic
+FROM ubuntu:jammy
 
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
@@ -132,8 +134,9 @@ RUN apt-get update \
 	liborc-dev \
 	libgirepository1.0-dev \
 	libopenslide-dev \
-	libjxr-dev
+	libjxr-dev \
+	openjdk-11-jre
 
 # Install other non-Python dependencies
-RUN apt-get install -y \
-    openjdk-11-jre
+# RUN apt-get install -y \
+    # openjdk-11-jre

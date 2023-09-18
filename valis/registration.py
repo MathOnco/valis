@@ -3101,7 +3101,7 @@ class Valis(object):
         # slide_idx, slide_names = list(zip(*[[slide_obj.stack_idx, slide_obj.name] for slide_obj in self.slide_dict.values()]))
         # slide_order = np.argsort(slide_idx) # sorts ascending
         # slide_list = [self.slide_dict[slide_names[i]] for i in slide_order]
-        # for moving_idx, fixed_idx in self.iter_order:
+        # for moving_idx, fixed_idx in micro_rigid_registar.iter_order:
         #     moving_slide = slide_list[moving_idx]
         #     fixed_slide = slide_list[fixed_idx]
 
@@ -3111,7 +3111,7 @@ class Valis(object):
         #     all_matches_img = viz.draw_matches(src_img=moving_draw_img, kp1_xy=moving_slide.xy_matched_to_prev,
         #                                        dst_img=fixed_draw_img,  kp2_xy=moving_slide.xy_in_prev,
         #                                        rad=3, alignment='horizontal')
-        #     matches_f_out = os.path.join(self.dst_dir, f"{self.val_obj.name}_{moving_slide.name}_to_{fixed_slide.name}_micro_rigid_matches.png")
+        #     matches_f_out = os.path.join(self.dst_dir, f"{self.name}_{moving_slide.name}_to_{fixed_slide.name}_micro_rigid_matches.png")
         #     warp_tools.save_img(matches_f_out, all_matches_img)
 
 
