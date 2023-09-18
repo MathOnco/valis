@@ -32,9 +32,24 @@ shapely = "^2.0.0"
 simpleitk = "^2.2.1"
 tqdm = "^4.64.1"
 weightedstats = "^0.4.1"
-aicspylibczi = "^3.1.2"
-torch = "^2.0.1"
+pqdm = "^0.2.0"
+torch = [{version = "^2.0.1", markers = "platform_system == 'macos'", source="PyPI"},
+         {version = "^2.0.1", markers = "platform_system == 'linux'", source="torchcpu"}]
+aicspylibczi = {git = "https://github.com/AllenCellModeling/aicspylibczi.git"}
+
 
 [build-system]
 requires = ["poetry-core", "setuptools>=57.0.0", "Cython>=0.29.27"]
 build-backend = "poetry.core.masonry.api"
+
+
+[[tool.poetry.source]]
+name = "torchcpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "supplemental"
+
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+

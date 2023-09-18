@@ -10,7 +10,7 @@ from . import feature_detectors
 from . import preprocessing
 # from . import viz
 from . import warp_tools
-
+from pqdm.threads import pqdm
 
 ROI_MASK = "mask"
 ROI_MATCHES = "matches"
@@ -228,8 +228,6 @@ class MicroRigidRegistrar(object):
         moving_processing_cls, moving_processing_kwargs = processor_dict[moving_slide.name]
         fixed_processing_cls, fixed_processing_kwargs = processor_dict[moving_slide.name]
 
-        pbar = iter(tqdm(range(n_tiles)))
-
         def _match_tile(bbox_id):
             bbox_xy = bbox_tiles[bbox_id]
 
@@ -239,7 +237,7 @@ class MicroRigidRegistrar(object):
             region_xywh = warp_tools.xy2bbox(bbox_xy)
             region_mask = slide_mask.extract_area(*region_xywh)
             if region_mask.max() == 0:
-                next(pbar)
+
                 return None
 
             moving_region, moving_processed, moving_bbox_xywh = self.process_roi(img=moving_img,
@@ -290,8 +288,7 @@ class MicroRigidRegistrar(object):
                     return None
 
             except Exception as e:
-                # print(e)
-                next(pbar)
+                print(e)
                 return None
 
             matched_moving_xy = filtered_matched_moving_xy.copy()
@@ -306,11 +303,9 @@ class MicroRigidRegistrar(object):
             # high_rez_moving_match_desc_list.append(matched_moving_desc)
 
             high_rez_fixed_match_xy_list[bbox_id] = matched_fixed_xy
-            next(pbar)
 
-            # pbar.update(1)
-            # high_rez_fixed_match_xy_list.append(matched_fixed_xy)
-            # high_rez_fixed_match_desc_list.append(matched_fixed_desc)
+            # _update_bar()
+            # next(pbar)
 
             # Draw matches in tile #
             # print("saving matches image")
@@ -325,12 +320,11 @@ class MicroRigidRegistrar(object):
 
         # start = time()
         n_cpu = multiprocessing.cpu_count() - 1
-        with parallel_backend("threading", n_jobs=n_cpu):
-            Parallel()(delayed(_match_tile)(i) for i in range(n_tiles))
+        res = pqdm(range(n_tiles), _match_tile, n_jobs=n_cpu)
 
-        pbar.close()
-        # stop = time()
-        # elapsed = stop - start
+        # with parallel_backend("threading", n_jobs=n_cpu):
+        #     Parallel()(delayed(_match_tile)(i) for i in range(n_tiles))
+
         # print("multithreading took", *valtils.get_elapsed_time_string(elapsed)) # 46.393 second
 
         # Remove tiles that didn't have any matches
