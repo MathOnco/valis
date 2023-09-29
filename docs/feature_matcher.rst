@@ -19,3 +19,13 @@ Matcher
 -------
 .. autoclass:: valis.feature_matcher::Matcher
     :members: __init__, match_images
+
+SuperPointAndGlue
+------------------
+.. autoclass:: valis.feature_matcher::SuperPointAndGlue
+    :members: __init__, match_images
+
+SuperGlueMatcher
+------------------
+.. autoclass:: valis.feature_matcher::SuperGlueMatcher
+    :members: __init__, match_images

@@ -23,6 +23,7 @@ Docmentation
    feature_detectors
    feature_matcher
    affine_optimizer
+   micro_rigid_registrar
    non_rigid_registrars
    serial_rigid
    serial_non_rigid

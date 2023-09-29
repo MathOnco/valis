@@ -52,7 +52,6 @@ The next example shows how align each image to a reference image, followed up by
     # Perform micro-registration on higher resolution images, aligning *directly to* the reference image
     registrar.register_micro(max_non_rigid_registration_dim_px=2000, align_to_reference=True)
 
-
 After registration is complete, one can view the results to determine if they are acceptable. In this example, the results are located in  :code:`./slide_registration_example`. Inside this folder will be 6 subfolders:
 
 
@@ -89,6 +88,9 @@ If the results look good, then one can warp and save all of the slides as ome.ti
 
 While the cropping setting can also be set when initializing the :code:`Valis` object, any of the above cropping methods can be used when saving the images.
 
+.. important::
+    By default, images are saved using lossless LZW compression. While this maintains the image's original quality, it may also generate files with very large sizes. One can reduce the file size by setting :code:`compression` to :code:`jpeg` or :code:`jp2k`, and/or control how lossy the compression is by setting :code:`Q` to a value less than :code:`100`. Do note that currently :code:`jpeg` or :code:`jp2k` can only write uint8 images, and so may not be suitable for immunofluorescence (or similar) images that have a different datatype.
+
 .. code-block:: python
 
     # Save all registered slides as ome.tiff
@@ -110,6 +112,42 @@ One can also choose to save individual slides. This is accomplished by accessing
     slide_obj.warp_and_save_slide("out_f.ome.tiff")
 
 Finally, if the non-rigid registration is deemed to have distorted the image too much, one can apply only the rigid transformation by setting :code:`non_rigid=False` in :code:`slide_obj.warp_and_save_slide` or :code:`registrar.warp_and_save_slides`.
+
+
+High resolution registration
+============================
+
+.. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/mico_rigid_reg.png
+
+The default pipeline, which uses low resolution images, can provide high quality results in a short amount of time. However, the results can be sometimes be improved by using higher resolution images, albeit at the cost of much higher computation times. This example shows how to perform registration using higher resolution images for both rigid and non-rigid registration. The :code:`micro_rigid_registrar.MicroRigidRegistrar` is used in the main pipeline to update the rigid registration by finding matches in higher resolution versions of the registered images. Keyword arguments used to initialize :code:`micro_rigid_registrar.MicroRigidRegistrar` can be passed in as the :code:`micro_rigid_registrar_params` argument when initializing the :code:`Valis` object. After the main pipeline is complete, one can also perform the 2nd high-resolution non-rigid registration using :code:`Valis.register_micro`. In this example, we perform the micro-registration using images that are 25% of the full resolution.
+
+.. code-block:: python
+
+    import time
+    import os
+    import numpy as np
+    from valis import registration
+    from valis.micro_rigid_registrar import MicroRigidRegistrar # For high resolution rigid registration
+
+    slide_src_dir = "./example_datasets/ihc"
+    results_dst_dir = "./expected_results/registration_hi_rez"
+    micro_reg_fraction = 0.25 # Fraction full resolution used for non-rigid registration
+
+    # Perform high resolution rigid registration using the MicroRigidRegistrar
+    start = time.time()
+    registrar = registration.Valis(slide_src_dir, results_dst_dir, micro_rigid_registrar_cls=MicroRigidRegistrar)
+    rigid_registrar, non_rigid_registrar, error_df = registrar.register()
+
+    # Calculate what `max_non_rigid_registration_dim_px` needs to be to do non-rigid registration on an image that is 25% full resolution.
+    img_dims = np.array([slide_obj.slide_dimensions_wh[0] for slide_obj in registrar.slide_dict.values()])
+    min_max_size = np.min([np.max(d) for d in img_dims])
+    img_areas = [np.multiply(*d) for d in img_dims]
+    max_img_w, max_img_h = tuple(img_dims[np.argmax(img_areas)])
+    micro_reg_size = np.floor(min_max_size*micro_reg_fraction).astype(int)
+
+    # Perform high resolution non-rigid registration using 25% full resolution
+    micro_reg, micro_error = registrar.register_micro(max_non_rigid_registration_dim_px=micro_reg_size)
+
 
 Create multiplex image from immunofluorescence images
 ======================================================

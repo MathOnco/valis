@@ -1,15 +1,13 @@
 import numpy as np
 from skimage import exposure, transform
-from tqdm import tqdm
-
 import multiprocessing
-from joblib import Parallel, delayed, parallel_backend
+from colorama import Fore
 
 from . import feature_matcher
 from . import feature_detectors
 from . import preprocessing
-# from . import viz
 from . import warp_tools
+from . import valtils
 from pqdm.threads import pqdm
 
 ROI_MASK = "mask"
@@ -209,16 +207,6 @@ class MicroRigidRegistrar(object):
         reg_bbox = warp_tools.xy2bbox(small_reg_bbox*reg_s)
         slide_mask = warp_tools.resize_img(warp_tools.numpy2vips(mask), warp_tools.get_shape(fixed_img)[0:2], interp_method="nearest")
 
-        ## Draw mask on image
-        # small_reg_bbox_xywh = warp_tools.xy2bbox(small_reg_bbox)
-        # mask_draw_img = warp_tools.resize_img(fixed_slide.image, fixed_slide.processed_img.shape[0:2])
-        # mask_draw_img = fixed_slide.warp_img(mask_draw_img, crop=False, non_rigid=False)
-        # bbox_draw_rc = draw.rectangle_perimeter(start=small_reg_bbox_xywh[0:2][::-1], extent=small_reg_bbox_xywh[2:][::-1], shape=mask_draw_img.shape[0:2])
-        # mask_draw_img[bbox_draw_rc[0], bbox_draw_rc[1]] = [0, 255, 0]
-        # io.imsave(os.path.join(self.val_obj.dst_dir, f"{self.val_obj.name}_{moving_slide.name}_to_{fixed_slide.name}_micro_rigid_bbox.png"), mask_draw_img)
-        ###
-
-
         # Collect high rez matches
         bbox_tiles = self.get_tiles(reg_bbox, self.tile_wh)
         n_tiles = len(bbox_tiles)
@@ -299,33 +287,11 @@ class MicroRigidRegistrar(object):
             matched_fixed_xy += fixed_bbox_xywh[0:2]
 
             high_rez_moving_match_xy_list[bbox_id] = matched_moving_xy
-            # high_rez_moving_match_xy_list.append(matched_moving_xy)
-            # high_rez_moving_match_desc_list.append(matched_moving_desc)
-
             high_rez_fixed_match_xy_list[bbox_id] = matched_fixed_xy
 
-            # _update_bar()
-            # next(pbar)
-
-            # Draw matches in tile #
-            # print("saving matches image")
-            # match_img = viz.draw_matches(src_img=moving_region, kp1_xy=filtered_matched_moving_xy,
-            #                              dst_img=fixed_region,  kp2_xy=filtered_matched_fixed_xy,
-            #                              rad=3, alignment='horizontal')
-
-            # from skimage import io
-            # import os
-            # io.imsave(os.path.join(self.val_obj.dst_dir, f"{self.val_obj.name}_{bbox_id}_{moving_slide.name}_to_{fixed_slide.name}.png"), match_img)
-
-
-        # start = time()
+        print(f"Aligning {moving_slide.name} to {fixed_slide.name}. ROI width, height is {reg_bbox[2:]} pixels")
         n_cpu = multiprocessing.cpu_count() - 1
         res = pqdm(range(n_tiles), _match_tile, n_jobs=n_cpu)
-
-        # with parallel_backend("threading", n_jobs=n_cpu):
-        #     Parallel()(delayed(_match_tile)(i) for i in range(n_tiles))
-
-        # print("multithreading took", *valtils.get_elapsed_time_string(elapsed)) # 46.393 second
 
         # Remove tiles that didn't have any matches
         high_rez_moving_match_xy_list = [xy for xy in high_rez_moving_match_xy_list if xy is not None]
@@ -349,8 +315,8 @@ class MicroRigidRegistrar(object):
 
             if len(moving_features_in_mask_idx) > 0 and len(fixed_features_in_mask_idx) > 0:
                 matches_in_masks = np.intersect1d(moving_features_in_mask_idx, fixed_features_in_mask_idx)
-                n_removed = scaled_moving_kp.shape[0] - len(matches_in_masks)
-                print(f"Removed {n_removed} features outside of the micro rigid mask for {moving_slide.name}. Went from {scaled_moving_kp.shape[0]} to {len(matches_in_masks)}")
+                # n_removed = scaled_moving_kp.shape[0] - len(matches_in_masks)
+                # print(f"Removed {n_removed} features outside of the micro rigid mask for {moving_slide.name}. Went from {scaled_moving_kp.shape[0]} to {len(matches_in_masks)}")
                 if len(matches_in_masks) > 0:
                     scaled_moving_kp = scaled_moving_kp[matches_in_masks, :]
                     scaled_fixed_kp = scaled_fixed_kp[matches_in_masks, :]
@@ -385,7 +351,9 @@ class MicroRigidRegistrar(object):
 
         n_old_matches = moving_slide.xy_matched_to_prev.shape[0]
         n_new_matches = matched_moving_in_og.shape[0]
-        # print(f"N Old matches= {n_old_matches}, N new= {n_new_matches}. Old D= {og_d}, new D={new_d}")
+
+        res_msg = f"N low rez matches= {n_old_matches}, N high rez matches = {n_new_matches}. Low rez D= {og_d}, high rez D={new_d}"
+        valtils.print_warning(res_msg, rgb=Fore.GREEN)
         if (n_old_matches <= n_new_matches) and (new_d < og_d):
             print("micro rigid registration improved alignments")
 
@@ -395,6 +363,8 @@ class MicroRigidRegistrar(object):
 
             moving_slide.xy_matched_to_prev_in_bbox = matched_moving_in_og
             moving_slide.xy_in_prev_in_bbox = matched_fixed_in_og
+        else:
+            print("micro rigid registration did not improve alignments. Keeping low rez registration parameters")
 
     def get_tiles(self, bbox_xywh, wh):
 
