@@ -250,9 +250,9 @@ class StainFlattener(ImageProcesser):
         else:
             k, clusterer = estimate_k(x, max_k=max_colors)
             self.n_colors = k
-            print(f"estimated {k} colors")
-        self.clusterer = clusterer
+            # print(f"estimated {k} colors")
 
+        self.clusterer = clusterer
         stain_rgb = jab2rgb(ss.inverse_transform(clusterer.cluster_centers_))
         stain_rgb = np.clip(stain_rgb, 0, 1)
 

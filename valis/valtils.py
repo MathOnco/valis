@@ -53,6 +53,22 @@ def HiddenPrints():
         yield
 
 
+def pad_strings(string_list, side="r"):
+    """
+    side : string
+        Which side to add the padding to
+    """
+    if side.lower().startswith("r"):
+        pad_fxn = "ljust"
+    else:
+        pad_fxn = "rjust"
+
+    max_chr = max([len(x) for x in string_list])
+    padded_strings = [x.__getattribute__(pad_fxn)(max_chr) for x in string_list]
+
+    return padded_strings
+
+
 def get_name(f):
     """
     To get an object's name, remove image type extension from filename

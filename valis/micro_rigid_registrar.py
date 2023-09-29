@@ -2,6 +2,7 @@ import numpy as np
 from skimage import exposure, transform
 import multiprocessing
 from colorama import Fore
+from contextlib import suppress
 
 from . import feature_matcher
 from . import feature_detectors
@@ -291,7 +292,10 @@ class MicroRigidRegistrar(object):
 
         print(f"Aligning {moving_slide.name} to {fixed_slide.name}. ROI width, height is {reg_bbox[2:]} pixels")
         n_cpu = multiprocessing.cpu_count() - 1
-        res = pqdm(range(n_tiles), _match_tile, n_jobs=n_cpu)
+
+        with suppress(UserWarning):
+            # Avoid printing warnings that not enough matches were found, which can happen frequently with this
+            res = pqdm(range(n_tiles), _match_tile, n_jobs=n_cpu)
 
         # Remove tiles that didn't have any matches
         high_rez_moving_match_xy_list = [xy for xy in high_rez_moving_match_xy_list if xy is not None]

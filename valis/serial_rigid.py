@@ -23,6 +23,17 @@ from . import warp_tools
 from .feature_detectors import VggFD
 from .feature_matcher import Matcher, convert_distance_to_similarity, GMS_NAME
 
+
+DENOISE_MSG = "Denoising images"
+FEATURE_MSG = "Detecting features"
+MATCHING_MSG = "Matching images"
+TRANSFORM_MSG = "Finding transforms"
+OPTIMIZING_MSG = "Optimizing transforms"
+FINALIZING_MSG = "Finalizing"
+
+msg_list = [DENOISE_MSG, FEATURE_MSG, MATCHING_MSG, TRANSFORM_MSG, FINALIZING_MSG, OPTIMIZING_MSG]
+DENOISE_MSG, FEATURE_MSG, MATCHING_MSG, TRANSFORM_MSG, FINALIZING_MSG, OPTIMIZING_MSG = valtils.pad_strings(msg_list)
+
 def get_image_files(img_dir, imgs_ordered=False):
     """Get images filenames in img_dir
 
@@ -489,7 +500,7 @@ class SerialRigidRegistrar(object):
         out_shape = (max_dist, max_dist)
         img_obj_list = [None] * self.size
 
-        for i in tqdm(range(self.size)):
+        for i in tqdm(range(self.size), desc=FEATURE_MSG, unit="image", leave=None):
             img_f = self.img_file_list[i]
             img = sorted_img_list[i]
 
@@ -587,7 +598,7 @@ class SerialRigidRegistrar(object):
         """
 
         n_comparisions = int((self.size*(self.size-1))/2)
-        pbar = tqdm(total=n_comparisions)
+        pbar = tqdm(total=n_comparisions, desc=MATCHING_MSG, unit="image", leave=None)
 
         def match_img_obj(i):
 
@@ -948,7 +959,7 @@ class SerialRigidRegistrar(object):
         """
 
         ref_img_obj = self.img_obj_list[self.reference_img_idx]
-        for moving_idx, fixed_idx in tqdm(self.iter_order):
+        for moving_idx, fixed_idx in tqdm(self.iter_order, desc=TRANSFORM_MSG, unit="image", leave=None):
             img_obj = self.img_obj_list[moving_idx]
             prev_img_obj = self.img_obj_list[fixed_idx]
 
@@ -1077,7 +1088,7 @@ class SerialRigidRegistrar(object):
         if qt_emitter is not None:
             qt_emitter.emit(1)
 
-        for moving_idx, fixed_idx in tqdm(self.iter_order):
+        for moving_idx, fixed_idx in tqdm(self.iter_order, desc=TRANSFORM_MSG, unit="image", leave=None):
             img_obj = self.img_obj_list[moving_idx]
             prev_img_obj = self.img_obj_list[fixed_idx]
             img_obj.fixed_obj = prev_img_obj
@@ -1119,7 +1130,7 @@ class SerialRigidRegistrar(object):
         if qt_emitter is not None:
             qt_emitter.emit(1)
 
-        for moving_idx, fixed_idx in tqdm(self.iter_order):
+        for moving_idx, fixed_idx in tqdm(self.iter_order, desc=OPTIMIZING_MSG, unit="image", leave=None):
             img_obj = self.img_obj_list[moving_idx]
             prev_img_obj = self.img_obj_list[fixed_idx]
 
@@ -1236,7 +1247,7 @@ class SerialRigidRegistrar(object):
         min_y = np.inf
         max_y = 0
         M_list = [None] * self.size
-        for i in tqdm(range(self.size)):
+        for i in tqdm(range(self.size), desc=FINALIZING_MSG, unit="image", leave=None):
 
             img_obj = self.img_obj_list[i]
 
@@ -1521,7 +1532,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
                                      name=name,
                                      align_to_reference=align_to_reference)
 
-    print("\n======== Detecting features\n")
+    # print("\n======== Detecting features\n")
     registrar.generate_img_obj_list(feature_detector, qt_emitter=qt_emitter)
 
     if valis_obj is not None:
@@ -1534,7 +1545,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
                     img_obj.kp_pos_xy = img_obj.kp_pos_xy[features_in_mask_idx, :]
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]
 
-    print("\n======== Matching images\n")
+    # print("\n======== Matching images\n")
     if registrar.aleady_sorted:
         registrar.match_sorted_imgs(matcher, keep_unfiltered=False,
                                     qt_emitter=qt_emitter)
@@ -1546,13 +1557,13 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         registrar.match_imgs(matcher, keep_unfiltered=False,
                              qt_emitter=qt_emitter)
 
-        print("\n======== Sorting images\n")
+        # print("\n======== Sorting images\n")
         registrar.build_metric_matrix(metric=similarity_metric)
         registrar.sort()
 
     registrar.distance_metric_name = matcher.metric_name
     registrar.distance_metric_type = matcher.metric_type
-    print("\n======== Calculating transformations\n")
+    # print("\n======== Calculating transformations\n")
     registrar.get_iter_order()
     if registrar.size > 2:
         registrar.update_match_dicts_with_neighbor_filter(transformer, matcher)
@@ -1576,7 +1587,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
             return False
 
     if affine_optimizer is not None:
-        print("\n======== Optimizing alignments\n")
+        # print("\n======== Optimizing alignments\n")
         registrar.optimize(affine_optimizer, qt_emitter=qt_emitter)
 
     registrar.finalize()
@@ -1590,14 +1601,14 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         for d in [registered_img_dir, registered_data_dir]:
             pathlib.Path(d).mkdir(exist_ok=True, parents=True)
 
-        print("\n======== Summarizing alignments\n")
+        # print("\n======== Summarizing alignments\n")
         summary_df = registrar.summarize()
         summary_file = os.path.join(registered_data_dir, name + "_results.csv")
         summary_df.to_csv(summary_file, index=False)
 
         registrar.summary = summary_df
 
-        print("\n======== Saving results\n")
+        # print("\n======== Saving results\n")
         pickle_file = os.path.join(registered_data_dir, name + "_registrar.pickle")
         pickle.dump(registrar, open(pickle_file, 'wb'))
 

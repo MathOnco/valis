@@ -98,6 +98,19 @@ CROP_OVERLAP = "overlap"
 CROP_REF = "reference"
 CROP_NONE = "all"
 
+# Messages
+WARP_ANNO_MSG = "Warping annotations"
+CONVERT_MSG = "Converting images"
+DENOISE_MSG = "Denoising images"
+PROCESS_IMG_MSG = "Processing images"
+NORM_IMG_MSG = "Normalizing images"
+TRANSFORM_MSG = "Finding rigid transforms"
+PREP_NON_RIGID_MSG = "Preparing images for non-rigid registration"
+MEASURE_MSG = "Measuring error"
+SAVING_IMG_MSG = "Saving images"
+
+PROCESS_IMG_MSG, NORM_IMG_MSG, DENOISE_MSG = valtils.pad_strings([PROCESS_IMG_MSG, NORM_IMG_MSG, DENOISE_MSG])
+
 
 def init_jvm(jar=None, mem_gb=10):
     """Initialize JVM for BioFormats
@@ -1274,7 +1287,7 @@ class Slide(object):
             shift_xy = None
 
         warped_features = [None]*len(annotation_geojson["features"])
-        for i, ft in tqdm.tqdm(enumerate(annotation_geojson["features"])):
+        for i, ft in tqdm.tqdm(enumerate(annotation_geojson["features"]), desc=WARP_ANNO_MSG, unit="annotation"):
             geom = shapely.geometry.shape(ft["geometry"])
             warped_geom = warp_tools.warp_shapely_geom(geom, M=M,
                                             transformation_src_shape_rc=self.processed_img_shape_rc,
@@ -1366,7 +1379,7 @@ class Slide(object):
             annotation_geojson = json.load(f)
 
         warped_features = [None]*len(annotation_geojson["features"])
-        for i, ft in tqdm.tqdm(enumerate(annotation_geojson["features"])):
+        for i, ft in tqdm.tqdm(enumerate(annotation_geojson["features"]), desc=WARP_ANNO_MSG, unit="annotation"):
             geom = shapely.geometry.shape(ft["geometry"])
             warped_geom = warp_tools.warp_shapely_geom_from_to(geom=geom,
                                             from_M=self.M,
@@ -2260,7 +2273,7 @@ class Valis(object):
 
         img_types = []
         self.size = 0
-        for f in tqdm.tqdm(self.original_img_list):
+        for f in tqdm.tqdm(self.original_img_list, desc=CONVERT_MSG, unit="image"):
             if reader_cls is None:
                 try:
                     slide_reader_cls = slide_io.get_slide_reader(f, series=series)
@@ -2512,7 +2525,7 @@ class Valis(object):
             else:
                 all_v = [None]*self.size
 
-        for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
+        for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values(), desc=PROCESS_IMG_MSG, unit="image")):
 
             levels_in_range = np.where(slide_obj.slide_dimensions_wh.max(axis=1) < self.max_processed_image_dim_px)[0]
             if len(levels_in_range) > 0:
@@ -2586,7 +2599,7 @@ class Valis(object):
             self.normalize_images(target_stats)
 
     def denoise_images(self):
-        for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
+        for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values(), desc=DENOISE_MSG, unit="image")):
             if slide_obj.rigid_reg_mask is None:
                 is_ihc = slide_obj.img_type == slide_tools.IHC_NAME
                 _, tissue_mask = preprocessing.create_tissue_mask(slide_obj.image, is_ihc)
@@ -2610,8 +2623,8 @@ class Valis(object):
             Target statistics used to normalize images
 
         """
-        print("\n==== Normalizing images\n")
-        for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values())):
+        # print("\n==== Normalizing images\n")
+        for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values(), desc=NORM_IMG_MSG, unit="image")):
             vips_img = pyvips.Image.new_from_file(slide_obj.processed_img_f)
             img = warp_tools.vips2numpy(vips_img)
             if self.norm_method == "histo_match":
@@ -2808,7 +2821,7 @@ class Valis(object):
         similarity_metric = self.rigid_reg_kwargs[SIM_METRIC_KEY]
         transformer = self.rigid_reg_kwargs[TRANSFORMER_KEY]
 
-        print("\n======== Detecting features\n")
+        # print("\n======== Detecting features\n")
         rigid_registrar.generate_img_obj_list(feature_detector)
 
         if self.create_masks:
@@ -2821,7 +2834,7 @@ class Valis(object):
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]
 
 
-        print("\n======== Matching images\n")
+        # print("\n======== Matching images\n")
         if rigid_registrar.aleady_sorted:
             rigid_registrar.match_sorted_imgs(matcher, keep_unfiltered=False)
 
@@ -2831,7 +2844,7 @@ class Valis(object):
         else:
             rigid_registrar.match_imgs(matcher, keep_unfiltered=False)
 
-            print("\n======== Sorting images\n")
+            # print("\n======== Sorting images\n")
             rigid_registrar.build_metric_matrix(metric=similarity_metric)
             rigid_registrar.sort()
 
@@ -2911,7 +2924,7 @@ class Valis(object):
             matching_rigid_obj.M = for_reg_M
 
         # Find M if not provided
-        for moving_idx, fixed_idx in tqdm.tqdm(rigid_registrar.iter_order):
+        for moving_idx, fixed_idx in tqdm.tqdm(rigid_registrar.iter_order, desc=TRANSFORM_MSG, unit="image"):
             img_obj = rigid_registrar.img_obj_list[moving_idx]
             if img_obj.name in scaled_M_dict:
                 continue
@@ -2960,6 +2973,7 @@ class Valis(object):
         if denoise:
             self.denoise_images()
 
+        print("\n==== Rigid registration\n")
         if self.do_rigid is True:
             rigid_registrar = serial_rigid.register_images(self.processed_dir,
                                                            align_to_reference=self.align_to_reference,
@@ -3432,8 +3446,8 @@ class Valis(object):
         img_names_list = [None] * self.size
         img_f_list = [None] * self.size
 
-        print("\n======== Preparing images for non-rigid registration\n")
-        for slide_obj in tqdm.tqdm(self.slide_dict.values()):
+        # print("\n======== Preparing images for non-rigid registration\n")
+        for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=PREP_NON_RIGID_MSG, unit="image"):
             # Get image to warp. Likely a larger image scaled down to specified shape #
             src_img_shape_rc, src_M = warp_tools.get_src_img_shape_and_M(transformation_src_shape_rc=slide_obj.processed_img_shape_rc,
                                                                             transformation_dst_shape_rc=slide_obj.reg_img_shape_rc,
@@ -3809,7 +3823,7 @@ class Valis(object):
         ref_diagonal = np.sqrt(np.sum(np.power(ref_slide.processed_img_shape_rc, 2)))
 
         measure_idx = []
-        for slide_obj in tqdm.tqdm(self.slide_dict.values()):
+        for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=MEASURE_MSG, unit="image"):
             i = slide_obj.stack_idx
             slide_name = slide_obj.name
 
@@ -4073,7 +4087,7 @@ class Valis(object):
             self.if_processing_fxn_str = if_processing_cls.__name__
             self.process_imgs(processor_dict=slide_processors)
 
-            print("\n==== Rigid registration\n")
+            # print("\n==== Rigid registration\n")
             rigid_registrar = self.rigid_register()
             aligned_slide_shape_rc = self.get_aligned_slide_shape(0)
             self.aligned_slide_shape_rc = aligned_slide_shape_rc
@@ -4459,7 +4473,7 @@ class Valis(object):
         """
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
-        for slide_obj in tqdm.tqdm(self.slide_dict.values()):
+        for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
             slide_cmap = None
             if colormap is not None:
                 chnl_names = slide_obj.reader.metadata.channel_names
