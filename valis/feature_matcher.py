@@ -9,7 +9,6 @@ from copy import deepcopy
 from sklearn import metrics
 from sklearn.metrics.pairwise import pairwise_kernels
 from skimage import transform
-from scipy.spatial import distance
 from . import warp_tools, valtils, feature_detectors
 from .superglue_models import matching, superglue, superpoint
 
@@ -238,7 +237,6 @@ def filter_matches_tukey(src_xy, dst_xy, tform=transform.SimilarityTransform()):
 
     """
 
-    # tform = transform.SimilarityTransform()
     tform.estimate(src=dst_xy, dst=src_xy)
     M = tform.params
 
@@ -940,6 +938,18 @@ class Matcher(object):
 
 
 class SuperPointAndGlue(Matcher):
+    """Use SuperPoint SuperPoint + SuperGlue to match images (`match_images`)
+
+    Implementation adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py
+
+    References
+    -----------
+    Paul-Edouard Sarlin, Daniel DeTone, Tomasz Malisiewicz, and Andrew
+    Rabinovich. SuperGlue: Learning Feature Matching with Graph Neural
+    Networks. In CVPR, 2020. https://arxiv.org/abs/1911.11763
+
+    """
+
     def __init__(self, weights="indoor", keypoint_threshold=0.005, nms_radius=4,
                  sinkhorn_iterations=100, match_threshold=0.2, force_cpu=False,
                  metric=None, metric_type=None, metric_kwargs=None,
@@ -947,11 +957,6 @@ class SuperPointAndGlue(Matcher):
                  gms_threshold=15, scaling=False):
 
         """
-        SuperPoint and SuperGlue
-
-        Use SuperPoint SuperPoint + SuperGlue to match images (`match_images`)
-
-        Adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py
 
         Parameters
         ----------
@@ -977,11 +982,8 @@ class SuperPointAndGlue(Matcher):
             Whether or not image scaling should be considered when
             filter_method is "GMS".
 
-        References
-        ----------
-
-
         """
+
         super().__init__(metric=metric, metric_type=metric_type, metric_kwargs=metric_kwargs,
                  match_filter_method=match_filter_method, ransac_thresh=ransac_thresh,
                  gms_threshold=gms_threshold, scaling=scaling)
@@ -1146,6 +1148,18 @@ class SuperPointAndGlue(Matcher):
 
 
 class SuperGlueMatcher(Matcher):
+    """Use SuperGlue to match images (`match_images`)
+
+    Implementation adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py
+
+    References
+    -----------
+    Paul-Edouard Sarlin, Daniel DeTone, Tomasz Malisiewicz, and Andrew
+    Rabinovich. SuperGlue: Learning Feature Matching with Graph Neural
+    Networks. In CVPR, 2020. https://arxiv.org/abs/1911.11763
+
+    """
+
     def __init__(self, weights="indoor", keypoint_threshold=0.005, nms_radius=4,
                  sinkhorn_iterations=100, match_threshold=0.2, force_cpu=False,
                  metric=None, metric_type=None, metric_kwargs=None,
@@ -1153,9 +1167,8 @@ class SuperGlueMatcher(Matcher):
                  gms_threshold=15, scaling=False):
 
         """
-        SuperPoint and SuperGlue
 
-        Use SuperPoint SuperPoint + SuperGlue to match images (`match_images`)
+        Use SuperGlue to match images (`match_images`)
 
         Adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py
 
@@ -1182,12 +1195,8 @@ class SuperGlueMatcher(Matcher):
         scaling: bool
             Whether or not image scaling should be considered when
             filter_method is "GMS".
-
-        References
-        ----------
-
-
         """
+
         super().__init__(metric=metric, metric_type=metric_type, metric_kwargs=metric_kwargs,
                  match_filter_method=match_filter_method, ransac_thresh=ransac_thresh,
                  gms_threshold=gms_threshold, scaling=scaling)
@@ -1231,7 +1240,6 @@ class SuperGlueMatcher(Matcher):
     def _match_kp(self, desc1, kp1_xy, desc2, kp2_xy, additional_filtering_kwargs=None):
         return super().match_images(desc1=desc1, kp1_xy=kp1_xy, desc2=desc2, kp2_xy=kp2_xy, additional_filtering_kwargs=additional_filtering_kwargs)
 
-
     def calc_scores(self, tensor_img, kp_xy):
         sp = superpoint.SuperPoint(self.config["superpoint"])
 
@@ -1259,38 +1267,6 @@ class SuperGlueMatcher(Matcher):
         scores = scores[0].unsqueeze(dim=0)
         return scores
 
-    # def prep_data(self, img, kp_xy, desc, n_features=256):
-    #     """
-    #     sp_kp = pred["keypoints"] # Tensor with shape [1, n_kp, 2],  float32
-    #     sp_desc = pred["descriptors"] # Tensor with shape [1, n_features, n_kp], float32
-    #     sp_scores = pred["scores"] # Tensor with shape [1, n_kp], float32
-    #     """
-
-    #     inp = self.frame2tensor(img)
-    #     scores = self.calc_scores(inp, kp_xy)
-    #     kp_xy_inp = torch.from_numpy(kp_xy[None, :].astype(np.float32))
-
-    #     if desc.shape[1] < n_features:
-    #         # Expects that there are 256 features
-    #         padding = np.zeros((desc.shape[0], n_features-desc.shape[1]))
-    #         padded_desc = np.hstack([desc, padding])
-    #     elif desc.shape[1] > n_features:
-    #         padded_desc = desc[:, :n_features]
-    #     else:
-    #         padded_desc = desc
-
-    #     desc_inp = torch.from_numpy(padded_desc.T[None].astype(np.float32))
-    #     desc_inp = torch.nn.functional.normalize(desc_inp, p=2, dim=1)
-
-    #     n_kp = kp_xy.shape[0]
-
-    #     assert scores.dtype == kp_xy_inp.dtype == desc_inp.dtype == torch.float32
-    #     assert scores.shape[1] == kp_xy_inp.shape[1] == desc_inp.shape[2] == n_kp
-
-    #     return inp, kp_xy_inp, desc_inp, scores
-
-
-
     def prep_data(self, img, kp_xy):
         """
         sp_kp = pred["keypoints"] # Tensor with shape [1, n_kp, 2],  float32
@@ -1312,7 +1288,6 @@ class SuperGlueMatcher(Matcher):
         assert scores.shape[1] == kp_xy_inp.shape[1] == desc_inp.shape[2] == n_kp
 
         return inp, kp_xy_inp, desc_inp, scores
-
 
     def _match_images(self, img1=None, desc1=None, kp1_xy=None, img2=None, desc2=None, kp2_xy=None, additional_filtering_kwargs=None):
 

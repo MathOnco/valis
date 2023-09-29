@@ -52,7 +52,9 @@ import numpy as np
 
 import shutil
 import sys
+# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import registration, valtils
+from valis.micro_rigid_registrar import MicroRigidRegistrar
 
 
 def get_parent_dir():
@@ -72,10 +74,39 @@ def cnames_from_filename(src_f):
     f = valtils.get_name(src_f)
     return ["DAPI"] + f.split(" ")
 
-
 parent_dir = get_parent_dir()
 datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
 results_dst_dir = os.path.join(parent_dir, f"valis/tests/tmp{sys.version_info.major}{sys.version_info.minor}")
+
+
+
+def register_hi_rez(src_dir):
+    high_rez_dst_dir = os.path.join(results_dst_dir, "high_rez")
+    micro_reg_fraction = 0.25 # Fraction full resolution used for non-rigid registration
+
+    # Perform high resolution rigid registration using the MicroRigidRegistrar
+    start = time.time()
+    registrar = registration.Valis(src_dir, high_rez_dst_dir, micro_rigid_registrar_cls=MicroRigidRegistrar)
+    rigid_registrar, non_rigid_registrar, error_df = registrar.register()
+
+    # Calculate what `max_non_rigid_registration_dim_px` needs to be to do non-rigid registration on an image that is 25% full resolution.
+    img_dims = np.array([slide_obj.slide_dimensions_wh[0] for slide_obj in registrar.slide_dict.values()])
+    min_max_size = np.min([np.max(d) for d in img_dims])
+    img_areas = [np.multiply(*d) for d in img_dims]
+    max_img_w, max_img_h = tuple(img_dims[np.argmax(img_areas)])
+    micro_reg_size = np.floor(min_max_size*micro_reg_fraction).astype(int)
+
+    # Perform high resolution non-rigid registration
+    micro_reg, micro_error = registrar.register_micro(max_non_rigid_registration_dim_px=micro_reg_size)
+
+    stop = time.time()
+    elapsed = stop - start
+    print(f"regisration time is {elapsed/60} minutes")
+
+    # We can also plot the high resolution matches using `Valis.draw_matches`:
+    matches_dst_dir = os.path.join(registrar.dst_dir, "hi_rez_matches")
+    registrar.draw_matches(matches_dst_dir)
+
 
 def register_ihc(max_error=45):
     ihc_src_dir = os.path.join(datasets_src_dir, "ihc")
@@ -102,7 +133,10 @@ def register_ihc(max_error=45):
         # shutil.rmtree(ihc_dst_dir, ignore_errors=True)
         assert False, e
 
+
 def test_register_cycif(max_error=3):
+
+
     cycif_src_dir = os.path.join(datasets_src_dir, "cycif")
     cycif_dst_dir = os.path.join(results_dst_dir, "cycif")
     try:
@@ -132,3 +166,18 @@ def test_register_cycif(max_error=3):
     except Exception as e:
         # shutil.rmtree(cycif_dst_dir, ignore_errors=True)
         assert False, e
+
+
+def test_register_hi_rez_ihc():
+    ihc_src_dir = os.path.join(datasets_src_dir, "ihc")
+    register_hi_rez(src_dir=ihc_src_dir)
+
+
+def test_register_hi_rez_cycif():
+    cycif_src_dir = os.path.join(datasets_src_dir, "cycif")
+    register_hi_rez(src_dir=cycif_src_dir)
+
+
+# if __name__ == "__main__":
+#     test_register_hi_rez_ihc()
+#     test_register_hi_rez_cycif()

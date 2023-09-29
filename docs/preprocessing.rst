@@ -27,6 +27,12 @@ ColorfulStandardizer
     :members:  __init__, process_image, create_mask
     :show-inheritance:
 
+StainFlattener
+---------------
+.. autoclass:: valis.preprocessing::StainFlattener
+    :members:  __init__, process_image, create_mask
+    :show-inheritance:
+
 BgColorDistance
 --------------------
 .. autoclass:: valis.preprocessing::BgColorDistance

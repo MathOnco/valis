@@ -1530,8 +1530,6 @@ def register_images(img_dir, dst_dir=None, name="registrar",
             for img_obj in registrar.img_obj_dict.values():
                 slide_obj = valis_obj.get_slide(img_obj.name)
                 features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=slide_obj.rigid_reg_mask)
-                n_removed = img_obj.kp_pos_xy.shape[0] - len(features_in_mask_idx)
-                print(f"Removed {n_removed} features outside of the mask for {slide_obj.name}")
                 if len(features_in_mask_idx) > 0:
                     img_obj.kp_pos_xy = img_obj.kp_pos_xy[features_in_mask_idx, :]
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]

@@ -11,7 +11,8 @@ Version 1.0.0 (September, 2023)
 #. Added the :code:`preprocessing.StainFlattener` class, which can be used with brightfield images.
 #. Added option for lossy compression by setting the :code:`Q` parameter using functions that save slides. Confirmed that RGB images saved using lossy JPEG and JPEG2000 compression open as expected in QuPath. Do note that float images saved using these compression methods will get cast to uint8 images. Addresses request made in `github issue 60 <https://github.com/MathOnco/valis/issues/60>`_.
 #. Fixed issue converting big-endian WSI to :code:`pyvips.Image` (reported on `image.sc <https://forum.image.sc/t/problems-registering-fluorescence-ome-tiffs-using-valis/82685>_`)
-#. Added citation to publication
+#. Added citation information
+#. Updated docker container to include pytorch
 
 
 Version 1.0.0rc15 (May 10, 2023)

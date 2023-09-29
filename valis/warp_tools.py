@@ -309,7 +309,8 @@ def get_src_img_shape_and_M(M, transformation_src_shape_rc, transformation_dst_s
         A scaled version of `M` that will warp an image with shape `src_shape_rc`
 
     """
-    img_corners_xy = get_corners_of_image(transformation_src_shape_rc)[::-1]
+
+    img_corners_xy = get_corners_of_image(transformation_src_shape_rc)[:, ::-1]
     warped_corners = warp_xy(img_corners_xy, M=M,
                              transformation_src_shape_rc=transformation_src_shape_rc,
                              transformation_dst_shape_rc=transformation_dst_shape_rc
@@ -1019,7 +1020,8 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
     interpolator = pyvips.Interpolate.new(interp_method)
     if do_rigid:
         if not np.all(src_sxy == 1):
-            img_corners_xy = get_corners_of_image(src_shape_rc)[::-1]
+
+            img_corners_xy = get_corners_of_image(src_shape_rc)[:, ::-1]
             warped_corners = warp_xy(img_corners_xy, M=M,
                                      transformation_src_shape_rc=transformation_src_shape_rc,
                                      transformation_dst_shape_rc=transformation_dst_shape_rc,
@@ -1223,7 +1225,7 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
 
     if do_rigid:
 
-        img_corners_xy = get_corners_of_image(src_shape_rc)[::-1]
+        img_corners_xy = get_corners_of_image(src_shape_rc)[:, ::-1]
         warped_corners = warp_xy(img_corners_xy, M=M,
                                     transformation_src_shape_rc=transformation_src_shape_rc,
                                     transformation_dst_shape_rc=transformation_dst_shape_rc,
@@ -1236,7 +1238,7 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
         tx, ty = warp_M[:2, 2]
         warp_M = np.linalg.inv(warp_M)
         vips_M = warp_M[:2, :2].reshape(-1).tolist()
-        warped = img.affine(vips_M,
+        warped = nr_warped.affine(vips_M,
                     oarea=[0, 0, src_shape_rc[1], src_shape_rc[0]],
                     interpolate=interpolator,
                     idx=-tx,

@@ -967,7 +967,6 @@ class Slide(object):
                                        src_f=src_f)
 
         # Get ome-xml #
-        # slide_meta = self.reader.metadata
         slide_reader_cls = slide_io.get_slide_reader(src_f)
         slide_reader = slide_reader_cls(src_f)
         slide_meta = slide_reader.metadata
@@ -1858,6 +1857,12 @@ class Valis(object):
             See preprocessing.match_histograms and preprocessing.norm_khan
             for details.
 
+        iter_order : list of tuples
+            Each element of `iter_order` contains a tuple of stack
+            indices. The first value is the index of the moving/current/from
+            image, while the second value is the index of the moving/next/to
+            image.
+
         micro_rigid_registrar_cls : MicroRigidRegistrar, optional
             Class used to perform higher resolution rigid registration. If `None`,
             this step is skipped.
@@ -1924,6 +1929,7 @@ class Valis(object):
         self.reference_img_idx = None
         self.reference_img_f = reference_img_f
         self.align_to_reference = align_to_reference
+        self.iter_order = None
 
         self.do_rigid = do_rigid
         self.rigid_registrar = None
@@ -1990,11 +1996,6 @@ class Valis(object):
         Keyword arguments will be passed to `serial_rigid.register_images`
 
         """
-
-        # if isinstance(match_filter_method, str):
-        #     matcher = feature_matcher.Matcher(match_filter_method=match_filter_method)
-        # else:
-        #     matcher = match_filter_method
 
         if affine_optimizer is not None:
             afo = affine_optimizer(transform=transformer.__name__)
@@ -2440,7 +2441,7 @@ class Valis(object):
         processor_dict : dict
             Each key should be the filename of the image, and the value either a subclassed
             preprocessing.ImageProcessor, or a list, where the 1st element is the processor,
-            and the second element a dictionary of keyword arguments passed to the processor.
+            and the second element a dictionary of keyword arguments passed to ImageProcesser.process_img.
             If `None`, then this function will assign a processor to each image.
 
         Returns
@@ -2448,7 +2449,7 @@ class Valis(object):
         named_processing_dict : Dict
             Each key is the name of the slide, and the value is a list, where
             the 1st element is the processor, and the second element a dictionary
-            of keyword arguments passed to the processor
+            of keyword arguments passed to ImageProcesser.process_img
 
         """
 
@@ -2543,8 +2544,6 @@ class Valis(object):
                     mask = warp_tools.resize_img(mask, processed_img.shape[0:2], interp_method="nearest")
 
                 slide_obj.rigid_reg_mask = mask
-                # print("not applying rigid mask (line ~2536)")
-                # processed_img[mask == 0] = 0
 
                 # Save image with mask drawn on top of it
                 thumbnail_mask = self.create_thumbnail(mask)
@@ -2755,7 +2754,7 @@ class Valis(object):
 
         """
         mask_dict = {}
-        mask_dict[CROP_REF] =  self.get_ref_img_mask(rigid_registrar)
+        mask_dict[CROP_REF] = self.get_ref_img_mask(rigid_registrar)
         mask_dict[CROP_OVERLAP] = self.get_all_overlap_mask(rigid_registrar)
         mask_dict[CROP_NONE] = self.get_null_overlap_mask(rigid_registrar)
         self.mask_dict = mask_dict
@@ -2817,8 +2816,6 @@ class Valis(object):
             for img_obj in rigid_registrar.img_obj_dict.values():
                 slide_obj = self.get_slide(img_obj.name)
                 features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=slide_obj.rigid_reg_mask)
-                n_removed = img_obj.kp_pos_xy.shape[0] - len(features_in_mask_idx)
-                print(f"Removed {n_removed} features outside of the mask")
                 if len(features_in_mask_idx) > 0:
                     img_obj.kp_pos_xy = img_obj.kp_pos_xy[features_in_mask_idx, :]
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]
@@ -3097,23 +3094,41 @@ class Valis(object):
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=self.crop)
             warp_tools.save_img(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8), thumbnail_size=self.thumbnail_size)
 
-        # Draw matches
-        # slide_idx, slide_names = list(zip(*[[slide_obj.stack_idx, slide_obj.name] for slide_obj in self.slide_dict.values()]))
-        # slide_order = np.argsort(slide_idx) # sorts ascending
-        # slide_list = [self.slide_dict[slide_names[i]] for i in slide_order]
-        # for moving_idx, fixed_idx in micro_rigid_registar.iter_order:
-        #     moving_slide = slide_list[moving_idx]
-        #     fixed_slide = slide_list[fixed_idx]
+    def draw_matches(self, dst_dir):
+        """Draw and save images of matching features
 
-        #     moving_draw_img = warp_tools.resize_img(moving_slide.image, moving_slide.processed_img.shape[0:2])
-        #     fixed_draw_img = warp_tools.resize_img(fixed_slide.image, fixed_slide.processed_img.shape[0:2])
+        Parameters
+        ----------
+        dst_dir : str
+            Where to save the images of the matched features
+        """
 
-        #     all_matches_img = viz.draw_matches(src_img=moving_draw_img, kp1_xy=moving_slide.xy_matched_to_prev,
-        #                                        dst_img=fixed_draw_img,  kp2_xy=moving_slide.xy_in_prev,
-        #                                        rad=3, alignment='horizontal')
-        #     matches_f_out = os.path.join(self.dst_dir, f"{self.name}_{moving_slide.name}_to_{fixed_slide.name}_micro_rigid_matches.png")
-        #     warp_tools.save_img(matches_f_out, all_matches_img)
+        dst_dir = str(dst_dir)
+        pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
+        slide_idx, slide_names = list(zip(*[[slide_obj.stack_idx, slide_obj.name] for slide_obj in self.slide_dict.values()]))
+        slide_order = np.argsort(slide_idx) # sorts ascending
+        slide_list = [self.slide_dict[slide_names[i]] for i in slide_order]
+        for moving_idx, fixed_idx in self.iter_order:
+            moving_slide = slide_list[moving_idx]
+            fixed_slide = slide_list[fixed_idx]
+
+            # RGB draw images
+            if moving_slide.image.ndim == 3 and moving_slide.is_rgb:
+                moving_draw_img = warp_tools.resize_img(moving_slide.image, moving_slide.processed_img.shape[0:2])
+            else:
+                moving_draw_img = moving_slide.processed_img
+
+            if fixed_slide.image.ndim == 3 and fixed_slide.is_rgb:
+                fixed_draw_img = warp_tools.resize_img(fixed_slide.image, fixed_slide.processed_img.shape[0:2])
+            else:
+                fixed_draw_img = fixed_slide.processed_img
+
+            all_matches_img = viz.draw_matches(src_img=moving_draw_img, kp1_xy=moving_slide.xy_matched_to_prev,
+                                               dst_img=fixed_draw_img,  kp2_xy=moving_slide.xy_in_prev,
+                                               rad=3, alignment='horizontal')
+            matches_f_out = os.path.join(dst_dir, f"{self.name}_{moving_slide.name}_to_{fixed_slide.name}_matches.png")
+            warp_tools.save_img(matches_f_out, all_matches_img)
 
     def create_non_rigid_reg_mask(self):
         """
@@ -3163,7 +3178,8 @@ class Valis(object):
             rigid_mask = slide_obj.warp_img(img_bbox, non_rigid=False, crop=False, interp_method="nearest")
             combo_mask[rigid_mask > 0] += 1
 
-        overlap_mask = (combo_mask == self.size).astype(np.uint8)
+        n = len(slide_list)
+        overlap_mask = (combo_mask == n).astype(np.uint8)
         overlap_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(overlap_mask))
         c0, r0 = overlap_bbox[:2]
         c1, r1 = overlap_bbox[:2] + overlap_bbox[2:]
@@ -3187,7 +3203,7 @@ class Valis(object):
         temp_non_rigid_mask = 255*filters.apply_hysteresis_threshold(combo_mask, 0.5, self.size-0.5).astype(np.uint8)
         overlap_mask = 255*ndimage.binary_fill_holes(temp_non_rigid_mask).astype(np.uint8)
 
-        to_combine_list = [None] * self.size
+        to_combine_list = [None] * len(slide_list)
         for i, slide_obj in enumerate(slide_list):
             for_summary = exposure.rescale_intensity(slide_obj.warp_img(slide_obj.processed_img, non_rigid=False, crop=False), out_range=(0,1))
             to_combine_list[i] = for_summary
@@ -4061,6 +4077,7 @@ class Valis(object):
             rigid_registrar = self.rigid_register()
             aligned_slide_shape_rc = self.get_aligned_slide_shape(0)
             self.aligned_slide_shape_rc = aligned_slide_shape_rc
+            self.iter_order = rigid_registrar.iter_order
             for slide_obj in self.slide_dict.values():
                 slide_obj.aligned_slide_shape_rc = aligned_slide_shape_rc
 
@@ -4078,14 +4095,10 @@ class Valis(object):
             else:
                 non_rigid_registrar = None
 
-            print("\n==== Measuring error\n")
-            # aligned_slide_shape_rc = self.get_aligned_slide_shape(0)
-            # self.aligned_slide_shape_rc = aligned_slide_shape_rc
-            # for slide_obj in self.slide_dict.values():
-            #     slide_obj.aligned_slide_shape_rc = aligned_slide_shape_rc
 
             self._add_empty_slides()
 
+            print("\n==== Measuring error\n")
             error_df = self.measure_error()
             self.cleanup()
 

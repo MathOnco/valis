@@ -403,10 +403,6 @@ class SuperPointFD(FeatureDD):
 
         kp_descriptor : optional, OpenCV feature desrciptor
 
-        References
-        ----------
-
-
         """
         super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
 
