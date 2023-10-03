@@ -3092,13 +3092,17 @@ class Valis(object):
         micro_rigid_registar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
         micro_rigid_registar.register()
 
-        rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in self.slide_dict.values()]
+        # rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in self.slide_dict.values()]
+
+        # Draw in same order as regular rigid registration
+        draw_list = [self.slide_dict[img_obj.name] for img_obj in self.rigid_registrar.img_obj_list]
+        rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in draw_list]
         self.micro_rigid_overlap_img = self.draw_overlap_img(rigid_img_list)
 
         micro_rigid_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_micro_rigid_overlap.png")
         warp_tools.save_img(micro_rigid_overlap_img_fout, self.micro_rigid_overlap_img, thumbnail_size=self.thumbnail_size)
 
-        # Overwrite rigid registration results #
+        # Overwrite rigid registration results and update rigid registrar
         for slide_name, slide_obj in self.slide_dict.items():
             if not slide_obj.is_rgb:
                 img_to_warp = slide_obj.processed_img
@@ -3107,6 +3111,24 @@ class Valis(object):
             img_to_warp = warp_tools.resize_img(img_to_warp, slide_obj.processed_img_shape_rc)
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=self.crop)
             warp_tools.save_img(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8), thumbnail_size=self.thumbnail_size)
+
+            if slide_obj.fixed_slide is None:
+                continue
+            fixed_slide = slide_obj.fixed_slide
+            fixed_rigid_obj = self.rigid_registrar.img_obj_dict[fixed_slide.name]
+
+            rigid_img_obj = self.rigid_registrar.img_obj_dict[slide_obj.name]
+            rigid_img_obj.M = slide_obj.M
+            rigid_img_obj.M_inv = np.linalg.inv(slide_obj.M)
+            rigid_img_obj.registered_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=False)
+
+            rigid_img_obj.match_dict[fixed_rigid_obj].matched_kp1_xy = slide_obj.xy_matched_to_prev
+            rigid_img_obj.match_dict[fixed_rigid_obj].matched_kp2_xy = slide_obj.xy_in_prev
+            rigid_img_obj.match_dict[fixed_rigid_obj].n_matches = slide_obj.xy_in_prev.shape[0]
+
+            fixed_rigid_obj.match_dict[rigid_img_obj].matched_kp1_xy = slide_obj.xy_in_prev
+            fixed_rigid_obj.match_dict[rigid_img_obj].matched_kp2_xy = slide_obj.xy_matched_to_prev
+            fixed_rigid_obj.match_dict[rigid_img_obj].n_matches = slide_obj.xy_in_prev.shape[0]
 
     def draw_matches(self, dst_dir):
         """Draw and save images of matching features

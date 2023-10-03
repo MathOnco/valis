@@ -354,12 +354,19 @@ class MicroRigidRegistrar(object):
         new_d = np.mean(warp_tools.calc_d(warp_tools.warp_xy(matched_moving_in_og, M=new_M), warp_tools.warp_xy(matched_fixed_in_og, fixed_slide.M)))
 
         n_old_matches = moving_slide.xy_matched_to_prev.shape[0]
-        n_new_matches = matched_moving_in_og.shape[0]
+        n_new_matches = high_rez_fixed_matched_kp_xy.shape[0]
 
-        res_msg = f"N low rez matches= {n_old_matches}, N high rez matches = {n_new_matches}. Low rez D= {og_d}, high rez D={new_d}"
-        valtils.print_warning(res_msg, rgb=Fore.GREEN)
-        if (n_old_matches <= n_new_matches) and (new_d < og_d):
-            print("micro rigid registration improved alignments")
+        improved = (n_new_matches >= n_old_matches) and (new_d < og_d)
+        if improved:
+            res_msg = "micro rigid registration improved alignments."
+            msg_clr = Fore.GREEN
+        else:
+            res_msg = "micro rigid registration did not improve alignments. Keeping low rez registration parameters."
+            msg_clr = Fore.YELLOW
+
+        full_res_msg = f"{res_msg} N low rez matches= {n_old_matches}, N high rez matches = {n_new_matches}. Low rez D= {og_d}, high rez D={new_d}"
+        valtils.print_warning(full_res_msg, rgb=msg_clr)
+        if improved:
 
             moving_slide.M = new_M
             moving_slide.xy_matched_to_prev = matched_moving_in_og
@@ -367,8 +374,7 @@ class MicroRigidRegistrar(object):
 
             moving_slide.xy_matched_to_prev_in_bbox = matched_moving_in_og
             moving_slide.xy_in_prev_in_bbox = matched_fixed_in_og
-        else:
-            print("micro rigid registration did not improve alignments. Keeping low rez registration parameters")
+
 
     def get_tiles(self, bbox_xywh, wh):
 
