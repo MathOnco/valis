@@ -53,3 +53,8 @@ Orb + Vgg
 ---------
 .. autoclass:: valis.feature_detectors::OrbVggFD
     :show-inheritance:
+
+SuperPoint
+-----------
+.. autoclass:: valis.feature_detectors::SuperPointFD
+    :show-inheritance:

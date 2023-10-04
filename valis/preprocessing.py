@@ -3,12 +3,17 @@ Collection of pre-processing methods for aligning images
 """
 from scipy.interpolate import Akima1DInterpolator
 from skimage import exposure, filters, measure, morphology, restoration
+from sklearn.cluster import estimate_bandwidth, MiniBatchKMeans, MeanShift
 import numpy as np
 import cv2
 from skimage import color as skcolor
 import pyvips
 import colour
 from scipy import ndimage
+from shapely import LineString
+from scipy import stats
+from sklearn import cluster
+from sklearn.preprocessing import StandardScaler
 
 from . import slide_io
 from . import warp_tools
@@ -198,6 +203,154 @@ class BgColorDistance(ImageProcesser):
         processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 1))
         processed_img = exposure.equalize_adapthist(processed_img)
         processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 255)).astype(np.uint8)
+
+        return processed_img
+
+
+class StainFlattener(ImageProcesser):
+    def __init__(self, image, src_f, level, series, *args, **kwargs):
+        super().__init__(image=image, src_f=src_f, level=level,
+                         series=series, *args, **kwargs)
+
+        self.n_colors = -1
+
+
+    def create_mask(self):
+
+        processed = self.process_image(adaptive_eq=True)
+
+        # Want to ignore black background
+        to_thresh_mask = 255*(np.all(self.image > 25, axis=2)).astype(np.uint8)
+
+        low_t, high_t = filters.threshold_multiotsu(processed[to_thresh_mask > 0])
+        tissue_mask = 255*filters.apply_hysteresis_threshold(processed, low_t, high_t).astype(np.uint8)
+
+        kernel_size=3
+        tissue_mask = mask2contours(tissue_mask, kernel_size)
+
+        return tissue_mask
+
+    def process_image_with_mask(self, n_colors=100, q=95, max_colors=100):
+        fg_mask, _ = create_tissue_mask_from_rgb(self.image)
+        mean_bg_rgb = np.mean(self.image[fg_mask == 0], axis=0)
+
+        # Get stain vectors
+        fg_rgb = self.image[fg_mask > 0]
+        fg_to_cluster = rgb2jab(fg_rgb)
+
+        ss = StandardScaler()
+        x = ss.fit_transform(fg_to_cluster)
+
+        if n_colors > 0:
+            self.n_colors = n_colors
+            clusterer = MiniBatchKMeans(n_clusters=n_colors,
+                                        reassignment_ratio=0,
+                                        n_init=3)
+            clusterer.fit(x)
+        else:
+            k, clusterer = estimate_k(x, max_k=max_colors)
+            self.n_colors = k
+            # print(f"estimated {k} colors")
+
+        self.clusterer = clusterer
+        stain_rgb = jab2rgb(ss.inverse_transform(clusterer.cluster_centers_))
+        stain_rgb = np.clip(stain_rgb, 0, 1)
+
+        stain_rgb = np.vstack([255*stain_rgb, mean_bg_rgb])
+        D = stainmat2decon(stain_rgb)
+        deconvolved = deconvolve_img(self.image, D)
+
+        eps = np.finfo("float").eps
+        d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
+        dmax = np.percentile(d_flat, q, axis=0)
+        for i in range(deconvolved.shape[2]):
+            c_dmax  = dmax[i] + eps
+            deconvolved[..., i] = np.clip(deconvolved[..., i], 0, c_dmax)
+            deconvolved[..., i] /= c_dmax
+
+        summary_img = deconvolved.mean(axis=2)
+
+        return summary_img
+
+    def process_image_all(self, n_colors=100, q=95, max_colors=100):
+        img_to_cluster = rgb2jab(self.image)
+
+        ss = StandardScaler()
+        x = ss.fit_transform(img_to_cluster.reshape(-1, img_to_cluster.shape[2]))
+        if n_colors > 0:
+            self.n_colors = n_colors
+            clusterer = MiniBatchKMeans(n_clusters=n_colors,
+                                        reassignment_ratio=0,
+                                        n_init=3)
+            clusterer.fit(x)
+        else:
+            k, clusterer = estimate_k(x, max_k=max_colors)
+            self.n_colors = k
+            print(f"estimated {k} colors")
+
+        self.clusterer = clusterer
+        stain_rgb = jab2rgb(ss.inverse_transform(clusterer.cluster_centers_))
+        stain_rgb = np.clip(stain_rgb, 0, 1)
+
+        stain_rgb = 255*stain_rgb
+        stain_rgb = np.clip(stain_rgb, 0, 255)
+        stain_rgb = np.unique(stain_rgb, axis=0)
+        D = stainmat2decon(stain_rgb)
+        deconvolved = deconvolve_img(self.image, D)
+
+        d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
+        dmax = np.percentile(d_flat, q, axis=0) + np.finfo("float").eps
+        for i in range(deconvolved.shape[2]):
+
+            deconvolved[..., i] = np.clip(deconvolved[..., i], 0, dmax[i])
+            deconvolved[..., i] /= dmax[i]
+
+        summary_img = deconvolved.mean(axis=2)
+
+        return summary_img
+
+    def process_image(self, n_colors=100, q=95, with_mask=True, adaptive_eq=True, max_colors=100):
+        """
+        Parameters
+        ----------
+        n_colors : int
+            Number of colors to use for deconvolution. If `n_stains = -1`, then the number
+            of colors will be estimated using the K-means "elbow method".
+
+        max_colors : int
+            If `n_colors = -1`, this value sets the maximum number of color clusters
+        """
+        if with_mask:
+            processed_img = self.process_image_with_mask(n_colors=n_colors, q=q, max_colors=max_colors)
+        else:
+            processed_img = self.process_image_all(n_colors=n_colors, q=q, max_colors=max_colors)
+
+        if adaptive_eq:
+            processed_img = exposure.equalize_adapthist(processed_img)
+
+        processed_img = exposure.rescale_intensity(processed_img, in_range="image", out_range=(0, 255)).astype(np.uint8)
+
+        return processed_img
+
+
+class Gray(ImageProcesser):
+    """Get luminosity of an RGB image
+
+    """
+
+    def __init__(self, image, src_f, level, series, *args, **kwargs):
+        super().__init__(image=image, src_f=src_f, level=level,
+                         series=series, *args, **kwargs)
+
+
+    def create_mask(self):
+        _, tissue_mask = create_tissue_mask_from_rgb(self.image)
+
+        return tissue_mask
+
+    def process_image(self,  *args, **kwaargs):
+        g = skcolor.rgb2gray(self.image)
+        processed_img = exposure.rescale_intensity(g, in_range="image", out_range=(0, 255)).astype(np.uint8)
 
         return processed_img
 
@@ -491,6 +644,26 @@ def jab2rgb(jab, cspace='CAM16UCS'):
     return rgb
 
 
+def jch2rgb(jch, cspace="CAM16UCS", h_rotation=0):
+    eps = np.finfo("float").eps
+
+    c = jch[..., 1]
+    h = np.deg2rad(jch[..., 2] - h_rotation)
+
+    a = c*np.cos(h)
+    b = c*np.sin(h)
+
+    jab = np.dstack([jch[..., 0], a, b])
+
+    with colour.utilities.suppress_warnings(colour_usage_warnings=True):
+        rgb = colour.convert(jab + eps, cspace, 'sRGB')
+
+    rgb = np.clip(rgb, 0, 1)
+    rgb = (255*rgb).astype(np.uint8)
+
+    return rgb
+
+
 def rgb2jch(rgb, cspace='CAM16UCS', h_rotation=0):
     jab = rgb2jab(rgb, cspace)
     jch = colour.models.Jab_to_JCh(jab)
@@ -501,6 +674,7 @@ def rgb2jch(rgb, cspace='CAM16UCS', h_rotation=0):
         jch[..., 2][above_360] = jch[..., 2][above_360] - 360
 
     return jch
+
 
 
 def rgb255_to_rgb1(rgb_img):
@@ -523,10 +697,10 @@ def rgb2od(rgb_img):
 
 
 def stainmat2decon(stain_mat_srgb255):
-
     od_mat = rgb2od(stain_mat_srgb255)
 
-    M = od_mat / np.linalg.norm(od_mat, axis=1, keepdims=True)
+    eps = np.finfo("float").eps
+    M = od_mat / np.linalg.norm(od_mat+eps, axis=1, keepdims=True)
     M[np.isnan(M)] = 0
     D = np.linalg.pinv(M)
 
@@ -539,6 +713,147 @@ def deconvolve_img(rgb_img, D):
     deconvolved_img[deconvolved_img < 0] = 0
 
     return deconvolved_img
+
+
+def thresh_unimodal(x, bins=256):
+    """
+    https://users.cs.cf.ac.uk/Paul.Rosin/resources/papers/unimodal2.pdf
+
+    To threshold
+    :param px_vals:
+    :param bins:
+    :return:
+    """
+    # Threshold unimodal distribution
+    skew = stats.skew(x)
+    # Find line from peak to tail
+    if skew >= 0:
+        counts, bin_edges = np.histogram(x, bins=bins)
+    else:
+        # Tail is to the left, so reverse values to use this method, which assumes tail is on the right
+        counts, bin_edges = np.histogram(-x, bins=bins)
+
+    bin_width = bin_edges[1] - bin_edges[0]
+    midpoints = bin_edges[0:-1] + bin_width/2
+    hist_line = LineString(np.column_stack([midpoints, counts]))
+
+    peak_bin = np.argmax(counts)
+    last_non_zero = np.where(counts > 0)[0][-1]
+    if last_non_zero == len(counts) - 1:
+        min_bin = last_non_zero
+    else:
+        min_bin = last_non_zero + 1
+
+    peak_x, min_bin_x = midpoints[peak_bin], midpoints[min_bin]
+    peak_y, min_bin_y = counts[peak_bin], counts[min_bin]
+
+    peak_m = (peak_y- min_bin_y)/(peak_x - min_bin_x + np.finfo(float).resolution)
+    peak_b = peak_y - peak_m*peak_x
+    perp_m = -peak_m + np.finfo(float).resolution
+    n_v = len(midpoints)
+    d = [-1] * n_v
+    all_xi = [-1] * n_v
+
+    for i in range(n_v):
+
+        x1 = midpoints[i]
+        if x1 < peak_x:
+            continue
+        y1 = peak_m*x1 + peak_b
+        perp_b = y1 - perp_m*x1
+        y2 = 0
+        x2 = -perp_b/(perp_m)
+
+        perp_line_obj = LineString([[x1, y1], [x2, y2]])
+        if not perp_line_obj.is_valid or not hist_line.is_valid:
+            print("perpline is valid", perp_line_obj.is_valid, "hist line is valid", hist_line.is_valid)
+            print("perpline xy1, xy2", [x1, y1], [x2, y2], "m=", perp_m)
+
+        intersection = perp_line_obj.intersection(hist_line)
+        if intersection.is_empty:
+            # No intersection
+            continue
+        if intersection.geom_type == 'MultiPoint':
+            all_x, all_y = LineString(intersection.geoms).xy
+            xi = all_x[-1]
+            yi = all_y[-1]
+        elif intersection.geom_type == 'Point':
+            xi, yi = intersection.xy
+            xi = xi[0]
+            yi = yi[0]
+        d[i] = np.sqrt((xi - x1)**2 + (yi - y1)**2)
+        all_xi[i] = xi
+
+    max_d_idx = np.argmax(d)
+    t = all_xi[max_d_idx]
+
+    if skew < 0:
+        t*= -1
+
+    return t
+
+
+def estimate_k(x, max_k=100, step_size=10):
+
+    if max_k <= 10:
+        step_size = 1
+
+    # Create initial cluster list
+    potential_c = np.arange(0, max_k, step=step_size)
+    # potential_c = np.linspace(2, max_k, n_steps).astype(int)
+    if potential_c[-1] != max_k:
+        potential_c = np.hstack([potential_c, max_k])
+    potential_c[0] = 2
+    potential_c = np.unique(potential_c[potential_c > 1])
+
+    almost_done = False
+    done = False
+    best_k = 2
+    best_clst = None
+    k_step = step_size
+    while not done:
+        inertia_list = []
+        nc = []
+        clst_list = []
+
+        for i in potential_c:
+
+            try:
+                clusterer = cluster.MiniBatchKMeans(n_clusters=i, n_init=3)
+                clusterer.fit(x)
+
+            except Exception as e:
+                continue
+            inertia_list.append(clusterer.inertia_)
+            nc.append(i)
+            clst_list.append(clusterer)
+
+        inertia_list = np.array(inertia_list)
+
+        dy = np.diff(inertia_list)
+        intertia_t = thresh_unimodal(dy, int(np.max(potential_c)))
+        best_k_idx = np.where(dy >= intertia_t)[0][0] + 1
+        best_k = potential_c[best_k_idx]
+        best_clst = clst_list[best_k_idx]
+        if almost_done:
+            done = True
+            break
+
+        next_k_range = np.clip([best_k - k_step//2, best_k + k_step//2], 2, max_k)
+        kd = np.diff(next_k_range)[0]
+        if kd == 0:
+            done = True
+            almost_done = True
+            break
+        if kd <= 10:
+            k_step = 1
+            almost_done = True
+        else:
+            k_step = step_size
+
+        potential_c = np.arange(next_k_range[0], next_k_range[1], k_step)
+
+    return best_k, best_clst
 
 
 def combine_masks_by_hysteresis(mask_list):
@@ -587,6 +902,7 @@ def combine_masks(mask1, mask2, op="or"):
         combo_mask = warp_tools.vips2numpy(combo_mask)
 
     return combo_mask
+
 
 def remove_small_obj_and_lines_by_dist(mask):
     """
@@ -889,7 +1205,7 @@ def norm_img_stats(img, target_stats, mask=None):
     target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots]).astype(float)
 
     # Add epsilon to avoid duplicate values
-    eps = 10*np.finfo(float).resolution
+    eps = 100*np.finfo(float).resolution
     eps_array = np.arange(len(src_stats_flat)) * eps
     src_stats_flat = src_stats_flat + eps_array
     target_stats_flat = target_stats_flat + eps_array

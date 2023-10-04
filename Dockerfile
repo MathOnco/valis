@@ -1,8 +1,11 @@
-FROM ubuntu:kinetic as builder
-# Using kinetic to get Python 3.10, used by Poetry
+FROM ubuntu:latest as builder
 
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
+
+ARG VIPS_VERSION=8.14.5
+ARG BF_VERSION=7.0.0
+ARG PYTORCH_VERSION=2.0.1
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -19,13 +22,12 @@ RUN apt-get update \
 		wget \
 		ca-certificates \
 		git-all \
-		cmake
+		cmake \
+		libjxr-dev \
+        openjdk-11-jre
 
-
-# we need meson for libvips build
+# libvips dependencies for libvips build
 RUN pip3 install meson
-
-# libvips dependencies
 RUN apt-get install --no-install-recommends -y \
 	glib-2.0-dev \
 	libexpat-dev \
@@ -41,16 +43,13 @@ RUN apt-get install --no-install-recommends -y \
 	libopenslide-dev
 
 
-RUN update-ca-certificates
+# RUN update-ca-certificates
 # Install libvips from source to get latest version
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
 
-ARG VIPS_VERSION=8.14.1
-ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
-
-
 # build the head of the stable 8.14 branch
+ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 RUN wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz --no-check-certificate \
 	&& tar xf vips-${VIPS_VERSION}.tar.xz \
 	&& cd vips-${VIPS_VERSION} \
@@ -63,34 +62,36 @@ RUN rm vips-${VIPS_VERSION}.tar.xz
 RUN rm -r vips-${VIPS_VERSION}
 
 
+# Copy over necessary files
+COPY valis valis
+COPY pyproject.toml pyproject.toml
+# COPY poetry.lock poetry.lock
+COPY README.rst README.rst
+COPY LICENSE.txt LICENSE.txt
+COPY CITATION.cff CITATION.cff
 
 # Install python packages using poetry
-COPY . .
-
 RUN pip3 install --upgrade pip
-RUN pip3 install poetry && poetry config virtualenvs.in-project true
+RUN pip3 install "poetry>=1.6.1"
+RUN poetry config virtualenvs.in-project true
 
+# RUN pip3 install poetry>=1.6.1
+# RUN poetry config virtualenvs.in-project true
 
-RUN pip3 install poetry
-RUN poetry remove aicspylibczi
+# RUN pip3 install poetry
+# RUN poetry remove aicspylibczi
+# Will install some Python packages with Git, so update git config
+RUN git config --global http.sslVerify false
+RUN poetry remove torch
+RUN poetry lock
 RUN poetry install --only main
 
 # Set path to use .venv Python
 ENV PATH="${WKDIR}/.venv/bin:$PATH"
 
-# Install python packages that can't be installed with poetry/pip (pep517)
-RUN . .venv/bin/activate
-ARG CZI_DIR=./aicspylibczi
-RUN git config --global http.sslVerify false
-RUN git clone https://github.com/AllenCellModeling/aicspylibczi.git ${CZI_DIR} --recurse-submodules
-WORKDIR ${CZI_DIR}
-RUN pip install -e .[dev] # for development (-e means editable so changes take effect when made)
+RUN ${WKDIR}/.venv/bin/pip install --no-cache-dir torch==${PYTORCH_VERSION} --index-url https://download.pytorch.org/whl/cpu
 
-WORKDIR ${WKDIR}
-
-
-# Install bioformats.jar in valis
-ARG BF_VERSION=6.12.0
+# # Install bioformats.jar in valis
 RUN wget https://downloads.openmicroscopy.org/bio-formats/${BF_VERSION}/artifacts/bioformats_package.jar -P valis
 
 # Clean up
@@ -102,38 +103,39 @@ RUN  apt-get remove -y wget build-essential ninja-build && \
   rm -rf /usr/local/lib/python*
 
 
-# Copy over only what is needed to run, but not build, the package.
-FROM ubuntu:kinetic
+# # Copy over only what is needed to run, but not build, the package.
+# # FROM ubuntu:jammy
 
-ARG WKDIR=/usr/local/src
-WORKDIR ${WKDIR}
+# ARG WKDIR=/usr/local/src
+# WORKDIR ${WKDIR}
 
-COPY --from=builder /usr/local/lib /usr/local/lib
-COPY --from=builder /etc/ssl/certs /etc/ssl/certs
-COPY --from=builder /usr/local/src /usr/local/src
+# COPY --from=builder /usr/local/lib /usr/local/lib
+# COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+# COPY --from=builder /usr/local/src /usr/local/src
 
-ENV LD_LIBRARY_PATH /usr/local/lib
-ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
-ENV PATH="${WKDIR}/.venv/bin:$PATH"
+# ENV LD_LIBRARY_PATH /usr/local/lib
+# ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
+# ENV PATH="${WKDIR}/.venv/bin:$PATH"
 
-ENV DEBIAN_FRONTEND=noninteractive
+# ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update \
-	&& apt-get install -y \
-	glib-2.0-dev \
-	libexpat-dev \
-	librsvg2-dev \
-	libpng-dev \
-	libjpeg-turbo8-dev \
-	libtiff-dev \
-	libexif-dev \
-	liblcms2-dev \
-	libheif-dev \
-	liborc-dev \
-	libgirepository1.0-dev \
-	libopenslide-dev \
-	libjxr-dev
+# RUN apt-get update \
+# 	&& apt-get install -y \
+# 	glib-2.0-dev \
+# 	libexpat-dev \
+# 	librsvg2-dev \
+# 	libpng-dev \
+# 	libjpeg-turbo8-dev \
+# 	libtiff-dev \
+# 	libexif-dev \
+# 	liblcms2-dev \
+# 	libheif-dev \
+# 	liborc-dev \
+# 	libgirepository1.0-dev \
+# 	libopenslide-dev \
+# 	libjxr-dev \
+# 	openjdk-11-jre
 
 # Install other non-Python dependencies
-RUN apt-get install -y \
-    openjdk-11-jre
+# RUN apt-get install -y \
+    # openjdk-11-jre

@@ -10,6 +10,7 @@ from collections import defaultdict
 
 color_init()
 
+
 def print_warning(msg, warning_type=UserWarning, rgb=Fore.RED):
     """Print warning message with color
     """
@@ -50,6 +51,22 @@ def rename_kwargs(func_name, kwargs, aliases):
 def HiddenPrints():
     with contextlib.redirect_stdout(open(os.devnull, 'w')):
         yield
+
+
+def pad_strings(string_list, side="r"):
+    """
+    side : string
+        Which side to add the padding to
+    """
+    if side.lower().startswith("r"):
+        pad_fxn = "ljust"
+    else:
+        pad_fxn = "rjust"
+
+    max_chr = max([len(x) for x in string_list])
+    padded_strings = [x.__getattribute__(pad_fxn)(max_chr) for x in string_list]
+
+    return padded_strings
 
 
 def get_name(f):

@@ -1,0 +1,71 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Gatenbee"
+  given-names: "Chandler"
+  orcid: "https://orcid.org/0000-0002-9730-5964"
+- family-names: "Anderson"
+  given-names: "Alexander R.A."
+  orcid: "https://orcid.org/0000-0002-2536-4383"
+
+title: "VALIS: Virtual alignment of pathology image series for multi-gigapixel whole slide images"
+version: 1.0.0
+doi: 10.5281/zenodo.7920926
+date-released: May 10, 2023
+url: "https://github.com/MathOnco/valis"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Gatenbee"
+    given-names: "Chandler"
+    orcid: "https://orcid.org/0000-0002-9730-5964"
+  - family-names: "Baker"
+    given-names: "Ann-Marie"
+    orcid: "https://orcid.org/0000-0001-8905-9137"
+  - family-names: "Prabhakaran"
+    given-names: "Sandhya"
+    orcid: "https://orcid.org/0000-0002-9537-507X"
+  - family-names: "Swinyard"
+    given-names: "Ottilie"
+    orcid: "https://orcid.org/0000-0001-8474-8865"
+  - family-names: "Slebos"
+    given-names: "Robbert J.C."
+    orcid: "https://orcid.org/0000-0003-3117-9544"
+  - family-names: "Mandal"
+    given-names: "Gunjan"
+    orcid: "https://orcid.org/0000-0002-4281-8009"
+  - family-names: "Mulholland"
+    given-names: "Eoghan"
+    orcid: "https://orcid.org/0000-0002-1200-9825"
+  - family-names: "Andor"
+    given-names: "Noemi"
+    orcid: "https://orcid.org/0000-0002-2469-5180"
+  - family-names: "Marusyk"
+    given-names: "Andriy"
+    orcid: "https://orcid.org/0000-0002-0087-9575"
+  - family-names: "Leedham"
+    given-names: "Simon"
+    orcid: "https://orcid.org/0000-0003-1476-6982"
+  - family-names: "Conejo-Garcia"
+    given-names: "Jose R."
+    orcid: "https://orcid.org/0000-0001-6431-4074"
+  - family-names: "Chung"
+    given-names: "Christine H."
+  - family-names: "Robertson-Tessi"
+    given-names: "Mark"
+    orcid: "0000-0003-0143-9587"
+  - family-names: "Graham"
+    given-names: "Trevor A."
+    orcid: "https://orcid.org/0000-0001-9582-1597"
+  - family-names: "Anderson"
+    given-names: "Alexander R. A."
+    orcid: "https://orcid.org/0000-0002-2536-4383"
+
+  doi: "10.1038/s41467-023-40218-9"
+  journal: "Nature Communications"
+  month: 7
+  start: 4502 # First page number
+  title: "Virtual alignment of pathology image series for multi-gigapixel whole slide images"
+  issue: 1
+  volume: 14
+  year: 2023

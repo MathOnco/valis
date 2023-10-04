@@ -839,7 +839,7 @@ class SerialNonRigidRegistrar(object):
         current_dxdy = None
         self.non_rigid_reg_params = non_rigid_reg_params
         iter_order = warp_tools.get_alignment_indices(self.size, self.ref_img_idx)
-        for moving_idx, fixed_idx in tqdm(iter_order):
+        for moving_idx, fixed_idx in tqdm(iter_order, desc="Finding non-rigid transforms", unit="image"):
             moving_obj = self.non_rigid_obj_list[moving_idx]
             fixed_obj = self.non_rigid_obj_list[fixed_idx]
 
@@ -889,7 +889,7 @@ class SerialNonRigidRegistrar(object):
         self.non_rigid_reg_params = non_rigid_reg_params
         ref_nr_obj = self.non_rigid_obj_list[self.ref_img_idx]
         ref_img = ref_nr_obj.image
-        for moving_idx in tqdm(range(self.size)):
+        for moving_idx in tqdm(range(self.size), desc="Finding non-rigid transforms", unit="image"):
             moving_obj = self.non_rigid_obj_list[moving_idx]
             if moving_obj.stack_idx == self.ref_img_idx:
                 continue
@@ -926,7 +926,8 @@ class SerialNonRigidRegistrar(object):
 
         print("\n======== Registering images (non-rigid)\n")
         warped_imgs, warped_grids, backward_deformations = non_rigid_reg.register(img_list, self.mask)
-        for i, nr_img_obj in enumerate(self.non_rigid_obj_list):
+
+        for i, nr_img_obj in tqdm(enumerate(self.non_rigid_obj_list), desc="Aligning images", unit="annotation"):
             nr_img_obj.registered_img = warped_imgs[i]
             nr_img_obj.bk_dxdy = backward_deformations[i]
             nr_img_obj.warped_grid = viz.color_displacement_grid(*nr_img_obj.bk_dxdy)

@@ -122,11 +122,23 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, rad=3, alignment='horizontal'
 
     """
 
-    all_dims = np.array([src_img.shape, dst_img.shape])
+    all_dims = np.array([src_img.shape[:2], dst_img.shape[:2]])
     out_shape = np.max(all_dims, axis=0)[0:2]
 
     padded_src, src_T = warp_tools.pad_img(src_img, out_shape)
     padded_dst, dst_T = warp_tools.pad_img(dst_img, out_shape)
+
+    if padded_src.ndim == 2:
+        padded_src = np.dstack([padded_src]*3)
+
+    if padded_dst.ndim == 2:
+        padded_dst = np.dstack([padded_dst]*3)
+
+    if not padded_src.dtype == np.uint8:
+        padded_src = exposure.rescale_intensity(padded_src, out_range=np.uint8)
+
+    if not padded_src.dtype == np.uint8:
+        padded_dst = exposure.rescale_intensity(padded_dst, out_range=np.uint8)
 
     if alignment.lower().startswith("v"):
         feature_img = np.vstack([padded_src, padded_dst])
@@ -134,9 +146,6 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, rad=3, alignment='horizontal'
     else:
         feature_img = np.hstack([padded_src, padded_dst])
         dst_xy_shift = np.array([out_shape[1], 0])
-
-    if feature_img.ndim == 2:
-        feature_img = color.gray2rgb(feature_img).astype(np.uint8)
 
     dst_T[0:2, 2] -= dst_xy_shift
     dst_xy_in_feature_img = warp_tools.warp_xy(kp2_xy, M=dst_T)
@@ -155,8 +164,8 @@ def draw_matches(src_img, kp1_xy, dst_img, kp2_xy, rad=3, alignment='horizontal'
         circ_rc_1 = draw.ellipse(*xy1[::-1], rad, rad, shape=feature_img.shape)
         circ_rc_2 = draw.ellipse(*xy2[::-1], rad, rad, shape=feature_img.shape)
         line_rc = np.array(draw.line_aa(*np.round(xy1[::-1]).astype(int), *np.round(xy2[::-1]).astype(int)))
-        line_rc[0] = np.clip(line_rc[0], 0, feature_img.shape[0]).astype(int)
-        line_rc[1] = np.clip(line_rc[1], 0, feature_img.shape[1]).astype(int)
+        line_rc[0] = np.clip(line_rc[0], 0, feature_img.shape[0]-1).astype(int)
+        line_rc[1] = np.clip(line_rc[1], 0, feature_img.shape[1]-1).astype(int)
 
         feature_img[line_rc[0].astype(int), line_rc[1].astype(int)] = pt_color*line_rc[2][..., np.newaxis]
         feature_img[circ_rc_1] = pt_color
