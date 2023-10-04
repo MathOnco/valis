@@ -1,15 +1,16 @@
 Change Log
 **********
 
-Version 1.0.0 (September, 2023)
+Version 1.0.0 (October 4, 2023)
 -------------------------------------
 #. Added option for high resolution rigid registration using the :code:`micro_rigid_registrar.MicroRigidRegistrar` class. To use this option, pass an uninstantiated :code:`micro_rigid_registrar.MicroRigidRegistrar` to :code:`micro_rigid_registrar_cls` when initializing the :code:`Valis` object. This class refines the rigid registration by detecting and matching features in higher resolution images warped using the initial rigid transforms. This should result in more accurate rigid registration, error estimates, and hopefully fewer unwanted non-rigid deformations.
 #. Added support for SuperPoint and SuperGlue feature detection and matching
 #. Masks not applied to images for rigid registration. Instead, the masks are used to filter the matches (i.e. keep only matches inside masks).
 #. Added support to extract different Z and T planes using the :code:`slide_io.BioFormatsSlideReader`.
-#. Non-rigid masks found by combining the intensities of the rigidly aligned images, as opposed to combining the rigid masks. Testing indicates these masks fit more tightly around the tissue, which will translates to having higher resolution images being used for non-rigid registration.
+#. Non-rigid masks found by combining the intensities of the rigidly aligned images, as opposed to combining the rigid masks. Testing indicates these masks fit more tightly around the tissue, which will translate to having higher resolution images being used for non-rigid registration.
 #. Added the :code:`preprocessing.StainFlattener` class, which can be used with brightfield images.
 #. Added option for lossy compression by setting the :code:`Q` parameter using functions that save slides. Confirmed that RGB images saved using lossy JPEG and JPEG2000 compression open as expected in QuPath. Do note that float images saved using these compression methods will get cast to uint8 images. Addresses request made in `github issue 60 <https://github.com/MathOnco/valis/issues/60>`_.
+#. Added :code:`Valis.draw_matches` method to visualize feature matches between each pair of images.
 #. Fixed issue converting big-endian WSI to :code:`pyvips.Image` (reported on `image.sc <https://forum.image.sc/t/problems-registering-fluorescence-ome-tiffs-using-valis/82685>_`)
 #. Added citation information
 #. Updated docker container to include pytorch
