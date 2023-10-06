@@ -227,3 +227,7 @@ def test_img_warp(max_mi=0.5, max_px_d=0.1):
     passed = pt_d < max_px_d and mi < max_mi
 
     assert passed
+
+
+if __name__ == "__main__":
+    test_img_warp()

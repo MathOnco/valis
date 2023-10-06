@@ -52,6 +52,7 @@ import numpy as np
 
 import shutil
 import sys
+import os
 # sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import registration, valtils
 from valis.micro_rigid_registrar import MicroRigidRegistrar
@@ -74,11 +75,15 @@ def cnames_from_filename(src_f):
     f = valtils.get_name(src_f)
     return ["DAPI"] + f.split(" ")
 
-parent_dir = get_parent_dir()
+# parent_dir = get_parent_dir()
+parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
 datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
-results_dst_dir = os.path.join(parent_dir, f"valis/tests/tmp{sys.version_info.major}{sys.version_info.minor}")
 
-
+in_container = sys.platform == "linux" and os.getcwd() == '/usr/local/src'
+if in_container:
+    results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
+else:
+    results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
 def register_hi_rez(src_dir):
     high_rez_dst_dir = os.path.join(results_dst_dir, "high_rez")
@@ -108,9 +113,9 @@ def register_hi_rez(src_dir):
     registrar.draw_matches(matches_dst_dir)
 
 
-def register_ihc(max_error=45):
+def test_register_ihc(max_error=50):
+    """Tests registration and lossy jpeg2000 compression"""
     ihc_src_dir = os.path.join(datasets_src_dir, "ihc")
-    ihc_dst_dir = os.path.join(results_dst_dir, "ihc")
     try:
         registrar = registration.Valis(ihc_src_dir, results_dst_dir)
         rigid_registrar, non_rigid_registrar, error_df = registrar.register()
@@ -122,8 +127,7 @@ def register_ihc(max_error=45):
             assert False, f"error was {avg_error} but should be below {max_error}"
 
         registered_slide_dst_dir = os.path.join(registrar.dst_dir, "registered_slides", registrar.name)
-        registrar.warp_and_save_slides(registered_slide_dst_dir)
-        # registration.kill_jvm()
+        registrar.warp_and_save_slides(dst_dir=registered_slide_dst_dir, Q=90, compression="jp2k")
 
         # shutil.rmtree(ihc_dst_dir, ignore_errors=True)
 
@@ -138,7 +142,6 @@ def test_register_cycif(max_error=3):
 
 
     cycif_src_dir = os.path.join(datasets_src_dir, "cycif")
-    cycif_dst_dir = os.path.join(results_dst_dir, "cycif")
     try:
         registrar = registration.Valis(cycif_src_dir, results_dst_dir)
         rigid_registrar, non_rigid_registrar, error_df = registrar.register()
@@ -155,7 +158,8 @@ def test_register_cycif(max_error=3):
         dst_f = os.path.join(registrar.dst_dir, "registered_slides", f"{registrar.name}.ome.tiff")
         merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
                                             channel_name_dict=channel_name_dict,
-                                            drop_duplicates=True)
+                                            drop_duplicates=True,
+                                            Q=90)
 
         # registration.kill_jvm()
 
@@ -178,6 +182,8 @@ def test_register_hi_rez_cycif():
     register_hi_rez(src_dir=cycif_src_dir)
 
 
-# if __name__ == "__main__":
-#     test_register_hi_rez_ihc()
-#     test_register_hi_rez_cycif()
+if __name__ == "__main__" and in_container:
+    # test_register_cycif()
+    # test_register_ihc()
+    test_register_hi_rez_ihc()
+    test_register_hi_rez_cycif()

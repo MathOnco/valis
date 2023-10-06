@@ -19,6 +19,7 @@ import shapely
 from copy import deepcopy
 from pprint import pformat
 import json
+from colorama import Fore
 
 from . import feature_matcher
 from . import serial_rigid
@@ -973,6 +974,8 @@ class Slide(object):
             Q factor for lossy compression
 
         """
+        if src_f is None:
+            src_f = self.src_f
 
         warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
                                        crop=crop,
@@ -2103,10 +2106,10 @@ class Valis(object):
 
                     elif len(matching_f) > 1:
                         msg = f"found {len(matching_f)} matches for {dir_name}: {', '.join(matching_f)}"
-                        valtils.print_warning(msg)
+                        valtils.print_warning(msg, rgb=Fore.RED)
                     elif len(matching_f) == 0:
                         msg = f"Can't find slide file associated with {dir_name}"
-                        valtils.print_warning(msg)
+                        valtils.print_warning(msg, rgb=Fore.RED)
 
     def set_dst_paths(self):
         """Set paths to where the results will be saved.
@@ -2189,7 +2192,7 @@ class Valis(object):
                    f"the dictionary. Either key (filenmae) or value (assigned name) will work:\n"
                    f"{pformat(possible_names_dict)}")
 
-            valtils.print_warning(msg)
+            valtils.print_warning(msg, rgb=Fore.RED)
             slide_obj = None
 
         return slide_obj
@@ -2233,7 +2236,7 @@ class Valis(object):
                 z = len(str(len(dup_paths)))
 
                 msg = f"Detected {len(dup_paths)} images that would be named {dup_name}"
-                valtils.print_warning(msg)
+                valtils.print_warning(msg, rgb=Fore.RED)
 
                 for j, p in enumerate(dup_paths):
                     new_name = f"{names_dict[p]}_{str(j).zfill(z)}"
@@ -2279,7 +2282,7 @@ class Valis(object):
                     slide_reader_cls = slide_io.get_slide_reader(f, series=series)
                 except Exception as e:
                     msg = f"Attempting to get reader for {f} created the following error:\n{e}"
-                    valtils.print_warning(msg)
+                    valtils.print_warning(msg, rgb=Fore.RED)
             else:
                 slide_reader_cls = reader_cls
 
@@ -2287,7 +2290,7 @@ class Valis(object):
                 reader = slide_reader_cls(f, series=series)
             except Exception as e:
                 msg = f"Attempting to read {f} created the following error:\n{e}"
-                valtils.print_warning(msg)
+                valtils.print_warning(msg, rgb=Fore.RED)
 
             slide_dims = reader.metadata.slide_dimensions
             levels_in_range = np.where(slide_dims.max(axis=1) < self.max_image_dim_px)[0]
@@ -2994,7 +2997,7 @@ class Valis(object):
 
         if rigid_registrar is False:
             msg = "Rigid registration failed"
-            valtils.print_warning(msg)
+            valtils.print_warning(msg, rgb=Fore.RED)
 
             return False
 
@@ -4147,7 +4150,7 @@ class Valis(object):
             error_df.to_csv(data_f_out, index=False)
 
         except Exception as e:
-            valtils.print_warning(e)
+            valtils.print_warning(e, rgb=Fore.RED)
             print(traceback.format_exc())
             kill_jvm()
             return None, None, None
@@ -4451,7 +4454,7 @@ class Valis(object):
                              crop=True,
                              colormap=None,
                              interp_method="bicubic",
-                             tile_wh=None, compression="lzw"):
+                             tile_wh=None, compression="lzw", Q=100):
 
         f"""Warp and save all slides
 
@@ -4492,6 +4495,9 @@ class Valis(object):
             Compression method used to save ome.tiff . Default is lzw, but can also
             be jpeg or jp2k. See pyips for more details.
 
+        Q : int
+            Q factor for lossy compression
+
         """
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
@@ -4508,12 +4514,14 @@ class Valis(object):
                         valtils.print_warning(msg)
 
             dst_f = os.path.join(dst_dir, slide_obj.name + ".ome.tiff")
+
             slide_obj.warp_and_save_slide(dst_f=dst_f, level=level,
                                           non_rigid=non_rigid,
                                           crop=crop,
+                                          src_f=slide_obj.src_f,
                                           interp_method=interp_method,
                                           colormap=slide_cmap,
-                                          tile_wh=tile_wh, compression=compression)
+                                          tile_wh=tile_wh, compression=compression, Q=Q)
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_merge_slides(self, dst_f=None, level=0, non_rigid=True,

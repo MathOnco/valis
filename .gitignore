@@ -172,6 +172,10 @@ examples/expected_results/registered_slides
 tests/tmp39
 tests/tmp310
 tests/tmp311
+tests/39
+tests/310
+tests/311
+tests/docker
 tests/test_difficult_cases.py
 tests/test_read_czi_jpgxr.py
 tests/test_tiler.py
@@ -197,3 +201,11 @@ Dockerfile_torch_debian
 torch_pyproject.toml
 
 tests/test_micro_rigid.py
+
+pip_poetry.lock
+
+pip_pyproject.toml
+
+docker_run_tests.sh
+
+docker_run_tests_by_line.sh

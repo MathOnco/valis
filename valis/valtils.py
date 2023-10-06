@@ -11,7 +11,7 @@ from collections import defaultdict
 color_init()
 
 
-def print_warning(msg, warning_type=UserWarning, rgb=Fore.RED):
+def print_warning(msg, warning_type=UserWarning, rgb=Fore.YELLOW):
     """Print warning message with color
     """
     warning_msg = f"{rgb}{msg}{Style.RESET_ALL}"

@@ -1,6 +1,11 @@
 Change Log
 **********
 
+Version 1.0.1 (October 6, 2023)
+-------------------------------------
+#. Bug fixes to functions related to saving slides as ome.tiff
+#. Address numba deprecation warnings
+
 Version 1.0.0 (October 4, 2023)
 -------------------------------------
 #. Added option for high resolution rigid registration using the :code:`micro_rigid_registrar.MicroRigidRegistrar` class. To use this option, pass an uninstantiated :code:`micro_rigid_registrar.MicroRigidRegistrar` to :code:`micro_rigid_registrar_cls` when initializing the :code:`Valis` object. This class refines the rigid registration by detecting and matching features in higher resolution images warped using the initial rigid transforms. This should result in more accurate rigid registration, error estimates, and hopefully fewer unwanted non-rigid deformations.
