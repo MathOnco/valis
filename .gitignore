@@ -209,3 +209,7 @@ pip_pyproject.toml
 docker_run_tests.sh
 
 docker_run_tests_by_line.sh
+
+git_poetry.lock
+
+git_pyproject.toml

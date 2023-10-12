@@ -1,6 +1,10 @@
 Change Log
 **********
 
+Version 1.0.2 (October 11, 2023)
+-------------------------------------
+#. Fix issue with pip installaton, where the pyproject.toml tried to get aicspylibczi from Github, not PyPi
+
 Version 1.0.1 (October 6, 2023)
 -------------------------------------
 #. Bug fixes to functions related to saving slides as ome.tiff

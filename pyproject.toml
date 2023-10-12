@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valis-wsi"
-version = "1.0.1"
+version = "1.0.2"
 description = ""
 authors = ["Chandler Gatenbee <chandlergatenbee@gmail.com>"]
 license = "MIT"
@@ -8,13 +8,12 @@ readme = "README.rst"
 packages = [{include = "valis"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.9,<3.11"
 beautifulsoup4 = "^4.11.1"
 scyjava = "^1.8.1"
 colorama = "^0.4.6"
 colour-science = ">0.4.2"
 fastcluster = "^1.2.6"
-interpolation = {git = "https://github.com/EconForge/interpolation.py.git"}
 joblib = "^1.2.0"
 jpype1 = "^1.4.1"
 matplotlib = "^3.6.3"
@@ -35,8 +34,8 @@ weightedstats = "^0.4.1"
 pqdm = "^0.2.0"
 markupsafe = "^2.0.0"
 torch = "^2.0.1"
-aicspylibczi = {git = "https://github.com/AllenCellModeling/aicspylibczi.git"}
-
+aicspylibczi = "^3.1.2"
+interpolation = "^2.2.4"
 
 [build-system]
 requires = ["poetry-core", "setuptools>=57.0.0", "Cython>=0.29.27"]

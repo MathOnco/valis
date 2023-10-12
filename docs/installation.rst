@@ -9,21 +9,35 @@ DockerHub
 VALIS is available as a Docker image and can be downloaded from `DockerHub <https://hub.docker.com/r/cdgatenbee/valis-wsi>`_. Starting a container will launch an Ubuntu shell, and so Python needs to be called when executing the script. In this example, the user has a file called "register.py" that takes :code:`src_dir` and :code:`dst_dir` arguments, which registers all of the images in :code:`src_dir` and saves the results in :code:`dst_dir`. This example bind mounts the home directory, and thus the full paths need to be specified.
 
 .. code-block:: bash
-  
+
     $ docker run --memory=20g  -v "$HOME:$HOME" cdgatenbee/valis-wsi python3 full/path/to/register.py -src_dir full/path/to/images_to_align -dst_dir full/path/to/where_to_save_results
 
 
 .. important::
     To avoid the container from shutting down prematurely, be sure to set appropriately high memory limits (including in Docker Desktop).
 
-PyPi
-=====
-VALIS can be downloaded from PyPI as the `valis-wsi <https://pypi.org/project/valis-wsi/#description>`_ package using the pip command. However, VALIS requires several system level packages, which will need to be installed first.
+Pip install
+============
 
+VALIS can be downloaded from PyPI as the `valis-wsi <https://pypi.org/project/valis-wsi/#description>`_ package using the pip command. However, also VALIS requires several system level packages, which will need to be installed first (see `Prerequisites`_ below).
+
+
+.. code-block:: bash
+
+    $ pip install valis-wsi
+
+
+One can also use pip to install directly from Github
+
+.. code-block:: bash
+
+    $ pip install git+https://github.com/MathOnco/valis.git
+
+.. _Prerequisites
 Prerequisites
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VALIS uses Bioforamts to read many slide formats. Bioformats is written in Java, and VALIS uses the Python package jpype to access the Bioformats jar. Therefore, the user will need to have installed a Java Development Kit (JDK) containing the Java Runtime Environment (JRE):
+VALIS uses Bioformats to read many slide formats. Bioformats is written in Java, and VALIS uses the Python package jpype to access the Bioformats jar. Therefore, the user will need to have installed a Java Development Kit (JDK) containing the Java Runtime Environment (JRE):
 
 #. Download appropriate JDK from `java downloads <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_
 
