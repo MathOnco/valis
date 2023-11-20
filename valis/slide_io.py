@@ -731,6 +731,11 @@ class SlideReader(object):
                                  is not None]
 
             if len(matching_channels) == 0:
+                # Special characters may be preventing match
+                matching_channels = [i for i in range(self.metadata.n_channels) if
+                                     self.metadata.channel_names[i].lower().startswith(channel.lower())]
+
+            if len(matching_channels) == 0:
                 msg = f"Cannot find channel '{channel}' in {self.src_f}. Using channel 0"
                 valtils.print_warning(msg)
                 matching_channel_idx = 0
