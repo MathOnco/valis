@@ -2782,7 +2782,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                         aligned_slide_shape_rc, M=None, dxdy=None,
                         level=0, series=None, interp_method="bicubic",
                         bbox_xywh=None, bg_color=None, colormap=None,
-                        tile_wh=None, compression="lzw", Q=100):
+                        tile_wh=None, compression="lzw", Q=100, pyramid=True):
 
     """ Warp and save a slide
 
@@ -2848,6 +2848,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
 
     Q : int
         Q factor for lossy compression
+
+    pyramid : bool
+        Whether or not to save an image pyramid.
+
     """
 
     warped_slide = slide_tools.warp_slide(src_f=src_f,
@@ -2896,10 +2900,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                 tile_wh = min(out_xyczt[0:2])
 
     save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
-                  tile_wh=tile_wh, compression=compression, Q=Q)
+                  tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
 
 
-def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=100):
+def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=100, pyramid=True):
     """Save an image in the ome.tiff format using pyvips
 
     Parameters
@@ -2921,6 +2925,9 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
     Q : int
         Q factor for lossy compression
+
+    pyramid : bool
+        Whether or not to save an image pyramid.
 
     """
     compression = compression.lower()
@@ -3035,7 +3042,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
     rgbjpeg = compression in ["jp2k", "jpeg"] and img.interpretation == "srgb"
     img.tiffsave(dst_f, compression=compression, tile=True,
                  tile_width=tile_wh, tile_height=tile_wh,
-                 pyramid=True, subifd=True, bigtiff=True,
+                 pyramid=pyramid, subifd=True, bigtiff=True,
                  lossless=lossless, Q=Q, rgbjpeg=rgbjpeg)
 
     # Print total time to completion #
@@ -3052,7 +3059,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
 @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
-                        colormap=None, tile_wh=None, compression="lzw", Q=100):
+                        colormap=None, tile_wh=None, compression="lzw", Q=100, pyramid=True):
     """Convert an image to an ome.tiff image
 
     Saves a new copy of the image as a tiled pyramid ome.tiff with valid ome-xml.
@@ -3093,6 +3100,9 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
 
     Q : int
         Q factor for lossy compression
+
+    pyramid : bool
+        Whether or not to save an image pyramid.
 
     """
 
@@ -3135,4 +3145,4 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     if tile_wh > MAX_TILE_SIZE:
             tile_wh = MAX_TILE_SIZE
 
-    save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q)
+    save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
