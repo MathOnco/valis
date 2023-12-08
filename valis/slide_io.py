@@ -1884,6 +1884,422 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         return bf_type
 
+# class CziJpgxrReader(SlideReader):
+#     """Read slides and get metadata
+
+#     Attributes
+#     ----------
+#     slide_f : str
+#         Path to slide
+
+#     metadata : MetaData
+#         MetaData containing some basic metadata about the slide
+
+#     series : int
+#         Image series
+
+#     """
+#     def __init__(self, src_f, series=None, *args, **kwargs):
+#         """
+#         Parameters
+#         -----------
+#         src_f : str
+#             Path to slide
+
+#         series : int
+#             The series to be read. If `series` is None, the the `series`
+#             will be set to the series associated with the largest image.
+
+#         """
+#         try:
+#             from aicspylibczi import CziFile
+#         except Exception as e:
+#             msg = "Please install aicspylibczi"
+#             print(e)
+#             valtils.print_warning(msg)
+
+#         czi_reader = CziFile(src_f)
+#         self.original_meta_dict = valtils.etree_to_dict(czi_reader.meta)
+
+#         self.is_bgr = False
+#         self.meta_list = [None]
+
+#         super().__init__(src_f=src_f, *args, **kwargs)
+
+#         try:
+#             self.meta_list = self.create_metadata()
+#         except Exception as e:
+#             print(e)
+
+#         self.n_series = len(self.meta_list)
+#         if series is None:
+#             img_areas = [np.multiply(*meta.slide_dimensions[0]) for meta in self.meta_list]
+#             series = np.argmax(img_areas)
+#             msg = (f"No series provided. "
+#                    f"Selecting series with largest image, "
+#                    f"which is series {series}")
+
+#             valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
+
+#         self._series = series
+#         self.series = series
+
+#     def _set_series(self, series):
+#         self._series = series
+#         self.metadata = self.meta_list[series]
+
+#     def _get_series(self):
+#         return self._series
+
+#     series = property(fget=_get_series,
+#                       fset=_set_series,
+#                       doc="Slide scene")
+
+#     # def slide2vips(self, level, xywh=None, *args, **kwargs):
+#     #     """Convert slide to pyvips.Image
+
+#     #     Parameters
+#     #     -----------
+#     #     level : int
+#     #         Pyramid level
+
+#     #     xywh : tuple of int, optional
+#     #         The region to be sliced from the slide. If None,
+#     #         then the entire slide will be converted. Otherwise
+#     #         xywh is the (top left x, top left y, width, height) of
+#     #         the region to be sliced.
+
+#     #     Returns
+#     #     -------
+#     #     vips_slide : pyvips.Image
+#     #         An  of the slide or the region defined by xywh
+
+#     #     """
+
+#     #     if self.is_bgr:
+#     #         vips_img = self._read_rgb(level=level, xywh=xywh, *args, **kwargs)
+#     #     else:
+#     #         print("currently only support RGB images when the CZI images are compressed using JPGXR")
+#     #         vips_img = None
+
+#     #     return vips_img
+
+#     def slide2vips(self, level=0, xywh=None, *args, **kwargs):
+#         czi_reader = CziFile(self.src_f)
+#         # img_dict = self._get_img_meta_dict()
+#         # channels = img_dict["Dimensions"]["Channels"]["Channel"]
+#         # if self.is_bgr:
+#         #     bg_hex = channels["Color"]
+#         # else:
+#         #     bg_hex = channels[2]["Color"]
+
+#         # level = 4
+#         # bg = valtils.hex_to_rgb(bg_hex)[::-1]
+#         out_shape_wh = self.metadata.slide_dimensions[0]
+#         tile_bboxes = czi_reader.get_all_mosaic_tile_bounding_boxes(C=0)
+
+#         vips_img = pyvips.Image.black(*out_shape_wh, bands=self.metadata.n_channels) #+ bg_rgba[0:3]
+#         print(f"Building CZI mosaic for {valtils.get_name(self.src_f)}")
+#         for tile_info, tile_bbox in tqdm(tile_bboxes.items()):
+#             m = tile_info.m_index
+#             x = tile_bbox.x
+#             y = tile_bbox.y
+
+#             np_tile, tile_dims = czi_reader.read_image(M=m)
+
+#             slice_dims = [v - 1 for k, v in tile_dims if k not in ["Y", "X", "A"]]
+
+#             np_tile = np_tile[(*slice_dims, ...)]
+#             if self.is_bgr:
+#                 np_tile = np_tile[..., ::-1]
+
+#             vips_tile = warp_tools.numpy2vips(np_tile)
+#             vips_img = vips_img.insert(vips_tile, *(x, y))
+
+
+#         if xywh is not None:
+#             vips_img = vips_img.extract_area(*xywh)
+
+#         if level != 0:
+#             scaling = self.metadata._zoom_levels[level]
+#             vips_img = warp_tools.rescale_img(vips_img, scaling)
+#         if self.is_bgr:
+#             vips_img = vips_img.copy(interpretation="srgb")
+
+#         np_type = slide_tools.CZI_FORMAT_TO_BF_FORMAT[czi_reader.pixel_type]
+#         vips_type = slide_tools.NUMPY_FORMAT_VIPS_DTYPE[np_type]
+#         vips_img = vips_img.cast(vips_type)
+
+#         # np_img = vips_img.numpy()
+#         # import matplotlib.pyplot as plt
+#         # plt.imshow(np_img/np_img.max())
+#         # plt.show()
+#         # warp_tools.save_img("test_mc_czi.png", np_img)
+
+#         return vips_img
+
+
+#     def slide2image(self, level, xywh=None, *args, **kwargs):
+#         """Convert slide to image
+
+#         Parameters
+#         -----------
+#         level : int
+#             Pyramid level
+
+#         xywh : tuple of int, optional
+#             The region to be sliced from the slide. If None,
+#             then the entire slide will be converted. Otherwise
+#             xywh is the (top left x, top left y, width, height) of
+#             the region to be sliced.
+
+#         Returns
+#         -------
+#         img : ndarray
+#             An image of the slide or the region defined by xywh
+
+#         """
+
+#         vips_img = self.slide2vips(level=level, xywh=xywh, *args, **kwargs)
+#         np_img = warp_tools.vips2numpy(vips_img)
+
+#         return np_img
+
+#     def create_metadata(self):
+#         """ Create and fill in a MetaData object
+
+#         Returns
+#         -------
+#         metadata : MetaData
+#             MetaData object containing metadata about slide
+
+#         """
+
+#         czi_reader = CziFile(self.src_f)
+#         dims_dict = czi_reader.get_dims_shape()
+
+#         n_scenes = len(dims_dict)
+#         meta_list = [None] * n_scenes
+#         phys_size = self._get_pixel_physical_size()
+
+#         with valtils.HiddenPrints():
+#             bf_reader = BioFormatsSlideReader(self.src_f)
+#             original_xml = bf_reader.metadata.original_xml
+
+#         for i in range(n_scenes):
+
+#             temp_name = f"{os.path.split(self.src_f)[1]}".strip("_")
+#             full_name = f"{temp_name}_Scene_{i}"
+
+#             series_meta = MetaData(full_name, "aicspylibczi", series=i)
+
+#             series_meta.is_rgb = self._check_rgb()
+
+#             if series_meta.is_rgb:
+#                 n_channels = dims_dict[i]["A"][1]
+#                 series_meta.pyvips_interpretation = 'srgb'
+#             else:
+#                 n_channels = dims_dict[i]["C"][1]
+#                 if n_channels == 1:
+#                     series_meta.pyvips_interpretation = 'b-w'
+#                 else:
+#                     series_meta.pyvips_interpretation = 'multiband'
+
+#             series_meta.n_channels = n_channels
+#             series_meta.slide_dimensions = self._get_slide_dimensions(i)
+#             series_meta.bf_datatype = slide_tools.CZI_FORMAT_TO_BF_FORMAT[czi_reader.pixel_type]
+#             series_meta.channel_names = self._get_channel_names(meta=series_meta)
+#             # series_meta.channel_names = self._get_channel_names(meta=series_meta)
+#             series_meta.pixel_physical_size_xyu = phys_size
+#             series_meta.original_xml = original_xml
+#             series_meta._zoom_levels = self._get_zoom_levels(i)
+
+#             meta_list[i] = series_meta
+
+
+#         return meta_list
+
+#     def _get_img_meta_dict(self):
+#         return self.original_meta_dict["ImageDocument"]["Metadata"]["Information"]["Image"]
+
+#     def _check_rgb(self, *args, **kwargs):
+#         """Determine if image is RGB
+
+#         Returns
+#         -------
+#         is_rgb : bool
+#             Whether or not the image is RGB
+
+#         """
+#         czi_reader = CziFile(self.src_f)
+#         self.is_bgr = czi_reader.pixel_type.startswith("bgr")
+#         _is_rgb = czi_reader.pixel_type.startswith("rgb")
+#         is_rgb  =_is_rgb or self.is_bgr
+
+#         return is_rgb
+
+#     def _get_channel_names(self, meta, *args, **kwargs):
+#         """Get names of each channel
+
+#         Get list of channel names
+
+#         Returns
+#         -------
+#         channel_names : list
+#             List of channel names
+
+#         """
+#         if meta.is_rgb:
+#             return None
+
+#         img_dict = self._get_img_meta_dict()
+#         channels = img_dict["Dimensions"]["Channels"]
+#         if "Channel" in channels:
+#             channels = channels["Channel"]
+
+#         if isinstance(channels, dict):
+#             channels = list(channels.values())
+
+#         try:
+#             # all_channel_ids = [eval(x["@Id"].split(":")[1]) for x in channels.values()]
+#             all_channel_ids = [eval(x["@Id"].split(":")[1]) for x in channels]
+#             max_c = max([eval(img_dict["SizeC"]), max(all_channel_ids)+1])
+#             channel_names = [None] * max_c
+#         except:
+#             channel_names = [None] * eval(img_dict["SizeC"])
+
+
+#         for chnl_attr in channels:
+#             # if isinstance(chnl_attr, list):
+#                 # chnl_attr = chnl_attr[0]
+#             chnl_name = chnl_attr["@Name"]
+#             chnl_idx = eval(chnl_attr["@Id"].split(":")[1])
+#             channel_names[chnl_idx] = chnl_name
+
+#         channel_names = [x for x in channel_names if x is not None]
+
+
+#         return channel_names
+
+
+#     def _get_slide_dimensions(self, scene=0, *args, **kwargs):
+#         """Get dimensions of slide at all pyramid levels
+
+#         Returns
+#         -------
+#         slide_dims : ndarray
+#             Dimensions of all images in the pyramid (width, height).
+
+#         """
+#         zoom_levels = self._get_zoom_levels(scene)
+
+#         czi_reader = CziFile(self.src_f)
+#         scene_bbox = czi_reader.get_all_scene_bounding_boxes()[scene]
+#         scence_l0_wh = np.array([scene_bbox.w, scene_bbox.h])
+#         slide_dimensions = np.round(scence_l0_wh*zoom_levels[..., np.newaxis]).astype(int)
+
+#         return slide_dimensions
+
+#     def _get_zoom_levels(self, scene=0):
+
+#         img_dict = self._get_img_meta_dict()
+#         if "S" not in img_dict["Dimensions"]:
+#             # No pyramid levels
+#             return np.array([1.0])
+
+#         scene_dict = img_dict["Dimensions"]["S"]["Scenes"]["Scene"]
+#         if scene in scene_dict:
+#             pyramid_info = scene_dict[scene]["PyramidInfo"]
+#         else:
+#             pyramid_info = scene_dict["PyramidInfo"]
+#         n_levels = eval(pyramid_info["PyramidLayersCount"])
+#         downsampling = eval(pyramid_info["MinificationFactor"])
+#         zoom_levels = (1/downsampling)**(np.arange(0, n_levels))
+
+#         return zoom_levels
+
+#     def _get_pixel_physical_size(self, *args, **kwargs):
+#         """Get resolution of slide
+
+#         Returns
+#         -------
+#         res_xyu : tuple
+#             Physical size per pixel and the unit, e.g. u'\u00B5m'
+
+#         Notes
+#         -----
+#             If physical unit is micron, it must be u'\u00B5m',
+#             not mu (u'\u03bcm') or u.
+
+#         """
+
+#         physical_sizes = self.original_meta_dict["ImageDocument"]["Metadata"]["Scaling"]["Items"]["Distance"]
+
+#         physical_size_xyu = [None] * 3
+#         physical_unit = physical_sizes[0]["DefaultUnitFormat"]
+#         physical_size_xyu[2] = physical_unit
+
+#         if physical_unit == u'\u00B5m':
+#             physical_scaling = 10**6
+#         elif physical_unit == "mm":
+#             physical_scaling = 10**3
+#         elif physical_unit == "cm":
+#             physical_scaling = 10**2
+#         else:
+#             physical_scaling = 1
+
+#         for ps in physical_sizes:
+#             if ps["@Id"] == "X":
+#                 physical_size_xyu[0] = eval(ps["Value"])*physical_scaling
+#             elif ps["@Id"] == "Y":
+#                 physical_size_xyu[1] = eval(ps["Value"])*physical_scaling
+
+#         return tuple(physical_size_xyu)
+
+
+#     def _read_rgb(self, level=0, xywh=None, *args, **kwargs):
+
+#         czi_reader = CziFile(self.src_f)
+#         img_dict = self._get_img_meta_dict()
+#         bg_hex = img_dict["Dimensions"]["Channels"]["Channel"]["Color"]
+#         bg_rgba = valtils.hex_to_rgb(bg_hex)[::-1]
+
+#         out_shape_wh = self.metadata.slide_dimensions[0]
+#         tile_bboxes = czi_reader.get_all_mosaic_tile_bounding_boxes(C=0)
+
+#         vips_img = pyvips.Image.black(*out_shape_wh, bands=self.metadata.n_channels) + bg_rgba[0:3]
+#         print(f"Building CZI mosaic for {valtils.get_name(self.src_f)}")
+#         for tile_info, tile_bbox in tqdm(tile_bboxes.items()):
+#             m = tile_info.m_index
+#             x = tile_bbox.x
+#             y = tile_bbox.y
+
+#             np_tile, tile_dims = czi_reader.read_image(M=m)
+
+#             slice_dims = [v - 1 for k, v in tile_dims if k not in ["Y", "X", "A"]]
+
+#             np_tile = np_tile[(*slice_dims, ...)]
+#             if self.is_bgr:
+#                 np_tile = np_tile[..., ::-1]
+
+#             vips_tile = warp_tools.numpy2vips(np_tile)
+#             vips_img = vips_img.insert(vips_tile, *(x, y))
+
+#         if xywh is not None:
+#             vips_img = vips_img.extract_area(*xywh)
+
+#         if level != 0:
+#             scaling = self.metadata._zoom_levels[level]
+#             vips_img = warp_tools.rescale_img(vips_img, scaling)
+
+#         vips_img = vips_img.copy(interpretation="srgb")
+#         np_type = slide_tools.CZI_FORMAT_TO_BF_FORMAT[czi_reader.pixel_type]
+#         vips_type = slide_tools.NUMPY_FORMAT_VIPS_DTYPE[np_type]
+#         vips_img = vips_img.cast(vips_type)
+
+#         return vips_img
+
+
 class CziJpgxrReader(SlideReader):
     """Read slides and get metadata
 
@@ -1925,8 +2341,6 @@ class CziJpgxrReader(SlideReader):
         self.meta_list = [None]
 
         super().__init__(src_f=src_f, *args, **kwargs)
-
-        # print("debugging CZI reader")
         # return None
         try:
             self.meta_list = self.create_metadata()
@@ -1957,46 +2371,31 @@ class CziJpgxrReader(SlideReader):
                       fset=_set_series,
                       doc="Slide scene")
 
-    # def slide2vips(self, level, xywh=None, *args, **kwargs):
-    #     """Convert slide to pyvips.Image
+    def _read_whole_img(self, level=0, xywh=None, *args, **kwargs):
+        """
 
-    #     Parameters
-    #     -----------
-    #     level : int
-    #         Pyramid level
+        Return
+        ------
+        img : ndarray
 
-    #     xywh : tuple of int, optional
-    #         The region to be sliced from the slide. If None,
-    #         then the entire slide will be converted. Otherwise
-    #         xywh is the (top left x, top left y, width, height) of
-    #         the region to be sliced.
+        """
 
-    #     Returns
-    #     -------
-    #     vips_slide : pyvips.Image
-    #         An  of the slide or the region defined by xywh
-
-    #     """
-
-    #     if self.is_bgr:
-    #         vips_img = self._read_rgb(level=level, xywh=xywh, *args, **kwargs)
-    #     else:
-    #         print("currently only support RGB images when the CZI images are compressed using JPGXR")
-    #         vips_img = None
-
-    #     return vips_img
-
-    def slide2vips(self, level=0, xywh=None, *args, **kwargs):
         czi_reader = CziFile(self.src_f)
-        # img_dict = self._get_img_meta_dict()
-        # channels = img_dict["Dimensions"]["Channels"]["Channel"]
-        # if self.is_bgr:
-        #     bg_hex = channels["Color"]
-        # else:
-        #     bg_hex = channels[2]["Color"]
+        img, shp = czi_reader.read_image(S=self.series)
+        shp = dict(shp)
+        if img.ndim == 4 and shp["T"] == 1:
+            img = img[0]
 
-        # level = 4
-        # bg = valtils.hex_to_rgb(bg_hex)[::-1]
+        if self.is_bgr:
+            img = img[..., ::-1]
+
+        vips_img = warp_tools.numpy2vips(img)
+
+        return vips_img
+
+    def _read_mosaic(self, level=0, xywh=None, *args, **kwargs):
+        czi_reader = CziFile(self.src_f)
+
         out_shape_wh = self.metadata.slide_dimensions[0]
         tile_bboxes = czi_reader.get_all_mosaic_tile_bounding_boxes(C=0)
 
@@ -2007,7 +2406,7 @@ class CziJpgxrReader(SlideReader):
             x = tile_bbox.x
             y = tile_bbox.y
 
-            np_tile, tile_dims = czi_reader.read_image(M=m)
+            np_tile, tile_dims = czi_reader.read_image(S=self.series, M=m)
 
             slice_dims = [v - 1 for k, v in tile_dims if k not in ["Y", "X", "A"]]
 
@@ -2016,9 +2415,21 @@ class CziJpgxrReader(SlideReader):
                 np_tile = np_tile[..., ::-1]
 
             vips_tile = warp_tools.numpy2vips(np_tile)
-            vips_img = vips_img.insert(vips_tile, *(x, y))
+            vips_img = vips_img.insert(vips_tile, x, y)
 
+        return vips_img
 
+    def slide2vips(self, level=0, xywh=None, *args, **kwargs):
+        try:
+            # Image is mosaic
+            vips_img = self._read_mosaic(level=level, xywh=xywh,*args, **kwargs)
+
+        except Exception as e:
+            print(e)
+            print("Reading whole image")
+            vips_img = self._read_whole_img(level=level, xywh=xywh,*args, **kwargs)
+
+        czi_reader = CziFile(self.src_f)
         if xywh is not None:
             vips_img = vips_img.extract_area(*xywh)
 
@@ -2032,12 +2443,7 @@ class CziJpgxrReader(SlideReader):
         vips_type = slide_tools.NUMPY_FORMAT_VIPS_DTYPE[np_type]
         vips_img = vips_img.cast(vips_type)
 
-        # np_img = vips_img.numpy()
-        # import matplotlib.pyplot as plt
-        # plt.imshow(np_img/np_img.max())
-        # plt.show()
-        # warp_tools.save_img("test_mc_czi.png", np_img)
-
+        return vips_img
 
     def slide2image(self, level, xywh=None, *args, **kwargs):
         """Convert slide to image
@@ -2109,7 +2515,7 @@ class CziJpgxrReader(SlideReader):
             series_meta.slide_dimensions = self._get_slide_dimensions(i)
             series_meta.bf_datatype = slide_tools.CZI_FORMAT_TO_BF_FORMAT[czi_reader.pixel_type]
             series_meta.channel_names = self._get_channel_names(meta=series_meta)
-            # series_meta.channel_names = self._get_channel_names(meta=series_meta)
+
             series_meta.pixel_physical_size_xyu = phys_size
             series_meta.original_xml = original_xml
             series_meta._zoom_levels = self._get_zoom_levels(i)
@@ -2136,10 +2542,55 @@ class CziJpgxrReader(SlideReader):
         _is_rgb = czi_reader.pixel_type.startswith("rgb")
         is_rgb  =_is_rgb or self.is_bgr
 
-
         return is_rgb
 
-    def _get_channel_names(self, meta, *args, **kwargs):
+    def _get_channel_names_aics(self, meta, *args, **kwargs):
+        """Get names of each channel
+
+        Get list of channel names
+
+        Returns
+        -------
+        channel_names : list
+            List of channel names
+
+        """
+
+        if meta.is_rgb:
+            return None
+
+        img_dict = self._get_img_meta_dict()
+        channels = img_dict["Dimensions"]["Channels"]
+        if "Channel" in channels:
+            channels = channels["Channel"]
+
+        if meta.n_channels == 1 and "@Name" in channels:
+            channel_names = [channels["@Name"]]
+
+            return channel_names
+
+        if isinstance(channels, dict):
+            channels = list(channels.values())
+
+        try:
+            all_channel_ids = [x["@Id"].split(":") for x in channels]
+            all_channel_ids = [eval(x["@Id"].split(":")[1]) for x in channels]
+            max_c = max([eval(img_dict["SizeC"]), max(all_channel_ids)+1])
+            channel_names = [None] * max_c
+        except:
+            channel_names = [None] * eval(img_dict["SizeC"])
+
+        for chnl_attr in channels:
+            chnl_name = chnl_attr["@Name"]
+            chnl_idx = eval(chnl_attr["@Id"].split(":")[1])
+            channel_names[chnl_idx] = chnl_name
+
+        channel_names = [x for x in channel_names if x is not None]
+
+        return channel_names
+
+
+    def _get_channel_names_bf(self, meta, *args, **kwargs):
         """Get names of each channel
 
         Get list of channel names
@@ -2153,35 +2604,18 @@ class CziJpgxrReader(SlideReader):
         if meta.is_rgb:
             return None
 
-        img_dict = self._get_img_meta_dict()
-        channels = img_dict["Dimensions"]["Channels"]
-        if "Channel" in channels:
-            channels = channels["Channel"]
 
-        if isinstance(channels, dict):
-            channels = list(channels.values())
+        with valtils.HiddenPrints():
+            bf_reader = BioFormatsSlideReader(self.src_f)
 
-        try:
-            # all_channel_ids = [eval(x["@Id"].split(":")[1]) for x in channels.values()]
-            all_channel_ids = [eval(x["@Id"].split(":")[1]) for x in channels]
-            max_c = max([eval(img_dict["SizeC"]), max(all_channel_ids)+1])
-            channel_names = [None] * max_c
-        except:
-            channel_names = [None] * eval(img_dict["SizeC"])
-
-
-        for chnl_attr in channels:
-            # if isinstance(chnl_attr, list):
-                # chnl_attr = chnl_attr[0]
-            chnl_name = chnl_attr["@Name"]
-            chnl_idx = eval(chnl_attr["@Id"].split(":")[1])
-            channel_names[chnl_idx] = chnl_name
-
-        channel_names = [x for x in channel_names if x is not None]
-
+        rdr, bf_meta = bf_reader._get_bf_objects()
+        channel_names = bf_reader._get_channel_names(rdr, bf_meta)
 
         return channel_names
 
+    def _get_channel_names(self, meta, *args, **kwargs):
+        channel_names = self._get_channel_names_aics(meta)
+        return channel_names
 
     def _get_slide_dimensions(self, scene=0, *args, **kwargs):
         """Get dimensions of slide at all pyramid levels
@@ -2256,49 +2690,6 @@ class CziJpgxrReader(SlideReader):
                 physical_size_xyu[1] = eval(ps["Value"])*physical_scaling
 
         return tuple(physical_size_xyu)
-
-
-    def _read_rgb(self, level=0, xywh=None, *args, **kwargs):
-
-        czi_reader = CziFile(self.src_f)
-        img_dict = self._get_img_meta_dict()
-        bg_hex = img_dict["Dimensions"]["Channels"]["Channel"]["Color"]
-        bg_rgba = valtils.hex_to_rgb(bg_hex)[::-1]
-
-        out_shape_wh = self.metadata.slide_dimensions[0]
-        tile_bboxes = czi_reader.get_all_mosaic_tile_bounding_boxes(C=0)
-
-        vips_img = pyvips.Image.black(*out_shape_wh, bands=self.metadata.n_channels) + bg_rgba[0:3]
-        print(f"Building CZI mosaic for {valtils.get_name(self.src_f)}")
-        for tile_info, tile_bbox in tqdm(tile_bboxes.items()):
-            m = tile_info.m_index
-            x = tile_bbox.x
-            y = tile_bbox.y
-
-            np_tile, tile_dims = czi_reader.read_image(M=m)
-
-            slice_dims = [v - 1 for k, v in tile_dims if k not in ["Y", "X", "A"]]
-
-            np_tile = np_tile[(*slice_dims, ...)]
-            if self.is_bgr:
-                np_tile = np_tile[..., ::-1]
-
-            vips_tile = warp_tools.numpy2vips(np_tile)
-            vips_img = vips_img.insert(vips_tile, *(x, y))
-
-        if xywh is not None:
-            vips_img = vips_img.extract_area(*xywh)
-
-        if level != 0:
-            scaling = self.metadata._zoom_levels[level]
-            vips_img = warp_tools.rescale_img(vips_img, scaling)
-
-        vips_img = vips_img.copy(interpretation="srgb")
-        np_type = slide_tools.CZI_FORMAT_TO_BF_FORMAT[czi_reader.pixel_type]
-        vips_type = slide_tools.NUMPY_FORMAT_VIPS_DTYPE[np_type]
-        vips_img = vips_img.cast(vips_type)
-
-        return vips_img
 
 
 class ImageReader(SlideReader):
@@ -2782,7 +3173,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                         aligned_slide_shape_rc, M=None, dxdy=None,
                         level=0, series=None, interp_method="bicubic",
                         bbox_xywh=None, bg_color=None, colormap=None,
-                        tile_wh=None, compression="lzw", Q=100):
+                        tile_wh=None, compression="lzw", Q=100, pyramid=True):
 
     """ Warp and save a slide
 
@@ -2848,6 +3239,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
 
     Q : int
         Q factor for lossy compression
+
+    pyramid : bool
+        Whether or not to save an image pyramid.
+
     """
 
     warped_slide = slide_tools.warp_slide(src_f=src_f,
@@ -2896,10 +3291,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                 tile_wh = min(out_xyczt[0:2])
 
     save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
-                  tile_wh=tile_wh, compression=compression, Q=Q)
+                  tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
 
 
-def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=100):
+def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=100, pyramid=True):
     """Save an image in the ome.tiff format using pyvips
 
     Parameters
@@ -2921,6 +3316,9 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
     Q : int
         Q factor for lossy compression
+
+    pyramid : bool
+        Whether or not to save an image pyramid.
 
     """
     compression = compression.lower()
@@ -3035,7 +3433,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
     rgbjpeg = compression in ["jp2k", "jpeg"] and img.interpretation == "srgb"
     img.tiffsave(dst_f, compression=compression, tile=True,
                  tile_width=tile_wh, tile_height=tile_wh,
-                 pyramid=True, subifd=True, bigtiff=True,
+                 pyramid=pyramid, subifd=True, bigtiff=True,
                  lossless=lossless, Q=Q, rgbjpeg=rgbjpeg)
 
     # Print total time to completion #
@@ -3052,7 +3450,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
 @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
-                        colormap=None, tile_wh=None, compression="lzw", Q=100):
+                        colormap=None, tile_wh=None, compression="lzw", Q=100, pyramid=True):
     """Convert an image to an ome.tiff image
 
     Saves a new copy of the image as a tiled pyramid ome.tiff with valid ome-xml.
@@ -3093,6 +3491,9 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
 
     Q : int
         Q factor for lossy compression
+
+    pyramid : bool
+        Whether or not to save an image pyramid.
 
     """
 
@@ -3135,4 +3536,4 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     if tile_wh > MAX_TILE_SIZE:
             tile_wh = MAX_TILE_SIZE
 
-    save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q)
+    save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)

@@ -7,7 +7,7 @@ import os
 import pyvips
 import numpy as np
 import colour
-from matplotlib import cm
+from matplotlib import colormaps
 import re
 import imghdr
 import sys
@@ -326,8 +326,9 @@ def get_matplotlib_channel_colors(n_colors, name="gist_rainbow", min_lum=0.5, mi
     """
     n = 200
     if n_colors > n:
-        n  = n_colors
-    all_colors =  cm.get_cmap(name)(np.linspace(0, 1, n))[..., 0:3]
+        n = n_colors
+    # all_colors =  cm.get_cmap(name)(np.linspace(0, 1, n))[..., 0:3]
+    all_colors = colormaps[name](np.linspace(0, 1, n))[..., 0:3]
 
     # Only allow bright colors #
     jch = preprocessing.rgb2jch(all_colors)
