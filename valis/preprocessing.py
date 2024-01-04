@@ -55,7 +55,7 @@ class ImageProcesser(object):
 
     """
 
-    def __init__(self, image, src_f, level, series):
+    def __init__(self, image, src_f, level, series, reader=None):
         """
         Parameters
         ----------
@@ -77,6 +77,12 @@ class ImageProcesser(object):
         self.src_f = src_f
         self.level = level
         self.series = series
+
+        if reader is None:
+            reader_cls = slide_io.get_slide_reader(src_f, series=series)
+            reader = reader_cls(src_f, series=series)
+
+        self.reader = reader
 
     def create_mask(self):
         return np.full(self.image.shape[0:2], 255, dtype=np.uint8)
@@ -110,16 +116,17 @@ class ChannelGetter(ImageProcesser):
         return tissue_mask
 
     def process_image(self, channel="dapi", adaptive_eq=True, *args, **kwaargs):
-        reader_cls = slide_io.get_slide_reader(self.src_f, series=self.series)
-        reader = reader_cls(self.src_f)
+        # reader_cls = slide_io.get_slide_reader(self.src_f, series=self.series)
+        # reader = reader_cls(self.src_f)
+        # reader = self.reader_cls(self.src_f, series=self.series)
         if self.image is None:
-            chnl = reader.get_channel(channel=channel, level=self.level, series=self.series).astype(float)
+            chnl = self.reader.get_channel(channel=channel, level=self.level, series=self.series).astype(float)
         else:
             if self.image.ndim == 2:
                 # the image is already the channel
                 chnl = self.image
             else:
-                chnl_idx = reader.get_channel_index(channel)
+                chnl_idx = self.reader.get_channel_index(channel)
                 chnl = self.image[..., chnl_idx]
         chnl = exposure.rescale_intensity(chnl, in_range="image", out_range=(0.0, 1.0))
 

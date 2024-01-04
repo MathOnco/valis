@@ -1,9 +1,20 @@
 Change Log
 **********
 
+Version 1.0.3 (January 11, 2024)
+-------------------------------------
+#. Can specify which slide readers to use for each image by passing a dictionary to the :code:`reader_dict` argument in :code:`Valis.register`. The keys, value pairs are image filename and instantiated :code:`SlideReader` to use to read that file. Valis will try to find an appropriate reader for any omitted files. Can be especially useful in cases where one needs different series for different images, as the :code:`series` argument is set when the :code:`SlideReader` is created.
+#. Each :code:`Slide` is assigned a :code:`SlideReader`, ensuring that the same series will always be read.
+#. Added traceback messages to critical try/except blocks to help with debugging.
+#. Now possible to save the images as non-pyarmid WSI by setting :code:`pyramid=False` when calling the various slide saving methods (requested in `github issue 56 <https://github.com/MathOnco/valis/issues/56>`_).
+#. Tested the :code:`slide_io.CziJpgxrReader` with more jpegxr compressed czi images, including  3 RGB (2 mosaic, 1 not mosaic),  1 multichannel non-RGB (mosaic), 1 single channel (mosaic). Related to `github issue 76 <https://github.com/MathOnco/valis/issues/76>`_.
+
+
+
+
 Version 1.0.2 (October 11, 2023)
 -------------------------------------
-#. Fix issue with pip installaton, where the pyproject.toml tried to get aicspylibczi from Github, not PyPi
+#. Fix issue with pip installation, where the pyproject.toml tried to get aicspylibczi from Github, not PyPi
 
 Version 1.0.1 (October 6, 2023)
 -------------------------------------

@@ -768,7 +768,7 @@ class Slide(object):
         return warped_img
 
     def warp_img_from_to(self, img, to_slide_obj,
-                        dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
+                         dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
 
         """Warp an image from this slide onto another unwarped slide
 
@@ -910,7 +910,8 @@ class Slide(object):
                                               dxdy=bk_dxdy, level=level, series=self.series,
                                               interp_method=interp_method,
                                               bbox_xywh=slide_bbox_xywh,
-                                              bg_color=bg_color)
+                                              bg_color=bg_color,
+                                              reader=self.reader)
         return warped_slide
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
@@ -920,7 +921,8 @@ class Slide(object):
                             colormap=None,
                             interp_method="bicubic",
                             tile_wh=None, compression="lzw",
-                            Q=100, pyramid=True):
+                            Q=100, pyramid=True,
+                            reader=None):
 
         """Warp and save a slide
 
@@ -986,21 +988,27 @@ class Slide(object):
                                        src_f=src_f)
 
         # Get ome-xml #
-        slide_reader_cls = slide_io.get_slide_reader(src_f)
-        slide_reader = slide_reader_cls(src_f)
-        slide_meta = slide_reader.metadata
+        if reader is None:
+            if src_f != self.src_f:
+                slide_reader_cls = slide_io.get_slide_reader(src_f)
+                reader = slide_reader_cls(src_f)
+            else:
+                reader = self.reader
+
+        slide_meta = reader.metadata
         if slide_meta.pixel_physical_size_xyu[2] == slide_io.PIXEL_UNIT:
             px_phys_size = None
         else:
-            px_phys_size = self.reader.scale_physical_size(level)
+            px_phys_size = reader.scale_physical_size(level)
 
         if channel_names is None:
-            if src_f is None:
-                channel_names = slide_meta.channel_names
-            else:
-                reader_cls = slide_io.get_slide_reader(src_f)
-                reader = reader_cls(src_f)
-                channel_names = reader.metadata.channel_names
+            channel_names = slide_meta.channel_names
+            # if src_f is None:
+            #     channel_names = slide_meta.channel_names
+            # else:
+            #     reader_cls = slide_io.get_slide_reader(src_f)
+            #     reader = reader_cls(src_f)
+            #     channel_names = reader.metadata.channel_names
 
         bf_dtype = slide_io.vips2bf_dtype(warped_slide.format)
         out_xyczt = slide_io.get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
@@ -2266,7 +2274,91 @@ class Valis(object):
 
         self._dup_names_dict = {k: v for k, v in default_names_dict.items() if len(v) > 1}
 
-    def convert_imgs(self, series=None, reader_cls=None):
+
+    def create_img_reader_dict(self, reader_dict=None, default_reader=None, series=None):
+
+        if reader_dict is None:
+            named_reader_dict = {}
+        else:
+            named_reader_dict = {valtils.get_name(f): reader_dict[f] for f in reader_dict.keys()}
+
+        for i, slide_f in enumerate(self.original_img_list):
+            slide_name = valtils.get_name(slide_f)
+            if slide_name not in named_reader_dict:
+                if default_reader is None:
+                    try:
+                        slide_reader_cls = slide_io.get_slide_reader(slide_f, series=series)
+                    except Exception as e:
+                        traceback_msg = traceback.format_exc()
+                        msg = f"Attempting to get reader for {slide_f} created the following error:\n{e}"
+                        valtils.print_warning(msg, rgb=Fore.RED, traceback_msg=traceback_msg)
+                else:
+                    slide_reader_cls = default_reader
+
+                slide_reader_kwargs = {"series": series}
+                # slide_reader = slide_reader_cls(slide_f, series=series)
+            else:
+                slide_reader_info = named_reader_dict[slide_name]
+                if isinstance(slide_reader_info, list) or isinstance(slide_reader_info, tuple):
+                    if len(slide_reader_info) == 2:
+                        slide_reader_cls, slide_reader_kwargs = slide_reader_info
+                    elif len(slide_reader_info) == 1:
+                        # Provided processor, but no kwargs
+                        slide_reader_cls = slide_reader_info[0]
+                        slide_reader_kwargs = {}
+                else:
+                    # Provided processor, but no kwargs
+                    slide_reader_kwargs = {}
+            try:
+                slide_reader = slide_reader_cls(src_f=slide_f, **slide_reader_kwargs)
+            except Exception as e:
+                traceback_msg = traceback.format_exc()
+                msg = f"Attempting to read {slide_f} created the following error:\n{e}"
+                valtils.print_warning(msg, rgb=Fore.RED, traceback_msg=traceback_msg)
+
+            named_reader_dict[slide_name] = slide_reader
+
+        return named_reader_dict
+
+    # def create_img_reader_dict(self, reader_dict=None, default_reader=None, series=None):
+
+    #     if reader_dict is None:
+    #         named_reader_dict = {}
+    #     else:
+    #         named_reader_dict = {valtils.get_name(f): reader_dict[f] for f in reader_dict.keys()}
+
+    #     for i, slide_f in enumerate(self.original_img_list):
+    #         slide_name = valtils.get_name(slide_f)
+    #         if slide_name not in named_reader_dict:
+    #             if default_reader is None:
+    #                 try:
+    #                     slide_reader_cls = slide_io.get_slide_reader(slide_f, series=series)
+    #                 except Exception as e:
+    #                     msg = f"Attempting to get reader for {slide_f} created the following error:\n{e}"
+    #                     valtils.print_warning(msg, rgb=Fore.RED)
+    #             else:
+    #                 slide_reader_cls = default_reader
+
+    #             slide_reader = slide_reader_cls(slide_f, series=series)
+    #         else:
+    #             slide_reader_info = named_reader_dict[slide_name]
+    #             if isinstance(slide_reader_info, list) or isinstance(slide_reader_info, tuple):
+    #                 if len(slide_reader_info) == 2:
+    #                     slide_reader_cls, slide_reader_kwargs = slide_reader_info
+    #                 elif len(slide_reader_info) == 1:
+    #                     # Provided reader, but no kwargs
+    #                     slide_reader_cls = slide_reader_info[0]
+    #                     slide_reader_kwargs = {}
+    #             else:
+    #                 # Provided reader, but no kwargs
+    #                 slide_reader_kwargs = {}
+    #             slide_reader = slide_reader_cls(src_f=slide_f, **slide_reader_kwargs)
+
+    #         named_reader_dict[slide_name] = slide_reader
+
+    #     return named_reader_dict
+
+    def convert_imgs(self, series=None, reader_dict=None, reader_cls=None):
         """Convert slides to images and create dictionary of Slides.
 
         series : int, optional
@@ -2276,26 +2368,37 @@ class Valis(object):
             Uninstantiated SlideReader class that will convert
             the slide to an image, and also collect metadata.
 
+        reader_dict: dict, optional
+            Dictionary specifying which readers to use for individual images.
+            The keys, value pairs are image filename and instantiated `slide_io.SlideReader`
+            to use to read that file. Valis will try to find an appropritate reader
+            for any omitted files, or will use `reader_cls` as the default.
+
         """
+
+        named_reader_dict = self.create_img_reader_dict(reader_dict=reader_dict,
+                                                        default_reader=reader_cls,
+                                                        series=series)
 
         img_types = []
         self.size = 0
         for f in tqdm.tqdm(self.original_img_list, desc=CONVERT_MSG, unit="image"):
-            if reader_cls is None:
-                try:
-                    slide_reader_cls = slide_io.get_slide_reader(f, series=series)
-                except Exception as e:
-                    msg = f"Attempting to get reader for {f} created the following error:\n{e}"
-                    valtils.print_warning(msg, rgb=Fore.RED)
-            else:
-                slide_reader_cls = reader_cls
+            # if reader_cls is None:
+            #     try:
+            #         slide_reader_cls = slide_io.get_slide_reader(f, series=series)
+            #     except Exception as e:
+            #         msg = f"Attempting to get reader for {f} created the following error:\n{e}"
+            #         valtils.print_warning(msg, rgb=Fore.RED)
+            # else:
+            #     slide_reader_cls = reader_cls
 
-            try:
-                reader = slide_reader_cls(f, series=series)
-            except Exception as e:
-                msg = f"Attempting to read {f} created the following error:\n{e}"
-                valtils.print_warning(msg, rgb=Fore.RED)
-
+            # try:
+            #     reader = slide_reader_cls(f, series=series)
+            # except Exception as e:
+            #     msg = f"Attempting to read {f} created the following error:\n{e}"
+            #     valtils.print_warning(msg, rgb=Fore.RED)
+            slide_name = valtils.get_name(f)
+            reader = named_reader_dict[slide_name]
             slide_dims = reader.metadata.slide_dimensions
             levels_in_range = np.where(slide_dims.max(axis=1) < self.max_image_dim_px)[0]
             if len(levels_in_range) > 0:
@@ -2541,7 +2644,11 @@ class Valis(object):
                 level = len(slide_obj.slide_dimensions_wh) - 1
 
             processing_cls, processing_kwargs = processor_dict[slide_obj.name]
-            processor = processing_cls(image=slide_obj.image, src_f=slide_obj.src_f, level=level, series=slide_obj.series)
+            processor = processing_cls(image=slide_obj.image,
+                                       src_f=slide_obj.src_f,
+                                       level=level,
+                                       series=slide_obj.series,
+                                       reader=slide_obj.reader)
 
             try:
                 processed_img = processor.process_image(**processing_kwargs)
@@ -3530,7 +3637,11 @@ class Valis(object):
                 unprocessed_warped_img = warp_tools.vips2numpy(unprocessed_warped_img)
 
                 processing_cls, processing_kwargs = processor_dict[slide_obj.name]
-                processor = processing_cls(image=unprocessed_warped_img, src_f=slide_obj.src_f, level=closest_img_level, series=slide_obj.series)
+                processor = processing_cls(image=unprocessed_warped_img,
+                                           src_f=slide_obj.src_f,
+                                           level=closest_img_level,
+                                           series=slide_obj.series,
+                                           reader=slide_obj.reader)
 
                 try:
                     processed_img = processor.process_image(**processing_kwargs)
@@ -3986,7 +4097,8 @@ class Valis(object):
                  if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
                  if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
                  processor_dict=None,
-                 reader_cls=None):
+                 reader_cls=None,
+                 reader_dict=None):
 
         """Register a collection of images
 
@@ -4030,7 +4142,7 @@ class Valis(object):
         if_processing_kwargs : dict
             Dictionary of keyward arguments to be passed to `if_processing_cls`
 
-        processor_dict : dict
+        processor_dict : dict, optional
             Each key should be the filename of the image, and the value either a subclassed
             preprocessing.ImageProcessor, or a list, where the 1st element is the processor,
             and the second element a dictionary of keyword arguments passed to the processor.
@@ -4044,6 +4156,12 @@ class Valis(object):
             This option is provided in case the slides cannot be opened by a current
             SlideReader class. In this case, the user should create a subclass of
             SlideReader. See slide_io.SlideReader for details.
+
+        reader_dict: dict, optional
+            Dictionary specifying which readers to use for individual images. The
+            keys should be the image's filename, and the values the instantiated slide_io.SlideReader
+            to use to read that file. Valis will try to find an appropritate reader
+            for any omitted files, or will use `reader_cls` as the default.
 
         Returns
         -------
@@ -4103,7 +4221,7 @@ class Valis(object):
         self.start_time = time()
         try:
             print("\n==== Converting images\n")
-            self.convert_imgs(series=self.series, reader_cls=reader_cls)
+            self.convert_imgs(series=self.series, reader_cls=reader_cls, reader_dict=reader_dict)
 
             print("\n==== Processing images\n")
             slide_processors = self.create_img_processor_dict(brightfield_processing_cls=brightfield_processing_cls,
@@ -4154,8 +4272,8 @@ class Valis(object):
             error_df.to_csv(data_f_out, index=False)
 
         except Exception as e:
-            valtils.print_warning(e, rgb=Fore.RED)
-            print(traceback.format_exc())
+            traceback_msg = traceback.format_exc()
+            valtils.print_warning(e, rgb=Fore.RED, traceback_msg=traceback_msg)
             kill_jvm()
             return None, None, None
 

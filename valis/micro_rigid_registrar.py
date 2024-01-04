@@ -3,6 +3,7 @@ from skimage import exposure, transform
 import multiprocessing
 from colorama import Fore
 from contextlib import suppress
+import traceback
 
 from . import feature_matcher
 from . import feature_detectors
@@ -277,7 +278,8 @@ class MicroRigidRegistrar(object):
                     return None
 
             except Exception as e:
-                print(e)
+                # traceback_msg = traceback.format_exc()
+                # print(traceback_msg)
                 return None
 
             matched_moving_xy = filtered_matched_moving_xy.copy()
@@ -424,7 +426,7 @@ class MicroRigidRegistrar(object):
 
         region_np = warp_tools.vips2numpy(region)
 
-        processor = processor_cls(region_np, src_f=slide_obj.src_f, level=0, series=slide_obj.series)
+        processor = processor_cls(region_np, src_f=slide_obj.src_f, level=0, series=slide_obj.series, reader=slide_obj.reader)
         processed_img = processor.process_image(**processor_kwargs)
 
         if apply_mask:
