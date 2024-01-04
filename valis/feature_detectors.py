@@ -12,6 +12,7 @@ import cv2
 from skimage import feature, exposure
 import numpy as np
 import torch
+import traceback
 
 from . import valtils
 from .superglue_models import superpoint
@@ -120,8 +121,9 @@ class FeatureDD(object):
                 kp_descriptor.detectAndCompute(_img, mask=None)
 
             except:
+                traceback_msg = traceback.format_exc()
                 msg = f"{self.kp_descriptor_name} unable to both detect and compute features. Setting to {DEFAULT_FEATURE_DETECTOR.__class__.__name__}"
-                valtils.print_warning(msg)
+                valtils.print_warning(msg, traceback_msg=traceback_msg)
 
                 self.kp_detector = DEFAULT_FEATURE_DETECTOR
 

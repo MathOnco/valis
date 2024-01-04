@@ -11,7 +11,7 @@ from collections import defaultdict
 color_init()
 
 
-def print_warning(msg, warning_type=UserWarning, rgb=Fore.YELLOW):
+def print_warning(msg, warning_type=UserWarning, rgb=Fore.YELLOW, traceback_msg=None):
     """Print warning message with color
     """
     warning_msg = f"{rgb}{msg}{Style.RESET_ALL}"
@@ -21,6 +21,9 @@ def print_warning(msg, warning_type=UserWarning, rgb=Fore.YELLOW):
         warnings.simplefilter('always', warning_type)
         warnings.warn(warning_msg, warning_type)
 
+    if traceback_msg is not None:
+        traceback_msg_rgb = f"{rgb}{traceback_msg}{Style.RESET_ALL}"
+        print(traceback_msg_rgb)
 
 def deprecated_args(**aliases):
     def deco(f):

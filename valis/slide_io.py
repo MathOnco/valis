@@ -26,8 +26,9 @@ import jpype
 from aicspylibczi import CziFile
 from tqdm import tqdm
 import scyjava
-
-
+from difflib import get_close_matches
+import traceback
+from colorama import Fore
 from . import valtils
 from . import slide_tools
 from . import warp_tools
@@ -400,7 +401,8 @@ def check_to_use_openslide(src_f):
             if "openslide.level-count" in vips_fields:
                 use_openslide = True
         except pyvips.error.Error as e:
-            valtils.print_warning(e)
+            traceback_msg = traceback.format_exc()
+            valtils.print_warning(e, traceback_msg=traceback_msg)
 
     return use_openslide
 
@@ -720,34 +722,79 @@ class SlideReader(object):
 
         """
 
+    # def get_channel_index(self, channel):
+
+    #     if isinstance(channel, int):
+    #         matching_channel_idx = channel
+
+    #     elif isinstance(channel, str):
+    #         matching_channels = [i for i in range(self.metadata.n_channels) if
+    #                              re.search(channel.lower(), self.metadata.channel_names[i].lower())
+    #                              is not None]
+
+    #         if len(matching_channels) == 0:
+    #             # Special characters may be preventing match
+    #             matching_channels = [i for i in range(self.metadata.n_channels) if
+    #                                  self.metadata.channel_names[i].lower().startswith(channel.lower())]
+
+    #         if len(matching_channels) == 0:
+    #             msg = f"Cannot find channel '{channel}' in {self.src_f}. Using channel 0"
+    #             valtils.print_warning(msg)
+    #             matching_channel_idx = 0
+
+    #         elif len(matching_channels) > 1:
+    #             all_matching_channels = ", ".join([f"'{self.metadata.channel_names[i]}'" for i in matching_channels])
+    #             msg = f"Fount multiple channels that match '{channel}' in {self.src_f}. These are: {all_matching_channels}. Using channel 0"
+    #             valtils.print_warning(msg)
+    #             matching_channel_idx = 0
+
+    #         else:
+    #             matching_channel_idx = matching_channels[0]
+
+    #     return matching_channel_idx
+
+
+
     def get_channel_index(self, channel):
 
         if isinstance(channel, int):
             matching_channel_idx = channel
 
         elif isinstance(channel, str):
-            matching_channels = [i for i in range(self.metadata.n_channels) if
-                                 re.search(channel.lower(), self.metadata.channel_names[i].lower())
-                                 is not None]
-
-            if len(matching_channels) == 0:
-                # Special characters may be preventing match
-                matching_channels = [i for i in range(self.metadata.n_channels) if
-                                     self.metadata.channel_names[i].lower().startswith(channel.lower())]
-
-            if len(matching_channels) == 0:
-                msg = f"Cannot find channel '{channel}' in {self.src_f}. Using channel 0"
-                valtils.print_warning(msg)
+            cnames = [x.upper() for x in self.metadata.channel_names]
+            try:
+                best_match = get_close_matches(channel.upper(), cnames)[0]
+                matching_channel_idx = cnames.index(best_match)
+                if best_match.upper() != channel.upper():
+                    msg = f"Cannot find exact match to channel '{channel}' in {valtils.get_name(self.src_f)}. Using channel {best_match}"
+                    valtils.print_warning(msg)
+            except Exception as e:
+                traceback_msg = traceback.format_exc()
                 matching_channel_idx = 0
+                msg = f"Cannot find channel '{channel.upper()}' in {valtils.get_name(self.src_f)}. Available channels are {self.metadata.channel_names}. Using channel {self.metadata.channel_names[matching_channel_idx]}"
+                valtils.print_warning(msg, traceback_msg=traceback_msg)
 
-            elif len(matching_channels) > 1:
-                all_matching_channels = ", ".join([f"'{self.metadata.channel_names[i]}'" for i in matching_channels])
-                msg = f"Fount multiple channels that match '{channel}' in {self.src_f}. These are: {all_matching_channels}. Using channel 0"
-                valtils.print_warning(msg)
-                matching_channel_idx = 0
+            # matching_channels = [i for i in range(self.metadata.n_channels) if
+            #                      re.search(channel.lower(), self.metadata.channel_names[i].lower())
+            #                      is not None]
+
+            # if len(matching_channels) == 0:
+            #     # Special characters may be preventing match
+            #     matching_channels = [i for i in range(self.metadata.n_channels) if
+            #                          self.metadata.channel_names[i].lower().startswith(channel.lower())]
+
+            # if len(matching_channels) == 0:
+
+            #     matching_channel_idx = 0
+
+            # elif len(matching_channels) > 1:
+            #     all_matching_channels = ", ".join([f"'{self.metadata.channel_names[i]}'" for i in matching_channels])
+            #     msg = f"Fount multiple channels that match '{channel}' in {self.src_f}. These are: {all_matching_channels}. Using channel 0"
+            #     valtils.print_warning(msg)
+            #     matching_channel_idx = 0
 
             else:
-                matching_channel_idx = matching_channels[0]
+                matching_channel_idx = 0 # matching_channels[0]
 
         return matching_channel_idx
 
@@ -855,7 +902,8 @@ class BioFormatsSlideReader(SlideReader):
         try:
             self.meta_list = self.create_metadata()
         except Exception as e:
-            print(e)
+            traceback_msg = traceback.format_exc()
+            valtils.print_warning(e, traceback_msg=traceback_msg)
             kill_jvm()
 
         # return None
@@ -900,7 +948,8 @@ class BioFormatsSlideReader(SlideReader):
             try:
                 tile = self.slide2image(level, series, xywh=tuple(xywh), z=z, t=t)
             except Exception as e:
-                print(e)
+                traceback_msg = traceback.format_exc()
+                valtils.print_warning(e, traceback_msg=traceback_msg, rgb=Fore.RED)
                 pass
             # javabridge.detach()
             # jpype.detachThreadFromJVM()
@@ -1073,7 +1122,8 @@ class BioFormatsSlideReader(SlideReader):
             rdr.close()
 
         except Exception as e:
-            print(e)
+            traceback_msg = traceback.format_exc()
+            valtils.print_warning(e, traceback_msg=traceback_msg)
             rdr.close()
 
         return meta_list
@@ -2330,9 +2380,9 @@ class CziJpgxrReader(SlideReader):
         try:
             from aicspylibczi import CziFile
         except Exception as e:
+            traceback_msg = traceback.format_exc()
             msg = "Please install aicspylibczi"
-            print(e)
-            valtils.print_warning(msg)
+            valtils.print_warning(msg, traceback_msg=traceback_msg)
 
         czi_reader = CziFile(src_f)
         self.original_meta_dict = valtils.etree_to_dict(czi_reader.meta)
@@ -2345,7 +2395,8 @@ class CziJpgxrReader(SlideReader):
         try:
             self.meta_list = self.create_metadata()
         except Exception as e:
-            print(e)
+            traceback_msg = traceback.format_exc()
+            valtils.print_warning(e, traceback_msg=traceback_msg)
 
         self.n_series = len(self.meta_list)
         if series is None:
@@ -3136,7 +3187,7 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, ser
             elementTree.fromstring(current_ome_xml_str)
             og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
 
-            if colormap is None:
+            if colormap is None and not is_rgb:
                 # Get original channel colors
                 img = og_ome.images[series]
                 colormap = {c.name: c.color.as_rgb_tuple() for c in img.pixels.channels}
@@ -3149,8 +3200,9 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, ser
 
         except elementTree.ParseError as e:
             print(e)
+            traceback_msg = traceback.format_exc()
             msg = "xml in original file is invalid or missing. Will create one"
-            valtils.print_warning(msg)
+            valtils.print_warning(msg, traceback_msg=traceback_msg)
             og_valid_xml = False
 
     else:
@@ -3173,7 +3225,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                         aligned_slide_shape_rc, M=None, dxdy=None,
                         level=0, series=None, interp_method="bicubic",
                         bbox_xywh=None, bg_color=None, colormap=None,
-                        tile_wh=None, compression="lzw", Q=100, pyramid=True):
+                        tile_wh=None, compression="lzw", Q=100, pyramid=True, reader=None):
 
     """ Warp and save a slide
 
@@ -3255,11 +3307,14 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                                           series=series,
                                           interp_method=interp_method,
                                           bbox_xywh=bbox_xywh,
-                                          bg_color=bg_color)
+                                          bg_color=bg_color,
+                                          reader=reader)
 
     # Get OMEXML and update with new dimensions
-    reader_cls = get_slide_reader(src_f, series=series) # Get slide reader class
-    reader = reader_cls(src_f, series=series) # Get reader
+    if reader is None:
+        reader_cls = get_slide_reader(src_f, series=series) # Get slide reader class
+        reader = reader_cls(src_f, series=series) # Get reader
+
     slide_meta = reader.metadata
     if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
         px_phys_size = None
@@ -3271,10 +3326,10 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
     ome_xml_obj = update_xml_for_new_img(slide_meta.original_xml,
                                          new_xyzct=out_xyczt,
                                          bf_dtype=bf_dtype,
-                                         is_rgb=reader.metadata.is_rgb,
+                                         is_rgb=slide_meta.is_rgb,
                                          series=series,
                                          pixel_physical_size_xyu=px_phys_size,
-                                         channel_names=reader.metadata.channel_names,
+                                         channel_names=slide_meta.channel_names,
                                          colormap=colormap
                                          )
 

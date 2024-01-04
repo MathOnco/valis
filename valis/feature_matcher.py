@@ -9,6 +9,8 @@ from copy import deepcopy
 from sklearn import metrics
 from sklearn.metrics.pairwise import pairwise_kernels
 from skimage import transform
+import traceback
+
 from . import warp_tools, valtils, feature_detectors
 from .superglue_models import matching, superglue, superpoint
 
@@ -127,8 +129,9 @@ def filter_matches_ransac(kp1_xy, kp2_xy, ransac_val=DEFAULT_RANSAC):
         filtered_src_points = kp1_xy[good_idx, :]
         filtered_dst_points = kp2_xy[good_idx, :]
     else:
+        traceback_msg = traceback.format_exc()
         msg = f"Need at least 4 keypoints for RANSAC filtering, but only have {kp1_xy.shape[0]}"
-        valtils.print_warning(msg)
+        valtils.print_warning(msg, traceback_msg=traceback_msg)
         filtered_src_points = kp1_xy.copy()
         filtered_dst_points = kp2_xy.copy()
         good_idx = np.arange(0, kp1_xy.shape[0])

@@ -233,7 +233,7 @@ def um_to_px(um, um_per_px):
 def warp_slide(src_f, transformation_src_shape_rc, transformation_dst_shape_rc,
                aligned_slide_shape_rc, M=None, dxdy=None,
                level=0, series=None, interp_method="bicubic",
-               bbox_xywh=None, bg_color=None):
+               bbox_xywh=None, bg_color=None, reader=None):
     """ Warp a slide
 
     Warp slide according to `M` and/or `non_rigid_dxdy`
@@ -281,8 +281,10 @@ def warp_slide(src_f, transformation_src_shape_rc, transformation_dst_shape_rc,
         A warped copy of the slide specified by `src_f`
 
     """
-    reader_cls = slide_io.get_slide_reader(src_f, series=series)
-    reader = reader_cls(src_f, series=series)
+    if reader is None:
+        reader_cls = slide_io.get_slide_reader(src_f, series=series)
+        reader = reader_cls(src_f, series=series)
+
     if series is None:
         series = reader.series
 
