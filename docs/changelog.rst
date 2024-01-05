@@ -1,13 +1,15 @@
 Change Log
 **********
 
-Version 1.0.3 (January 11, 2024)
+Version 1.0.3 (January 5, 2024)
 -------------------------------------
 #. Can specify which slide readers to use for each image by passing a dictionary to the :code:`reader_dict` argument in :code:`Valis.register`. The keys, value pairs are image filename and instantiated :code:`SlideReader` to use to read that file. Valis will try to find an appropriate reader for any omitted files. Can be especially useful in cases where one needs different series for different images, as the :code:`series` argument is set when the :code:`SlideReader` is created.
 #. Each :code:`Slide` is assigned a :code:`SlideReader`, ensuring that the same series will always be read.
 #. Added traceback messages to critical try/except blocks to help with debugging.
 #. Now possible to save the images as non-pyarmid WSI by setting :code:`pyramid=False` when calling the various slide saving methods (requested in `github issue 56 <https://github.com/MathOnco/valis/issues/56>`_).
 #. Tested the :code:`slide_io.CziJpgxrReader` with more jpegxr compressed czi images, including  3 RGB (2 mosaic, 1 not mosaic),  1 multichannel non-RGB (mosaic), 1 single channel (mosaic). Related to `github issue 76 <https://github.com/MathOnco/valis/issues/76>`_.
+#. Added checks to make sure all channel names are in the colormap, hopefully addressing `github issues 78 <https://github.com/MathOnco/valis/issues/78>`_ and `86 <https://github.com/MathOnco/valis/issues/86>`_ .
+#. Setting :code:`colormap=None` to the various save functions will not add any color channels, and so the slide viewer's default colormaps will be used.
 
 
 

@@ -914,14 +914,139 @@ class Slide(object):
                                               reader=self.reader)
         return warped_slide
 
-    @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
+    # @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
+    # def warp_and_save_slide(self, dst_f, level=0, non_rigid=True,
+    #                         crop=True, src_f=None,
+    #                         channel_names=None,
+    #                         colormap=slide_io.CMAP_AUTO,
+    #                         interp_method="bicubic",
+    #                         tile_wh=None, compression="lzw",
+    #                         Q=100, pyramid=True,
+    #                         reader=None):
+
+    #     """Warp and save a slide
+
+    #     Slides will be saved in the ome.tiff format.
+
+    #     Parameters
+    #     ----------
+    #     dst_f : str
+    #         Path to were the warped slide will be saved.
+
+    #     level : int
+    #         Pyramid level to be warped
+
+    #     non_rigid : bool, optional
+    #         Whether or not to conduct non-rigid warping. If False,
+    #         then only a rigid transformation will be applied. Default is True
+
+    #     crop: bool, str
+    #         How to crop the registered images. If `True`, then the same crop used
+    #         when initializing the `Valis` object will be used. If `False`, the
+    #         image will not be cropped. If "overlap", the warped slide will be
+    #         cropped to include only areas where all images overlapped.
+    #         "reference" crops to the area that overlaps with the reference image,
+    #         defined by `reference_img_f` when initializing the `Valis object`.
+
+    #     channel_names : list, optional
+    #         List of channel names. If None, then Slide.reader
+    #         will attempt to find the channel names associated with `src_f`.
+
+    #     colormap : dict, optional
+    #         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+    #         If 'auto' (the default), the original channel colors ` will be used, if available.
+    #         If `None`, no channel colors will be assigned.
+
+    #     src_f : str, optional
+    #        Path of slide to be warped. If None (the default), Slide.src_f
+    #        will be used. Otherwise, the file to which `src_f` points to should
+    #        be an alternative copy of the slide, such as one that has undergone
+    #        processing (e.g. stain segmentation), has a mask applied, etc...
+
+    #     interp_method : str
+    #         Interpolation method used when warping slide. Default is "bicubic"
+
+    #     tile_wh : int, optional
+    #         Tile width and height used to save image
+
+    #     compression : str
+    #         Compression method used to save ome.tiff . Default is lzw, but can also
+    #         be jpeg or jp2k. See pyips for more details.
+
+    #     Q : int
+    #         Q factor for lossy compression
+
+    #     pyramid : bool
+    #         Whether or not to save an image pyramid.
+    #     """
+    #     if src_f is None:
+    #         src_f = self.src_f
+
+    #     warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
+    #                                    crop=crop,
+    #                                    interp_method=interp_method,
+    #                                    src_f=src_f)
+
+    #     # Get ome-xml #
+    #     if reader is None:
+    #         if src_f != self.src_f:
+    #             slide_reader_cls = slide_io.get_slide_reader(src_f)
+    #             reader = slide_reader_cls(src_f)
+    #         else:
+    #             reader = self.reader
+
+    #     slide_meta = reader.metadata
+    #     if slide_meta.pixel_physical_size_xyu[2] == slide_io.PIXEL_UNIT:
+    #         px_phys_size = None
+    #     else:
+    #         px_phys_size = reader.scale_physical_size(level)
+
+    #     if channel_names is None:
+    #         channel_names = slide_meta.channel_names
+    #         # if src_f is None:
+    #         #     channel_names = slide_meta.channel_names
+    #         # else:
+    #         #     reader_cls = slide_io.get_slide_reader(src_f)
+    #         #     reader = reader_cls(src_f)
+    #         #     channel_names = reader.metadata.channel_names
+
+    #     bf_dtype = slide_io.vips2bf_dtype(warped_slide.format)
+    #     out_xyczt = slide_io.get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
+    #     ome_xml_obj = slide_io.update_xml_for_new_img(current_ome_xml_str=slide_meta.original_xml,
+    #                                                   new_xyzct=out_xyczt,
+    #                                                   bf_dtype=bf_dtype,
+    #                                                   is_rgb=self.is_rgb,
+    #                                                   series=self.series,
+    #                                                   pixel_physical_size_xyu=px_phys_size,
+    #                                                   channel_names=channel_names,
+    #                                                   colormap=colormap
+    #                                                   )
+
+    #     ome_xml = ome_xml_obj.to_xml()
+    #     if tile_wh is None:
+    #         tile_wh = slide_meta.optimal_tile_wh
+    #         if level != 0:
+    #             down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
+    #             tile_wh = int(np.round(tile_wh*down_sampling))
+    #             tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
+    #             if tile_wh < 16:
+    #                 tile_wh = 16
+    #             if np.any(np.array(out_xyczt[0:2]) < tile_wh):
+    #                 tile_wh = min(out_xyczt[0:2])
+
+    #     slide_io.save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
+    #                            tile_wh=tile_wh, compression=compression,
+    #                            Q=Q, pyramid=pyramid)
+
+
     def warp_and_save_slide(self, dst_f, level=0, non_rigid=True,
                             crop=True, src_f=None,
                             channel_names=None,
-                            colormap=None,
+                            colormap=slide_io.CMAP_AUTO,
                             interp_method="bicubic",
                             tile_wh=None, compression="lzw",
-                            Q=100, pyramid=True,
+                            Q=100,
+                            pyramid=True,
                             reader=None):
 
         """Warp and save a slide
@@ -958,10 +1083,10 @@ class Slide(object):
             If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
         src_f : str, optional
-           Path of slide to be warped. If None (the default), Slide.src_f
-           will be used. Otherwise, the file to which `src_f` points to should
-           be an alternative copy of the slide, such as one that has undergone
-           processing (e.g. stain segmentation), has a mask applied, etc...
+            Path of slide to be warped. If None (the default), Slide.src_f
+            will be used. Otherwise, the file to which `src_f` points to should
+            be an alternative copy of the slide, such as one that has undergone
+            processing (e.g. stain segmentation), has a mask applied, etc...
 
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
@@ -995,48 +1120,55 @@ class Slide(object):
             else:
                 reader = self.reader
 
-        slide_meta = reader.metadata
-        if slide_meta.pixel_physical_size_xyu[2] == slide_io.PIXEL_UNIT:
-            px_phys_size = None
-        else:
-            px_phys_size = reader.scale_physical_size(level)
-
-        if channel_names is None:
-            channel_names = slide_meta.channel_names
-            # if src_f is None:
-            #     channel_names = slide_meta.channel_names
-            # else:
-            #     reader_cls = slide_io.get_slide_reader(src_f)
-            #     reader = reader_cls(src_f)
-            #     channel_names = reader.metadata.channel_names
-
-        bf_dtype = slide_io.vips2bf_dtype(warped_slide.format)
-        out_xyczt = slide_io.get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
-        ome_xml_obj = slide_io.update_xml_for_new_img(current_ome_xml_str=slide_meta.original_xml,
-                                                      new_xyzct=out_xyczt,
-                                                      bf_dtype=bf_dtype,
-                                                      is_rgb=self.is_rgb,
-                                                      series=self.series,
-                                                      pixel_physical_size_xyu=px_phys_size,
+        ome_xml_obj = slide_io.update_xml_for_new_img(img=warped_slide,
+                                                      reader=reader,
+                                                      level=level,
                                                       channel_names=channel_names,
-                                                      colormap=colormap
-                                                      )
+                                                      colormap=colormap)
 
         ome_xml = ome_xml_obj.to_xml()
-        if tile_wh is None:
-            tile_wh = slide_meta.optimal_tile_wh
-            if level != 0:
-                down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
-                tile_wh = int(np.round(tile_wh*down_sampling))
-                tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
-                if tile_wh < 16:
-                    tile_wh = 16
-                if np.any(np.array(out_xyczt[0:2]) < tile_wh):
-                    tile_wh = min(out_xyczt[0:2])
+
+        out_shape_wh = warp_tools.get_shape(warped_slide)[0:2][::-1]
+        tile_wh = slide_io.get_tile_wh(reader=reader,
+                                       level=level,
+                                       out_shape_wh=out_shape_wh)
+        # slide_meta = reader.metadata
+        # if slide_meta.pixel_physical_size_xyu[2] == slide_io.PIXEL_UNIT:
+        #     px_phys_size = None
+        # else:
+        #     px_phys_size = reader.scale_physical_size(level)
+
+        # if channel_names is None:
+        #     channel_names = slide_meta.channel_names
+
+        # bf_dtype = slide_io.vips2bf_dtype(warped_slide.format)
+        # out_xyczt = slide_io.get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
+        # ome_xml_obj = slide_io.update_xml_for_new_img(current_ome_xml_str=slide_meta.original_xml,
+        #                                                 new_xyzct=out_xyczt,
+        #                                                 bf_dtype=bf_dtype,
+        #                                                 is_rgb=self.is_rgb,
+        #                                                 series=self.series,
+        #                                                 pixel_physical_size_xyu=px_phys_size,
+        #                                                 channel_names=channel_names,
+        #                                                 colormap=colormap
+        #                                                 )
+
+        # ome_xml = ome_xml_obj.to_xml()
+        # if tile_wh is None:
+        #     tile_wh = slide_meta.optimal_tile_wh
+        #     if level != 0:
+        #         down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
+        #         tile_wh = int(np.round(tile_wh*down_sampling))
+        #         tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
+        #         if tile_wh < 16:
+        #             tile_wh = 16
+        #         if np.any(np.array(out_xyczt[0:2]) < tile_wh):
+        #             tile_wh = min(out_xyczt[0:2])
 
         slide_io.save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
-                               tile_wh=tile_wh, compression=compression,
-                               Q=Q, pyramid=pyramid)
+                              tile_wh=tile_wh, compression=compression,
+                              Q=Q, pyramid=pyramid)
+
 
     def warp_xy(self, xy, M=None, slide_level=0, pt_level=0,
                 non_rigid=True, crop=True):
@@ -3651,8 +3783,6 @@ class Valis(object):
                 processed_img = exposure.rescale_intensity(processed_img, out_range=(0, 255)).astype(np.uint8)
 
                 np_mask = warp_tools.vips2numpy(slide_mask)
-
-                # print("not applying non-rigid mask (~3477)")
                 processed_img[np_mask == 0] = 0
 
                 # Normalize images using stats collected for rigid registration #
@@ -4574,7 +4704,7 @@ class Valis(object):
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_save_slides(self, dst_dir, level=0, non_rigid=True,
                              crop=True,
-                             colormap=None,
+                             colormap=slide_io.CMAP_AUTO,
                              interp_method="bicubic",
                              tile_wh=None, compression="lzw", Q=100):
 
@@ -4605,7 +4735,9 @@ class Valis(object):
             defined by `reference_img_f` when initialzing the `Valis object`.
 
         colormap : list
-            List of RGB colors (0-255) to use for channel colors
+            List of RGB colors (0-255) to use for channel colors.
+            If 'auto' (the default), the original channel colors ` will be used, if available.
+            If `None`, no channel colors will be assigned.
 
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
@@ -4625,15 +4757,24 @@ class Valis(object):
 
         for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
             slide_cmap = None
-            if colormap is not None:
+            is_rgb = slide_obj.reader.metadata.is_rgb
+            if colormap is not None and not is_rgb:
                 chnl_names = slide_obj.reader.metadata.channel_names
-                if chnl_names is not None:
-                    if len(colormap) >= len(chnl_names):
-                        slide_cmap = {chnl_names[i]:tuple(colormap[i]) for i in range(len(chnl_names))}
+                updated_channel_names = slide_io.check_channel_names(chnl_names, is_rgb)
+                try:
+                    colormap = slide_io.check_colormap(colormap, updated_channel_names)
+                    # if colormap == slide_io.CMAP_AUTO:
+                    #     slide_cmap = slide_io.get_colormap(updated_channel_names, is_rgb)
+                    # elif isinstance(colormap, list):
+                    #     slide_cmap = {updated_channel_names[i]:tuple(colormap[i]) for i in range(len(updated_channel_names))}
+                    # else:
+                    #     msg = f'{slide_obj.name} has {len(chnl_names)} but colormap only has {len(colormap)} colors'
+                    #     valtils.print_warning(msg)
+                except Exception as e:
+                    traceback_msg = traceback.format_exc()
+                    msg = f"Could not create colormap for the following reason:{e}"
+                    valtils.print_warning(msg, traceback_msg=traceback_msg)
 
-                    else:
-                        msg = f'{slide_obj.name} has {len(chnl_names)} but colormap only has {len(colormap)} colors'
-                        valtils.print_warning(msg)
 
             dst_f = os.path.join(dst_dir, slide_obj.name + ".ome.tiff")
 
