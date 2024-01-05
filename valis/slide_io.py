@@ -35,6 +35,11 @@ from . import warp_tools
 
 pyvips.cache_set_max(0)
 
+CMAP_AUTO = "auto"
+"""
+str: Default argument to get channel colors.
+"""
+
 MAX_TILE_SIZE = 2**10
 """int: maximum tile used to read or write images"""
 
@@ -3056,8 +3061,102 @@ def create_channel(channel_id, name=None, color=None):
     return new_channel
 
 
-@valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
-def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
+def get_colormap(channel_names, is_rgb, series=0, original_xml=None):
+
+    if is_rgb:
+        colormap = {None: (255, 255, 255)}
+
+    else:
+        nc = len(channel_names)
+        channel_colors = slide_tools.get_matplotlib_channel_colors(nc)
+        default_colormap = {channel_names[i]: channel_colors[i] for i in range(nc)}
+
+        if original_xml is not None:
+            try:
+                # Try to get original colors
+                og_ome = ome_types.from_xml(original_xml, parser="xmlschema")
+                ome_img = og_ome.images[series]
+                colormap = {c.name: c.color.as_rgb_tuple() for c in ome_img.pixels.channels}
+                all_rgb = set(list(colormap.values()))
+                nc = len(ome_img.pixels.channels)
+                if len(all_rgb) < nc:
+                    # Channels do not have unique colors
+                    colormap = default_colormap
+            except Exception as e:
+                print(e)
+                # Can't get original colors
+                colormap = default_colormap
+        else:
+            colormap = default_colormap
+
+    return colormap
+
+
+def check_colormap(colormap, channel_names):
+    """Make sure colormap is valid
+    If colormap is a dictionary, make sure all `channel_names` are in keys of colormap.
+    If colormap is a list, create a dictionary colormap
+
+    Returns
+    -------
+    updated_colormap : dict
+        Colormap dictionary or None if colormap was invalid
+    """
+
+    msg = None
+    updated_colormap = colormap
+    if colormap == CMAP_AUTO:
+        updated_colormap = get_colormap(channel_names, is_rgb=False)
+
+    elif isinstance(colormap, list):
+        if len(colormap) < len(channel_names):
+            msg = f"Not enough colors in colormap. Only {len(colormap)} colors provided, but there are {len(channel_names)} channels"
+
+        updated_colormap = {channel_names[i]:tuple(colormap[i]) for i in range(len(channel_names))}
+    elif isinstance(colormap, dict):
+        missing_channels = set(channel_names) - set(colormap.keys())
+
+        if len(missing_channels) != 0:
+            msg = f"Missing colors in colormap for the following channels: {missing_channels}"
+
+    elif colormap is not None:
+        msg = (f"Colormap must be {CMAP_AUTO}, "
+               f"a list of colors with the same length as `channel_names`, ",
+               f"a dictionary (key=channel name, value=rgb color), ",
+               f"or `None`")
+
+    if msg is not None:
+        msg += ". Will not try to add channel colors"
+        updated_colormap = None
+        valtils.print_warning(msg)
+
+    return updated_colormap
+
+
+def check_channel_names(channel_names, is_rgb):
+
+    if is_rgb:
+        return None
+
+    nc = len(channel_names)
+    default_channel_names = [f"C{i+1}" for i in range(nc)]
+
+    if channel_names is None:
+        updated_channel_names = default_channel_names
+    else:
+        updated_channel_names = [channel_names[i] if
+                                 (channel_names[i] is not None and channel_names[i] != "None")
+                                 else default_channel_names[i] for i in range(nc)]
+
+    renamed_channels = set(updated_channel_names) - set(channel_names)
+    if len(renamed_channels) > 0:
+        msg = f"some non-RGB channel names were `None`. Renamed channels are: {sorted(list(renamed_channels))}"
+        print(msg)
+
+    return updated_channel_names
+
+
+def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, colormap=CMAP_AUTO):
     """Create new ome-xmml object
 
     Parameters
@@ -3077,9 +3176,10 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
     channel_names : list, optional
         List of channel names.
 
-    colormap : dict, optional
+    colormap : dict, str, optional
         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
-        If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+        If "auto" (default), the channel colors from `current_ome_xml_str` will be used, if available.
+        If `None`, channel colors will not be assigned.
 
     Returns
     -------
@@ -3117,21 +3217,25 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
         new_img.pixels.channels = [rgb_channel]
 
     else:
+        updated_channel_names = check_channel_names(channel_names, is_rgb)
+        if colormap == CMAP_AUTO:
+            colormap = get_colormap(updated_channel_names, is_rgb)
 
-        if channel_names is None:
-            channel_names = [f"C{i}" for i in range(c)]
-
-        default_colors = slide_tools.get_matplotlib_channel_colors(c)
-        default_colormap = {channel_names[i]:tuple(default_colors[i]) for i in range(c)}
         if colormap is not None:
-            if len(colormap) != c:
-                colormap = default_colormap
-                msg = "Number of colors in colormap not same as the number of channels. Using default colormap"
+            try:
+                channels = [create_channel(i, name=updated_channel_names[i], color=colormap[updated_channel_names[i]]) for i in range(c)]
+            except KeyError as e:
+                msg = f"Mismatch between channel names and keys in colormap. Cannot find channel name {e} in colormap"
+                if colormap is not None:
+                    msg += f", which has keys: {list(colormap.keys())}"
+                msg += ". Saving without colormap. To avoid this error, please provide valid colormap, or set colormap=None."
                 valtils.print_warning(msg)
+                channels = [create_channel(i, name=updated_channel_names[i]) for i in range(c)]
+                #Mismatch between channel names and keys in colormap
         else:
-            colormap = default_colormap
+            channels = [create_channel(i, name=updated_channel_names[i]) for i in range(c)]
 
-        channels = [create_channel(i, name=channel_names[i], color=colormap[channel_names[i]]) for i in range(c)]
+
         new_img.pixels.channels = channels
 
     new_ome = ome_types.model.OME()
@@ -3140,8 +3244,25 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
     return new_ome
 
 
-@valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
-def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, series, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
+def get_tile_wh(reader, level, out_shape_wh):
+    """Get tile width and height to write image
+    """
+    slide_meta = reader.metadata
+
+    tile_wh = slide_meta.optimal_tile_wh
+    if level != 0:
+        down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
+        tile_wh = int(np.round(tile_wh*down_sampling))
+        tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
+        if tile_wh < 16:
+            tile_wh = 16
+        if np.any(np.array(out_shape_wh[0:2]) < tile_wh):
+            tile_wh = min(out_shape_wh[0:2])
+
+    return tile_wh
+
+
+def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CMAP_AUTO):
     """Update dimensions ome-xml metadata
 
     Used to create a new ome-xmlthat reflects changes in an image, such as its shape
@@ -3150,27 +3271,19 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, ser
 
     Parameters
     -------
-    current_ome_xml_str : str
-        ome-xml string that needs to be updated
+    img : ndarry or pyvips.Image
+        Image for which xml will be generated. Used to determine shape and datatype.
 
-    new_xyzct : tuple of int
-        XYZCT shape of image
-
-    bf_dtype : str
-        String format of Bioformats datatype
-
-    is_rgb : bool
-        Whether or not the image is RGB
-
-    pixel_physical_size_xyu : tuple, optional
-        Physical size per pixel and the unit.
+    reader : SlideReader
+        SlideReader used to open `img`. Will use this to extract other metadata, including
+        the original xml.
 
     channel_names : list, optional
         List of channel names.
 
     colormap : dict, optional
         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
-        If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+        If "auto" (the default), the channel colors from `current_ome_xml_str` will be used, if available.
         If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
     Returns
@@ -3180,35 +3293,52 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, ser
 
     """
 
+    slide_meta = reader.metadata
+    img_h, img_w, nc = warp_tools.get_shape(img)
+    new_xyzct = get_shape_xyzct((img_w, img_h), nc)
+    current_ome_xml_str = slide_meta.original_xml
+    is_rgb = slide_meta.is_rgb
+    series = slide_meta.series
+
+    if isinstance(img, pyvips.Image):
+        bf_dtype = vips2bf_dtype(img.format)
+    else:
+        bf_dtype = slide_tools.NUMPY_FORMAT_BF_DTYPE[str(img.dtype)]
+
+    if channel_names is None:
+        channel_names = slide_meta.channel_names
+
+    if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
+        pixel_physical_size_xyu = None
+    else:
+        pixel_physical_size_xyu = reader.scale_physical_size(level)
+
+    updated_channel_names = check_channel_names(channel_names, is_rgb)
+
+    if colormap == CMAP_AUTO:
+        colormap = get_colormap(updated_channel_names, is_rgb=is_rgb, series=series, original_xml=current_ome_xml_str)
+
+    colormap = check_colormap(colormap, updated_channel_names)
+
     og_valid_xml = True
     og_ome = None
     if current_ome_xml_str is not None:
         try:
             elementTree.fromstring(current_ome_xml_str)
             og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
-
-            if colormap is None and not is_rgb:
-                # Get original channel colors
-                img = og_ome.images[series]
-                colormap = {c.name: c.color.as_rgb_tuple() for c in img.pixels.channels}
-                all_rgb = set(list(colormap.values()))
-                nc = len(img.pixels.channels)
-                if len(all_rgb) == 1 and nc > 1:
-                    # Original image didn't have colors
-                    default_colors = slide_tools.get_matplotlib_channel_colors(nc)
-                    colormap = {img.pixels.channels[i].name: tuple(default_colors[i]) for i in range(nc)}
-
         except elementTree.ParseError as e:
-            print(e)
             traceback_msg = traceback.format_exc()
             msg = "xml in original file is invalid or missing. Will create one"
+            # print(traceback_msg)
             valtils.print_warning(msg, traceback_msg=traceback_msg)
             og_valid_xml = False
 
     else:
         og_valid_xml = False
 
-    temp_new_ome = create_ome_xml(new_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu, channel_names, colormap=colormap)
+    temp_new_ome = create_ome_xml(shape_xyzct=new_xyzct, bf_dtype=bf_dtype, is_rgb=is_rgb,
+                                  pixel_physical_size_xyu=pixel_physical_size_xyu,
+                                  channel_names=updated_channel_names, colormap=colormap)
 
     if og_valid_xml:
         new_ome = og_ome.copy()
@@ -3220,11 +3350,366 @@ def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, ser
 
 
 
+# def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, series, pixel_physical_size_xyu=None, channel_names=None, colormap=CMAP_AUTO):
+#     """Update dimensions ome-xml metadata
+
+#     Used to create a new ome-xmlthat reflects changes in an image, such as its shape
+
+#     If `current_ome_xml_str` is invalid or None, a new ome-xml will be created
+
+#     Parameters
+#     -------
+#     current_ome_xml_str : str
+#         ome-xml string that needs to be updated
+
+#     new_xyzct : tuple of int
+#         XYZCT shape of image
+
+#     bf_dtype : str
+#         String format of Bioformats datatype
+
+#     is_rgb : bool
+#         Whether or not the image is RGB
+
+#     pixel_physical_size_xyu : tuple, optional
+#         Physical size per pixel and the unit.
+
+#     channel_names : list, optional
+#         List of channel names.
+
+#     colormap : dict, optional
+#         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+#         If "auto" (the default), the channel colors from `current_ome_xml_str` will be used, if available.
+#         If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
+
+#     Returns
+#     -------
+#     new_ome : ome_types.model.OME
+#         ome_types.model.OME object containing ome-xml metadata
+
+#     """
+
+#     og_valid_xml = True
+#     og_ome = None
+#     if current_ome_xml_str is not None:
+#         try:
+#             elementTree.fromstring(current_ome_xml_str)
+#             og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
+#         except elementTree.ParseError as e:
+#             traceback_msg = traceback.format_exc()
+#             msg = "xml in original file is invalid or missing. Will create one"
+#             # print(traceback_msg)
+#             valtils.print_warning(msg, traceback_msg=traceback_msg)
+#             og_valid_xml = False
+
+#     else:
+#         og_valid_xml = False
+
+#     updated_channel_names = check_channel_names(channel_names, is_rgb)
+#     if colormap == CMAP_AUTO:
+#         colormap = get_colormap(updated_channel_names, is_rgb=is_rgb, series=series, original_xml=current_ome_xml_str)
+
+#     temp_new_ome = create_ome_xml(shape_xyzct=new_xyzct, bf_dtype=bf_dtype, is_rgb=is_rgb,
+#                                   pixel_physical_size_xyu=pixel_physical_size_xyu,
+#                                   channel_names=updated_channel_names, colormap=colormap)
+
+#     if og_valid_xml:
+#         new_ome = og_ome.copy()
+#         new_ome.images = temp_new_ome.images
+#     else:
+#         new_ome = temp_new_ome
+
+#     return new_ome
+
+
+# def warp_and_save_slide(slide_obj, dst_f, level=0, non_rigid=True,
+#                         crop=True, src_f=None,
+#                         channel_names=None,
+#                         colormap=CMAP_AUTO,
+#                         interp_method="bicubic",
+#                         tile_wh=None, compression="lzw",
+#                         Q=100,
+#                         pyramid=True,
+#                         reader=None):
+
+#     """Warp and save a slide
+
+#     Slides will be saved in the ome.tiff format.
+
+#     Parameters
+#     ----------
+#     dst_f : str
+#         Path to were the warped slide will be saved.
+
+#     level : int
+#         Pyramid level to be warped
+
+#     non_rigid : bool, optional
+#         Whether or not to conduct non-rigid warping. If False,
+#         then only a rigid transformation will be applied. Default is True
+
+#     crop: bool, str
+#         How to crop the registered images. If `True`, then the same crop used
+#         when initializing the `Valis` object will be used. If `False`, the
+#         image will not be cropped. If "overlap", the warped slide will be
+#         cropped to include only areas where all images overlapped.
+#         "reference" crops to the area that overlaps with the reference image,
+#         defined by `reference_img_f` when initializing the `Valis object`.
+
+#     channel_names : list, optional
+#         List of channel names. If None, then Slide.reader
+#         will attempt to find the channel names associated with `src_f`.
+
+#     colormap : dict, optional
+#         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+#         If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+#         If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
+
+#     src_f : str, optional
+#         Path of slide to be warped. If None (the default), Slide.src_f
+#         will be used. Otherwise, the file to which `src_f` points to should
+#         be an alternative copy of the slide, such as one that has undergone
+#         processing (e.g. stain segmentation), has a mask applied, etc...
+
+#     interp_method : str
+#         Interpolation method used when warping slide. Default is "bicubic"
+
+#     tile_wh : int, optional
+#         Tile width and height used to save image
+
+#     compression : str
+#         Compression method used to save ome.tiff . Default is lzw, but can also
+#         be jpeg or jp2k. See pyips for more details.
+
+#     Q : int
+#         Q factor for lossy compression
+
+#     pyramid : bool
+#         Whether or not to save an image pyramid.
+#     """
+#     if src_f is None:
+#         src_f = slide_obj.src_f
+
+#     warped_slide = slide_obj.warp_slide(level=level, non_rigid=non_rigid,
+#                                     crop=crop,
+#                                     interp_method=interp_method,
+#                                     src_f=src_f)
+
+#     # Get ome-xml #
+#     if reader is None:
+#         if src_f != slide_obj.src_f:
+#             slide_reader_cls = get_slide_reader(src_f)
+#             reader = slide_reader_cls(src_f)
+#         else:
+#             reader = slide_obj.reader
+
+#     slide_meta = reader.metadata
+#     if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
+#         px_phys_size = None
+#     else:
+#         px_phys_size = reader.scale_physical_size(level)
+
+#     if channel_names is None:
+#         channel_names = slide_meta.channel_names
+
+#     bf_dtype = vips2bf_dtype(warped_slide.format)
+#     out_xyczt = get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
+#     ome_xml_obj = update_xml_for_new_img(current_ome_xml_str=slide_meta.original_xml,
+#                                                     new_xyzct=out_xyczt,
+#                                                     bf_dtype=bf_dtype,
+#                                                     is_rgb=slide_obj.is_rgb,
+#                                                     series=slide_obj.series,
+#                                                     pixel_physical_size_xyu=px_phys_size,
+#                                                     channel_names=channel_names,
+#                                                     colormap=colormap
+#                                                     )
+
+#     ome_xml = ome_xml_obj.to_xml()
+#     if tile_wh is None:
+#         tile_wh = slide_meta.optimal_tile_wh
+#         if level != 0:
+#             down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
+#             tile_wh = int(np.round(tile_wh*down_sampling))
+#             tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
+#             if tile_wh < 16:
+#                 tile_wh = 16
+#             if np.any(np.array(out_xyczt[0:2]) < tile_wh):
+#                 tile_wh = min(out_xyczt[0:2])
+
+#     save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
+#                            tile_wh=tile_wh, compression=compression,
+#                            Q=Q, pyramid=pyramid)
+
+
+# @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
+# def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
+#     """Create new ome-xmml object
+
+#     Parameters
+#     -------
+#     shape_xyzct : tuple of int
+#         XYZCT shape of image
+
+#     bf_dtype : str
+#         String format of Bioformats datatype
+
+#     is_rgb : bool
+#         Whether or not the image is RGB
+
+#     pixel_physical_size_xyu : tuple, optional
+#         Physical size per pixel and the unit.
+
+#     channel_names : list, optional
+#         List of channel names.
+
+#     colormap : dict, optional
+#         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+#         If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+
+#     Returns
+#     -------
+#     new_ome : ome_types.model.OME
+#         ome_types.model.OME object containing ome-xml metadata
+
+#     """
+
+#     x, y, z, c, t = shape_xyzct
+#     new_ome = ome_types.OME()
+#     new_img = ome_types.model.Image(
+#         id="Image:0",
+#         pixels=ome_types.model.Pixels(
+#             id="Pixels:0",
+#             size_x=x,
+#             size_y=y,
+#             size_z=z,
+#             size_c=c,
+#             size_t=t,
+#             type=bf_dtype,
+#             dimension_order='XYZCT',
+#             metadata_only=True
+#         )
+#     )
+
+#     if pixel_physical_size_xyu is not None:
+#         phys_x, phys_y, phys_u = pixel_physical_size_xyu
+#         new_img.pixels.physical_size_x = phys_x
+#         new_img.pixels.physical_size_x_unit = phys_u
+#         new_img.pixels.physical_size_y = phys_y
+#         new_img.pixels.physical_size_y_unit = phys_u
+
+#     if is_rgb:
+#         rgb_channel = ome_types.model.Channel(id='Channel:0:0', samples_per_pixel=3)
+#         new_img.pixels.channels = [rgb_channel]
+
+#     else:
+
+#         if channel_names is None:
+#             channel_names = [f"C{i}" for i in range(c)]
+
+#         default_colors = slide_tools.get_matplotlib_channel_colors(c)
+#         default_colormap = {channel_names[i]:tuple(default_colors[i]) for i in range(c)}
+#         if colormap is not None:
+#             if len(colormap) != c:
+#                 colormap = default_colormap
+#                 msg = "Number of colors in colormap not same as the number of channels. Using default colormap"
+#                 valtils.print_warning(msg)
+#         else:
+#             colormap = default_colormap
+
+#         channels = [create_channel(i, name=channel_names[i], color=colormap[channel_names[i]]) for i in range(c)]
+#         new_img.pixels.channels = channels
+
+#     new_ome = ome_types.model.OME()
+#     new_ome.images.append(new_img)
+
+#     return new_ome
+
+
+# @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
+# def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, series, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
+#     """Update dimensions ome-xml metadata
+
+#     Used to create a new ome-xmlthat reflects changes in an image, such as its shape
+
+#     If `current_ome_xml_str` is invalid or None, a new ome-xml will be created
+
+#     Parameters
+#     -------
+#     current_ome_xml_str : str
+#         ome-xml string that needs to be updated
+
+#     new_xyzct : tuple of int
+#         XYZCT shape of image
+
+#     bf_dtype : str
+#         String format of Bioformats datatype
+
+#     is_rgb : bool
+#         Whether or not the image is RGB
+
+#     pixel_physical_size_xyu : tuple, optional
+#         Physical size per pixel and the unit.
+
+#     channel_names : list, optional
+#         List of channel names.
+
+#     colormap : dict, optional
+#         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
+#         If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
+#         If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
+
+#     Returns
+#     -------
+#     new_ome : ome_types.model.OME
+#         ome_types.model.OME object containing ome-xml metadata
+
+#     """
+
+#     og_valid_xml = True
+#     og_ome = None
+#     if current_ome_xml_str is not None:
+#         try:
+#             elementTree.fromstring(current_ome_xml_str)
+#             og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
+
+#             if colormap is None and not is_rgb:
+#                 # Get original channel colors
+#                 img = og_ome.images[series]
+#                 colormap = {c.name: c.color.as_rgb_tuple() for c in img.pixels.channels}
+#                 all_rgb = set(list(colormap.values()))
+#                 nc = len(img.pixels.channels)
+#                 if len(all_rgb) == 1 and nc > 1:
+#                     # Original image didn't have colors
+#                     default_colors = slide_tools.get_matplotlib_channel_colors(nc)
+#                     colormap = {img.pixels.channels[i].name: tuple(default_colors[i]) for i in range(nc)}
+
+#         except elementTree.ParseError as e:
+#             print(e)
+#             traceback_msg = traceback.format_exc()
+#             msg = "xml in original file is invalid or missing. Will create one"
+#             valtils.print_warning(msg, traceback_msg=traceback_msg)
+#             og_valid_xml = False
+
+#     else:
+#         og_valid_xml = False
+
+#     temp_new_ome = create_ome_xml(new_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu, channel_names, colormap=colormap)
+
+#     if og_valid_xml:
+#         new_ome = og_ome.copy()
+#         new_ome.images = temp_new_ome.images
+#     else:
+#         new_ome = temp_new_ome
+
+#     return new_ome
+
+
+
 @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformation_dst_shape_rc,
                         aligned_slide_shape_rc, M=None, dxdy=None,
                         level=0, series=None, interp_method="bicubic",
-                        bbox_xywh=None, bg_color=None, colormap=None,
+                        bbox_xywh=None, bg_color=None, colormap=None, channel_names=None,
                         tile_wh=None, compression="lzw", Q=100, pyramid=True, reader=None):
 
     """ Warp and save a slide
@@ -3279,8 +3764,8 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
 
     colormap : dict, optional
         Dictionary of channel colors, where the key is the channel name, and the value the color as rgb255.
-        If None (default), the channel colors from `current_ome_xml_str` will be used, if available.
-        If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
+        If "auto" (default), the channel colors from `current_ome_xml_str` will be used, if available.
+        If `None`, no channel colors will be added.
 
     tile_wh : int, optional
         Tile width and height used to save image
@@ -3295,6 +3780,9 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
     pyramid : bool
         Whether or not to save an image pyramid.
 
+    reader: SlideReader, optional
+        Instantiated SlideReader to use to read image. If `None`,
+        `get_slide_reader` will be used to find the appropriate reader.
     """
 
     warped_slide = slide_tools.warp_slide(src_f=src_f,
@@ -3315,35 +3803,47 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
         reader_cls = get_slide_reader(src_f, series=series) # Get slide reader class
         reader = reader_cls(src_f, series=series) # Get reader
 
-    slide_meta = reader.metadata
-    if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
-        px_phys_size = None
-    else:
-        px_phys_size = reader.scale_physical_size(level)
-
-    bf_dtype = vips2bf_dtype(warped_slide.format)
-    out_xyczt = get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
-    ome_xml_obj = update_xml_for_new_img(slide_meta.original_xml,
-                                         new_xyzct=out_xyczt,
-                                         bf_dtype=bf_dtype,
-                                         is_rgb=slide_meta.is_rgb,
-                                         series=series,
-                                         pixel_physical_size_xyu=px_phys_size,
-                                         channel_names=slide_meta.channel_names,
-                                         colormap=colormap
-                                         )
+    ome_xml_obj = update_xml_for_new_img(img=warped_slide,
+                                         reader=reader,
+                                         level=level,
+                                         channel_names=channel_names,
+                                         colormap=colormap)
 
     ome_xml = ome_xml_obj.to_xml()
-    if tile_wh is None:
-        tile_wh = slide_meta.optimal_tile_wh
-        if level != 0:
-            down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
-            tile_wh = int(np.round(tile_wh*down_sampling))
-            tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
-            if tile_wh < 16:
-                tile_wh = 16
-            if np.any(np.array(out_xyczt[0:2]) < tile_wh):
-                tile_wh = min(out_xyczt[0:2])
+
+    out_shape_wh = warp_tools.get_shape(warped_slide)[0:2][::-1]
+    tile_wh = get_tile_wh(reader=reader,
+                          level=level,
+                          out_shape_wh=out_shape_wh)
+    # slide_meta = reader.metadata
+    # if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
+    #     px_phys_size = None
+    # else:
+    #     px_phys_size = reader.scale_physical_size(level)
+
+    # bf_dtype = vips2bf_dtype(warped_slide.format)
+    # out_xyczt = get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
+    # ome_xml_obj = update_xml_for_new_img(slide_meta.original_xml,
+    #                                      new_xyzct=out_xyczt,
+    #                                      bf_dtype=bf_dtype,
+    #                                      is_rgb=slide_meta.is_rgb,
+    #                                      series=series,
+    #                                      pixel_physical_size_xyu=px_phys_size,
+    #                                      channel_names=slide_meta.channel_names,
+    #                                      colormap=colormap
+    #                                      )
+
+    # ome_xml = ome_xml_obj.to_xml()
+    # if tile_wh is None:
+    #     tile_wh = slide_meta.optimal_tile_wh
+    #     if level != 0:
+    #         down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
+    #         tile_wh = int(np.round(tile_wh*down_sampling))
+    #         tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
+    #         if tile_wh < 16:
+    #             tile_wh = 16
+    #         if np.any(np.array(out_xyczt[0:2]) < tile_wh):
+    #             tile_wh = min(out_xyczt[0:2])
 
     save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
                   tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
@@ -3426,6 +3926,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
             ome_xml_obj = create_ome_xml(xyzct, bf_dtype, is_rgb)
 
     ome_xml_obj.creator = f"pyvips version {pyvips.__version__}"
+    # ome_xml_obj.creator = f"libvips version {valtils.get_vips_version()}"
     ome_metadata = ome_xml_obj.to_xml()
 
     # Save ome-tiff using vips #
@@ -3505,7 +4006,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
 @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
-                        colormap=None, tile_wh=None, compression="lzw", Q=100, pyramid=True):
+                        colormap=CMAP_AUTO, tile_wh=None, compression="lzw", Q=100, pyramid=True, reader=None):
     """Convert an image to an ome.tiff image
 
     Saves a new copy of the image as a tiled pyramid ome.tiff with valid ome-xml.
@@ -3555,33 +4056,40 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     dst_dir = os.path.join(dst_f)[0]
     pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
-    reader_cls = get_slide_reader(src_f, series)
-    reader = reader_cls(src_f, series=series)
+    if reader is None:
+        reader_cls = get_slide_reader(src_f, series)
+        reader = reader_cls(src_f, series=series)
     slide_meta = reader.metadata
     if series is None:
         series = reader.metadata.series
 
     vips_img = reader.slide2vips(level=level, series=series, xywh=xywh)
-    bf_dtype = vips2bf_dtype(vips_img.format)
-    out_xyczt = get_shape_xyzct((vips_img.width, vips_img.height), slide_meta.n_channels)
+    # bf_dtype = vips2bf_dtype(vips_img.format)
+    # out_xyczt = get_shape_xyzct((vips_img.width, vips_img.height), slide_meta.n_channels)
 
-    if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
-        px_phys_size = None
-    else:
-        if level == 0:
-            px_phys_size = slide_meta.pixel_physical_size_xyu
-        else:
-            px_phys_size = reader.scale_physical_size(level)
+    # if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
+    #     px_phys_size = None
+    # else:
+    #     if level == 0:
+    #         px_phys_size = slide_meta.pixel_physical_size_xyu
+    #     else:
+    #         px_phys_size = reader.scale_physical_size(level)
 
-    ome_obj = update_xml_for_new_img(slide_meta.original_xml,
-                                     new_xyzct=out_xyczt,
-                                     bf_dtype=bf_dtype,
-                                     is_rgb=slide_meta.is_rgb,
-                                     series=series,
-                                     pixel_physical_size_xyu=px_phys_size,
+    # ome_obj = update_xml_for_new_img(slide_meta.original_xml,
+    #                                  new_xyzct=out_xyczt,
+    #                                  bf_dtype=bf_dtype,
+    #                                  is_rgb=slide_meta.is_rgb,
+    #                                  series=series,
+    #                                  pixel_physical_size_xyu=px_phys_size,
+    #                                  channel_names=slide_meta.channel_names,
+    #                                  colormap=colormap
+    #                                  )
+
+    ome_obj = update_xml_for_new_img(img=vips_img,
+                                     reader=reader,
+                                     level=level,
                                      channel_names=slide_meta.channel_names,
-                                     colormap=colormap
-                                     )
+                                     colormap=colormap)
 
     ome_obj.creator = f"pyvips version {pyvips.__version__}"
     ome_xml_str = ome_obj.to_xml()
@@ -3589,6 +4097,6 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
         tile_wh = slide_meta.optimal_tile_wh
 
     if tile_wh > MAX_TILE_SIZE:
-            tile_wh = MAX_TILE_SIZE
+        tile_wh = MAX_TILE_SIZE
 
     save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)

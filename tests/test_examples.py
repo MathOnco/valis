@@ -53,7 +53,7 @@ import numpy as np
 import shutil
 import sys
 import os
-# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import registration, valtils
 from valis.micro_rigid_registrar import MicroRigidRegistrar
 
