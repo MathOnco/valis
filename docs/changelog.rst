@@ -10,8 +10,8 @@ Version 1.0.3 (January 5, 2024)
 #. Tested the :code:`slide_io.CziJpgxrReader` with more jpegxr compressed czi images, including  3 RGB (2 mosaic, 1 not mosaic),  1 multichannel non-RGB (mosaic), 1 single channel (mosaic). Related to `github issue 76 <https://github.com/MathOnco/valis/issues/76>`_.
 #. Added checks to make sure all channel names are in the colormap, hopefully addressing `github issues 78 <https://github.com/MathOnco/valis/issues/78>`_ and `86 <https://github.com/MathOnco/valis/issues/86>`_ .
 #. Setting :code:`colormap=None` to the various save functions will not add any color channels, and so the slide viewer's default colormaps will be used.
-
-
+#. Updated :code:`slide_io.get_slide_reader` to give preference to reading images with libvips/openslide. Should be faster since image will not need to be constructed from tiles.
+#. Updated :code:`slide_io.VipsSlideReader` to use the ome-types pacakge to extract metadata, instead of Bio-formats. Should avoid having to launch JVM unless Bio-formats is really needed.
 
 
 Version 1.0.2 (October 11, 2023)

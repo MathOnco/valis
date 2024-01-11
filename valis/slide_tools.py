@@ -51,6 +51,7 @@ VIPS_FORMAT_NUMPY_DTYPE = {
     'dpcomplex': np.complex128,
 }
 
+
 NUMPY_FORMAT_BF_DTYPE = {'uint8': 'uint8',
                          'int8': 'int8',
                          'uint16': 'uint16',
@@ -59,6 +60,17 @@ NUMPY_FORMAT_BF_DTYPE = {'uint8': 'uint8',
                          'int32': 'int32',
                          'float32': 'float',
                          'float64': 'double'}
+
+# See slide_io.bf_to_numpy_dtype
+BF_DTYPE_PIXEL_TYPE = {'uint8':1,
+                       'int8': 0,
+                       'uint16': 3,
+                       'int16': 2,
+                       'uint32': 5,
+                       'int32': 4,
+                       'float': 6,
+                       'double': 7
+                       }
 
 CZI_FORMAT_NUMPY_DTYPE = {
     "gray8": "uint8",
@@ -80,12 +92,14 @@ def vips2numpy(vi):
     https://github.com/libvips/pyvips/blob/master/examples/pil-numpy-pyvips.py
 
     """
-
-    img = np.ndarray(buffer=vi.write_to_memory(),
-                     dtype=VIPS_FORMAT_NUMPY_DTYPE[vi.format],
-                     shape=[vi.height, vi.width, vi.bands])
-    if vi.bands == 1:
-        img = img[..., 0]
+    try:
+        img = vi.numpy()
+    except:
+        img = np.ndarray(buffer=vi.write_to_memory(),
+                        dtype=VIPS_FORMAT_NUMPY_DTYPE[vi.format],
+                        shape=[vi.height, vi.width, vi.bands])
+        if vi.bands == 1:
+            img = img[..., 0]
 
     return img
 
@@ -94,23 +108,26 @@ def numpy2vips(a, pyvips_interpretation=None):
     """
 
     """
+    try:
+        vi = pyvips.Image.new_from_array(a)
 
-    if a.ndim > 2:
-        height, width, bands = a.shape
-    else:
-        height, width = a.shape
-        bands = 1
+    except Exception as e:
+        if a.ndim > 2:
+            height, width, bands = a.shape
+        else:
+            height, width = a.shape
+            bands = 1
 
-    linear = a.reshape(width * height * bands)
-    if linear.dtype.byteorder == ">":
-        #vips seems to expect the array to be little endian, but `a` is big endian
-        linear.byteswap(inplace=True)
+        linear = a.reshape(width * height * bands)
+        if linear.dtype.byteorder == ">":
+            #vips seems to expect the array to be little endian, but `a` is big endian
+            linear.byteswap(inplace=True)
 
-    vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,
-                                      NUMPY_FORMAT_VIPS_DTYPE[a.dtype.name])
+        vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,
+                                        NUMPY_FORMAT_VIPS_DTYPE[a.dtype.name])
 
-    if pyvips_interpretation is not None:
-        vi = vi.copy(interpretation=pyvips_interpretation)
+        if pyvips_interpretation is not None:
+            vi = vi.copy(interpretation=pyvips_interpretation)
     return vi
 
 
@@ -130,7 +147,7 @@ def get_slide_extension(src_f):
     """
 
     f = os.path.split(src_f)[1]
-    if re.search(".ome.tif", f):
+    if re.search(".ome.tif", f) or re.search(".nii.gz", f):
         format_split = -2
     else:
         format_split = -1
