@@ -137,7 +137,11 @@ def get_elapsed_time_string(elapsed_time, rounding=3):
 
 
 def get_vips_version():
-    v = f"{pyvips.vips_lib.VIPS_MAJOR_VERSION}.{pyvips.vips_lib.VIPS_MINOR_VERSION}.{pyvips.vips_lib.VIPS_MICRO_VERSION}"
+    try:
+        v = f"{pyvips.vips_lib.VIPS_MAJOR_VERSION}.{pyvips.vips_lib.VIPS_MINOR_VERSION}.{pyvips.vips_lib.VIPS_MICRO_VERSION}"
+    except AttributeError:
+        v = ".".join([str(pyvips.vips_lib.vips_version(i)) for i in range(3)])
+
     return v
 
 

@@ -4760,7 +4760,7 @@ class Valis(object):
             is_rgb = slide_obj.reader.metadata.is_rgb
             if colormap is not None and not is_rgb:
                 chnl_names = slide_obj.reader.metadata.channel_names
-                updated_channel_names = slide_io.check_channel_names(chnl_names, is_rgb)
+                updated_channel_names = slide_io.check_channel_names(chnl_names, is_rgb, nc=slide_obj.reader.metadata.n_channels)
                 try:
                     colormap = slide_io.check_colormap(colormap, updated_channel_names)
                     # if colormap == slide_io.CMAP_AUTO:
