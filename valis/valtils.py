@@ -7,6 +7,8 @@ import pyvips
 import warnings
 import contextlib
 from collections import defaultdict
+import platform
+import subprocess
 
 color_init()
 
@@ -71,11 +73,21 @@ def pad_strings(string_list, side="r"):
 
     return padded_strings
 
+def check_m1_mac():
+    is_mac_m1 = False
+    if platform.system() == "Darwin":
+        cpu_kind = subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"]).decode('utf-8')
+        if cpu_kind.startswith("Apple M1"):
+            is_mac_m1 = True
+
+    return is_mac_m1
+
 
 def get_name(f):
     """
     To get an object's name, remove image type extension from filename
     """
+    f = str(f)
     if re.search("\.", f) is None:
         # Extension already removed
         return f

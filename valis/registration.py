@@ -20,6 +20,7 @@ from copy import deepcopy
 from pprint import pformat
 import json
 from colorama import Fore
+from itertools import chain
 
 from . import feature_matcher
 from . import serial_rigid
@@ -2048,8 +2049,13 @@ class Valis(object):
                 # Key=original file name, value=name
                 self.original_img_list = list(img_list.keys())
                 self.name_dict = img_list
-            elif isinstance(img_list, list):
-                self.original_img_list = img_list
+            # elif isinstance(img_list, list):
+            elif hasattr(img_list, "__iter__"):
+                self.original_img_list = list(img_list)
+            else:
+                msg = (f"Cannot upack `img_list`, which is type {type(img_list).__name__}. "
+                       "Please provide an iterable object (list, tuple, array, etc...) that has the location of the images")
+                valtils.print_warning(msg, rgb=Fore.RED)
         else:
             self.get_imgs_in_dir()
 
@@ -4789,7 +4795,7 @@ class Valis(object):
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_merge_slides(self, dst_f=None, level=0, non_rigid=True,
                               crop=True, channel_name_dict=None,
-                              src_f_list=None, colormap=None,
+                              src_f_list=None, colormap=slide_io.CMAP_AUTO,
                               drop_duplicates=True, tile_wh=None,
                               interp_method="bicubic", compression="lzw",
                               Q=100, pyramid=True):
@@ -4868,12 +4874,19 @@ class Valis(object):
 
         if channel_name_dict is not None:
             channel_name_dict_by_name = {valtils.get_name(k):channel_name_dict[k] for k in channel_name_dict}
+        else:
+            channel_name_dict_by_name = {slide_obj.name: [f"{c} ({slide_obj.name})" for c in slide_obj.reader.metadata.channel_names]
+                                         for slide_obj in self.slide_dict.values()}
 
         if src_f_list is None:
             src_f_list = self.original_img_list
 
         all_channel_names = []
         merged_slide = None
+
+        expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in self.original_img_list]))
+        if drop_duplicates:
+            expected_channel_order = list(dict.fromkeys(expected_channel_order))
 
         for f in src_f_list:
             slide_name = valtils.get_name(os.path.split(f)[1])
@@ -4884,16 +4897,16 @@ class Valis(object):
                                                 interp_method=interp_method)
 
             keep_idx = list(range(warped_slide.bands))
-            if channel_name_dict is not None:
-                slide_channel_names = channel_name_dict_by_name[slide_obj.name]
+            # if channel_name_dict is not None:
+            slide_channel_names = channel_name_dict_by_name[slide_obj.name]
 
-                if drop_duplicates:
-                    keep_idx = [idx for idx  in range(len(slide_channel_names)) if
-                                slide_channel_names[idx] not in all_channel_names]
+            if drop_duplicates:
+                keep_idx = [idx for idx  in range(len(slide_channel_names)) if
+                            slide_channel_names[idx] not in all_channel_names]
 
-            else:
-                slide_channel_names = slide_obj.reader.metadata.channel_names
-                slide_channel_names = [c + " (" + slide_name + ")" for c in  slide_channel_names]
+            # else:
+            #     slide_channel_names = slide_obj.reader.metadata.channel_names
+            #     slide_channel_names = [c + " (" + slide_name + ")" for c in  slide_channel_names]
 
             if drop_duplicates and warped_slide.bands != len(keep_idx):
                 keep_channels = [warped_slide[c] for c in keep_idx]
@@ -4902,7 +4915,7 @@ class Valis(object):
                     warped_slide = keep_channels[0]
                 else:
                     warped_slide = keep_channels[0].bandjoin(keep_channels[1:])
-            print(f"merging {', '.join(slide_channel_names)}")
+            print(f"merging {', '.join(slide_channel_names)} from {slide_obj.name}")
 
             if merged_slide is None:
                 merged_slide = warped_slide
@@ -4911,14 +4924,16 @@ class Valis(object):
 
             all_channel_names.extend(slide_channel_names)
 
+        assert all_channel_names == expected_channel_order
 
         if colormap is not None:
-            if len(colormap) >= len(all_channel_names):
-                cmap_dict = {all_channel_names[i]:tuple(colormap[i]) for i in range(len(all_channel_names))}
+            # if len(colormap) >= len(all_channel_names):
+                # cmap_dict = {all_channel_names[i]:tuple(colormap[i]) for i in range(len(all_channel_names))}
+            cmap_dict = slide_io.check_colormap(colormap, all_channel_names)
 
-            else:
-                msg = f'Merged image has {len(all_channel_names)} but colormap only has {len(colormap)} colors'
-                valtils.print_warning(msg)
+            # else:
+                # msg = f'Merged image has {len(all_channel_names)} but colormap only has {len(colormap)} colors'
+                # valtils.print_warning(msg)
 
         else:
             cmap_dict = None
