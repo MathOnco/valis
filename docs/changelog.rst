@@ -11,8 +11,12 @@ Version 1.0.3 (January 18, 2024)
 #. Added checks to make sure all channel names are in the colormap, hopefully addressing `github issues 78 <https://github.com/MathOnco/valis/issues/78>`_ and `86 <https://github.com/MathOnco/valis/issues/86>`_ .
 #. Setting :code:`colormap=None` to the various save functions will not add any color channels, and so the slide viewer's default colormaps will be used.
 #. Updated :code:`slide_io.get_slide_reader` to give preference to reading images with libvips/openslide. Should be faster since image will not need to be constructed from tiles.
+#. JVM will only be initialized if bioformats is needed to read the image.
 #. Updated :code:`slide_io.VipsSlideReader` to use the ome-types pacakge to extract metadata, instead of Bio-formats. Should avoid having to launch JVM unless Bio-formats is really needed.
 #. Added checks to ensure that channels in merged image are in the correct order when :code:`imgs_ordered=True`, addressing the comment `github issue 56 <https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877>`_ .
+#. Added tests for images with minimal ome-xml (i.e. no channel names, units, etc...)
+#. Removed usage of :code:`imghdr`, which is being deprecated
+#. Updated ome-types' parser to "lxml"
 
 
 Version 1.0.2 (October 11, 2023)

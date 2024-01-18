@@ -6,7 +6,7 @@ import numpy as np
 from skimage import io
 from tqdm import tqdm
 import os
-import imghdr
+# import imghdr
 from time import time
 import pathlib
 import pandas as pd
@@ -21,6 +21,7 @@ from . import valtils
 from . import serial_rigid
 from . import viz
 from . import preprocessing
+from . import slide_tools
 
 IMG_LIST_KEY = "img_list"
 IMG_F_LIST_KEY = "img_f_list"
@@ -99,8 +100,11 @@ def get_imgs_from_dir(src_dir):
         List of masks used for registration
     """
 
+    # img_f_list = [f for f in os.listdir(src_dir) if
+    #               imghdr.what(os.path.join(src_dir, f)) is not None]
+
     img_f_list = [f for f in os.listdir(src_dir) if
-                  imghdr.what(os.path.join(src_dir, f)) is not None]
+                  slide_tools.get_img_type(os.path.join(src_dir, f)) is not None]
 
     valtils.sort_nicely(img_f_list)
 

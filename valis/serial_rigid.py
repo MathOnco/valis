@@ -11,18 +11,19 @@ from skimage import transform, io
 from skimage.transform import EuclideanTransform
 import pandas as pd
 import warnings
-import imghdr
+# import imghdr
 from tqdm import tqdm
 import pathlib
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
 from time import time
 import inspect
+
 from . import valtils
 from . import warp_tools
+from . import slide_tools
 from .feature_detectors import VggFD
 from .feature_matcher import Matcher, convert_distance_to_similarity, GMS_NAME
-
 
 DENOISE_MSG = "Denoising images"
 FEATURE_MSG = "Detecting features"
@@ -59,8 +60,11 @@ def get_image_files(img_dir, imgs_ordered=False):
 
     """
 
+    # img_list = [f for f in os.listdir(img_dir) if
+    #             imghdr.what(os.path.join(img_dir, f)) is not None]
+
     img_list = [f for f in os.listdir(img_dir) if
-                imghdr.what(os.path.join(img_dir, f)) is not None]
+                slide_tools.get_img_type(os.path.join(img_dir, f)) is not None]
 
     if imgs_ordered:
         valtils.sort_nicely(img_list)

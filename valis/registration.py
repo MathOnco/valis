@@ -832,7 +832,7 @@ class Slide(object):
 
     @valtils.deprecated_args(crop_to_overlap="crop")
     def warp_slide(self, level, non_rigid=True, crop=True,
-                   src_f=None, interp_method="bicubic"):
+                   src_f=None, interp_method="bicubic", reader=None):
         """Warp a slide using registration parameters
 
         Parameters
@@ -904,6 +904,9 @@ class Slide(object):
         else:
             bg_color = None
 
+        if reader is None:
+            reader = self.reader
+
         warped_slide = slide_tools.warp_slide(src_f, M=self.M,
                                               transformation_src_shape_rc=self.processed_img_shape_rc,
                                               transformation_dst_shape_rc=self.reg_img_shape_rc,
@@ -912,7 +915,7 @@ class Slide(object):
                                               interp_method=interp_method,
                                               bbox_xywh=slide_bbox_xywh,
                                               bg_color=bg_color,
-                                              reader=self.reader)
+                                              reader=reader)
         return warped_slide
 
     # @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
@@ -1108,12 +1111,6 @@ class Slide(object):
         if src_f is None:
             src_f = self.src_f
 
-        warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
-                                       crop=crop,
-                                       interp_method=interp_method,
-                                       src_f=src_f)
-
-        # Get ome-xml #
         if reader is None:
             if src_f != self.src_f:
                 slide_reader_cls = slide_io.get_slide_reader(src_f)
@@ -1121,6 +1118,13 @@ class Slide(object):
             else:
                 reader = self.reader
 
+        warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
+                                       crop=crop,
+                                       interp_method=interp_method,
+                                       src_f=src_f,
+                                       reader=reader)
+
+        # Get ome-xml #
         ome_xml_obj = slide_io.update_xml_for_new_img(img=warped_slide,
                                                       reader=reader,
                                                       level=level,
@@ -2044,6 +2048,7 @@ class Valis(object):
         self.src_dir = src_dir
         self.dst_dir = os.path.join(dst_dir, self.name)
         self.name_dict = None
+
         if img_list is not None:
             if isinstance(img_list, dict):
                 # Key=original file name, value=name
@@ -4875,8 +4880,11 @@ class Valis(object):
         if channel_name_dict is not None:
             channel_name_dict_by_name = {valtils.get_name(k):channel_name_dict[k] for k in channel_name_dict}
         else:
+            # if drop_duplicates:
+            #     channel_name_dict_by_name = {slide_obj.name: slide_obj.reader.metadata.channel_names for slide_obj in self.slide_dict.values()}
+            # else:
             channel_name_dict_by_name = {slide_obj.name: [f"{c} ({slide_obj.name})" for c in slide_obj.reader.metadata.channel_names]
-                                         for slide_obj in self.slide_dict.values()}
+                                        for slide_obj in self.slide_dict.values()}
 
         if src_f_list is None:
             src_f_list = self.original_img_list
@@ -4903,10 +4911,6 @@ class Valis(object):
             if drop_duplicates:
                 keep_idx = [idx for idx  in range(len(slide_channel_names)) if
                             slide_channel_names[idx] not in all_channel_names]
-
-            # else:
-            #     slide_channel_names = slide_obj.reader.metadata.channel_names
-            #     slide_channel_names = [c + " (" + slide_name + ")" for c in  slide_channel_names]
 
             if drop_duplicates and warped_slide.bands != len(keep_idx):
                 keep_channels = [warped_slide[c] for c in keep_idx]
