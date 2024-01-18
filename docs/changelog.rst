@@ -1,7 +1,7 @@
 Change Log
 **********
 
-Version 1.0.3 (January 5, 2024)
+Version 1.0.3 (January 18, 2024)
 -------------------------------------
 #. Can specify which slide readers to use for each image by passing a dictionary to the :code:`reader_dict` argument in :code:`Valis.register`. The keys, value pairs are image filename and instantiated :code:`SlideReader` to use to read that file. Valis will try to find an appropriate reader for any omitted files. Can be especially useful in cases where one needs different series for different images, as the :code:`series` argument is set when the :code:`SlideReader` is created.
 #. Each :code:`Slide` is assigned a :code:`SlideReader`, ensuring that the same series will always be read.
@@ -12,6 +12,7 @@ Version 1.0.3 (January 5, 2024)
 #. Setting :code:`colormap=None` to the various save functions will not add any color channels, and so the slide viewer's default colormaps will be used.
 #. Updated :code:`slide_io.get_slide_reader` to give preference to reading images with libvips/openslide. Should be faster since image will not need to be constructed from tiles.
 #. Updated :code:`slide_io.VipsSlideReader` to use the ome-types pacakge to extract metadata, instead of Bio-formats. Should avoid having to launch JVM unless Bio-formats is really needed.
+#. Added checks to ensure that channels in merged image are in the correct order when :code:`imgs_ordered=True`, addressing the comment `github issue 56 <https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877>`_ .
 
 
 Version 1.0.2 (October 11, 2023)

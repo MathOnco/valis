@@ -49,6 +49,9 @@ are, then one can warp and save all of the slides.
 import time
 import os
 import numpy as np
+from itertools import chain
+import pathlib
+import ome_types
 
 import shutil
 import sys
@@ -139,11 +142,23 @@ def test_register_ihc(max_error=50):
 
 
 def test_register_cycif(max_error=3):
+    """
+    Goals:
+        * Aligment and merging of staining rounds
+        * Make sure error is below threshold
+        * Checks channel names of merged imagae are in the correct order (https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877)
+        * Check compression
 
 
+    """
+
+    drop_duplicates = True
     cycif_src_dir = os.path.join(datasets_src_dir, "cycif")
     try:
-        registrar = registration.Valis(cycif_src_dir, results_dst_dir)
+        img_list = list(pathlib.Path(cycif_src_dir).rglob("*.ome.tiff"))
+        img_list = np.roll(img_list, 1)
+
+        registrar = registration.Valis(cycif_src_dir, results_dst_dir, img_list=img_list, imgs_ordered=True)
         rigid_registrar, non_rigid_registrar, error_df = registrar.register()
         micro_non_rigid_registrar, micro_error_df = registrar.register_micro()
         avg_error = np.max(micro_error_df["mean_non_rigid_D"])
@@ -159,9 +174,17 @@ def test_register_cycif(max_error=3):
         merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
                                             channel_name_dict=channel_name_dict,
                                             drop_duplicates=True,
-                                            Q=90)
+                                            Q=90, compression="jpeg")
 
-        # registration.kill_jvm()
+
+
+        expected_names = list(chain.from_iterable([channel_name_dict[f] for f in registrar.original_img_list]))
+        if drop_duplicates:
+            expected_names = list(dict.fromkeys(expected_names))
+
+        merged_ome = ome_types.from_tiff(dst_f)
+        saved_names = [c.name for c in merged_ome.images[0].pixels.channels]
+        assert all([expected_names[i] == saved_names[i] for i in range(len(saved_names))]), "channels not written in correct order"
 
         # shutil.rmtree(cycif_dst_dir, ignore_errors=True)
 

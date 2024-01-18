@@ -130,15 +130,13 @@ def test_flattened_pyramid_reader():
         slide_reader.metadata.channel_names
 
 
-
 def test_sk_img_reader():
     bmp = "/Users/gatenbcd/Dropbox/Documents/image_processing/alignment_paper/comparison_to_Wang2015/comparison_to_Wang2015_pycode/valis_alignment/full_size/0_source_raw_52.bmp"
 
 
-
 def test_czi_jpegxr():
     rgb_czi_jpegxr = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/resources/slides/czi_jpegxr/2CS003-4_06-Stitching.czi"
-    single_c_czi_jpegxr = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/resources/slides/czi_jpegxr/JK023-15.czi"
+    single_c_czi_jpegxr = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/debugging/github_issue_76/src/JK023-15.czi"
     czi_f = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/debugging/github_issue_60/czi_image/32161012-014.czi"
 
     img_f_list = [

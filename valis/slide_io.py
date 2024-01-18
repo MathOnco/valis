@@ -28,6 +28,7 @@ from tqdm import tqdm
 import scyjava
 from difflib import get_close_matches
 import traceback
+
 from colorama import Fore
 from . import valtils
 from . import slide_tools
@@ -55,7 +56,8 @@ OPENSLIDE_RDR = "openslide"
 IMG_RDR = "skimage"
 """str: Name of image reader"""
 
-PIXEL_UNIT = "px"
+# PIXEL_UNIT = "px"
+PIXEL_UNIT = "pixel"
 """str: Physical unit when the unit can't be found in the metadata"""
 
 MICRON_UNIT = u'\u00B5m'
@@ -401,6 +403,20 @@ def bf2vips_dtype(bf_dtype):
     vips_format = slide_tools.NUMPY_FORMAT_VIPS_DTYPE[np_type]
 
     return vips_format
+
+
+def check_czi_jpegxr(src_f):
+    f_extension = slide_tools.get_slide_extension(src_f)
+    if f_extension != ".czi":
+        return False
+
+    czi = CziFile(src_f)
+    is_czi_jpgxr = False
+    comp_tree = czi.meta.findall(".//OriginalCompressionMethod")
+    if len(comp_tree) > 0:
+        is_czi_jpgxr = comp_tree[0].text.lower() == "jpgxr"
+
+    return is_czi_jpgxr
 
 
 def check_to_use_openslide(src_f):
@@ -1785,6 +1801,9 @@ class VipsSlideReader(SlideReader):
                     if cname.text not in channel_names:
                         channel_names.append(cname.text)
 
+        if channel_names is None:
+            channel_names = get_default_channel_names(vips_img.bands)
+
         return channel_names
 
     def _get_slide_dimensions(self, vips_img):
@@ -2168,7 +2187,8 @@ class FlattenedPyramidReader(VipsSlideReader):
             return names
 
 
-        default_channel_names = [f"C{i+1}" for i in range(vips_img.bands)]
+        # default_channel_names = [f"C{i+1}" for i in range(vips_img.bands)]
+        default_channel_names = get_default_channel_names(vips_img.bands)
 
         vips_fields = vips_img.get_fields()
         if "image-description" in vips_fields:
@@ -2716,7 +2736,7 @@ class CziJpgxrReader(SlideReader):
 
         self.is_bgr = False
         self.meta_list = [None]
-        print("Need to create metadata")
+        # print("Need to create metadata")
 
         super().__init__(src_f=src_f, *args, **kwargs)
         # return None
@@ -3212,6 +3232,13 @@ def get_slide_reader(src_f, series=None):
     if (can_use_vips or can_use_openslide) and one_series and series == 0 and not is_flattened_tiff:
         return VipsSlideReader
 
+    if is_czi:
+        is_jpegxr = check_czi_jpegxr(src_f)
+        is_m1_mac = valtils.check_m1_mac()
+        if is_m1_mac and is_jpegxr:
+            msg = "Will likely be errors using Bioformats to read a JPEGXR compressed CZI on this Apple M1 machine. Will use CziJpgxrReader instead."
+            return CziJpgxrReader
+
     init_jvm()
     can_read_meta_bf, can_read_img_bf = check_to_use_bioformats(src_f)
     can_use_bf = can_read_meta_bf and can_read_img_bf
@@ -3567,13 +3594,19 @@ def check_colormap(colormap, channel_names):
 
     return updated_colormap
 
+def get_default_channel_names(nc):
+
+    default_channel_names = [f"C{i+1}" for i in range(nc)]
+
+    return default_channel_names
+
 
 def check_channel_names(channel_names, is_rgb, nc):
 
     if is_rgb:
         return None
 
-    default_channel_names = [f"C{i+1}" for i in range(nc)]
+    default_channel_names = get_default_channel_names(nc)
 
     if channel_names is None or len(channel_names) == 0 and nc > 0:
         updated_channel_names = default_channel_names
