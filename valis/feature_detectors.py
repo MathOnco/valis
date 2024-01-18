@@ -160,7 +160,6 @@ class FeatureDD(object):
         if self.kp_detector is not None:
             detected_kp = self.kp_detector.detect(image)
             kp, desc = self.kp_descriptor.compute(image, detected_kp)
-            # type(desc)
 
         else:
             kp, desc = self.kp_descriptor.detectAndCompute(image, mask=mask)

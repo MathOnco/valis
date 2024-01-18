@@ -88,6 +88,7 @@ if in_container:
 else:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
+
 def register_hi_rez(src_dir):
     high_rez_dst_dir = os.path.join(results_dst_dir, "high_rez")
     micro_reg_fraction = 0.25 # Fraction full resolution used for non-rigid registration
@@ -146,8 +147,8 @@ def test_register_cycif(max_error=3):
     Goals:
         * Aligment and merging of staining rounds
         * Make sure error is below threshold
-        * Checks channel names of merged imagae are in the correct order (https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877)
-        * Check compression
+        * Checks channel names of merged image are in the correct order (https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877)
+        * Check jpeg compression
 
 
     """
