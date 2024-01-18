@@ -2748,10 +2748,9 @@ class CziJpgxrReader(SlideReader):
 
         self.is_bgr = False
         self.meta_list = [None]
-        # print("Need to create metadata")
 
         super().__init__(src_f=src_f, *args, **kwargs)
-        # return None
+
         try:
             self.meta_list = self.create_metadata()
         except Exception as e:
@@ -3816,12 +3815,10 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
     if current_ome_xml_str is not None:
         try:
             elementTree.fromstring(current_ome_xml_str)
-            # og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
             og_ome = ome_types.from_xml(current_ome_xml_str, parser=OME_TYPES_PARSER)
         except elementTree.ParseError as e:
             traceback_msg = traceback.format_exc()
             msg = "xml in original file is invalid or missing. Will create one"
-            # print(traceback_msg)
             valtils.print_warning(msg, traceback_msg=traceback_msg)
             og_valid_xml = False
 

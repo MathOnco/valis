@@ -246,10 +246,8 @@ def get_img_type(img_f):
         return TYPE_SLIDE_NAME
 
     # Finally, see if Bioformats can read slide.
-    print(f"have to use BF to read {valtils.get_name(img_f)}. Is ome = {is_ome_tiff}, can use vips= {can_use_vips}, can use OSlide= {can_use_openslide}")
     if slide_io.BF_READABLE_FORMATS is None:
         slide_io.init_jvm()
-    print("DONE")
     can_use_bf = f_extension in slide_io.BF_READABLE_FORMATS
     if can_use_bf:
         return TYPE_SLIDE_NAME

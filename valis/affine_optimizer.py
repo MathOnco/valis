@@ -308,7 +308,6 @@ def update_joint_H(binned_moving, binned_fixed, H, M, sample_pts, pos=0,
     return H
 
 
-# @nba.jit(nopython=False)
 def get_neighborhood(im, i, j, r):
     """
     Get values in a neighborhood
@@ -317,7 +316,6 @@ def get_neighborhood(im, i, j, r):
     return im[i - r:i + r + 1, j - r:j + r + 1].flatten()
 
 
-# @nba.jit(nopython=False)
 def build_P(A, B, r, mask):
     hood_size = (2 * r + 1) ** 2
     d = 2 * hood_size

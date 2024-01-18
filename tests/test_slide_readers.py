@@ -8,10 +8,11 @@ Make sure that correct slide reader is being used and can read specified slide
 
 import os
 from time import time
+from aicspylibczi import CziFile
 
 import sys
 sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
-from valis import slide_io
+from valis import slide_io, slide_tools
 
 def test_vips_reader():
     """
@@ -40,6 +41,8 @@ def test_vips_reader():
     expected_reader_cls = slide_io.VipsSlideReader
     for src_f in img_f_list:
         slide_reader_cls = slide_io.get_slide_reader(src_f)
+        assert slide_tools.get_img_type(src_f) is not None
+
         assert slide_reader_cls == expected_reader_cls, print(f"expected to get {expected_reader_cls.__name__} but got {slide_reader_cls.__name__}")
 
         slide_reader = slide_reader_cls(src_f)
@@ -92,6 +95,9 @@ def test_bf_reader():
 
         vips_img = slide_reader.slide2vips(n_levels-1)
 
+        assert slide_tools.get_img_type(src_f) is not None
+
+
 
 def test_flattened_pyramid_reader():
 
@@ -127,7 +133,13 @@ def test_flattened_pyramid_reader():
 
         n_levels = len(slide_reader.metadata.slide_dimensions)
         vips_img = slide_reader.slide2vips(n_levels-1)
-        slide_reader.metadata.channel_names
+
+        # import ome_types
+        # ome_types.from_xml(slide_reader.metadata.original_xml)
+
+        # slide_reader.metadata.channel_names
+
+        assert slide_tools.get_img_type(src_f) is not None
 
 
 def test_sk_img_reader():
@@ -146,18 +158,13 @@ def test_czi_jpegxr():
     ]
 
 
-
-    import os
-    from time import time
-
     import sys
     sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
     from valis import slide_io
 
-    import importlib
-    importlib.reload(slide_io)
-    from valis.slide_io import *
-
+    # import importlib
+    # importlib.reload(slide_io)
+    # from valis.slide_io import *
     expected_reader_cls = slide_io.CziJpgxrReader
     src_f = czi_f
     for src_f in img_f_list:
@@ -172,6 +179,8 @@ def test_czi_jpegxr():
 
             n_levels = len(slide_reader.metadata.slide_dimensions)
             vips_img = slide_reader.slide2vips(n_levels-1)
+
+        assert slide_tools.get_img_type(src_f) is not None
 
 
 

@@ -78,6 +78,6 @@ Full documentation with installation instructions and examples can be found at `
 License
 -------
 
-`MIT`_ © 2021-2023 Chandler Gatenbee
+`MIT`_ © 2021-2024 Chandler Gatenbee
 
 .. _MIT: LICENSE.txt
