@@ -11,7 +11,7 @@ import pathlib
 import re
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
-import imghdr
+# import imghdr
 from scipy import stats
 from bs4 import BeautifulSoup
 from statistics import mode
@@ -109,6 +109,7 @@ loci = None
 """Bioformats loci from bioforamts_jar.
    Created after initializing JVM."""
 
+OME_TYPES_PARSER = "lxml"
 
 """
 NOTE: Commented out block is how to use boformats with javabrdige.
@@ -457,7 +458,7 @@ def check_is_ome(src_f):
     if is_ome:
         # Verify that image is valid ome.tiff
         try:
-            ome_types.from_tiff(src_f)
+            ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
             is_ome = True
         except:
             is_ome = False
@@ -628,7 +629,7 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
     Use ome-types to extract metadata from xml.
     """
     # ome_info = ome_types.from_xml(xml, parser="xmlschema")
-    ome_info = ome_types.from_xml(xml, parser="lxml")
+    ome_info = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
 
     ome_img = ome_info.images[series]
 
@@ -638,9 +639,14 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
     if ome_img.pixels.big_endian is not None:
         metadata.is_little_endian = ome_img.pixels.big_endian == False
 
-    metadata.is_rgb = ome_img.pixels.channels[0].samples_per_pixel == 3 and \
-        ome_img.pixels.type.value == 'uint8' and \
-        len(ome_img.pixels.channels) == 1
+    has_channel_info = len(ome_img.pixels.channels) > 0
+    if has_channel_info:
+        metadata.is_rgb = ome_img.pixels.channels[0].samples_per_pixel == 3 and \
+            ome_img.pixels.type.value == 'uint8' and \
+            len(ome_img.pixels.channels) == 1
+    else:
+        #No channel info, so guess based on image shape and datatype
+        metadata.is_rgb = ome_img.pixels.type.value == 'uint8' and ome_img.pixels.size_c == 3
 
     if ome_img.pixels.physical_size_x is not None:
         metadata.pixel_physical_size_xyu = (ome_img.pixels.physical_size_x, ome_img.pixels.physical_size_y, MICRON_UNIT)
@@ -655,7 +661,10 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
     metadata.bf_pixel_type = slide_tools.BF_DTYPE_PIXEL_TYPE[metadata.bf_datatype]
 
     if not metadata.is_rgb:
-        metadata.channel_names = [ome_img.pixels.channels[i].name for i in range(metadata.n_channels)]
+        if has_channel_info:
+            metadata.channel_names = [ome_img.pixels.channels[i].name for i in range(metadata.n_channels)]
+        else:
+            metadata.channel_names = get_default_channel_names(ome_img.pixels.size_c)
 
     return metadata
 
@@ -959,8 +968,11 @@ class SlideReader(object):
             except Exception as e:
                 traceback_msg = traceback.format_exc()
                 matching_channel_idx = 0
-                msg = f"Cannot find channel '{channel.upper()}' in {valtils.get_name(self.src_f)}. Available channels are {self.metadata.channel_names}. Using channel {self.metadata.channel_names[matching_channel_idx]}"
-                valtils.print_warning(msg, traceback_msg=traceback_msg)
+                msg = (f"Cannot find channel '{channel}' in {valtils.get_name(self.src_f)}."
+                       f" Available channels are {self.metadata.channel_names}."
+                       f" Using channel number {matching_channel_idx}, which has name {self.metadata.channel_names[matching_channel_idx]}")
+
+                valtils.print_warning(msg)
 
             # matching_channels = [i for i in range(self.metadata.n_channels) if
             #                      re.search(channel.lower(), self.metadata.channel_names[i].lower())
@@ -3217,7 +3229,7 @@ def get_slide_reader(src_f, series=None):
 
     one_series = True
     if is_ome_tiff:
-        ome_obj = ome_types.from_tiff(src_f)
+        ome_obj = ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
         one_series = len(ome_obj.images) == 1
     #     with valtils.HiddenPrints():
     #         bf_reader = BioFormatsSlideReader(src_f)
@@ -3536,7 +3548,8 @@ def get_colormap(channel_names, is_rgb, series=0, original_xml=None):
         if original_xml is not None:
             try:
                 # Try to get original colors
-                og_ome = ome_types.from_xml(original_xml, parser="xmlschema")
+                # og_ome = ome_types.from_xml(original_xml, parser="xmlschema")
+                og_ome = ome_types.from_xml(original_xml, parser=OME_TYPES_PARSER)
                 ome_img = og_ome.images[series]
                 colormap = {c.name: c.color.as_rgb_tuple() for c in ome_img.pixels.channels}
                 all_rgb = set(list(colormap.values()))
@@ -3608,7 +3621,10 @@ def check_channel_names(channel_names, is_rgb, nc):
 
     default_channel_names = get_default_channel_names(nc)
 
-    if channel_names is None or len(channel_names) == 0 and nc > 0:
+    if channel_names is None:
+        channel_names = []
+
+    if len(channel_names) == 0 and nc > 0:
         updated_channel_names = default_channel_names
     else:
         updated_channel_names = [channel_names[i] if
@@ -3655,6 +3671,7 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
 
     """
 
+    #Minimal ome-xml
     x, y, z, c, t = shape_xyzct
     new_ome = ome_types.OME()
     new_img = ome_types.model.Image(
@@ -3799,7 +3816,8 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
     if current_ome_xml_str is not None:
         try:
             elementTree.fromstring(current_ome_xml_str)
-            og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
+            # og_ome = ome_types.from_xml(current_ome_xml_str, parser="xmlschema")
+            og_ome = ome_types.from_xml(current_ome_xml_str, parser=OME_TYPES_PARSER)
         except elementTree.ParseError as e:
             traceback_msg = traceback.format_exc()
             msg = "xml in original file is invalid or missing. Will create one"
@@ -4383,10 +4401,11 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
     bf_dtype = vips2bf_dtype(img.format)
     if ome_xml is None:
         # Create minimal ome-xml
-        ome_xml_obj = create_ome_xml(xyzct, bf_dtype, is_rgb)
+        ome_xml_obj = create_ome_xml(shape_xyzct=xyzct, bf_dtype=bf_dtype, is_rgb=is_rgb)
     else:
         # Verify that vips image and ome-xml match
-        ome_xml_obj = ome_types.from_xml(ome_xml, parser="xmlschema")
+        # ome_xml_obj = ome_types.from_xml(ome_xml, parser="xmlschema")
+        ome_xml_obj = ome_types.from_xml(ome_xml, parser=OME_TYPES_PARSER)
         ome_img = ome_xml_obj.images[0].pixels
         match_dict = {"same_x": ome_img.size_x == img.width,
                       "same_y": ome_img.size_y == img.height,
@@ -4450,10 +4469,17 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
     # Write image #
     tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
+
+    if max(xyzct[0:2]) < tile_wh:
+        tile = False
+    else:
+        tile = True
+
     if np.any(np.array(xyzct[0:2]) < tile_wh):
         # Image is smaller than the tile #
         min_dim = min(xyzct[0:2])
         tile_wh = int((min_dim - min_dim % 16))
+
     if tile_wh < 16:
         tile_wh = 16
 
@@ -4461,7 +4487,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
     lossless = Q == 100
     rgbjpeg = compression in ["jp2k", "jpeg"] and img.interpretation == "srgb"
-    img.tiffsave(dst_f, compression=compression, tile=True,
+    img.tiffsave(dst_f, compression=compression, tile=tile,
                  tile_width=tile_wh, tile_height=tile_wh,
                  pyramid=pyramid, subifd=True, bigtiff=True,
                  lossless=lossless, Q=Q, rgbjpeg=rgbjpeg)

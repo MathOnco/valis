@@ -9,13 +9,15 @@ import numpy as np
 import colour
 from matplotlib import colormaps
 import re
-import imghdr
+# import imghdr
 import sys
+from PIL import Image
 from collections import Counter
 from . import warp_tools
 from . import slide_io
 from . import viz
 from . import preprocessing
+from . import valtils
 
 IHC_NAME = "brightfield"
 IF_NAME = "fluorescence"
@@ -156,6 +158,45 @@ def get_slide_extension(src_f):
     return slide_format
 
 
+# def get_img_type(img_f):
+#     """Determine if file is a slide or an image
+
+#     Parameters
+#     ----------
+#     img_f : str
+#         Path to image
+
+#     Returns
+#     -------
+#     kind : str
+#         Type of file, either 'image', 'slide', or None if they type
+#         could not be determined
+
+#     """
+
+#     if os.path.isdir(img_f):
+#         return None
+
+#     f_extension = get_slide_extension(img_f)
+#     what_img = imghdr.what(img_f)
+#     if slide_io.BF_READABLE_FORMATS is None:
+#         slide_io.init_jvm()
+
+#     can_use_bf = f_extension in slide_io.BF_READABLE_FORMATS
+#     can_use_openslide = slide_io.check_to_use_openslide(img_f)
+#     is_tiff = f_extension == ".tiff" or f_extension == ".tif"
+#     can_use_skimage = ".".join(f_extension.split(".")[1:]) == what_img and not is_tiff
+
+#     kind = None
+#     if can_use_skimage:
+#         kind = TYPE_IMG_NAME
+#     elif can_use_bf or can_use_openslide:
+#         kind = TYPE_SLIDE_NAME
+
+#     return kind
+
+
+
 def get_img_type(img_f):
     """Determine if file is a slide or an image
 
@@ -172,24 +213,46 @@ def get_img_type(img_f):
 
     """
 
+    kind = None
     if os.path.isdir(img_f):
-        return None
+        return kind
+
 
     f_extension = get_slide_extension(img_f)
-    what_img = imghdr.what(img_f)
+
+    if f_extension.lower() == '.ds_store':
+        return kind
+    # what_img = imghdr.what(img_f)
+
+    is_ome_tiff = slide_io.check_is_ome(img_f)
+    is_czi = f_extension == ".czi"
+
+    # is_tiff = re.search(".tif*", f_extension) is not None and not is_ome_tiff
+    can_use_pil = False
+    if not is_ome_tiff:
+        try:
+            with valtils.HiddenPrints():
+                pil_image = Image.open(img_f)
+            can_use_pil = True
+        except:
+            pass
+
+    can_use_vips = slide_io.check_to_use_vips(img_f)
+    if not is_ome_tiff and (can_use_pil or can_use_vips):
+        return TYPE_IMG_NAME
+
+    can_use_openslide = slide_io.check_to_use_openslide(img_f)
+    if can_use_openslide or is_ome_tiff or is_czi:
+        return TYPE_SLIDE_NAME
+
+    # Finally, see if Bioformats can read slide.
+    print(f"have to use BF to read {valtils.get_name(img_f)}. Is ome = {is_ome_tiff}, can use vips= {can_use_vips}, can use OSlide= {can_use_openslide}")
     if slide_io.BF_READABLE_FORMATS is None:
         slide_io.init_jvm()
-
+    print("DONE")
     can_use_bf = f_extension in slide_io.BF_READABLE_FORMATS
-    can_use_openslide = slide_io.check_to_use_openslide(img_f)
-    is_tiff = f_extension == ".tiff" or f_extension == ".tif"
-    can_use_skimage = ".".join(f_extension.split(".")[1:]) == what_img and not is_tiff
-
-    kind = None
-    if can_use_skimage:
-        kind = TYPE_IMG_NAME
-    elif can_use_bf or can_use_openslide:
-        kind = TYPE_SLIDE_NAME
+    if can_use_bf:
+        return TYPE_SLIDE_NAME
 
     return kind
 
