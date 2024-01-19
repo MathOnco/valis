@@ -34,6 +34,8 @@ def test_align_min_metadata():
     registrar.warp_and_save_slides(dst_dir)
     registrar.warp_and_merge_slides(dst_f=os.path.join(dst_dir, "merged.ome.tiff"))
 
+    assert True
+
     # self = registrar
 
 if __name__ == "__main__":

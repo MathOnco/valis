@@ -25,7 +25,7 @@ The results directory contains several folders:
 3. *rigid_registration* shows thumbnails of how each image
     looks after performing rigid registration.
 
-4. *non_rigid_registration* shows thumbnaials of how each
+4. *non_rigid_registration* shows thumbnails of how each
     image looks after non-rigid registration.
 
 5. *deformation_fields* contains images showing what the
@@ -173,11 +173,9 @@ def test_register_cycif(max_error=3):
 
         dst_f = os.path.join(registrar.dst_dir, "registered_slides", f"{registrar.name}.ome.tiff")
         merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
-                                            channel_name_dict=channel_name_dict,
-                                            drop_duplicates=True,
-                                            Q=90, compression="jpeg")
-
-
+                                                channel_name_dict=channel_name_dict,
+                                                drop_duplicates=True,
+                                                Q=90, compression="jpeg")
 
         expected_names = list(chain.from_iterable([channel_name_dict[f] for f in registrar.original_img_list]))
         if drop_duplicates:
