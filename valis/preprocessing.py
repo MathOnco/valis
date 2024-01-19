@@ -116,9 +116,6 @@ class ChannelGetter(ImageProcesser):
         return tissue_mask
 
     def process_image(self, channel="dapi", adaptive_eq=True, *args, **kwaargs):
-        # reader_cls = slide_io.get_slide_reader(self.src_f, series=self.series)
-        # reader = reader_cls(self.src_f)
-        # reader = self.reader_cls(self.src_f, series=self.series)
         if self.image is None:
             chnl = self.reader.get_channel(channel=channel, level=self.level, series=self.series).astype(float)
         else:
@@ -806,7 +803,6 @@ def estimate_k(x, max_k=100, step_size=10):
 
     # Create initial cluster list
     potential_c = np.arange(0, max_k, step=step_size)
-    # potential_c = np.linspace(2, max_k, n_steps).astype(int)
     if potential_c[-1] != max_k:
         potential_c = np.hstack([potential_c, max_k])
     potential_c[0] = 2

@@ -176,9 +176,16 @@ tests/39
 tests/310
 tests/311
 tests/docker
+tests/test_align_min_metadata.py
 tests/test_difficult_cases.py
 tests/test_read_czi_jpgxr.py
+tests/skip_test_read_czi_jpgxr.py
+tests/test_micro_rigid.py
+tests/test_slide_readers.py
 tests/test_tiler.py
+tests/test_warp_assoc_imgs.py
+tests/test_warp_fxns.py
+
 .nox/
 
 docs/html/
@@ -199,8 +206,6 @@ _Dockerfile_old
 Dockerfile_torch_debian
 
 torch_pyproject.toml
-
-tests/test_micro_rigid.py
 
 pip_poetry.lock
 

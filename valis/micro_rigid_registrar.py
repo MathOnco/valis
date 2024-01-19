@@ -3,7 +3,6 @@ from skimage import exposure, transform
 import multiprocessing
 from colorama import Fore
 from contextlib import suppress
-import traceback
 
 from . import feature_matcher
 from . import feature_detectors

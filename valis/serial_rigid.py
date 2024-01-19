@@ -11,13 +11,12 @@ from skimage import transform, io
 from skimage.transform import EuclideanTransform
 import pandas as pd
 import warnings
-# import imghdr
 from tqdm import tqdm
 import pathlib
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
 from time import time
-import inspect
+from pqdm.threads import pqdm
 
 from . import valtils
 from . import warp_tools
@@ -59,9 +58,6 @@ def get_image_files(img_dir, imgs_ordered=False):
         properly. Otherwise, the list is sorted lexicographicly.
 
     """
-
-    # img_list = [f for f in os.listdir(img_dir) if
-    #             imghdr.what(os.path.join(img_dir, f)) is not None]
 
     img_list = [f for f in os.listdir(img_dir) if
                 slide_tools.get_img_type(os.path.join(img_dir, f)) is not None]
@@ -555,10 +551,6 @@ class SerialRigidRegistrar(object):
                                          img2=img_obj_2.image, desc2=img_obj_2.desc, kp2_xy=img_obj_2.kp_pos_xy,
                                          additional_filtering_kwargs=filter_kwargs)
 
-            # unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
-            #     matcher_obj.match_images(img_obj_1.desc, img_obj_1.kp_pos_xy,
-            #                                 img_obj_2.desc, img_obj_2.kp_pos_xy,
-            #                                 filter_kwargs)
             if len(filtered_match_info12.matched_kp1_xy) == 0:
                 warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} between {img_obj_1.name} and {img_obj_2.name}")
 
@@ -602,7 +594,7 @@ class SerialRigidRegistrar(object):
         """
 
         n_comparisions = int((self.size*(self.size-1))/2)
-        pbar = tqdm(total=n_comparisions, desc=MATCHING_MSG, unit="image", leave=None)
+        # pbar = tqdm(total=n_comparisions, desc=MATCHING_MSG, unit="image", leave=None)
 
         def match_img_obj(i):
 
@@ -618,11 +610,6 @@ class SerialRigidRegistrar(object):
                     matcher_obj.match_images(img1=img_obj_1.image, desc1=img_obj_1.desc, kp1_xy=img_obj_1.kp_pos_xy,
                                              img2=img_obj_2.image, desc2=img_obj_2.desc, kp2_xy=img_obj_2.kp_pos_xy,
                                              additional_filtering_kwargs=filter_kwargs)
-
-                # unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
-                #     matcher_obj.match_images(img_obj_1.desc, img_obj_1.kp_pos_xy,
-                #                                 img_obj_2.desc, img_obj_2.kp_pos_xy,
-                #                                 filter_kwargs)
 
                 if len(filtered_match_info12.matched_kp1_xy) == 0:
                     warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} between {img_obj_1.name} and {img_obj_2.name}")
@@ -640,13 +627,15 @@ class SerialRigidRegistrar(object):
                 filtered_match_info21.set_names(img_obj_2.name, img_obj_1.name)
                 img_obj_2.match_dict[img_obj_1] = filtered_match_info21
 
-                pbar.update(1)
+                # pbar.update(1)
                 if qt_emitter is not None:
                     qt_emitter.emit(1)
 
         n_cpu = multiprocessing.cpu_count() - 1
-        with parallel_backend("threading", n_jobs=n_cpu):
-            Parallel()(delayed(match_img_obj)(i) for i in range(self.size))
+        res = pqdm(range(self.size), match_img_obj, n_jobs=n_cpu, desc=MATCHING_MSG, unit="image", leave=None)
+
+        # with parallel_backend("threading", n_jobs=n_cpu):
+        #     Parallel()(delayed(match_img_obj)(i) for i in range(self.size))
 
     def get_neighbor_matches_idx(self, img_obj, prev_img_obj, next_img_obj):
         """Get indices of features found in both neighbors
@@ -975,7 +964,7 @@ class SerialRigidRegistrar(object):
             else:
                 filter_kwargs = None
 
-            # Estimate curent error without reflections. Don't need to re-detect and match features
+            # Estimate current error without reflections. Don't need to re-detect and match features
             to_prev_match_info = img_obj.match_dict[prev_img_obj]
             transformer.estimate(to_prev_match_info.matched_kp2_xy, to_prev_match_info.matched_kp1_xy)
             unreflected_warped_src_xy = warp_tools.warp_xy(to_prev_match_info.matched_kp1_xy, transformer.params)
@@ -1007,11 +996,6 @@ class SerialRigidRegistrar(object):
                         matcher_obj.match_images(img1=reflected_img, desc1=reflected_desc, kp1_xy=reflected_src_xy,
                                                  img2=prev_img_obj.image, desc2=prev_img_obj.desc, kp2_xy=dst_xy,
                                                  additional_filtering_kwargs=filter_kwargs)
-
-                    # unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
-                    #     matcher_obj.match_images(reflected_desc, reflected_src_xy,
-                    #                                 prev_img_obj.desc, dst_xy,
-                    #                                 filter_kwargs)
 
                     # Record info #
                     _ = transformer.estimate(filtered_match_info12.matched_kp2_xy, filtered_match_info12.matched_kp1_xy)

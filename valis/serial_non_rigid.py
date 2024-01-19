@@ -6,12 +6,10 @@ import numpy as np
 from skimage import io
 from tqdm import tqdm
 import os
-# import imghdr
 from time import time
 import pathlib
 import pandas as pd
 import pickle
-import cv2
 import pyvips
 import inspect
 
@@ -99,9 +97,6 @@ def get_imgs_from_dir(src_dir):
     mask_list : list of ndarray
         List of masks used for registration
     """
-
-    # img_f_list = [f for f in os.listdir(src_dir) if
-    #               imghdr.what(os.path.join(src_dir, f)) is not None]
 
     img_f_list = [f for f in os.listdir(src_dir) if
                   slide_tools.get_img_type(os.path.join(src_dir, f)) is not None]
