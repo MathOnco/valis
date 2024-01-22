@@ -7,7 +7,7 @@ from shapely.strtree import STRtree
 from shapely.geometry import Polygon, MultiPolygon
 import matplotlib.pyplot as plt
 import numpy as np
-from joblib import Parallel, delayed, parallel_backend
+from pqdm.threads import pqdm
 from skimage import draw, restoration, transform, filters, morphology
 import tqdm
 import cv2
@@ -2880,8 +2880,9 @@ def get_overlapping_poly(mesh_poly_coords):
                 poly_diffs.append(diff.buffer(buffer_v))
 
     n_cpu = multiprocessing.cpu_count() - 1
-    with parallel_backend("threading", n_jobs=n_cpu):
-        Parallel()(delayed(clip_poly)(i) for i in tqdm.tqdm(range(n_poly)))
+    res = pqdm(range(n_poly), clip_poly, n_jobs=n_cpu, unit="image", leave=None)
+    # with parallel_backend("threading", n_jobs=n_cpu):
+    #     Parallel()(delayed(clip_poly)(i) for i in tqdm.tqdm(range(n_poly)))
 
     return overlapping_poly_list, poly_diffs
 

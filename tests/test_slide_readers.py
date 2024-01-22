@@ -12,7 +12,7 @@ from aicspylibczi import CziFile
 import pathlib
 
 import sys
-sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import slide_io, slide_tools, valtils
 
 # import jpype
@@ -27,8 +27,8 @@ def get_parent_dir():
     parent_dir = os.sep.join(dir_split[:split_idx+1])
     return parent_dir
 
-# parent_dir = get_parent_dir()
-parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
+parent_dir = get_parent_dir()
+# parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
 datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
 
 in_container = sys.platform == "linux" and os.getcwd() == '/usr/local/src'
@@ -119,26 +119,9 @@ def test_bf_reader():
         # bmp
     ]
 
-    # import importlib
-    # importlib.reload(slide_io)
-    # from valis.slide_io import *
-    # src_f = img_f
-    # src_f = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/debugging/github_issue_81/skin HMGB1 round 3 with neg ctrl_TileScan 1_Merged_ch00/4i 1st round skin lamin B1 tile _TileScan 1_Merged_ch00.tif"
-    # src_f = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/resources/slides/ihc_bf/6069 idh2 cd34.svs"
     expected_reader_cls = slide_io.BioFormatsSlideReader
     for src_f in img_f_list:
         io_fxn(src_f, expected_reader_cls)
-        # slide_reader_cls = slide_io.get_slide_reader(src_f)
-        # assert slide_reader_cls == expected_reader_cls, print(f"expected to get {expected_reader_cls.__name__} but got {slide_reader_cls.__name__}")
-
-        # slide_reader = slide_reader_cls(src_f)
-        # n_levels = len(slide_reader.metadata.slide_dimensions)
-
-
-        # vips_img = slide_reader.slide2vips(n_levels-1)
-
-        # assert slide_tools.get_img_type(src_f) is not None
-
 
 
 def test_flattened_pyramid_reader():
@@ -146,8 +129,6 @@ def test_flattened_pyramid_reader():
 
     qptiff = os.path.join(parent_dir, "debugging/qptiff/37_C1D15_[46831,12690]_component_data.qptif")
     halo_stitched_tif = os.path.join(parent_dir, "resources/slides/halo_tiff/Beg_P1_48_C1D15_06S17081023.tif")
-    # halo_stitched_tif = "/Users/gatenbcd/Dropbox/Documents/SimonL/eoghan_adincar/images/batch_1/2358/Hu_Stromal_2385-17_K_FUSED.tif"
-
     img_f_list = [
         qptiff,
         halo_stitched_tif
@@ -172,11 +153,6 @@ def test_czi_jpegxr():
         single_c_czi_jpegxr,
         czi_f
     ]
-
-
-    import sys
-    sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
-    from valis import slide_io
 
     expected_reader_cls = slide_io.CziJpgxrReader
     for src_f in img_f_list:

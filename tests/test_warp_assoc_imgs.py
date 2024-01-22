@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 import sys
-sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import slide_io, warp_tools, valtils, registration
 
 

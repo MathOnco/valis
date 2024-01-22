@@ -792,15 +792,33 @@ class SerialNonRigidRegistrar(object):
 
             self.non_rigid_obj_list[i] = nr_obj
 
-    def update_img_params(self, non_rigid_reg_params=None, img_params=None, name=None):
+    def update_img_params(self, non_rigid_reg_params=None, img_params=None, moving_name=None, fixed_name=None, is_tiler=False):
+        """
+        Update img params for non-rigid-registration
+        """
 
-        if img_params is not None and name is not None:
+        if img_params is not None and moving_name is not None:
             if len(img_params) == 0:
                 indv_img_params = None
             else:
-                indv_img_params = img_params[name]
+                indv_img_params = img_params[moving_name]
+
         else:
             indv_img_params = img_params
+
+        if is_tiler:
+            #Tiler needs processor arguments for moving and fixed images
+            assert moving_name in img_params and fixed_name in img_params, "Tiled registration requires image processors for each image"
+
+            moving_dict = img_params[moving_name]
+            indv_img_params[non_rigid_registrars.NR_TILE_MOVING_P_KEY] = moving_dict[non_rigid_registrars.NR_PROCESSING_CLASS_KEY]
+            indv_img_params[non_rigid_registrars.NR_TILE_MOVING_P_INIT_KW_KEY] = moving_dict[non_rigid_registrars.NR_PROCESSING_INIT_KW_KEY]
+            indv_img_params[non_rigid_registrars.NR_TILE_MOVING_P_KW_KEY] = moving_dict[non_rigid_registrars.NR_PROCESSING_KW_KEY]
+
+            fixed_dict = img_params[fixed_name]
+            indv_img_params[non_rigid_registrars.NR_TILE_FIXED_P_KEY] = fixed_dict[non_rigid_registrars.NR_PROCESSING_CLASS_KEY]
+            indv_img_params[non_rigid_registrars.NR_TILE_FIXED_P_INIT_KW_KEY] = fixed_dict[non_rigid_registrars.NR_PROCESSING_INIT_KW_KEY]
+            indv_img_params[non_rigid_registrars.NR_TILE_FIXED_P_KW_KEY] = fixed_dict[non_rigid_registrars.NR_PROCESSING_KW_KEY]
 
         if non_rigid_reg_params is not None and indv_img_params is not None:
 
@@ -829,7 +847,7 @@ class SerialNonRigidRegistrar(object):
 
         non_rigid_reg_params: dictionary, optional
             Dictionary containing parameters {name: value} to be used to initialize
-            the NonRigidRegistrar.
+            `non_rigid_reg_class`.
             In the case where simple ITK is used by the, params should be
             a SimpleITK.ParameterMap. Note that numeric values nedd to be
             converted to strings.
@@ -838,6 +856,8 @@ class SerialNonRigidRegistrar(object):
         current_dxdy = None
         self.non_rigid_reg_params = non_rigid_reg_params
         iter_order = warp_tools.get_alignment_indices(self.size, self.ref_img_idx)
+
+        is_tiler = non_rigid_reg_class.__name__ == non_rigid_registrars.NonRigidTileRegistrar.__name__
         for moving_idx, fixed_idx in tqdm(iter_order, desc="Finding non-rigid transforms", unit="image"):
             moving_obj = self.non_rigid_obj_list[moving_idx]
             fixed_obj = self.non_rigid_obj_list[fixed_idx]
@@ -856,11 +876,10 @@ class SerialNonRigidRegistrar(object):
 
             elif self.mask is not None:
                 reg_mask = self.mask
-
             else:
                 reg_mask is None
 
-            nr_reg_params = self.update_img_params(non_rigid_reg_params, img_params, moving_obj.name)
+            nr_reg_params = self.update_img_params(non_rigid_reg_params, img_params, moving_name=moving_obj.name, fixed_name=fixed_obj.name, is_tiler=is_tiler)
             updated_dxdy = moving_obj.calc_deformation(registered_fixed_image=fixed_obj.registered_img,
                                         non_rigid_reg_class=non_rigid_reg_class,
                                         bk_dxdy=current_dxdy,
@@ -888,6 +907,7 @@ class SerialNonRigidRegistrar(object):
         self.non_rigid_reg_params = non_rigid_reg_params
         ref_nr_obj = self.non_rigid_obj_list[self.ref_img_idx]
         ref_img = ref_nr_obj.image
+        is_tiler = non_rigid_reg_class.__name__ == non_rigid_registrars.NonRigidTileRegistrar.__name__
         for moving_idx in tqdm(range(self.size), desc="Finding non-rigid transforms", unit="image"):
             moving_obj = self.non_rigid_obj_list[moving_idx]
             if moving_obj.stack_idx == self.ref_img_idx:
@@ -895,7 +915,7 @@ class SerialNonRigidRegistrar(object):
 
             overlap_mask = None
 
-            nr_reg_params = self.update_img_params(non_rigid_reg_params, img_params, moving_obj.name)
+            nr_reg_params = self.update_img_params(non_rigid_reg_params, img_params, moving_name=moving_obj.name, fixed_name=ref_nr_obj.name, is_tiler=is_tiler)
 
             moving_obj.calc_deformation(ref_img,
                                         non_rigid_reg_class,
@@ -964,7 +984,6 @@ class SerialNonRigidRegistrar(object):
             named_img_params = {valtils.get_name(k):v for k, v in img_params.items()}
         else:
             named_img_params = None
-
         if issubclass(non_rigid_reg_class, non_rigid_registrars.NonRigidRegistrarGroupwise):
             self.register_groupwise(non_rigid_reg_class, non_rigid_reg_params)
         elif self.align_to_reference:

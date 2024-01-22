@@ -9,7 +9,6 @@ import numpy as np
 import colour
 from matplotlib import colormaps
 import re
-# import imghdr
 import sys
 from PIL import Image
 from collections import Counter

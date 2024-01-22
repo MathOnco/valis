@@ -21,7 +21,6 @@ from valis import viz, warp_tools
 # sys.path.append(valis_src_dir)
 
 
-
 def get_parent_dir():
     cwd = os.getcwd()
     dir_split = cwd.split(os.sep)
@@ -29,6 +28,13 @@ def get_parent_dir():
     parent_dir = os.sep.join(dir_split[:split_idx+1])
     return parent_dir
 
+
+parent_dir = get_parent_dir()
+in_container = sys.platform == "linux" and os.getcwd() == '/usr/local/src'
+if in_container:
+    results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
+else:
+    results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
 def gen_M(img_shape_rc, txy=(0, 0), sxy=(1,1), rot_deg=0):
 
@@ -117,9 +123,10 @@ def draw_pts(img, pt_xy):
 
 def test_img_warp(max_mi=0.5, max_px_d=0.1):
 
-    img_f="/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/write_up/logo/tri_logo/valis_logo.png"
+    img_f = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/write_up/logo/tri_logo/valis_logo.png"
     # dst_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/tests/warp_from_to"
-    dst_dir = f"/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/tests/tmp{sys.version_info.major}{sys.version_info.minor}/warp_functions"
+    # dst_dir = f"/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/tests/tmp{sys.version_info.major}{sys.version_info.minor}/warp_functions"
+    dst_dir = os.path.join(results_dst_dir, "warp_functions")
     pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
     img = io.imread(img_f, True)

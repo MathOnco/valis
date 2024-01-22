@@ -14,7 +14,6 @@ import warnings
 from tqdm import tqdm
 import pathlib
 import multiprocessing
-from joblib import Parallel, delayed, parallel_backend
 from time import time
 from pqdm.threads import pqdm
 
@@ -572,8 +571,10 @@ class SerialRigidRegistrar(object):
                 qt_emitter.emit(1)
 
         n_cpu = multiprocessing.cpu_count() - 1
-        with parallel_backend("threading", n_jobs=n_cpu):
-            Parallel()(delayed(match_adj_img_obj)(i) for i in range(self.size))
+        res = pqdm(range(self.size), match_adj_img_obj, n_jobs=n_cpu, desc=MATCHING_MSG, unit="image", leave=None)
+
+        # with parallel_backend("threading", n_jobs=n_cpu):
+        #     Parallel()(delayed(match_adj_img_obj)(i) for i in range(self.size))
 
     def match_imgs(self, matcher_obj, keep_unfiltered=False, qt_emitter=None):
         """Conduct feature matching between all pairs of images.
@@ -593,7 +594,7 @@ class SerialRigidRegistrar(object):
 
         """
 
-        n_comparisions = int((self.size*(self.size-1))/2)
+        # n_comparisions = int((self.size*(self.size-1))/2)
         # pbar = tqdm(total=n_comparisions, desc=MATCHING_MSG, unit="image", leave=None)
 
         def match_img_obj(i):

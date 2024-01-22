@@ -6,7 +6,7 @@ import glob
 import os
 import numpy as np
 import sys
-sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import slide_io
 
 

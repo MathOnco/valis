@@ -10,7 +10,7 @@ from PIL import Image
 import pathlib
 import re
 import multiprocessing
-from joblib import Parallel, delayed, parallel_backend
+from pqdm.threads import pqdm
 from scipy import stats
 from bs4 import BeautifulSoup
 from statistics import mode
@@ -504,7 +504,7 @@ def check_to_use_bioformats(src_f, series=None):
     return can_get_metadata, can_read_img
 
 
-def check_flattened_pyramid_tiff(src_f):
+def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
     """Determine if a tiff is a flattened pyramid
 
     Determines if a slide is pyramid where each page/plane is a channel
@@ -543,6 +543,7 @@ def check_flattened_pyramid_tiff(src_f):
     vips_fields = vips_img.get_fields()
 
     is_flattended_pyramid = False
+    can_use_bf = False
 
     if 'n-pages' in vips_fields:
         n_pages = vips_img.get("n-pages")
@@ -605,13 +606,14 @@ def check_flattened_pyramid_tiff(src_f):
             n_channels = most_common_channel_count
 
     else:
-        return False, False, None, None, None
+        return is_flattended_pyramid, can_use_bf, None, None, None
     # Now check if Bioformats reads it similarly #
-    with valtils.HiddenPrints():
-        bf_reader = BioFormatsSlideReader(src_f)
-    bf_levels = len(bf_reader.metadata.slide_dimensions)
-    bf_channels = bf_reader.metadata.n_channels
-    can_use_bf = bf_levels >= len(slide_dimensions) and bf_channels == n_channels
+    if check_with_bf:
+        with valtils.HiddenPrints():
+            bf_reader = BioFormatsSlideReader(src_f)
+        bf_levels = len(bf_reader.metadata.slide_dimensions)
+        bf_channels = bf_reader.metadata.n_channels
+        can_use_bf = bf_levels >= len(slide_dimensions) and bf_channels == n_channels
 
     return is_flattended_pyramid, can_use_bf, slide_dimensions, levels_start_idx, n_channels
 
@@ -1094,8 +1096,9 @@ class BioFormatsSlideReader(SlideReader):
 
 
         n_cpu = multiprocessing.cpu_count() - 1
-        with parallel_backend("threading", n_jobs=n_cpu):
-            Parallel()(delayed(tile2vips_threaded)(i) for i in tqdm(range(n_tiles)))
+        res = pqdm(range(n_tiles), tile2vips_threaded, n_jobs=n_cpu, unit="tiles", leave=None)
+        # with parallel_backend("threading", n_jobs=n_cpu):
+        #     Parallel()(delayed(tile2vips_threaded)(i) for i in tqdm(range(n_tiles)))
 
         return tile_array
 
@@ -2684,7 +2687,7 @@ def get_slide_reader(src_f, series=None):
     is_flattened_tiff = False
     bf_reads_flat = False
     if is_tiff:
-        is_flattened_tiff, bf_reads_flat = check_flattened_pyramid_tiff(src_f)[0:2]
+        is_flattened_tiff, _ = check_flattened_pyramid_tiff(src_f, check_with_bf=False)[0:2]
 
     if series is None:
         series = 0
@@ -2697,7 +2700,7 @@ def get_slide_reader(src_f, series=None):
     can_use_vips = check_to_use_vips(src_f)
     can_use_openslide = check_to_use_openslide(src_f) # Checks openslide is installed
 
-    # Give preference to vips since it will be fastest
+    # Give preference to vips/openslide since it will be fastest
     if (can_use_vips or can_use_openslide) and one_series and series == 0 and not is_flattened_tiff:
         return VipsSlideReader
 
@@ -2708,10 +2711,12 @@ def get_slide_reader(src_f, series=None):
             msg = "Will likely be errors using Bioformats to read a JPEGXR compressed CZI on this Apple M1 machine. Will use CziJpgxrReader instead."
             return CziJpgxrReader
 
+    # Check to see if Bio-formats will work
     init_jvm()
     can_read_meta_bf, can_read_img_bf = check_to_use_bioformats(src_f)
     can_use_bf = can_read_meta_bf and can_read_img_bf
     if is_flattened_tiff:
+        _, bf_reads_flat = check_flattened_pyramid_tiff(src_f, check_with_bf=True)[0:2]
         # Give preference to BioFormatsSlideReader since it will be faster
         if bf_reads_flat and can_read_img_bf:
             return BioFormatsSlideReader
