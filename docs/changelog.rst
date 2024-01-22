@@ -1,7 +1,7 @@
 Change Log
 **********
 
-Version 1.0.3 (January 18, 2024)
+Version 1.0.3 (January 22, 2024)
 -------------------------------------
 #. Can specify which slide readers to use for each image by passing a dictionary to the :code:`reader_dict` argument in :code:`Valis.register`. The keys, value pairs are image filename and instantiated :code:`SlideReader` to use to read that file. Valis will try to find an appropriate reader for any omitted files. Can be especially useful in cases where one needs different series for different images, as the :code:`series` argument is set when the :code:`SlideReader` is created.
 #. Each :code:`Slide` is assigned a :code:`SlideReader`, ensuring that the same series will always be read.
@@ -17,6 +17,8 @@ Version 1.0.3 (January 18, 2024)
 #. Added tests for images with minimal ome-xml (i.e. no channel names, units, etc...)
 #. Removed usage of :code:`imghdr`, which is being deprecated
 #. Updated ome-types' parser to "lxml"
+#. Replaced joblib with pqdm. May resolve issue posted on `image.sc <https://forum.image.sc/t/valis-image-registration-unable-to-generate-expected-results/89466>`_
+#. Micro-registration can now use multiple image processors, and so should be able to perform multi-modal registration
 
 
 Version 1.0.2 (October 11, 2023)

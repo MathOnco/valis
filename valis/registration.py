@@ -3370,7 +3370,10 @@ class Valis(object):
 
             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_CLASS_KEY] = processing_cls
             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_KW_KEY] = processing_kwargs
-
+            tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_INIT_KW_KEY] = {"src_f": slide_obj.src_f,
+                                                                                          "series": slide_obj.series,
+                                                                                          "reader": deepcopy(slide_obj.reader)
+                                                                                          }
             img_specific_args[slide_obj.name] = tiled_non_rigid_reg_params
 
         non_rigid_registrar_cls = non_rigid_registrars.NonRigidTileRegistrar

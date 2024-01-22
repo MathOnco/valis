@@ -56,7 +56,7 @@ import ome_types
 import shutil
 import sys
 import os
-sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import registration, valtils
 from valis.micro_rigid_registrar import MicroRigidRegistrar
 
@@ -78,8 +78,8 @@ def cnames_from_filename(src_f):
     f = valtils.get_name(src_f)
     return ["DAPI"] + f.split(" ")
 
-# parent_dir = get_parent_dir()
-parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
+parent_dir = get_parent_dir()
+# parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
 datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
 
 in_container = sys.platform == "linux" and os.getcwd() == '/usr/local/src'
@@ -88,6 +88,7 @@ if in_container:
 else:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
+results_dst_dir = os.path.join(results_dst_dir, "examples")
 
 def register_hi_rez(src_dir):
     high_rez_dst_dir = os.path.join(results_dst_dir, "high_rez")

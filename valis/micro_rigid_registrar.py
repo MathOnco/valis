@@ -357,7 +357,8 @@ class MicroRigidRegistrar(object):
         n_old_matches = moving_slide.xy_matched_to_prev.shape[0]
         n_new_matches = high_rez_fixed_matched_kp_xy.shape[0]
 
-        improved = (n_new_matches >= n_old_matches) and (new_d < og_d)
+        # improved = (n_new_matches >= n_old_matches) and (new_d < og_d)
+        improved = (n_new_matches >= n_old_matches) #and (new_d < og_d)
         if improved:
             res_msg = "micro rigid registration improved alignments."
             msg_clr = Fore.GREEN
