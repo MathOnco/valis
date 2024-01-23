@@ -1,4 +1,6 @@
-
+"""
+Make sure VALIS still works when images have minimal metadata
+"""
 import os
 import pathlib
 
@@ -36,7 +38,6 @@ def test_align_min_metadata():
 
     assert True
 
-    # self = registrar
 
 if __name__ == "__main__":
     test_align_min_metadata()

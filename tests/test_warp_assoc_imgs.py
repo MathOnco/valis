@@ -38,7 +38,6 @@ def test_warp_other_images():
         registrar = registration.Valis(src_dir, dst_dir, img_list=img_list)
         rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
-
         for dapi_f in img_list:
             round_dir = os.path.split(dapi_f)[0].split(os.path.sep)[-1].replace(" ", "_")
             src_round_dir = os.path.join(src_dir, round_dir)
@@ -48,7 +47,7 @@ def test_warp_other_images():
             dapi_thumb = dapi_thumb_vips.numpy()
             for img_f in other_img_list:
                 dst_f = os.path.join(slide_dst_dir, f"{valtils.get_name(img_f)}_warped.ome.tiff")
-                slide_obj.warp_and_save_slide(src_f=img_f, dst_f=dst_f, compression="jpeg")
+                slide_obj.warp_and_save_slide(src_f=img_f, dst_f=dst_f, compression="jp2k")
 
                 thumb_reader = slide_io.get_slide_reader(dst_f)
                 thumb_img = thumb_reader(dst_f).slide2image(0)

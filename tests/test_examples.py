@@ -78,8 +78,9 @@ def cnames_from_filename(src_f):
     f = valtils.get_name(src_f)
     return ["DAPI"] + f.split(" ")
 
+
 parent_dir = get_parent_dir()
-# parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
+
 datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
 
 in_container = sys.platform == "linux" and os.getcwd() == '/usr/local/src'
@@ -89,6 +90,7 @@ else:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
 results_dst_dir = os.path.join(results_dst_dir, "examples")
+
 
 def register_hi_rez(src_dir):
     high_rez_dst_dir = os.path.join(results_dst_dir, "high_rez")
@@ -119,7 +121,7 @@ def register_hi_rez(src_dir):
 
 
 def test_register_ihc(max_error=50):
-    """Tests registration and lossy jpeg2000 compression"""
+    """Tests registration and lossy jpeg compression"""
     ihc_src_dir = os.path.join(datasets_src_dir, "ihc")
     try:
         registrar = registration.Valis(ihc_src_dir, results_dst_dir)
@@ -132,7 +134,7 @@ def test_register_ihc(max_error=50):
             assert False, f"error was {avg_error} but should be below {max_error}"
 
         registered_slide_dst_dir = os.path.join(registrar.dst_dir, "registered_slides", registrar.name)
-        registrar.warp_and_save_slides(dst_dir=registered_slide_dst_dir, Q=90, compression="jp2k")
+        registrar.warp_and_save_slides(dst_dir=registered_slide_dst_dir, Q=90, compression="jpeg")
 
         # shutil.rmtree(ihc_dst_dir, ignore_errors=True)
 
@@ -149,7 +151,7 @@ def test_register_cycif(max_error=3):
         * Aligment and merging of staining rounds
         * Make sure error is below threshold
         * Checks channel names of merged image are in the correct order (https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877)
-        * Check jpeg compression
+        * Check jpeg2000 compression
 
 
     """
@@ -176,7 +178,7 @@ def test_register_cycif(max_error=3):
         merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
                                                 channel_name_dict=channel_name_dict,
                                                 drop_duplicates=True,
-                                                Q=90, compression="jpeg")
+                                                Q=90, compression="jp2k")
 
         expected_names = list(chain.from_iterable([channel_name_dict[f] for f in registrar.original_img_list]))
         if drop_duplicates:
@@ -206,7 +208,7 @@ def test_register_hi_rez_cycif():
 
 
 if __name__ == "__main__" and in_container:
-    # test_register_cycif()
-    # test_register_ihc()
+    test_register_cycif()
+    test_register_ihc()
     test_register_hi_rez_ihc()
     test_register_hi_rez_cycif()

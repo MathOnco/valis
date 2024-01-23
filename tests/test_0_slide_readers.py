@@ -15,7 +15,7 @@ import sys
 # sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 from valis import slide_io, slide_tools, valtils
 
-# import jpype
+import jpype
 # jpype.isJVMStarted()
 
 
@@ -91,9 +91,13 @@ def test_vips_reader():
         #   nifti
         ]
 
+
     expected_reader_cls = slide_io.VipsSlideReader
     for src_f in img_f_list:
         io_fxn(src_f, expected_reader_cls)
+
+    # assert jpype.isJVMStarted() == False, "shouldn't need to start JVM when images can be opened with vips/openslide. Make sure this is your 1st test"
+
 
 def test_bf_reader():
 
@@ -139,8 +143,10 @@ def test_flattened_pyramid_reader():
     for src_f in img_f_list:
         io_fxn(src_f, expected_reader_cls)
 
+
 def test_sk_img_reader():
     bmp = "/Users/gatenbcd/Dropbox/Documents/image_processing/alignment_paper/comparison_to_Wang2015/comparison_to_Wang2015_pycode/valis_alignment/full_size/0_source_raw_52.bmp"
+    assert True
 
 
 def test_czi_jpegxr():
@@ -153,7 +159,9 @@ def test_czi_jpegxr():
         single_c_czi_jpegxr,
         czi_f
     ]
-
+    # self = slide_reader
+    # from valis.slide_io import *
+    # src_f = rgb_czi_jpegxr
     expected_reader_cls = slide_io.CziJpgxrReader
     for src_f in img_f_list:
         czi = CziFile(src_f)
@@ -171,10 +179,10 @@ def test_czi_jpegxr():
         assert slide_tools.get_img_type(src_f) is not None
 
 
-
-def test_compare_if_ome_readtime():
+def skip_test_compare_if_ome_readtime():
         """
         Expect that libvips should read one-series ome-tiffs more quickly
+        Using BF might have memory leak...
         """
         large_series_ome_if = "/Users/gatenbcd/Dropbox/Documents/BCI-EvoCa2/chandler/CycIF_example/registered_slides/K3.ome.tiff"
 
@@ -193,3 +201,11 @@ def test_compare_if_ome_readtime():
 
         assert v_elapsed < b_elapsed
 
+
+if __name__ == "__main__":
+    test_vips_reader()
+    test_bf_reader()
+    test_flattened_pyramid_reader()
+    test_sk_img_reader()
+    test_czi_jpegxr()
+    # test_compare_if_ome_readtime()
