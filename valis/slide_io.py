@@ -1739,7 +1739,7 @@ class VipsSlideReader(SlideReader):
                     if cname.text not in channel_names:
                         channel_names.append(cname.text)
 
-        if channel_names is None:
+        if channel_names is None and not vips_img.interpretation == "srgb":
             channel_names = get_default_channel_names(vips_img.bands)
 
         return channel_names
@@ -1886,7 +1886,8 @@ class VipsSlideReader(SlideReader):
         else:
             x_res = vips_img.get("xres")
             y_res = vips_img.get("yres")
-            if x_res != 0 and y_res != 0:
+            has_units = "resolution-unit" in vips_img.get_fields()
+            if x_res != 0 and y_res != 0 and has_units:
                 # in vips, x_res and y_res are px/mm (https://www.libvips.org/API/current/VipsImage.html#VipsImage--xres)
                 # Need to convert to um/px
                 x_res = (1/x_res)*(10**3)
@@ -2271,6 +2272,7 @@ class CziJpgxrReader(SlideReader):
         return vips_img
 
     def _read_mosaic(self, level=0, xywh=None, *args, **kwargs):
+        # Note, tried multiprocessing (see below), but get blank image.
         czi_reader = CziFile(self.src_f)
 
         out_shape_wh = self.metadata.slide_dimensions[0]
@@ -2295,6 +2297,47 @@ class CziJpgxrReader(SlideReader):
             vips_img = vips_img.insert(vips_tile, x, y)
 
         return vips_img
+
+    # def _read_mosaic(self, level=0, xywh=None, *args, **kwargs):
+    #     czi_reader = CziFile(self.src_f)
+
+    #     out_shape_wh = self.metadata.slide_dimensions[0]
+    #     tile_bboxes = czi_reader.get_all_mosaic_tile_bounding_boxes(C=0)
+
+    #     tile_bboxes_l = list(tile_bboxes.items())
+    #     vips_img = pyvips.Image.black(*out_shape_wh, bands=self.metadata.n_channels) #+ bg_rgba[0:3]
+
+    #     def _read_tile(idx):
+    #         tile_info, tile_bbox = tile_bboxes_l[idx]
+    #         m = tile_info.m_index
+    #         x = tile_bbox.x
+    #         y = tile_bbox.y
+    #         np_tile, tile_dims = czi_reader.read_image(S=self.series, M=m)
+
+    #         slice_dims = [v - 1 for k, v in tile_dims if k not in ["Y", "X", "A"]]
+
+    #         np_tile = np_tile[(*slice_dims, ...)]
+    #         if self.is_bgr:
+    #             np_tile = np_tile[..., ::-1]
+
+    #         vips_tile = warp_tools.numpy2vips(np_tile)
+    #         vips_img = vips_img.insert(vips_tile, x, y)
+
+    #     n_cpu = multiprocessing.cpu_count() - 1
+    #     n_tiles = len(tile_bboxes_l)
+    #     print(f"Building CZI mosaic for {valtils.get_name(self.src_f)}")
+    #     res = pqdm(range(n_tiles), _read_tile, n_jobs=n_cpu, unit="tiles", leave=None)
+
+    #     # small_img = warp_tools.rescale_img(vips_img, 0.05)
+
+    #     # small_np = small_img.numpy()
+
+    #     # # import matplotlib.pyplot as plt
+
+    #     # plt.imshow(small_np)
+    #     # plt.show()
+
+    #     return vips_img
 
     def slide2vips(self, level=0, xywh=None, *args, **kwargs):
         try:

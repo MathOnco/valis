@@ -4691,6 +4691,11 @@ class Valis(object):
                 keep_idx = [idx for idx  in range(len(slide_channel_names)) if
                             slide_channel_names[idx] not in all_channel_names]
 
+            if len(keep_idx) == 0:
+                msg= f"Have already added all channels in {slide_channel_names}. Ignoring {slide_name}"
+                valtils.print_warning(msg)
+                continue
+
             if drop_duplicates and warped_slide.bands != len(keep_idx):
                 keep_channels = [warped_slide[c] for c in keep_idx]
                 slide_channel_names = [slide_channel_names[idx] for idx in keep_idx]
