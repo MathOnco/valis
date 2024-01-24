@@ -1,14 +1,15 @@
 Change Log
 **********
 
-Version 1.0.3 (January 22, 2024)
+Version 1.0.3 (January 25, 2024)
 -------------------------------------
 #. Can specify which slide readers to use for each image by passing a dictionary to the :code:`reader_dict` argument in :code:`Valis.register`. The keys, value pairs are image filename and instantiated :code:`SlideReader` to use to read that file. Valis will try to find an appropriate reader for any omitted files. Can be especially useful in cases where one needs different series for different images, as the :code:`series` argument is set when the :code:`SlideReader` is created.
 #. Each :code:`Slide` is assigned a :code:`SlideReader`, ensuring that the same series will always be read.
 #. Added traceback messages to critical try/except blocks to help with debugging.
+#. Micro-registration can now use multiple image processors, and so should be able to perform multi-modal registration
 #. Now possible to save the images as non-pyarmid WSI by setting :code:`pyramid=False` when calling the various slide saving methods (requested in `github issue 56 <https://github.com/MathOnco/valis/issues/56>`_).
 #. Tested the :code:`slide_io.CziJpgxrReader` with more jpegxr compressed czi images, including  3 RGB (2 mosaic, 1 not mosaic),  1 multichannel non-RGB (mosaic), 1 single channel (mosaic). Related to `github issue 76 <https://github.com/MathOnco/valis/issues/76>`_.
-#. Added checks to make sure all channel names are in the colormap, hopefully addressing `github issues 78 <https://github.com/MathOnco/valis/issues/78>`_ and `86 <https://github.com/MathOnco/valis/issues/86>`_ .
+#. Added checks to make sure all channel names are in the colormap, addressing `github issues 78 <https://github.com/MathOnco/valis/issues/78>`_ and `86 <https://github.com/MathOnco/valis/issues/86>`_ .
 #. Setting :code:`colormap=None` to the various save functions will not add any color channels, and so the slide viewer's default colormaps will be used.
 #. Updated :code:`slide_io.get_slide_reader` to give preference to reading images with libvips/openslide. Should be faster since image will not need to be constructed from tiles.
 #. JVM will only be initialized if bioformats is needed to read the image.
@@ -16,9 +17,9 @@ Version 1.0.3 (January 22, 2024)
 #. Added checks to ensure that channels in merged image are in the correct order when :code:`imgs_ordered=True`, addressing the comment `github issue 56 <https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877>`_ .
 #. Added tests for images with minimal ome-xml (i.e. no channel names, units, etc...)
 #. Removed usage of :code:`imghdr`, which is being deprecated
-#. Updated ome-types' parser to "lxml"
 #. Replaced joblib with pqdm. May resolve issue posted on `image.sc <https://forum.image.sc/t/valis-image-registration-unable-to-generate-expected-results/89466>`_
-#. Micro-registration can now use multiple image processors, and so should be able to perform multi-modal registration
+#. Removed interpolation and numba packages as dependencies
+#. #. Updated ome-types' parser to "lxml"
 
 
 Version 1.0.2 (October 11, 2023)

@@ -1,6 +1,7 @@
 """
 Make sure VALIS still works when images have minimal metadata
 """
+
 import os
 import pathlib
 

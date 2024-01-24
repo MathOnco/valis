@@ -16,11 +16,12 @@ import numpy as np
 import weightedstats
 import warnings
 import pyvips
-from interpolation.splines import UCGrid, filter_cubic, eval_cubic
+from scipy.interpolate import SmoothBivariateSpline, RectBivariateSpline
 import SimpleITK as sitk
 from colorama import Fore
 import os
 import re
+
 from copy import deepcopy
 from . import valtils
 
@@ -1774,16 +1775,20 @@ def smooth_dxdy(dxdy, grid_spacing_ratio=0.015, sigma_ratio=0.005,
 
         subgrid_r, subgrid_c = get_mesh(dx.shape, grid_spacing, inclusive=True)
 
-        grid = UCGrid((0.0, float(dx.shape[1]), int(subgrid_r.shape[1])),
-                      (0.0, float(dx.shape[0]), int(subgrid_r.shape[0])))
-
         grid_y, grid_x = np.indices(dx.shape)
         grid_xy = np.dstack([grid_x.reshape(-1), grid_y.reshape(-1)]).astype(float)[0]
 
-        dx_cubic_coeffs = filter_cubic(grid, dx[subgrid_r, subgrid_c]).T
-        dy_cubic_coeffs = filter_cubic(grid, dy[subgrid_r, subgrid_c]).T
-        smooth_dx = eval_cubic(grid, dx_cubic_coeffs, grid_xy).reshape(dx.shape)
-        smooth_dy = eval_cubic(grid, dy_cubic_coeffs, grid_xy).reshape(dx.shape)
+        sub_dx = dx[subgrid_r, subgrid_c]
+        sub_dy = dy[subgrid_r, subgrid_c]
+
+        subgrid_r_flat = subgrid_r.reshape(-1)
+        subgrid_c_flat = subgrid_c.reshape(-1)
+
+        smooth_dx_interp = SmoothBivariateSpline(subgrid_r_flat, subgrid_c_flat, sub_dx.reshape(-1))
+        smooth_dx = smooth_dx_interp(grid_xy[:, 1], grid_xy[:, 0], grid=False).reshape(dx.shape)
+
+        smooth_dy_interp = SmoothBivariateSpline(subgrid_r_flat, subgrid_c_flat, sub_dy.reshape(-1))
+        smooth_dy = smooth_dx_interp(grid_xy[:, 1], grid_xy[:, 0], grid=False).reshape(dy.shape)
 
     elif method.lower().startswith("g"):
         sigma = sigma_ratio*np.max(dx.shape)
@@ -1830,7 +1835,34 @@ def warp_xy_rigid(xy, inv_matrix):
     dst_pts[dst_pts[:, 2] == 0, 2] = np.finfo(float).eps
     # rescale to homogeneous coordinates
     dst_pts[:, :2] /= dst_pts[:, 2:3]
+
     return dst_pts[:, :2]
+
+
+def warp_xy_non_rigid(xy, dxdy, displacement_shape_rc=None):
+
+    single_pt = xy.ndim == 1
+    if single_pt:
+        xy = np.array([xy])
+
+    if displacement_shape_rc is None:
+        displacement_shape_rc = dxdy[0].shape
+
+    bbox = [0, displacement_shape_rc[0], 0, displacement_shape_rc[1]]
+    grid_r = np.arange(displacement_shape_rc[0])
+    grid_c = np.arange(displacement_shape_rc[1])
+
+    interp_dx = RectBivariateSpline(grid_r, grid_c, dxdy[0], bbox=bbox)
+    interp_dy = RectBivariateSpline(grid_r, grid_c, dxdy[1], bbox=bbox)
+
+    nr_x = xy[:, 0] + interp_dx(xy[:, 1], xy[:, 0], grid=False)
+    nr_y = xy[:, 1] + interp_dy(xy[:, 1], xy[:, 0], grid=False)
+
+    nr_xy = np.dstack([nr_x, nr_y])[0]
+    if single_pt:
+        nr_xy = nr_xy[0]
+
+    return nr_xy
 
 
 def get_warp_scaling_factors(transformation_src_shape_rc=None, transformation_dst_shape_rc=None, src_shape_rc=None, dst_shape_rc=None, bk_dxdy=None, fwd_dxdy=None):
@@ -1944,6 +1976,7 @@ def _warp_pt_vips(xy, M=None, vips_bk_dxdy=None, vips_fwd_dxdy=None, src_sxy=Non
     """Warp single point when the displacement fields are pyvips.Image objects
 
     """
+
     do_non_rigid = vips_bk_dxdy is not None or vips_fwd_dxdy is not None
 
     if src_sxy is not None:
@@ -1967,7 +2000,6 @@ def _warp_pt_vips(xy, M=None, vips_bk_dxdy=None, vips_fwd_dxdy=None, src_sxy=Non
         # So move points into new displacement field
         rigid_xy *= displacement_sxy
 
-
     bbox_xy_tl  = (rigid_xy - pt_buffer//2).astype(int)
     bbox_xy_br  = np.ceil(rigid_xy + pt_buffer//2).astype(int)
     bbox_x01 = np.clip(np.array([bbox_xy_tl[0], bbox_xy_br[0]]), 0, displacement_shape_rc[1])
@@ -1981,7 +2013,7 @@ def _warp_pt_vips(xy, M=None, vips_bk_dxdy=None, vips_fwd_dxdy=None, src_sxy=Non
     rigid_xy_in_tile = rigid_xy - region_bbox_xywh[:2]
 
     # Get region dxdy
-    if vips_bk_dxdy is None and vips_fwd_dxdy is not None:
+    if vips_fwd_dxdy is not None:
         vips_region_dxdy = vips_fwd_dxdy.extract_area(*region_bbox_xywh)
         region_dxdy = vips2numpy(vips_region_dxdy)
     elif vips_bk_dxdy is not None and vips_fwd_dxdy is None:
@@ -1989,16 +2021,9 @@ def _warp_pt_vips(xy, M=None, vips_bk_dxdy=None, vips_fwd_dxdy=None, src_sxy=Non
         region_bk_dxdy = vips2numpy(vips_region_bk_dxdy)
         region_dxdy = np.dstack(get_inverse_field(region_bk_dxdy[..., 0], region_bk_dxdy[..., 1]))
 
-    grid = UCGrid((0.0, float(bbox_w-1), int(bbox_w)),
-                  (0.0, float(bbox_h-1), int(bbox_h)))
+    nonrigid_xy = warp_xy_non_rigid(xy=rigid_xy_in_tile, dxdy=[region_dxdy[..., 0], region_dxdy[..., 1]], displacement_shape_rc=[bbox_h, bbox_w])
+    nonrigid_xy += region_bbox_xywh[0:2]
 
-    dx_cubic_coeffs = filter_cubic(grid, region_dxdy[..., 0]).T
-    dy_cubic_coeffs = filter_cubic(grid, region_dxdy[..., 1]).T
-
-    new_x = region_bbox_xywh[0] + rigid_xy_in_tile[0] + eval_cubic(grid, dx_cubic_coeffs, rigid_xy_in_tile)
-    new_y = region_bbox_xywh[1] + rigid_xy_in_tile[1] + eval_cubic(grid, dy_cubic_coeffs, rigid_xy_in_tile)
-
-    nonrigid_xy = np.array([new_x, new_y])
     if dst_sxy is not None:
         nonrigid_xy *= dst_sxy
 
@@ -2067,8 +2092,7 @@ def _warp_xy_vips(xy, M=None, transformation_src_shape_rc=None, transformation_d
 
 
 def _warp_xy_numpy(xy, M=None, transformation_src_shape_rc=None, transformation_dst_shape_rc=None,
-            src_shape_rc=None, dst_shape_rc=None,
-            bk_dxdy=None, fwd_dxdy=None):
+                   src_shape_rc=None, dst_shape_rc=None, bk_dxdy=None, fwd_dxdy=None):
     """
     Warp xy points using M and/or bk_dxdy/fwd_dxdy. If bk_dxdy is provided, it will be inverted to  create fwd_dxdy
 
@@ -2145,21 +2169,12 @@ def _warp_xy_numpy(xy, M=None, transformation_src_shape_rc=None, transformation_
     if bk_dxdy is not None and fwd_dxdy is None:
         fwd_dxdy = get_inverse_field(bk_dxdy)
 
-    grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), int(displacement_shape_rc[1])),
-                  (0.0, float(displacement_shape_rc[0]-1), int(displacement_shape_rc[0])))
+    nonrigid_xy = warp_xy_non_rigid(rigid_xy, dxdy=fwd_dxdy, displacement_shape_rc=displacement_shape_rc)
 
-    dx_cubic_coeffs = filter_cubic(grid, fwd_dxdy[0]).T
-    dy_cubic_coeffs = filter_cubic(grid, fwd_dxdy[1]).T
-
-    new_x = rigid_xy[:, 0] + eval_cubic(grid, dx_cubic_coeffs, rigid_xy)
-    new_y = rigid_xy[:, 1] + eval_cubic(grid, dy_cubic_coeffs, rigid_xy)
-
-    nonrigid_xy = np.dstack([new_x, new_y])[0]
     if dst_sxy is not None:
         nonrigid_xy *= dst_sxy
 
     return nonrigid_xy
-
 
 def warp_xy(xy, M=None, transformation_src_shape_rc=None, transformation_dst_shape_rc=None,
             src_shape_rc=None, dst_shape_rc=None,
@@ -2887,546 +2902,546 @@ def get_overlapping_poly(mesh_poly_coords):
     return overlapping_poly_list, poly_diffs
 
 
-def untangle(dxdy, n_grid_pts=50, penalty=10e-6, mask=None):
-    """Remove tangles caused by 2D displacement
-    Based on method described in
-    "Foldover-free maps in 50 lines of code" Garanzha et al. 2021.
-
-    Parameters
-    ----------
-    dxdy : ndarray
-        2xMxN array of displacement fields
-
-    n_grid_pts : int, optional
-        Number of grid points to sample, in each dimension
-
-    penalty : float
-        How much to penalize tangles
-
-    mask : ndarray
-        Mask indicating which areas should be untangled
-
-    Returns
-    -------
-    untangled_dxdy : ndarray
-        Copy of `dxdy`, but with displacements adjusted so that they
-        won't introduce tangles.
-
-    """
-
-    qut = QuadUntangler(dxdy, n_grid_pts=n_grid_pts, fold_penalty=penalty)
-    mesh = qut.mesh
-    if mask is not None:
-        frozen_mask = mask.copy()
-        if np.any(mask.shape != mesh.padded_shape):
-            padding_T = get_padding_matrix(mask.shape, mesh.padded_shape)
-            frozen_mask = transform.warp(frozen_mask, padding_T, output_shape=mesh.padded_shape, preserve_range=True)
-        # Freeze regions that aren't folded
-        frozen_mask[0:frozen_mask.shape[0]-1, 0:mesh.c_offset] = 0 # left
-        frozen_mask[0:frozen_mask.shape[0]-1, frozen_mask.shape[1]-mesh.c_offset : frozen_mask.shape[1]-1] = 0 # right
-        frozen_mask[0:mesh.r_offset, 0:frozen_mask.shape[1]-1] = 0 # top
-        frozen_mask[frozen_mask.shape[0]-mesh.r_offset : frozen_mask.shape[0] - 1, 0:frozen_mask.shape[1]-1] = 0 # bottom
-        frozen_point = frozen_mask[mesh.sample_pos_xy[:, 1].astype(int),
-                                   mesh.sample_pos_xy[:, 0].astype(int)].reshape(-1) == 0
-
-        qut.mesh.boundary = frozen_point
-
-
-    untangled_mesh = qut.untangle()
-    qut.mesh.x = untangled_mesh
-    untangled_coords = np.dstack([untangled_mesh[:mesh.nverts], untangled_mesh[mesh.nverts:]])[0]
-    untangled_coords *= mesh.scaling
-    untangled_dx = (mesh.sample_pos_xy[:, 0] - untangled_coords[:, 0]).reshape((mesh.nr, mesh.nc))
-    untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
-
-    padded_shape = mesh.padded_shape
-    grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
-                  (0.0, float(padded_shape[0]), int(mesh.nr)))
-
-    dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
-    dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T
-
-    img_y, img_x = np.indices(padded_shape)
-    img_xy = np.dstack([img_x.reshape(-1), img_y.reshape(-1)]).astype(float)[0]
-    untangled_dx = eval_cubic(grid, dx_cubic_coeffs, img_xy).reshape(padded_shape)
-    untangled_dy = eval_cubic(grid, dy_cubic_coeffs, img_xy).reshape(padded_shape)
-
-    inv_T = np.linalg.inv(mesh.padding_T)
-    untangled_dx = transform.warp(untangled_dx, inv_T, output_shape=mesh.shape_rc, preserve_range=True)
-    untangled_dy = transform.warp(untangled_dy, inv_T, output_shape=mesh.shape_rc, preserve_range=True)
-    untangled_dxdy = np.array([untangled_dx, untangled_dy])
-
-    return untangled_dxdy
-
-
-def remove_folds_in_dxdy(dxdy, n_grid_pts=50, method="inpaint", paint_size=5000, fold_penalty=1e-6):
-    """Remove folds in displacement fields
-
-    Find and remove folds in displacement fields
-
-    Parameters
-    ---------
-    method : str, optional
-        "inpaint" will use inpainting to fill in areas idenetified
-        as containing folds. "regularize" will unfold those regions
-        using the mehod described in "Foldover-free maps in 50 lines of code"
-        Garanzha et al. 2021.
-
-    n_grid_pts : int
-        Number of gridpoints used to detect folds. Also the number
-        of gridpoints to use when regularizing he mesh when
-        `method` = "regularize".
-
-    paint_size : int
-        Used to determine how much to resize the image to have efficient inpainting.
-        Larger values = longer processing time. Only used if `method` = "inpaint".
-
-    fold_penalty : float
-        How much to penalize folding/stretching. Larger values will make
-        the deformation field more uniform. Only used if `method` = "regularize"
-
-    Returns
-    -------
-    no_folds_dxdy : ndarray
-        An array containing the x-axis (column) displacement, and y-axis (row)
-        displacement after removing folds.
-
-    """
-
-    # Use triangular mesh to find regions with folds
-    # TriangleMesh will warp triangle points using dxdy to determine location vertices in warped image
-    # It is assumed dxdy is a backwards transform found by registering images.
-    # Because TriMesh is warping points, the inverse of dxdy is used.
-    # Any image create from these points can be warped to their original position using dxdy
-
-    valtils.print_warning("Looking for folds", None, rgb=Fore.YELLOW)
-    tri_mesh = TriangleMesh(dxdy, n_grid_pts)
-    padded_shape = tri_mesh.padded_shape
-
-    tri_verts_xy = np.dstack([tri_mesh.x[:tri_mesh.nverts], tri_mesh.x[tri_mesh.nverts:]])[0]*tri_mesh.scaling
-    tri_xy = np.array([tri_verts_xy[t, :] for t in tri_mesh.tri])
-
-    overlapping_poly_list, poly_diff_list = get_overlapping_poly(tri_xy)
-    poly_overlap_mask = np.zeros(padded_shape, dtype=np.uint8)
-    for poly in overlapping_poly_list:
-        poly_r, poly_c = draw.polygon(*poly.exterior.xy[::-1], shape=padded_shape)
-        poly_overlap_mask[poly_r, poly_c] = 255
-
-    # Warp mask back to original image. Should isolaate regions that will cause folding
-    warp_map = get_warp_map(dxdy=tri_mesh.padded_dxdy)
-    src_folds_mask = transform.warp(poly_overlap_mask, warp_map, preserve_range=True)
-    src_folds_mask[src_folds_mask != 0] = 255
-    src_folds_mask = ndimage.binary_fill_holes(src_folds_mask).astype(np.uint8)*255
-
-    folded_area = len(np.where(src_folds_mask > 0)[0])
-    if folded_area == 0:
-        return dxdy
-
-    if method == 'regularize':
-        valtils.print_warning("Removing folds using regularizaation", None, rgb=Fore.YELLOW)
-        # Untanlge folded regions using regularization
-        qut = QuadUntangler(dxdy, n_grid_pts=n_grid_pts, fold_penalty=fold_penalty)
-        mesh = qut.mesh
-        frozen_mask = src_folds_mask.copy()
-        # Freeze regions that aren't folded
-        frozen_mask[0:frozen_mask.shape[0]-1, 0:mesh.c_offset] = 0 # left
-        frozen_mask[0:frozen_mask.shape[0]-1, frozen_mask.shape[1]-mesh.c_offset : frozen_mask.shape[1]-1] = 0 # right
-        frozen_mask[0:mesh.r_offset, 0:frozen_mask.shape[1]-1] = 0 # top
-        frozen_mask[frozen_mask.shape[0]-mesh.r_offset : frozen_mask.shape[0] - 1, 0:frozen_mask.shape[1]-1] = 0 # bottom
-        frozen_point = frozen_mask[mesh.sample_pos_xy[:, 1].astype(int),
-                                   mesh.sample_pos_xy[:, 0].astype(int)].reshape(-1) == 0
-
-        qut.mesh.boundary = frozen_point
-
-        # Untangle and interpolate
-        untangled_mesh = qut.untangle()
-        qut.mesh.x = untangled_mesh
-        untangled_coords = np.dstack([untangled_mesh[:mesh.nverts], untangled_mesh[mesh.nverts:]])[0]
-        untangled_coords *= mesh.scaling
-        untangled_dx = (mesh.sample_pos_xy[:, 0] - untangled_coords[:, 0]).reshape((mesh.nr, mesh.nc))
-        untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
-
-        grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
-                      (0.0, float(padded_shape[0]), int(mesh.nr)))
-
-        dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
-        dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T
-
-        img_y, img_x = np.indices(padded_shape)
-        img_xy = np.dstack([img_x.reshape(-1), img_y.reshape(-1)]).astype(float)[0]
-        no_folds_dx = eval_cubic(grid, dx_cubic_coeffs, img_xy).reshape(padded_shape)
-        no_folds_dy = eval_cubic(grid, dy_cubic_coeffs, img_xy).reshape(padded_shape)
-
-    else:
-
-        s = np.sqrt(paint_size)/np.sqrt(folded_area)
-        if s > 1:
-            s = 1
-
-        inpaint_mask = transform.rescale(src_folds_mask, s, preserve_range=True)
-
-        to_paint_dx = transform.rescale(tri_mesh.padded_dxdy[0], s, preserve_range=True)
-        painted_dx = restoration.inpaint_biharmonic(to_paint_dx, inpaint_mask)
-        smooth_dx = transform.resize(painted_dx, tri_mesh.padded_shape, preserve_range=True)
-
-        to_paint_dy = transform.rescale(tri_mesh.padded_dxdy[1], s, preserve_range=True)
-        painted_dy = restoration.inpaint_biharmonic(to_paint_dy, inpaint_mask)
-        smooth_dy = transform.resize(painted_dy, tri_mesh.padded_shape, preserve_range=True)
-
-        blending_mask = filters.gaussian(src_folds_mask, 1)
-        no_folds_dx = blending_mask*smooth_dx + (1-blending_mask)*tri_mesh.padded_dxdy[0]
-        no_folds_dy = blending_mask*smooth_dy + (1-blending_mask)*tri_mesh.padded_dxdy[1]
-
-    # Crop to original shape #
-    no_folds_dx = transform.warp(no_folds_dx, inv_T, output_shape=tri_mesh.shape_rc, preserve_range=True)
-    no_folds_dy = transform.warp(no_folds_dy, inv_T, output_shape=tri_mesh.shape_rc, preserve_range=True)
-    no_folds_dxdy = np.array([no_folds_dx, no_folds_dy])
-
-    return no_folds_dxdy
-
-
-class QuadMesh(object):
-
-    def __init__(self, dxdy, n_grid_pts=50):
-        shape = np.array(dxdy[0].shape)
-        self.shape_rc = shape
-        grid_spacing =  int(np.min(np.round(shape/n_grid_pts)))
-
-        new_r = shape[0] - shape[0] % grid_spacing + grid_spacing
-        self.r_padding = new_r - shape[0]
-        sample_y = np.floor(np.arange(0, new_r + grid_spacing, grid_spacing))
-
-        new_c = shape[1] - shape[1] % grid_spacing + grid_spacing
-        sample_x = np.arange(0, new_c + grid_spacing, grid_spacing)
-        self.c_padding = new_c - shape[1]
-
-        nr = len(sample_y)
-        nc = len(sample_x)
-        padded_shape = np.array([new_r+1, new_c+1])
-        self.padded_shape = padded_shape
-        y_center, x_center = padded_shape/2
-        self.nverts = nr*nc
-        self.nr = nr
-        self.nc = nc
-
-        self.r_offset, self.c_offset = (padded_shape - shape)//2
-
-        # Pad displacement #
-        self.padding_T = get_padding_matrix(shape, padded_shape)
-
-        padded_dx = transform.warp(dxdy[0], self.padding_T, output_shape=padded_shape, preserve_range=True)
-        padded_dy = transform.warp(dxdy[1], self.padding_T, output_shape=padded_shape, preserve_range=True)
-
-        self.padded_dxdy = np.array([padded_dx, padded_dy])
-        # Flattend indices for each pixel in a quadrat
-        quads = [[r*nc + c, r*nc + c + 1, (r+1)*nc + c + 1, (r+1)*nc + c] for r in range(nr-1) for c in range(nc-1)]
-        self.quads = quads
-        self.boundary = [None] * self.nverts
-
-        for i in range(self.nverts):
-            r_idx = i // nc
-            c_idx = i % nc
-            r = sample_y[r_idx]
-            c = sample_x[c_idx]
-            if r <= y_center or r >= new_r - y_center or c <= x_center or c >= new_c - x_center:
-                self.boundary[i] = True
-
-            else:
-                self.boundary[i] = False
-
-        sample_pos_y, sample_pos_x = np.meshgrid(sample_y, sample_x, indexing="ij")
-        unwarped_xy = np.dstack([sample_pos_x.reshape(-1), sample_pos_y.reshape(-1)])[0].astype(float)
-        self.sample_pos_xy = unwarped_xy
-        sample_xy = warp_xy(unwarped_xy, M=None, bk_dxdy=[padded_dx, padded_dy])
-        self.warped_xy = sample_xy
-        scaled_coords = self.scale_coords(sample_xy)
-        self.x = np.hstack([scaled_coords[:, 0], scaled_coords[:, 1]])
-
-    def scale_coords(self, xy):
-        max_side = np.max(self.padded_shape)
-        scaled_coords = xy/max_side
-        self.scaling = max_side
-
-        return scaled_coords
-
-
-    def __str__(self):
-        ret = ""
-        for v in range(self.nverts):
-            ret = ret + ("v %f %f 0\n" % (self.x[v], self.x[v+self.nverts]))
-        for f in self.quads:
-            ret = ret + ("f %d %d %d %d\n" % (f[0]+1, f[1]+1, f[2]+1, f[3]+1))
-        return ret
-
-    def show(self):
-        res = 1000
-        off = 100
-        image = Image.new(mode='L', size=(res, res), color=255)
-        draw = ImageDraw.Draw(image)
-
-        for quad in self.quads:
-            for e in range(4):
-                i = quad[e]
-                j = quad[(e+1)%4]
-
-                line = ((off+self.x[i]*res/2, off+self.x[i+self.nverts]*res/2), (off+self.x[j]*res/2, off+self.x[j+self.nverts]*res/2))
-                draw.line(line, fill=128)
-        del draw
-        image.show()
-
-
-class TriangleMesh(object):
-    def __init__(self, dxdy, n_grid_pts=50):
-        shape = np.array(dxdy[0].shape)
-        self.shape_rc = shape
-        grid_spacing =  int(np.min(np.round(shape/n_grid_pts)))
-
-        new_r = shape[0] - shape[0] % grid_spacing + grid_spacing
-        self.r_padding = new_r - shape[0]
-        sample_y = np.floor(np.arange(0, new_r + grid_spacing, grid_spacing))
-
-        new_c = shape[1] - shape[1] % grid_spacing + grid_spacing
-        sample_x = np.arange(0, new_c + grid_spacing, grid_spacing)
-        self.c_padding = new_c - shape[1]
-
-        nr = len(sample_y)
-        nc = len(sample_x)
-        padded_shape = np.array([new_r+1, new_c+1])
-        self.padded_shape = padded_shape
-        self.r_offset, self.c_offset = (padded_shape - shape)//2
-
-        self.nverts = nr*nc
-        self.nr = nr
-        self.nc = nc
-        y_center, x_center = padded_shape/2
-
-        self.padding_T = get_padding_matrix(shape, padded_shape)
-
-        padded_dx = transform.warp(dxdy[0], self.padding_T, output_shape=padded_shape, preserve_range=True)
-        padded_dy = transform.warp(dxdy[1], self.padding_T, output_shape=padded_shape, preserve_range=True)
-
-        self.padded_dxdy = np.array([padded_dx, padded_dy])
-
-        # Get triangle vertices
-        sample_x = np.arange(0, new_c + grid_spacing, grid_spacing)
-        sample_y = np.arange(0, new_r + grid_spacing, grid_spacing)
-
-        tri_verts, tri_faces = get_triangular_mesh(sample_x, sample_y)
-        self.nverts = tri_verts.shape[0]
-        self.tri_verts = tri_verts
-        self.boundary = [None] * self.nverts
-        for i in range(self.nverts):
-            c, r = tri_verts[i]
-
-            if r <= y_center or r >= new_r - y_center or c <= x_center or c >= new_c - x_center:
-                self.boundary[i] = True
-            else:
-                self.boundary[i] = False
-
-        sample_xy = warp_xy(tri_verts, M=None, bk_dxdy=[padded_dx, padded_dy])
-        self.warped_xy = sample_xy
-
-        self.tri = tri_faces
-        self.nfacets = len(self.tri)
-        self.vert = self.scale_coords(sample_xy)
-        self.x = np.hstack([self.vert[:, 0], self.vert[:, 1]])
-
-    def scale_coords(self, xy):
-
-        max_side = np.max(self.padded_shape)
-        scaled_coords = xy/max_side
-        self.scaling = max_side
-
-        return scaled_coords
-
-
-class QuadUntangler(object):
-    def __init__(self, dxdy, fold_penalty=1e-6, n_grid_pts=50):
-        self.shape = np.array(dxdy[0].shape)
-        self.mesh = QuadMesh(dxdy, n_grid_pts)
-        self.mesh_type = self.mesh.__class__.__name__
-        self.n_grid_pts = n_grid_pts
-        self.n = self.mesh.nverts
-        self.fold_penalty = fold_penalty
-
-    def untangle(self):
-        n = self.n
-        mesh = self.mesh
-        Q = [np.matrix('-1,-1;1,0;0,0;0,1'), np.matrix('-1,0;1,-1;0,1;0,0'),  # quadratures for
-             np.matrix('0,0;0,-1;1,1;-1,0'), np.matrix('0,-1;0,0;1,0;-1,1') ] # every quad corner
-
-        def jacobian(U, qc, quad):
-            return np.matrix([[U[quad[0]  ], U[quad[1]  ], U[quad[2]  ], U[quad[3]  ]],
-                              [U[quad[0]+n], U[quad[1]+n], U[quad[2]+n], U[quad[3]+n]]]) * Q[qc]
-
-        mindet = min([np.linalg.det( jacobian(mesh.x, qc, quad) ) for quad in mesh.quads for qc in range(4)])
-        eps = np.sqrt(1e-6**2 + min(mindet, 0)**2) # the regularization parameter e
-        eps *= 1/self.fold_penalty
-
-        def energy(U): # compute the energy and its gradient for the map u
-            F,G = 0, np.zeros(2*n)
-            for quad in mesh.quads: # sum over all quads
-                for qc in range(4): # evaluate the Jacobian matrix for every quad corner
-                    J = jacobian(U, qc, quad)
-                    det = np.linalg.det(J)
-                    chi  = det/2 + np.sqrt(eps**2 + det**2)/2    # the penalty function
-                    chip = .5 + det/(2*np.sqrt(eps**2 + det**2)) # its derivative
-
-                    f = np.trace(np.transpose(J)*J)/chi # quad corner shape quality
-                    F += f
-                    dfdj = (2*J - np.matrix([[J[1,1],-J[1,0]],[-J[0,1],J[0,0]]])*f*chip)/chi
-                    dfdu = Q[qc] * np.transpose(dfdj) # chain rule for the actual variables
-                    for i,v in enumerate(quad):
-                        if (mesh.boundary[v]): continue # the boundary verts are locked
-                        G[v  ] += dfdu[i,0]
-                        G[v+n] += dfdu[i,1]
-            return F,G
-
-        # factr are: 1e12 for low accuracy; 1e7 for moderate accuracy; 10.0 for extremely high accuracy.
-        factr = 1e7
-        untangled = fmin_l_bfgs_b(energy, mesh.x, factr=factr)[0] # inner L-BFGS loop
-
-        return untangled
-
-
-class _TriUntangler(object):
-    def __init__(self, dxdy, n_grid_pts=50):
-        self.shape = np.array(dxdy[0].shape)
-
-        # self.mesh = QuadMesh(dxdy, n_grid_pts)
-        self.mesh = TriangleMesh(dxdy, n_grid_pts)
-        self.mesh_type = self.mesh.__class__.__name__
-        self.n_grid_pts = n_grid_pts
-        self.n = self.mesh.nverts
-        self.n_tri = len(self.mesh.tri)
-
-    def triangle_area2d(self, a, b, c):
-        x = 0
-        y = 1
-        tri_area = .5*((b[y]-a[y])*(b[x]+a[x]) + (c[y]-b[y])*(c[x]+b[x]) + (a[y]-c[y])*(a[x]+c[x]))
-        return tri_area
-
-    def triangle_aspect_ratio_2d(self, a, b, c):
-
-        l1 = np.linalg.norm(b-a)
-        l2 = np.linalg.norm(c-b)
-        l3 = np.linalg.norm(a-c)
-        lmax = max([l1, l2, l3])
-
-        return lmax*(l1+l2+l3)/(4.*np.sqrt(3.)*self.triangle_area2d(a, b, c))
-
-
-    def setup(self):
-        area = [None] * self.n_tri
-        ref_tri = [None] * self.n_tri
-        for t, faces in enumerate(self.mesh.tri):
-
-
-            ax, bx, cx = self.mesh.x[self.mesh.tri[t]]
-            ay, by, cy = self.mesh.x[self.mesh.tri[t]+ self.mesh.nverts]
-
-            A = np.array([ax, ay])
-            B = np.array([bx, by])
-            C = np.array([cx, cy])
-
-
-            area[t] = self.triangle_area2d(A, B, C)
-
-            ar = self.triangle_aspect_ratio_2d(A, B, C)
-            if ar > 10:
-                #if the aspect ratio is bad, assign an equilateral reference triangle
-                l1 = np.linalg.norm(B-A)
-                l2 = np.linalg.norm(C-B)
-                l3 = np.linalg.norm(A-C)
-                a = (l1 + l2 + l3)/3 # edge length is the average of the original triangle
-                area[t] = np.sqrt(3.)/4.*a*a
-                A = np.array([0., 0.])
-                B = np.array([a, 0.])
-                C = np.array([a/2., np.sqrt(3.)/2.*a])
-
-            ST = np.matrix([B-A, C-A])
-            ST_invert_transpose = np.linalg.inv(ST).T
-            ref_tri[t] = np.array([[-1, -1], [1, 0], [0, 1] ]) @ ST_invert_transpose
-
-        self.area = area
-        self.ref_tri = ref_tri
-
-
-    def untangle(self):
-        self.setup()
-        def evaluate_jacobian(X, t):
-            J = np.matrix(np.zeros((2, 2)))
-            for i in range(3):
-                for d in range(2):
-                    J[d] += self.ref_tri[t][i, d] + X[self.mesh.tri[t][i] + self.n*d]
-
-            K = np.array([[J[1, 1], -J[1, 0]],
-                         [-J[0, 1], J[0, 0]]
-            ])
-
-            det = np.linalg.det(J)
-
-            return J, K, det
-
-        mindet = np.inf
-        for t in range(self.n_tri):
-            _, _, det = evaluate_jacobian(self.mesh.x, t)
-            mindet = np.min([mindet, det])
-
-        eps = np.sqrt(1e-6**2 + min(mindet, 0)**2) # the regularization parameter e
-        theta = 1./128
-
-        def chi(eps, det):
-            if det < 0:
-                return (det + np.sqrt(eps*eps + det*det) + 10**-6)*.5
-            else:
-                return .5*eps*eps / (np.sqrt(eps*eps + det*det) - det + 10**-6)
-
-        def chi_deriv(eps, det):
-            return .5+det/(2.*np.sqrt(eps*eps + det*det + 10**-6))
-
-
-        def energy(U):
-
-
-            F,G = 0, np.zeros(2*self.n)
-
-            for t in range(self.n_tri):
-                J, K, det = evaluate_jacobian(U, t)
-
-                c1 = chi(eps, det)
-                c2 = chi_deriv(eps, det)
-
-                f = np.trace(np.transpose(J)*J)/c1 # corner shape quality
-                g = (1+det*det)/c1
-
-                F += ((1-theta)*f + theta*g)*self.area[t]
-
-                for dim in range(2):
-
-                    a = J[dim] # tangent basis
-                    b = K[dim] # dual basis
-                    dfda = (a*2. - b*f*c2)/c1
-                    dgda = b*(2*det-g*c2)/c1
-                    for i in range(3):
-                        v = self.mesh.tri[t][i]
-                        if self.mesh.boundary[v]: continue # the boundary verts are locked
-                        # og_pos = G[v+ dim*self.n]
-                        G[v+ dim*self.n] += (self.ref_tri[t][i] @ np.transpose(dfda*(1.-theta) + dgda*theta))*self.area[t]
-                        # new_pos = G[v+ dim*self.n]
-                        # print(new_pos - og_pos)
-            return F, G
-
-        n_iter = 3
-
-        for i in range(n_iter):
-
-            self.mesh.x = fmin_l_bfgs_b(energy, self.mesh.x, factr=1e12)[0] # inner L-BFGS loop
-            # updated_xy = self.mesh.x.reshape((self.n, 2))
-            updated_xy = np.dstack([self.mesh.x[self.n:], self.mesh.x[:self.n]])[0]
-            # plt.triplot(updated_xy[:, 0], -updated_xy[:, 1], self.mesh.tri, linewidth=0.5)
-            plt.triplot(updated_xy[:, 1], -updated_xy[:, 0], self.mesh.tri, linewidth=0.5)
-            plt.axis("equal")
-            plt.savefig(f"{i}_smooth_mesh.png")
-            plt.close()
+# def untangle(dxdy, n_grid_pts=50, penalty=10e-6, mask=None):
+#     """Remove tangles caused by 2D displacement
+#     Based on method described in
+#     "Foldover-free maps in 50 lines of code" Garanzha et al. 2021.
+
+#     Parameters
+#     ----------
+#     dxdy : ndarray
+#         2xMxN array of displacement fields
+
+#     n_grid_pts : int, optional
+#         Number of grid points to sample, in each dimension
+
+#     penalty : float
+#         How much to penalize tangles
+
+#     mask : ndarray
+#         Mask indicating which areas should be untangled
+
+#     Returns
+#     -------
+#     untangled_dxdy : ndarray
+#         Copy of `dxdy`, but with displacements adjusted so that they
+#         won't introduce tangles.
+
+#     """
+
+#     qut = QuadUntangler(dxdy, n_grid_pts=n_grid_pts, fold_penalty=penalty)
+#     mesh = qut.mesh
+#     if mask is not None:
+#         frozen_mask = mask.copy()
+#         if np.any(mask.shape != mesh.padded_shape):
+#             padding_T = get_padding_matrix(mask.shape, mesh.padded_shape)
+#             frozen_mask = transform.warp(frozen_mask, padding_T, output_shape=mesh.padded_shape, preserve_range=True)
+#         # Freeze regions that aren't folded
+#         frozen_mask[0:frozen_mask.shape[0]-1, 0:mesh.c_offset] = 0 # left
+#         frozen_mask[0:frozen_mask.shape[0]-1, frozen_mask.shape[1]-mesh.c_offset : frozen_mask.shape[1]-1] = 0 # right
+#         frozen_mask[0:mesh.r_offset, 0:frozen_mask.shape[1]-1] = 0 # top
+#         frozen_mask[frozen_mask.shape[0]-mesh.r_offset : frozen_mask.shape[0] - 1, 0:frozen_mask.shape[1]-1] = 0 # bottom
+#         frozen_point = frozen_mask[mesh.sample_pos_xy[:, 1].astype(int),
+#                                    mesh.sample_pos_xy[:, 0].astype(int)].reshape(-1) == 0
+
+#         qut.mesh.boundary = frozen_point
+
+
+#     untangled_mesh = qut.untangle()
+#     qut.mesh.x = untangled_mesh
+#     untangled_coords = np.dstack([untangled_mesh[:mesh.nverts], untangled_mesh[mesh.nverts:]])[0]
+#     untangled_coords *= mesh.scaling
+#     untangled_dx = (mesh.sample_pos_xy[:, 0] - untangled_coords[:, 0]).reshape((mesh.nr, mesh.nc))
+#     untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
+
+#     padded_shape = mesh.padded_shape
+#     grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
+#                   (0.0, float(padded_shape[0]), int(mesh.nr)))
+
+#     dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
+#     dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T
+
+#     img_y, img_x = np.indices(padded_shape)
+#     img_xy = np.dstack([img_x.reshape(-1), img_y.reshape(-1)]).astype(float)[0]
+#     untangled_dx = eval_cubic(grid, dx_cubic_coeffs, img_xy).reshape(padded_shape)
+#     untangled_dy = eval_cubic(grid, dy_cubic_coeffs, img_xy).reshape(padded_shape)
+
+#     inv_T = np.linalg.inv(mesh.padding_T)
+#     untangled_dx = transform.warp(untangled_dx, inv_T, output_shape=mesh.shape_rc, preserve_range=True)
+#     untangled_dy = transform.warp(untangled_dy, inv_T, output_shape=mesh.shape_rc, preserve_range=True)
+#     untangled_dxdy = np.array([untangled_dx, untangled_dy])
+
+#     return untangled_dxdy
+
+
+# def remove_folds_in_dxdy(dxdy, n_grid_pts=50, method="inpaint", paint_size=5000, fold_penalty=1e-6):
+#     """Remove folds in displacement fields
+
+#     Find and remove folds in displacement fields
+
+#     Parameters
+#     ---------
+#     method : str, optional
+#         "inpaint" will use inpainting to fill in areas idenetified
+#         as containing folds. "regularize" will unfold those regions
+#         using the mehod described in "Foldover-free maps in 50 lines of code"
+#         Garanzha et al. 2021.
+
+#     n_grid_pts : int
+#         Number of gridpoints used to detect folds. Also the number
+#         of gridpoints to use when regularizing he mesh when
+#         `method` = "regularize".
+
+#     paint_size : int
+#         Used to determine how much to resize the image to have efficient inpainting.
+#         Larger values = longer processing time. Only used if `method` = "inpaint".
+
+#     fold_penalty : float
+#         How much to penalize folding/stretching. Larger values will make
+#         the deformation field more uniform. Only used if `method` = "regularize"
+
+#     Returns
+#     -------
+#     no_folds_dxdy : ndarray
+#         An array containing the x-axis (column) displacement, and y-axis (row)
+#         displacement after removing folds.
+
+#     """
+
+#     # Use triangular mesh to find regions with folds
+#     # TriangleMesh will warp triangle points using dxdy to determine location vertices in warped image
+#     # It is assumed dxdy is a backwards transform found by registering images.
+#     # Because TriMesh is warping points, the inverse of dxdy is used.
+#     # Any image create from these points can be warped to their original position using dxdy
+
+#     valtils.print_warning("Looking for folds", None, rgb=Fore.YELLOW)
+#     tri_mesh = TriangleMesh(dxdy, n_grid_pts)
+#     padded_shape = tri_mesh.padded_shape
+
+#     tri_verts_xy = np.dstack([tri_mesh.x[:tri_mesh.nverts], tri_mesh.x[tri_mesh.nverts:]])[0]*tri_mesh.scaling
+#     tri_xy = np.array([tri_verts_xy[t, :] for t in tri_mesh.tri])
+
+#     overlapping_poly_list, poly_diff_list = get_overlapping_poly(tri_xy)
+#     poly_overlap_mask = np.zeros(padded_shape, dtype=np.uint8)
+#     for poly in overlapping_poly_list:
+#         poly_r, poly_c = draw.polygon(*poly.exterior.xy[::-1], shape=padded_shape)
+#         poly_overlap_mask[poly_r, poly_c] = 255
+
+#     # Warp mask back to original image. Should isolaate regions that will cause folding
+#     warp_map = get_warp_map(dxdy=tri_mesh.padded_dxdy)
+#     src_folds_mask = transform.warp(poly_overlap_mask, warp_map, preserve_range=True)
+#     src_folds_mask[src_folds_mask != 0] = 255
+#     src_folds_mask = ndimage.binary_fill_holes(src_folds_mask).astype(np.uint8)*255
+
+#     folded_area = len(np.where(src_folds_mask > 0)[0])
+#     if folded_area == 0:
+#         return dxdy
+
+#     if method == 'regularize':
+#         valtils.print_warning("Removing folds using regularizaation", None, rgb=Fore.YELLOW)
+#         # Untanlge folded regions using regularization
+#         qut = QuadUntangler(dxdy, n_grid_pts=n_grid_pts, fold_penalty=fold_penalty)
+#         mesh = qut.mesh
+#         frozen_mask = src_folds_mask.copy()
+#         # Freeze regions that aren't folded
+#         frozen_mask[0:frozen_mask.shape[0]-1, 0:mesh.c_offset] = 0 # left
+#         frozen_mask[0:frozen_mask.shape[0]-1, frozen_mask.shape[1]-mesh.c_offset : frozen_mask.shape[1]-1] = 0 # right
+#         frozen_mask[0:mesh.r_offset, 0:frozen_mask.shape[1]-1] = 0 # top
+#         frozen_mask[frozen_mask.shape[0]-mesh.r_offset : frozen_mask.shape[0] - 1, 0:frozen_mask.shape[1]-1] = 0 # bottom
+#         frozen_point = frozen_mask[mesh.sample_pos_xy[:, 1].astype(int),
+#                                    mesh.sample_pos_xy[:, 0].astype(int)].reshape(-1) == 0
+
+#         qut.mesh.boundary = frozen_point
+
+#         # Untangle and interpolate
+#         untangled_mesh = qut.untangle()
+#         qut.mesh.x = untangled_mesh
+#         untangled_coords = np.dstack([untangled_mesh[:mesh.nverts], untangled_mesh[mesh.nverts:]])[0]
+#         untangled_coords *= mesh.scaling
+#         untangled_dx = (mesh.sample_pos_xy[:, 0] - untangled_coords[:, 0]).reshape((mesh.nr, mesh.nc))
+#         untangled_dy = (mesh.sample_pos_xy[:, 1] - untangled_coords[:, 1]).reshape((mesh.nr, mesh.nc))
+
+#         grid = UCGrid((0.0, float(padded_shape[1]), int(mesh.nc)),
+#                       (0.0, float(padded_shape[0]), int(mesh.nr)))
+
+#         dx_cubic_coeffs = filter_cubic(grid, untangled_dx).T
+#         dy_cubic_coeffs = filter_cubic(grid, untangled_dy).T
+
+#         img_y, img_x = np.indices(padded_shape)
+#         img_xy = np.dstack([img_x.reshape(-1), img_y.reshape(-1)]).astype(float)[0]
+#         no_folds_dx = eval_cubic(grid, dx_cubic_coeffs, img_xy).reshape(padded_shape)
+#         no_folds_dy = eval_cubic(grid, dy_cubic_coeffs, img_xy).reshape(padded_shape)
+
+#     else:
+
+#         s = np.sqrt(paint_size)/np.sqrt(folded_area)
+#         if s > 1:
+#             s = 1
+
+#         inpaint_mask = transform.rescale(src_folds_mask, s, preserve_range=True)
+
+#         to_paint_dx = transform.rescale(tri_mesh.padded_dxdy[0], s, preserve_range=True)
+#         painted_dx = restoration.inpaint_biharmonic(to_paint_dx, inpaint_mask)
+#         smooth_dx = transform.resize(painted_dx, tri_mesh.padded_shape, preserve_range=True)
+
+#         to_paint_dy = transform.rescale(tri_mesh.padded_dxdy[1], s, preserve_range=True)
+#         painted_dy = restoration.inpaint_biharmonic(to_paint_dy, inpaint_mask)
+#         smooth_dy = transform.resize(painted_dy, tri_mesh.padded_shape, preserve_range=True)
+
+#         blending_mask = filters.gaussian(src_folds_mask, 1)
+#         no_folds_dx = blending_mask*smooth_dx + (1-blending_mask)*tri_mesh.padded_dxdy[0]
+#         no_folds_dy = blending_mask*smooth_dy + (1-blending_mask)*tri_mesh.padded_dxdy[1]
+
+#     # Crop to original shape #
+#     no_folds_dx = transform.warp(no_folds_dx, inv_T, output_shape=tri_mesh.shape_rc, preserve_range=True)
+#     no_folds_dy = transform.warp(no_folds_dy, inv_T, output_shape=tri_mesh.shape_rc, preserve_range=True)
+#     no_folds_dxdy = np.array([no_folds_dx, no_folds_dy])
+
+#     return no_folds_dxdy
+
+
+# class QuadMesh(object):
+
+#     def __init__(self, dxdy, n_grid_pts=50):
+#         shape = np.array(dxdy[0].shape)
+#         self.shape_rc = shape
+#         grid_spacing =  int(np.min(np.round(shape/n_grid_pts)))
+
+#         new_r = shape[0] - shape[0] % grid_spacing + grid_spacing
+#         self.r_padding = new_r - shape[0]
+#         sample_y = np.floor(np.arange(0, new_r + grid_spacing, grid_spacing))
+
+#         new_c = shape[1] - shape[1] % grid_spacing + grid_spacing
+#         sample_x = np.arange(0, new_c + grid_spacing, grid_spacing)
+#         self.c_padding = new_c - shape[1]
+
+#         nr = len(sample_y)
+#         nc = len(sample_x)
+#         padded_shape = np.array([new_r+1, new_c+1])
+#         self.padded_shape = padded_shape
+#         y_center, x_center = padded_shape/2
+#         self.nverts = nr*nc
+#         self.nr = nr
+#         self.nc = nc
+
+#         self.r_offset, self.c_offset = (padded_shape - shape)//2
+
+#         # Pad displacement #
+#         self.padding_T = get_padding_matrix(shape, padded_shape)
+
+#         padded_dx = transform.warp(dxdy[0], self.padding_T, output_shape=padded_shape, preserve_range=True)
+#         padded_dy = transform.warp(dxdy[1], self.padding_T, output_shape=padded_shape, preserve_range=True)
+
+#         self.padded_dxdy = np.array([padded_dx, padded_dy])
+#         # Flattend indices for each pixel in a quadrat
+#         quads = [[r*nc + c, r*nc + c + 1, (r+1)*nc + c + 1, (r+1)*nc + c] for r in range(nr-1) for c in range(nc-1)]
+#         self.quads = quads
+#         self.boundary = [None] * self.nverts
+
+#         for i in range(self.nverts):
+#             r_idx = i // nc
+#             c_idx = i % nc
+#             r = sample_y[r_idx]
+#             c = sample_x[c_idx]
+#             if r <= y_center or r >= new_r - y_center or c <= x_center or c >= new_c - x_center:
+#                 self.boundary[i] = True
+
+#             else:
+#                 self.boundary[i] = False
+
+#         sample_pos_y, sample_pos_x = np.meshgrid(sample_y, sample_x, indexing="ij")
+#         unwarped_xy = np.dstack([sample_pos_x.reshape(-1), sample_pos_y.reshape(-1)])[0].astype(float)
+#         self.sample_pos_xy = unwarped_xy
+#         sample_xy = warp_xy(unwarped_xy, M=None, bk_dxdy=[padded_dx, padded_dy])
+#         self.warped_xy = sample_xy
+#         scaled_coords = self.scale_coords(sample_xy)
+#         self.x = np.hstack([scaled_coords[:, 0], scaled_coords[:, 1]])
+
+#     def scale_coords(self, xy):
+#         max_side = np.max(self.padded_shape)
+#         scaled_coords = xy/max_side
+#         self.scaling = max_side
+
+#         return scaled_coords
+
+
+#     def __str__(self):
+#         ret = ""
+#         for v in range(self.nverts):
+#             ret = ret + ("v %f %f 0\n" % (self.x[v], self.x[v+self.nverts]))
+#         for f in self.quads:
+#             ret = ret + ("f %d %d %d %d\n" % (f[0]+1, f[1]+1, f[2]+1, f[3]+1))
+#         return ret
+
+#     def show(self):
+#         res = 1000
+#         off = 100
+#         image = Image.new(mode='L', size=(res, res), color=255)
+#         draw = ImageDraw.Draw(image)
+
+#         for quad in self.quads:
+#             for e in range(4):
+#                 i = quad[e]
+#                 j = quad[(e+1)%4]
+
+#                 line = ((off+self.x[i]*res/2, off+self.x[i+self.nverts]*res/2), (off+self.x[j]*res/2, off+self.x[j+self.nverts]*res/2))
+#                 draw.line(line, fill=128)
+#         del draw
+#         image.show()
+
+
+# class TriangleMesh(object):
+#     def __init__(self, dxdy, n_grid_pts=50):
+#         shape = np.array(dxdy[0].shape)
+#         self.shape_rc = shape
+#         grid_spacing =  int(np.min(np.round(shape/n_grid_pts)))
+
+#         new_r = shape[0] - shape[0] % grid_spacing + grid_spacing
+#         self.r_padding = new_r - shape[0]
+#         sample_y = np.floor(np.arange(0, new_r + grid_spacing, grid_spacing))
+
+#         new_c = shape[1] - shape[1] % grid_spacing + grid_spacing
+#         sample_x = np.arange(0, new_c + grid_spacing, grid_spacing)
+#         self.c_padding = new_c - shape[1]
+
+#         nr = len(sample_y)
+#         nc = len(sample_x)
+#         padded_shape = np.array([new_r+1, new_c+1])
+#         self.padded_shape = padded_shape
+#         self.r_offset, self.c_offset = (padded_shape - shape)//2
+
+#         self.nverts = nr*nc
+#         self.nr = nr
+#         self.nc = nc
+#         y_center, x_center = padded_shape/2
+
+#         self.padding_T = get_padding_matrix(shape, padded_shape)
+
+#         padded_dx = transform.warp(dxdy[0], self.padding_T, output_shape=padded_shape, preserve_range=True)
+#         padded_dy = transform.warp(dxdy[1], self.padding_T, output_shape=padded_shape, preserve_range=True)
+
+#         self.padded_dxdy = np.array([padded_dx, padded_dy])
+
+#         # Get triangle vertices
+#         sample_x = np.arange(0, new_c + grid_spacing, grid_spacing)
+#         sample_y = np.arange(0, new_r + grid_spacing, grid_spacing)
+
+#         tri_verts, tri_faces = get_triangular_mesh(sample_x, sample_y)
+#         self.nverts = tri_verts.shape[0]
+#         self.tri_verts = tri_verts
+#         self.boundary = [None] * self.nverts
+#         for i in range(self.nverts):
+#             c, r = tri_verts[i]
+
+#             if r <= y_center or r >= new_r - y_center or c <= x_center or c >= new_c - x_center:
+#                 self.boundary[i] = True
+#             else:
+#                 self.boundary[i] = False
+
+#         sample_xy = warp_xy(tri_verts, M=None, bk_dxdy=[padded_dx, padded_dy])
+#         self.warped_xy = sample_xy
+
+#         self.tri = tri_faces
+#         self.nfacets = len(self.tri)
+#         self.vert = self.scale_coords(sample_xy)
+#         self.x = np.hstack([self.vert[:, 0], self.vert[:, 1]])
+
+#     def scale_coords(self, xy):
+
+#         max_side = np.max(self.padded_shape)
+#         scaled_coords = xy/max_side
+#         self.scaling = max_side
+
+#         return scaled_coords
+
+
+# class QuadUntangler(object):
+#     def __init__(self, dxdy, fold_penalty=1e-6, n_grid_pts=50):
+#         self.shape = np.array(dxdy[0].shape)
+#         self.mesh = QuadMesh(dxdy, n_grid_pts)
+#         self.mesh_type = self.mesh.__class__.__name__
+#         self.n_grid_pts = n_grid_pts
+#         self.n = self.mesh.nverts
+#         self.fold_penalty = fold_penalty
+
+#     def untangle(self):
+#         n = self.n
+#         mesh = self.mesh
+#         Q = [np.matrix('-1,-1;1,0;0,0;0,1'), np.matrix('-1,0;1,-1;0,1;0,0'),  # quadratures for
+#              np.matrix('0,0;0,-1;1,1;-1,0'), np.matrix('0,-1;0,0;1,0;-1,1') ] # every quad corner
+
+#         def jacobian(U, qc, quad):
+#             return np.matrix([[U[quad[0]  ], U[quad[1]  ], U[quad[2]  ], U[quad[3]  ]],
+#                               [U[quad[0]+n], U[quad[1]+n], U[quad[2]+n], U[quad[3]+n]]]) * Q[qc]
+
+#         mindet = min([np.linalg.det( jacobian(mesh.x, qc, quad) ) for quad in mesh.quads for qc in range(4)])
+#         eps = np.sqrt(1e-6**2 + min(mindet, 0)**2) # the regularization parameter e
+#         eps *= 1/self.fold_penalty
+
+#         def energy(U): # compute the energy and its gradient for the map u
+#             F,G = 0, np.zeros(2*n)
+#             for quad in mesh.quads: # sum over all quads
+#                 for qc in range(4): # evaluate the Jacobian matrix for every quad corner
+#                     J = jacobian(U, qc, quad)
+#                     det = np.linalg.det(J)
+#                     chi  = det/2 + np.sqrt(eps**2 + det**2)/2    # the penalty function
+#                     chip = .5 + det/(2*np.sqrt(eps**2 + det**2)) # its derivative
+
+#                     f = np.trace(np.transpose(J)*J)/chi # quad corner shape quality
+#                     F += f
+#                     dfdj = (2*J - np.matrix([[J[1,1],-J[1,0]],[-J[0,1],J[0,0]]])*f*chip)/chi
+#                     dfdu = Q[qc] * np.transpose(dfdj) # chain rule for the actual variables
+#                     for i,v in enumerate(quad):
+#                         if (mesh.boundary[v]): continue # the boundary verts are locked
+#                         G[v  ] += dfdu[i,0]
+#                         G[v+n] += dfdu[i,1]
+#             return F,G
+
+#         # factr are: 1e12 for low accuracy; 1e7 for moderate accuracy; 10.0 for extremely high accuracy.
+#         factr = 1e7
+#         untangled = fmin_l_bfgs_b(energy, mesh.x, factr=factr)[0] # inner L-BFGS loop
+
+#         return untangled
+
+
+# class _TriUntangler(object):
+#     def __init__(self, dxdy, n_grid_pts=50):
+#         self.shape = np.array(dxdy[0].shape)
+
+#         # self.mesh = QuadMesh(dxdy, n_grid_pts)
+#         self.mesh = TriangleMesh(dxdy, n_grid_pts)
+#         self.mesh_type = self.mesh.__class__.__name__
+#         self.n_grid_pts = n_grid_pts
+#         self.n = self.mesh.nverts
+#         self.n_tri = len(self.mesh.tri)
+
+#     def triangle_area2d(self, a, b, c):
+#         x = 0
+#         y = 1
+#         tri_area = .5*((b[y]-a[y])*(b[x]+a[x]) + (c[y]-b[y])*(c[x]+b[x]) + (a[y]-c[y])*(a[x]+c[x]))
+#         return tri_area
+
+#     def triangle_aspect_ratio_2d(self, a, b, c):
+
+#         l1 = np.linalg.norm(b-a)
+#         l2 = np.linalg.norm(c-b)
+#         l3 = np.linalg.norm(a-c)
+#         lmax = max([l1, l2, l3])
+
+#         return lmax*(l1+l2+l3)/(4.*np.sqrt(3.)*self.triangle_area2d(a, b, c))
+
+
+#     def setup(self):
+#         area = [None] * self.n_tri
+#         ref_tri = [None] * self.n_tri
+#         for t, faces in enumerate(self.mesh.tri):
+
+
+#             ax, bx, cx = self.mesh.x[self.mesh.tri[t]]
+#             ay, by, cy = self.mesh.x[self.mesh.tri[t]+ self.mesh.nverts]
+
+#             A = np.array([ax, ay])
+#             B = np.array([bx, by])
+#             C = np.array([cx, cy])
+
+
+#             area[t] = self.triangle_area2d(A, B, C)
+
+#             ar = self.triangle_aspect_ratio_2d(A, B, C)
+#             if ar > 10:
+#                 #if the aspect ratio is bad, assign an equilateral reference triangle
+#                 l1 = np.linalg.norm(B-A)
+#                 l2 = np.linalg.norm(C-B)
+#                 l3 = np.linalg.norm(A-C)
+#                 a = (l1 + l2 + l3)/3 # edge length is the average of the original triangle
+#                 area[t] = np.sqrt(3.)/4.*a*a
+#                 A = np.array([0., 0.])
+#                 B = np.array([a, 0.])
+#                 C = np.array([a/2., np.sqrt(3.)/2.*a])
+
+#             ST = np.matrix([B-A, C-A])
+#             ST_invert_transpose = np.linalg.inv(ST).T
+#             ref_tri[t] = np.array([[-1, -1], [1, 0], [0, 1] ]) @ ST_invert_transpose
+
+#         self.area = area
+#         self.ref_tri = ref_tri
+
+
+#     def untangle(self):
+#         self.setup()
+#         def evaluate_jacobian(X, t):
+#             J = np.matrix(np.zeros((2, 2)))
+#             for i in range(3):
+#                 for d in range(2):
+#                     J[d] += self.ref_tri[t][i, d] + X[self.mesh.tri[t][i] + self.n*d]
+
+#             K = np.array([[J[1, 1], -J[1, 0]],
+#                          [-J[0, 1], J[0, 0]]
+#             ])
+
+#             det = np.linalg.det(J)
+
+#             return J, K, det
+
+#         mindet = np.inf
+#         for t in range(self.n_tri):
+#             _, _, det = evaluate_jacobian(self.mesh.x, t)
+#             mindet = np.min([mindet, det])
+
+#         eps = np.sqrt(1e-6**2 + min(mindet, 0)**2) # the regularization parameter e
+#         theta = 1./128
+
+#         def chi(eps, det):
+#             if det < 0:
+#                 return (det + np.sqrt(eps*eps + det*det) + 10**-6)*.5
+#             else:
+#                 return .5*eps*eps / (np.sqrt(eps*eps + det*det) - det + 10**-6)
+
+#         def chi_deriv(eps, det):
+#             return .5+det/(2.*np.sqrt(eps*eps + det*det + 10**-6))
+
+
+#         def energy(U):
+
+
+#             F,G = 0, np.zeros(2*self.n)
+
+#             for t in range(self.n_tri):
+#                 J, K, det = evaluate_jacobian(U, t)
+
+#                 c1 = chi(eps, det)
+#                 c2 = chi_deriv(eps, det)
+
+#                 f = np.trace(np.transpose(J)*J)/c1 # corner shape quality
+#                 g = (1+det*det)/c1
+
+#                 F += ((1-theta)*f + theta*g)*self.area[t]
+
+#                 for dim in range(2):
+
+#                     a = J[dim] # tangent basis
+#                     b = K[dim] # dual basis
+#                     dfda = (a*2. - b*f*c2)/c1
+#                     dgda = b*(2*det-g*c2)/c1
+#                     for i in range(3):
+#                         v = self.mesh.tri[t][i]
+#                         if self.mesh.boundary[v]: continue # the boundary verts are locked
+#                         # og_pos = G[v+ dim*self.n]
+#                         G[v+ dim*self.n] += (self.ref_tri[t][i] @ np.transpose(dfda*(1.-theta) + dgda*theta))*self.area[t]
+#                         # new_pos = G[v+ dim*self.n]
+#                         # print(new_pos - og_pos)
+#             return F, G
+
+#         n_iter = 3
+
+#         for i in range(n_iter):
+
+#             self.mesh.x = fmin_l_bfgs_b(energy, self.mesh.x, factr=1e12)[0] # inner L-BFGS loop
+#             # updated_xy = self.mesh.x.reshape((self.n, 2))
+#             updated_xy = np.dstack([self.mesh.x[self.n:], self.mesh.x[:self.n]])[0]
+#             # plt.triplot(updated_xy[:, 0], -updated_xy[:, 1], self.mesh.tri, linewidth=0.5)
+#             plt.triplot(updated_xy[:, 1], -updated_xy[:, 0], self.mesh.tri, linewidth=0.5)
+#             plt.axis("equal")
+#             plt.savefig(f"{i}_smooth_mesh.png")
+#             plt.close()
 

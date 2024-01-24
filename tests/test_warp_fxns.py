@@ -16,6 +16,10 @@ import os
 import numpy as np
 import pathlib
 from skimage.feature import corner_harris, corner_subpix, corner_peaks
+
+import sys
+# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+
 from valis import viz, warp_tools
 # valis_src_dir = '/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/'
 # sys.path.append(valis_src_dir)
@@ -35,6 +39,7 @@ if in_container:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
 else:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
+
 
 def gen_M(img_shape_rc, txy=(0, 0), sxy=(1,1), rot_deg=0):
 
@@ -121,6 +126,41 @@ def draw_pts(img, pt_xy):
     return viz_img
 
 
+
+# def nr_warp_interp(xy, dxdy, displacement_shape_rc=None):
+#     grid = UCGrid((0.0, float(displacement_shape_rc[1]-1), int(displacement_shape_rc[1])),
+#                   (0.0, float(displacement_shape_rc[0]-1), int(displacement_shape_rc[0])))
+
+#     dx_cubic_coeffs = filter_cubic(grid, fwd_dxdy[0]).T
+#     dy_cubic_coeffs = filter_cubic(grid, fwd_dxdy[1]).T
+
+#     new_x = xy[:, 0] + eval_cubic(grid, dx_cubic_coeffs, xy)
+#     new_y = xy[:, 1] + eval_cubic(grid, dy_cubic_coeffs, xy)
+
+#     return np.dstack([new_x, new_y])[0]
+
+
+# def nr_warp_xy(xy, dxdy, displacement_shape_rc=None):
+
+#     from scipy.interpolate import RectBivariateSpline
+
+#     if displacement_shape_rc is None:
+#         displacement_shape_rc = dxdy[0].shape
+
+#     grid_r = np.arange(displacement_shape_rc[0])
+#     grid_c = np.arange(displacement_shape_rc[1])
+
+#     interp_dx = RectBivariateSpline(grid_r, grid_c, dxdy[0])
+#     interp_dy = RectBivariateSpline(grid_r, grid_c, dxdy[1])
+
+#     nr_x = xy[:, 0] + interp_dx(xy[:, 1], xy[:, 0], grid=False)
+#     nr_y = xy[:, 1] + interp_dy(xy[:, 1], xy[:, 0], grid=False)
+
+#     return np.dstack([nr_x, nr_y])[0]
+
+# dxdy = dxdy1
+# from valis.warp_tools import *
+
 def test_img_warp(max_mi=0.5, max_px_d=0.1):
 
     img_f = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/write_up/logo/tri_logo/valis_logo.png"
@@ -134,6 +174,9 @@ def test_img_warp(max_mi=0.5, max_px_d=0.1):
     img_shape = img.shape[0:2]
 
     pt_corners = get_points(img)
+
+    # pt_corners + np.array([1, 2])
+
     img_w_pts = draw_pts(img, pt_corners)
     io.imsave(os.path.join(dst_dir, "img_og.png"), img_w_pts)
 
@@ -147,7 +190,6 @@ def test_img_warp(max_mi=0.5, max_px_d=0.1):
 
     viz1 = draw_pts(unreg1, unreg_pt1)
     io.imsave(os.path.join(dst_dir, "unreg1.png"), viz1)
-
 
     M2, unreg_shape2 = gen_M(img.shape, (25, 50), (0.9, 0.9), 225)
     dxdy2 = gen_dxdy(img_shape=img_shape, wave_fxn=np.cos, amp_range=(12, 12), phase_range=(0.2, 0.2), period_range=(0.4, 0.4), shift_range=(0, 0))
@@ -166,7 +208,6 @@ def test_img_warp(max_mi=0.5, max_px_d=0.1):
 
     M2_reg = np.linalg.inv(M2)
     M2_bk_dxdy = warp_tools.get_inverse_field(dxdy2)
-
 
     img_2_on_1_rigid = warp_tools.warp_img_from_to(unreg2,
                     from_M=M2_reg,
@@ -226,7 +267,6 @@ def test_img_warp(max_mi=0.5, max_px_d=0.1):
 
     mi = warp_tools.mattes_mi(unreg1, img_2_on_1_non_rigid)
     pt_d = np.median(warp_tools.calc_d(pt2_on_1_non_rigid, unreg_pt1))
-    # assert pt_d < max_px_d and mi < max_mi
 
     viz_img_2_on_1_non_rigid = draw_pts(img_2_on_1_non_rigid, pt2_on_1_non_rigid)
     io.imsave(os.path.join(dst_dir, "2_on_1_non_rigid.png"), viz_img_2_on_1_non_rigid)
