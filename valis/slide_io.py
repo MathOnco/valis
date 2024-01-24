@@ -1778,6 +1778,9 @@ class VipsSlideReader(SlideReader):
 
     def _get_slide_dimensions_ometiff(self, vips_img, *args):
 
+        if "n-subifds" not in vips_img.get_fields():
+            return self._get_slide_dimensions_vips(vips_img)
+
         n_levels = vips_img.get("n-subifds") + 1
         slide_dims_wh = [None] * n_levels
         for i in range(0, n_levels):

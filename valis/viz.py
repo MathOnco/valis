@@ -7,10 +7,12 @@ from skimage import draw, color, exposure, transform
 from scipy.cluster.hierarchy import dendrogram
 from scipy.spatial import distance
 import numpy as np
-import numba as nb
-from . import warp_tools
+# import numba as nb
+
 import cv2
 import platform
+
+from . import warp_tools
 # JzAzBz #
 DXDY_CSPACE = "JzAzBz"
 DXDY_CRANGE = (0, 0.025)
@@ -204,7 +206,7 @@ def draw_clusterd_D(D, optimal_Z):
 
 
 # Non-rigid visualization #
-@nb.njit()
+# @nb.njit()
 def get_grid(shape, grid_spacing, thickness=1):
     """
     Get points for a grid. Can be used to view deformation field
@@ -485,7 +487,7 @@ def get_n_colors(rgb, n):
     return rgb[rgb_idx]
 
 
-@nb.njit(fastmath=True, cache=True)
+# @nb.njit(fastmath=True, cache=True)
 def blend_colors(img, colors, scale_by):
     """ Color an image by blending
 

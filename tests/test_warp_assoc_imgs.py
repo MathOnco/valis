@@ -5,6 +5,8 @@ import os
 
 import sys
 # sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
+# from valis import warp_tools
+
 from valis import slide_io, warp_tools, valtils, registration
 
 

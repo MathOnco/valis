@@ -8,7 +8,7 @@ readme = "README.rst"
 packages = [{include = "valis"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.11"
+python = ">=3.9,<=3.12"
 beautifulsoup4 = "^4.11.1"
 scyjava = "^1.8.1"
 colorama = "^0.4.6"
@@ -16,7 +16,6 @@ colour-science = ">0.4.2"
 fastcluster = "^1.2.6"
 jpype1 = "^1.4.1"
 matplotlib = "^3.6.3"
-numba = ">0.56.4"
 numpy = "<1.24"
 ome-types = "^0.3.2"
 opencv-contrib-python-headless = "4.6.0.66"
@@ -34,10 +33,10 @@ pqdm = "^0.2.0"
 markupsafe = "^2.0.0"
 torch = "^2.0.1"
 aicspylibczi = "^3.1.2"
-interpolation = "^2.2.4"
+setuptools = "^69.0.3"
 
 [build-system]
-requires = ["poetry-core", "setuptools>=57.0.0", "Cython>=0.29.27"]
+requires = ["poetry-core", "setuptools>=69.0.0", "Cython>=0.29.27"]
 build-backend = "poetry.core.masonry.api"
 
 
