@@ -3,11 +3,10 @@ FROM ubuntu:latest as builder
 ARG WKDIR=/usr/local/src
 WORKDIR ${WKDIR}
 
-# ARG VIPS_VERSION=8.14.5
-# ARG BF_VERSION=7.0.0
 
 ARG VIPS_VERSION=8.15.1
-ARG BF_VERSION=7.1.0
+ARG BF_VERSION=7.0.0
+# ARG BF_VERSION=7.1.0 #Issues reading ndpis images
 ARG PYTORCH_VERSION=2.0.1
 
 ENV PYTHONUNBUFFERED=1
@@ -37,6 +36,7 @@ RUN apt-get install --no-install-recommends -y \
 	librsvg2-dev \
 	libpng-dev \
 	libjpeg-turbo8-dev \
+	libopenjp2-7-dev \
 	libtiff-dev \
 	libexif-dev \
 	liblcms2-dev \

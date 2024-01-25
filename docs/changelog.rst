@@ -19,7 +19,8 @@ Version 1.0.3 (January 25, 2024)
 #. Removed usage of :code:`imghdr`, which is being deprecated
 #. Replaced joblib with pqdm. May resolve issue posted on `image.sc <https://forum.image.sc/t/valis-image-registration-unable-to-generate-expected-results/89466>`_
 #. Removed interpolation and numba packages as dependencies
-#. #. Updated ome-types' parser to "lxml"
+#. Updated ome-types' parser to "lxml"
+#. Merged `github pull request 95 <https://github.com/MathOnco/valis/pull/95>`_.
 
 
 Version 1.0.2 (October 11, 2023)
