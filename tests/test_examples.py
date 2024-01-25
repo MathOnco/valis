@@ -44,6 +44,8 @@ After registraation is complete, one should view the
 results to determine if they aare acceptable. If they
 are, then one can warp and save all of the slides.
 
+
+docker run -it --rm --name test_examples  -v "$HOME:$HOME" valis-wsi-arm64 python3 /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/tests/test_examples.py
 """
 
 import time
@@ -60,13 +62,20 @@ import os
 from valis import registration, valtils
 from valis.micro_rigid_registrar import MicroRigidRegistrar
 
-
-def get_parent_dir():
+def get_dirs():
     cwd = os.getcwd()
-    dir_split = cwd.split(os.sep)
-    split_idx = [i for i in range(len(dir_split)) if dir_split[i] == "valis_project"][0]
-    parent_dir = os.sep.join(dir_split[:split_idx+1])
-    return parent_dir
+    in_container = sys.platform == "linux" and os.getcwd() == cwd
+    if not in_container:
+        dir_split = cwd.split(os.sep)
+        split_idx = [i for i in range(len(dir_split)) if dir_split[i] == "valis_project"][0]
+        parent_dir = os.sep.join(dir_split[:split_idx+1])
+
+        results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
+    else:
+        parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
+        results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
+
+    return parent_dir, results_dst_dir, in_container
 
 
 def cnames_from_filename(src_f):
@@ -79,17 +88,8 @@ def cnames_from_filename(src_f):
     return ["DAPI"] + f.split(" ")
 
 
-parent_dir = get_parent_dir()
-
+parent_dir, results_dst_dir, in_container = get_dirs()
 datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
-
-in_container = sys.platform == "linux" and os.getcwd() == '/usr/local/src'
-if in_container:
-    results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
-else:
-    results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
-
-results_dst_dir = os.path.join(results_dst_dir, "examples")
 
 
 def register_hi_rez(src_dir):
@@ -217,6 +217,6 @@ def test_register_hi_rez_cycif():
 
 if __name__ == "__main__" and in_container:
     test_register_cycif()
-    # test_register_ihc()
-    # test_register_hi_rez_ihc()
-    # test_register_hi_rez_cycif()
+    test_register_ihc()
+    test_register_hi_rez_ihc()
+    test_register_hi_rez_cycif()

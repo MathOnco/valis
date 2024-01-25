@@ -679,7 +679,6 @@ def rgb2jch(rgb, cspace='CAM16UCS', h_rotation=0):
     return jch
 
 
-
 def rgb255_to_rgb1(rgb_img):
     if np.issubdtype(rgb_img.dtype, np.integer) or rgb_img.max() > 1:
         rgb01 = rgb_img/255.0
