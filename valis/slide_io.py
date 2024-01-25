@@ -934,8 +934,8 @@ class SlideReader(object):
 
                 valtils.print_warning(msg)
 
-            else:
-                matching_channel_idx = 0
+        else:
+            matching_channel_idx = 0
 
         return matching_channel_idx
 
