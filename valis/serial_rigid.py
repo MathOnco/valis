@@ -1000,7 +1000,8 @@ class SerialRigidRegistrar(object):
 
                     # Record info #
                     _ = transformer.estimate(filtered_match_info12.matched_kp2_xy, filtered_match_info12.matched_kp1_xy)
-                    _,  reflected_d = warp_tools.measure_error(filtered_match_info12.matched_kp2_xy, filtered_match_info12.matched_kp1_xy, prev_img_obj.padded_shape_rc)
+                    reflected_warped_src_xy = warp_tools.warp_xy(filtered_match_info12.matched_kp1_xy, transformer.params)
+                    _,  reflected_d = warp_tools.measure_error(filtered_match_info12.matched_kp2_xy, reflected_warped_src_xy, prev_img_obj.padded_shape_rc)
                     reflected_d_vals.append(reflected_d)
                     reflection_M.append(rM)
                     transforms.append(transformer.params)
