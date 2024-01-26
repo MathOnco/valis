@@ -11,7 +11,7 @@ to provide examples on how to subclass AffineOptimizer.
 """
 
 from scipy import ndimage, optimize
-import numba as nba
+# import numba as nba
 import numpy as np
 from skimage import transform, util
 import cv2
@@ -107,7 +107,7 @@ def make_transform(param):
                                          scale=s)
 
 
-@nba.njit()
+# @nba.njit()
 def bin_image(img, p):
     x_min = np.min(img)
     x_max_ = np.max(img)
@@ -121,7 +121,7 @@ def bin_image(img, p):
     return binned_img
 
 
-@nba.njit()
+# @nba.njit()
 def solve_abc(verts):
     """
     Find coefficients A,B,C that will allow estimation of intesnity of point
@@ -155,14 +155,14 @@ def solve_abc(verts):
     return abc
 
 
-@nba.njit()
+# @nba.njit()
 def area(x1, y1, x2, y2, x3, y3):
     # From https://www.geeksforgeeks.org/check-whether-a-given-point-lies-inside-a-triangle-or-not/
     a = np.abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0)
     return a
 
 
-@nba.njit()
+# @nba.njit()
 def isInside(x1, y1, x2, y2, x3, y3, x, y):
     # Calculate area of triangle ABC
     A = area(x1, y1, x2, y2, x3, y3)
@@ -187,7 +187,7 @@ def isInside(x1, y1, x2, y2, x3, y3, x, y):
         return 0
 
 
-@nba.njit()
+# @nba.njit()
 def get_intersection(alpha1, alpha2, abc1, abc2):
     """
 
@@ -219,7 +219,7 @@ def get_intersection(alpha1, alpha2, abc1, abc2):
     return xy
 
 
-@nba.njit()
+# @nba.njit()
 def get_verts(img, x, y, pos=0):
     """
     Get veritices of triangle and intenisty at each vertex
@@ -240,7 +240,7 @@ def get_verts(img, x, y, pos=0):
     return verts
 
 
-@nba.njit()
+# @nba.njit()
 def hist2d(x, y, n_bins):
     """
     Build 2D histogram by determining the bin each x and y value falls in
@@ -270,7 +270,7 @@ def hist2d(x, y, n_bins):
     return results, x_margins, y_margins
 
 
-@nba.njit()
+# @nba.njit()
 def update_joint_H(binned_moving, binned_fixed, H, M, sample_pts, pos=0,
                    precalcd_abc=None):
 
@@ -308,7 +308,6 @@ def update_joint_H(binned_moving, binned_fixed, H, M, sample_pts, pos=0,
     return H
 
 
-# @nba.jit(nopython=False)
 def get_neighborhood(im, i, j, r):
     """
     Get values in a neighborhood
@@ -317,7 +316,6 @@ def get_neighborhood(im, i, j, r):
     return im[i - r:i + r + 1, j - r:j + r + 1].flatten()
 
 
-# @nba.jit(nopython=False)
 def build_P(A, B, r, mask):
     hood_size = (2 * r + 1) ** 2
     d = 2 * hood_size
@@ -345,7 +343,7 @@ def build_P(A, B, r, mask):
     return P[:, :idx]
 
 
-@nba.njit()
+# @nba.njit()
 def entropy(x):
     """
     Caclulate Shannon's entropy for array x
@@ -367,14 +365,14 @@ def entropy(x):
     return h
 
 
-@nba.njit()
+# @nba.njit()
 def entropy_from_c(cov_mat, d):
     e = np.log(((2*np.pi*np.e) ** (d/2)) *
                (np.linalg.det(cov_mat) ** 0.5) + EPS)
     return e
 
 
-@nba.njit()
+# @nba.njit()
 def region_mi(A, B, mask, r=4):
     P = build_P(A, B, r, mask)  # d x N matrix: N points with d dimensions
 
@@ -393,7 +391,7 @@ def region_mi(A, B, mask, r=4):
     return RMI
 
 
-@nba.njit()
+# @nba.njit()
 def normalized_mutual_information(A, B, mask, n_bins=256):
     """
     Build 2D histogram by determining the bin each x and y value falls in

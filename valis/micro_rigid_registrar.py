@@ -277,7 +277,8 @@ class MicroRigidRegistrar(object):
                     return None
 
             except Exception as e:
-                print(e)
+                # traceback_msg = traceback.format_exc()
+                # print(traceback_msg)
                 return None
 
             matched_moving_xy = filtered_matched_moving_xy.copy()
@@ -356,7 +357,8 @@ class MicroRigidRegistrar(object):
         n_old_matches = moving_slide.xy_matched_to_prev.shape[0]
         n_new_matches = high_rez_fixed_matched_kp_xy.shape[0]
 
-        improved = (n_new_matches >= n_old_matches) and (new_d < og_d)
+        # improved = (n_new_matches >= n_old_matches) and (new_d < og_d)
+        improved = (n_new_matches >= n_old_matches) #and (new_d < og_d)
         if improved:
             res_msg = "micro rigid registration improved alignments."
             msg_clr = Fore.GREEN
@@ -424,7 +426,7 @@ class MicroRigidRegistrar(object):
 
         region_np = warp_tools.vips2numpy(region)
 
-        processor = processor_cls(region_np, src_f=slide_obj.src_f, level=0, series=slide_obj.series)
+        processor = processor_cls(region_np, src_f=slide_obj.src_f, level=0, series=slide_obj.series, reader=slide_obj.reader)
         processed_img = processor.process_image(**processor_kwargs)
 
         if apply_mask:

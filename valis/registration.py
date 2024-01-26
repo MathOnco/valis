@@ -20,6 +20,7 @@ from copy import deepcopy
 from pprint import pformat
 import json
 from colorama import Fore
+from itertools import chain
 
 from . import feature_matcher
 from . import serial_rigid
@@ -768,7 +769,7 @@ class Slide(object):
         return warped_img
 
     def warp_img_from_to(self, img, to_slide_obj,
-                        dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
+                         dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
 
         """Warp an image from this slide onto another unwarped slide
 
@@ -831,7 +832,7 @@ class Slide(object):
 
     @valtils.deprecated_args(crop_to_overlap="crop")
     def warp_slide(self, level, non_rigid=True, crop=True,
-                   src_f=None, interp_method="bicubic"):
+                   src_f=None, interp_method="bicubic", reader=None):
         """Warp a slide using registration parameters
 
         Parameters
@@ -903,6 +904,9 @@ class Slide(object):
         else:
             bg_color = None
 
+        if reader is None:
+            reader = self.reader
+
         warped_slide = slide_tools.warp_slide(src_f, M=self.M,
                                               transformation_src_shape_rc=self.processed_img_shape_rc,
                                               transformation_dst_shape_rc=self.reg_img_shape_rc,
@@ -910,16 +914,19 @@ class Slide(object):
                                               dxdy=bk_dxdy, level=level, series=self.series,
                                               interp_method=interp_method,
                                               bbox_xywh=slide_bbox_xywh,
-                                              bg_color=bg_color)
+                                              bg_color=bg_color,
+                                              reader=reader)
         return warped_slide
 
-    @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_save_slide(self, dst_f, level=0, non_rigid=True,
                             crop=True, src_f=None,
                             channel_names=None,
-                            colormap=None,
+                            colormap=slide_io.CMAP_AUTO,
                             interp_method="bicubic",
-                            tile_wh=None, compression="lzw", Q=100):
+                            tile_wh=None, compression="lzw",
+                            Q=100,
+                            pyramid=True,
+                            reader=None):
 
         """Warp and save a slide
 
@@ -955,10 +962,10 @@ class Slide(object):
             If None, and there are no channel colors in the `current_ome_xml_str`, then no colors will be added
 
         src_f : str, optional
-           Path of slide to be warped. If None (the default), Slide.src_f
-           will be used. Otherwise, the file to which `src_f` points to should
-           be an alternative copy of the slide, such as one that has undergone
-           processing (e.g. stain segmentation), has a mask applied, etc...
+            Path of slide to be warped. If None (the default), Slide.src_f
+            will be used. Otherwise, the file to which `src_f` points to should
+            be an alternative copy of the slide, such as one that has undergone
+            processing (e.g. stain segmentation), has a mask applied, etc...
 
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
@@ -973,58 +980,43 @@ class Slide(object):
         Q : int
             Q factor for lossy compression
 
+        pyramid : bool
+            Whether or not to save an image pyramid.
         """
         if src_f is None:
             src_f = self.src_f
 
+        if reader is None:
+            if src_f != self.src_f:
+                slide_reader_cls = slide_io.get_slide_reader(src_f)
+                reader = slide_reader_cls(src_f)
+            else:
+                reader = self.reader
+
         warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
                                        crop=crop,
                                        interp_method=interp_method,
-                                       src_f=src_f)
+                                       src_f=src_f,
+                                       reader=reader)
 
         # Get ome-xml #
-        slide_reader_cls = slide_io.get_slide_reader(src_f)
-        slide_reader = slide_reader_cls(src_f)
-        slide_meta = slide_reader.metadata
-        if slide_meta.pixel_physical_size_xyu[2] == slide_io.PIXEL_UNIT:
-            px_phys_size = None
-        else:
-            px_phys_size = self.reader.scale_physical_size(level)
-
-        if channel_names is None:
-            if src_f is None:
-                channel_names = slide_meta.channel_names
-            else:
-                reader_cls = slide_io.get_slide_reader(src_f)
-                reader = reader_cls(src_f)
-                channel_names = reader.metadata.channel_names
-
-        bf_dtype = slide_io.vips2bf_dtype(warped_slide.format)
-        out_xyczt = slide_io.get_shape_xyzct((warped_slide.width, warped_slide.height), warped_slide.bands)
-        ome_xml_obj = slide_io.update_xml_for_new_img(current_ome_xml_str=slide_meta.original_xml,
-                                                      new_xyzct=out_xyczt,
-                                                      bf_dtype=bf_dtype,
-                                                      is_rgb=self.is_rgb,
-                                                      series=self.series,
-                                                      pixel_physical_size_xyu=px_phys_size,
+        ome_xml_obj = slide_io.update_xml_for_new_img(img=warped_slide,
+                                                      reader=reader,
+                                                      level=level,
                                                       channel_names=channel_names,
-                                                      colormap=colormap
-                                                      )
+                                                      colormap=colormap)
 
         ome_xml = ome_xml_obj.to_xml()
-        if tile_wh is None:
-            tile_wh = slide_meta.optimal_tile_wh
-            if level != 0:
-                down_sampling = np.mean(slide_meta.slide_dimensions[level]/slide_meta.slide_dimensions[0])
-                tile_wh = int(np.round(tile_wh*down_sampling))
-                tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
-                if tile_wh < 16:
-                    tile_wh = 16
-                if np.any(np.array(out_xyczt[0:2]) < tile_wh):
-                    tile_wh = min(out_xyczt[0:2])
+
+        out_shape_wh = warp_tools.get_shape(warped_slide)[0:2][::-1]
+        tile_wh = slide_io.get_tile_wh(reader=reader,
+                                       level=level,
+                                       out_shape_wh=out_shape_wh)
 
         slide_io.save_ome_tiff(warped_slide, dst_f=dst_f, ome_xml=ome_xml,
-                               tile_wh=tile_wh, compression=compression, Q=Q)
+                               tile_wh=tile_wh, compression=compression,
+                               Q=Q, pyramid=pyramid)
+
 
     def warp_xy(self, xy, M=None, slide_level=0, pt_level=0,
                 non_rigid=True, crop=True):
@@ -1899,13 +1891,18 @@ class Valis(object):
         self.src_dir = src_dir
         self.dst_dir = os.path.join(dst_dir, self.name)
         self.name_dict = None
+
         if img_list is not None:
             if isinstance(img_list, dict):
                 # Key=original file name, value=name
                 self.original_img_list = list(img_list.keys())
                 self.name_dict = img_list
-            elif isinstance(img_list, list):
-                self.original_img_list = img_list
+            elif hasattr(img_list, "__iter__"):
+                self.original_img_list = list(img_list)
+            else:
+                msg = (f"Cannot upack `img_list`, which is type {type(img_list).__name__}. "
+                       "Please provide an iterable object (list, tuple, array, etc...) that has the location of the images")
+                valtils.print_warning(msg, rgb=Fore.RED)
         else:
             self.get_imgs_in_dir()
 
@@ -2262,7 +2259,52 @@ class Valis(object):
 
         self._dup_names_dict = {k: v for k, v in default_names_dict.items() if len(v) > 1}
 
-    def convert_imgs(self, series=None, reader_cls=None):
+
+    def create_img_reader_dict(self, reader_dict=None, default_reader=None, series=None):
+
+        if reader_dict is None:
+            named_reader_dict = {}
+        else:
+            named_reader_dict = {valtils.get_name(f): reader_dict[f] for f in reader_dict.keys()}
+
+        for i, slide_f in enumerate(self.original_img_list):
+            slide_name = valtils.get_name(slide_f)
+            if slide_name not in named_reader_dict:
+                if default_reader is None:
+                    try:
+                        slide_reader_cls = slide_io.get_slide_reader(slide_f, series=series)
+                    except Exception as e:
+                        traceback_msg = traceback.format_exc()
+                        msg = f"Attempting to get reader for {slide_f} created the following error:\n{e}"
+                        valtils.print_warning(msg, rgb=Fore.RED, traceback_msg=traceback_msg)
+                else:
+                    slide_reader_cls = default_reader
+
+                slide_reader_kwargs = {"series": series}
+            else:
+                slide_reader_info = named_reader_dict[slide_name]
+                if isinstance(slide_reader_info, list) or isinstance(slide_reader_info, tuple):
+                    if len(slide_reader_info) == 2:
+                        slide_reader_cls, slide_reader_kwargs = slide_reader_info
+                    elif len(slide_reader_info) == 1:
+                        # Provided processor, but no kwargs
+                        slide_reader_cls = slide_reader_info[0]
+                        slide_reader_kwargs = {}
+                else:
+                    # Provided processor, but no kwargs
+                    slide_reader_kwargs = {}
+            try:
+                slide_reader = slide_reader_cls(src_f=slide_f, **slide_reader_kwargs)
+            except Exception as e:
+                traceback_msg = traceback.format_exc()
+                msg = f"Attempting to read {slide_f} created the following error:\n{e}"
+                valtils.print_warning(msg, rgb=Fore.RED, traceback_msg=traceback_msg)
+
+            named_reader_dict[slide_name] = slide_reader
+
+        return named_reader_dict
+
+    def convert_imgs(self, series=None, reader_dict=None, reader_cls=None):
         """Convert slides to images and create dictionary of Slides.
 
         series : int, optional
@@ -2272,26 +2314,23 @@ class Valis(object):
             Uninstantiated SlideReader class that will convert
             the slide to an image, and also collect metadata.
 
+        reader_dict: dict, optional
+            Dictionary specifying which readers to use for individual images.
+            The keys, value pairs are image filename and instantiated `slide_io.SlideReader`
+            to use to read that file. Valis will try to find an appropritate reader
+            for any omitted files, or will use `reader_cls` as the default.
+
         """
+
+        named_reader_dict = self.create_img_reader_dict(reader_dict=reader_dict,
+                                                        default_reader=reader_cls,
+                                                        series=series)
 
         img_types = []
         self.size = 0
         for f in tqdm.tqdm(self.original_img_list, desc=CONVERT_MSG, unit="image"):
-            if reader_cls is None:
-                try:
-                    slide_reader_cls = slide_io.get_slide_reader(f, series=series)
-                except Exception as e:
-                    msg = f"Attempting to get reader for {f} created the following error:\n{e}"
-                    valtils.print_warning(msg, rgb=Fore.RED)
-            else:
-                slide_reader_cls = reader_cls
-
-            try:
-                reader = slide_reader_cls(f, series=series)
-            except Exception as e:
-                msg = f"Attempting to read {f} created the following error:\n{e}"
-                valtils.print_warning(msg, rgb=Fore.RED)
-
+            slide_name = valtils.get_name(f)
+            reader = named_reader_dict[slide_name]
             slide_dims = reader.metadata.slide_dimensions
             levels_in_range = np.where(slide_dims.max(axis=1) < self.max_image_dim_px)[0]
             if len(levels_in_range) > 0:
@@ -2537,7 +2576,11 @@ class Valis(object):
                 level = len(slide_obj.slide_dimensions_wh) - 1
 
             processing_cls, processing_kwargs = processor_dict[slide_obj.name]
-            processor = processing_cls(image=slide_obj.image, src_f=slide_obj.src_f, level=level, series=slide_obj.series)
+            processor = processing_cls(image=slide_obj.image,
+                                       src_f=slide_obj.src_f,
+                                       level=level,
+                                       series=slide_obj.series,
+                                       reader=slide_obj.reader)
 
             try:
                 processed_img = processor.process_image(**processing_kwargs)
@@ -3095,8 +3138,6 @@ class Valis(object):
         micro_rigid_registar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
         micro_rigid_registar.register()
 
-        # rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in self.slide_dict.values()]
-
         # Draw in same order as regular rigid registration
         draw_list = [self.slide_dict[img_obj.name] for img_obj in self.rigid_registrar.img_obj_list]
         rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in draw_list]
@@ -3329,7 +3370,10 @@ class Valis(object):
 
             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_CLASS_KEY] = processing_cls
             tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_KW_KEY] = processing_kwargs
-
+            tiled_non_rigid_reg_params[non_rigid_registrars.NR_PROCESSING_INIT_KW_KEY] = {"src_f": slide_obj.src_f,
+                                                                                          "series": slide_obj.series,
+                                                                                          "reader": deepcopy(slide_obj.reader)
+                                                                                          }
             img_specific_args[slide_obj.name] = tiled_non_rigid_reg_params
 
         non_rigid_registrar_cls = non_rigid_registrars.NonRigidTileRegistrar
@@ -3526,7 +3570,11 @@ class Valis(object):
                 unprocessed_warped_img = warp_tools.vips2numpy(unprocessed_warped_img)
 
                 processing_cls, processing_kwargs = processor_dict[slide_obj.name]
-                processor = processing_cls(image=unprocessed_warped_img, src_f=slide_obj.src_f, level=closest_img_level, series=slide_obj.series)
+                processor = processing_cls(image=unprocessed_warped_img,
+                                           src_f=slide_obj.src_f,
+                                           level=closest_img_level,
+                                           series=slide_obj.series,
+                                           reader=slide_obj.reader)
 
                 try:
                     processed_img = processor.process_image(**processing_kwargs)
@@ -3536,8 +3584,6 @@ class Valis(object):
                 processed_img = exposure.rescale_intensity(processed_img, out_range=(0, 255)).astype(np.uint8)
 
                 np_mask = warp_tools.vips2numpy(slide_mask)
-
-                # print("not applying non-rigid mask (~3477)")
                 processed_img[np_mask == 0] = 0
 
                 # Normalize images using stats collected for rigid registration #
@@ -3982,7 +4028,8 @@ class Valis(object):
                  if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
                  if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
                  processor_dict=None,
-                 reader_cls=None):
+                 reader_cls=None,
+                 reader_dict=None):
 
         """Register a collection of images
 
@@ -4026,7 +4073,7 @@ class Valis(object):
         if_processing_kwargs : dict
             Dictionary of keyward arguments to be passed to `if_processing_cls`
 
-        processor_dict : dict
+        processor_dict : dict, optional
             Each key should be the filename of the image, and the value either a subclassed
             preprocessing.ImageProcessor, or a list, where the 1st element is the processor,
             and the second element a dictionary of keyword arguments passed to the processor.
@@ -4040,6 +4087,12 @@ class Valis(object):
             This option is provided in case the slides cannot be opened by a current
             SlideReader class. In this case, the user should create a subclass of
             SlideReader. See slide_io.SlideReader for details.
+
+        reader_dict: dict, optional
+            Dictionary specifying which readers to use for individual images. The
+            keys should be the image's filename, and the values the instantiated slide_io.SlideReader
+            to use to read that file. Valis will try to find an appropritate reader
+            for any omitted files, or will use `reader_cls` as the default.
 
         Returns
         -------
@@ -4099,7 +4152,7 @@ class Valis(object):
         self.start_time = time()
         try:
             print("\n==== Converting images\n")
-            self.convert_imgs(series=self.series, reader_cls=reader_cls)
+            self.convert_imgs(series=self.series, reader_cls=reader_cls, reader_dict=reader_dict)
 
             print("\n==== Processing images\n")
             slide_processors = self.create_img_processor_dict(brightfield_processing_cls=brightfield_processing_cls,
@@ -4150,8 +4203,8 @@ class Valis(object):
             error_df.to_csv(data_f_out, index=False)
 
         except Exception as e:
-            valtils.print_warning(e, rgb=Fore.RED)
-            print(traceback.format_exc())
+            traceback_msg = traceback.format_exc()
+            valtils.print_warning(e, rgb=Fore.RED, traceback_msg=traceback_msg)
             kill_jvm()
             return None, None, None
 
@@ -4452,7 +4505,7 @@ class Valis(object):
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_save_slides(self, dst_dir, level=0, non_rigid=True,
                              crop=True,
-                             colormap=None,
+                             colormap=slide_io.CMAP_AUTO,
                              interp_method="bicubic",
                              tile_wh=None, compression="lzw", Q=100):
 
@@ -4483,7 +4536,9 @@ class Valis(object):
             defined by `reference_img_f` when initialzing the `Valis object`.
 
         colormap : list
-            List of RGB colors (0-255) to use for channel colors
+            List of RGB colors (0-255) to use for channel colors.
+            If 'auto' (the default), the original channel colors ` will be used, if available.
+            If `None`, no channel colors will be assigned.
 
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
@@ -4503,15 +4558,17 @@ class Valis(object):
 
         for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
             slide_cmap = None
-            if colormap is not None:
+            is_rgb = slide_obj.reader.metadata.is_rgb
+            if colormap is not None and not is_rgb:
                 chnl_names = slide_obj.reader.metadata.channel_names
-                if chnl_names is not None:
-                    if len(colormap) >= len(chnl_names):
-                        slide_cmap = {chnl_names[i]:tuple(colormap[i]) for i in range(len(chnl_names))}
+                updated_channel_names = slide_io.check_channel_names(chnl_names, is_rgb, nc=slide_obj.reader.metadata.n_channels)
+                try:
+                    colormap = slide_io.check_colormap(colormap, updated_channel_names)
+                except Exception as e:
+                    traceback_msg = traceback.format_exc()
+                    msg = f"Could not create colormap for the following reason:{e}"
+                    valtils.print_warning(msg, traceback_msg=traceback_msg)
 
-                    else:
-                        msg = f'{slide_obj.name} has {len(chnl_names)} but colormap only has {len(colormap)} colors'
-                        valtils.print_warning(msg)
 
             dst_f = os.path.join(dst_dir, slide_obj.name + ".ome.tiff")
 
@@ -4526,9 +4583,10 @@ class Valis(object):
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_merge_slides(self, dst_f=None, level=0, non_rigid=True,
                               crop=True, channel_name_dict=None,
-                              src_f_list=None, colormap=None,
+                              src_f_list=None, colormap=slide_io.CMAP_AUTO,
                               drop_duplicates=True, tile_wh=None,
-                              interp_method="bicubic", compression="lzw", Q=100):
+                              interp_method="bicubic", compression="lzw",
+                              Q=100, pyramid=True):
 
         """Warp and merge registered slides
 
@@ -4585,6 +4643,9 @@ class Valis(object):
         Q : int
             Q factor for lossy compression
 
+        pyramid : bool
+            Whether or not to save an image pyramid.
+
         Returns
         -------
         merged_slide : pyvips.Image
@@ -4601,12 +4662,19 @@ class Valis(object):
 
         if channel_name_dict is not None:
             channel_name_dict_by_name = {valtils.get_name(k):channel_name_dict[k] for k in channel_name_dict}
+        else:
+            channel_name_dict_by_name = {slide_obj.name: [f"{c} ({slide_obj.name})" for c in slide_obj.reader.metadata.channel_names]
+                                        for slide_obj in self.slide_dict.values()}
 
         if src_f_list is None:
             src_f_list = self.original_img_list
 
         all_channel_names = []
         merged_slide = None
+
+        expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in self.original_img_list]))
+        if drop_duplicates:
+            expected_channel_order = list(dict.fromkeys(expected_channel_order))
 
         for f in src_f_list:
             slide_name = valtils.get_name(os.path.split(f)[1])
@@ -4617,16 +4685,16 @@ class Valis(object):
                                                 interp_method=interp_method)
 
             keep_idx = list(range(warped_slide.bands))
-            if channel_name_dict is not None:
-                slide_channel_names = channel_name_dict_by_name[slide_obj.name]
+            slide_channel_names = channel_name_dict_by_name[slide_obj.name]
 
-                if drop_duplicates:
-                    keep_idx = [idx for idx  in range(len(slide_channel_names)) if
-                                slide_channel_names[idx] not in all_channel_names]
+            if drop_duplicates:
+                keep_idx = [idx for idx  in range(len(slide_channel_names)) if
+                            slide_channel_names[idx] not in all_channel_names]
 
-            else:
-                slide_channel_names = slide_obj.reader.metadata.channel_names
-                slide_channel_names = [c + " (" + slide_name + ")" for c in  slide_channel_names]
+            if len(keep_idx) == 0:
+                msg= f"Have already added all channels in {slide_channel_names}. Ignoring {slide_name}"
+                valtils.print_warning(msg)
+                continue
 
             if drop_duplicates and warped_slide.bands != len(keep_idx):
                 keep_channels = [warped_slide[c] for c in keep_idx]
@@ -4635,7 +4703,7 @@ class Valis(object):
                     warped_slide = keep_channels[0]
                 else:
                     warped_slide = keep_channels[0].bandjoin(keep_channels[1:])
-            print(f"merging {', '.join(slide_channel_names)}")
+            print(f"merging {', '.join(slide_channel_names)} from {slide_obj.name}")
 
             if merged_slide is None:
                 merged_slide = warped_slide
@@ -4644,15 +4712,10 @@ class Valis(object):
 
             all_channel_names.extend(slide_channel_names)
 
+        assert all_channel_names == expected_channel_order
 
         if colormap is not None:
-            if len(colormap) >= len(all_channel_names):
-                cmap_dict = {all_channel_names[i]:tuple(colormap[i]) for i in range(len(all_channel_names))}
-
-            else:
-                msg = f'Merged image has {len(all_channel_names)} but colormap only has {len(colormap)} colors'
-                valtils.print_warning(msg)
-
+            cmap_dict = slide_io.check_colormap(colormap, all_channel_names)
         else:
             cmap_dict = None
 
@@ -4670,20 +4733,15 @@ class Valis(object):
         if dst_f is not None:
             dst_dir = os.path.split(dst_f)[0]
             pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
-            if tile_wh is None:
-                tile_wh = slide_obj.reader.metadata.optimal_tile_wh
-                if level != 0:
-                    down_sampling = np.mean(slide_obj.slide_dimensions_wh[level]/slide_obj.slide_dimensions_wh[0])
-                    tile_wh = int(np.round(tile_wh*down_sampling))
-                    tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
-                    if tile_wh < 16:
-                        tile_wh = 16
-                    if np.any(np.array(out_xyczt[0:2]) < tile_wh):
-                        tile_wh = min(out_xyczt[0:2])
+
+            ref_slide = self.get_ref_slide()
+            tile_wh = slide_io.get_tile_wh(reader=ref_slide.reader,
+                                level=level,
+                                out_shape_wh=out_xyczt[0:2])
 
             slide_io.save_ome_tiff(merged_slide, dst_f=dst_f,
                                    ome_xml=ome_xml,tile_wh=tile_wh,
-                                   compression=compression, Q=Q)
+                                   compression=compression, Q=Q, pyramid=pyramid)
 
         return merged_slide, all_channel_names, ome_xml
 

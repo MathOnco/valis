@@ -7,11 +7,13 @@ import pyvips
 import warnings
 import contextlib
 from collections import defaultdict
+import platform
+import subprocess
 
 color_init()
 
 
-def print_warning(msg, warning_type=UserWarning, rgb=Fore.YELLOW):
+def print_warning(msg, warning_type=UserWarning, rgb=Fore.YELLOW, traceback_msg=None):
     """Print warning message with color
     """
     warning_msg = f"{rgb}{msg}{Style.RESET_ALL}"
@@ -21,6 +23,9 @@ def print_warning(msg, warning_type=UserWarning, rgb=Fore.YELLOW):
         warnings.simplefilter('always', warning_type)
         warnings.warn(warning_msg, warning_type)
 
+    if traceback_msg is not None:
+        traceback_msg_rgb = f"{rgb}{traceback_msg}{Style.RESET_ALL}"
+        print(traceback_msg_rgb)
 
 def deprecated_args(**aliases):
     def deco(f):
@@ -68,11 +73,21 @@ def pad_strings(string_list, side="r"):
 
     return padded_strings
 
+def check_m1_mac():
+    is_mac_m1 = False
+    if platform.system() == "Darwin":
+        cpu_kind = subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"]).decode('utf-8')
+        if cpu_kind.startswith("Apple M1"):
+            is_mac_m1 = True
+
+    return is_mac_m1
+
 
 def get_name(f):
     """
     To get an object's name, remove image type extension from filename
     """
+    f = str(f)
     if re.search("\.", f) is None:
         # Extension already removed
         return f
@@ -134,7 +149,11 @@ def get_elapsed_time_string(elapsed_time, rounding=3):
 
 
 def get_vips_version():
-    v = f"{pyvips.vips_lib.VIPS_MAJOR_VERSION}.{pyvips.vips_lib.VIPS_MINOR_VERSION}.{pyvips.vips_lib.VIPS_MICRO_VERSION}"
+    try:
+        v = f"{pyvips.vips_lib.VIPS_MAJOR_VERSION}.{pyvips.vips_lib.VIPS_MINOR_VERSION}.{pyvips.vips_lib.VIPS_MICRO_VERSION}"
+    except AttributeError:
+        v = ".".join([str(pyvips.vips_lib.vips_version(i)) for i in range(3)])
+
     return v
 
 

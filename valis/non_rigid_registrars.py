@@ -9,21 +9,32 @@ import SimpleITK as sitk
 from skimage import transform, color, filters, exposure, util
 from skimage import color as skcolor
 import pyvips
+from copy import deepcopy
 import multiprocessing
-from joblib import Parallel, delayed, parallel_backend
-
-from tqdm import tqdm
+from pqdm.threads import pqdm
 
 from . import viz
 from . import warp_tools
 from . import preprocessing
 
 NR_CLS_KEY = "non_rigid_registrar_cls"
-NR_PROCESSING_KW_KEY = "processing_kwargs"
-NR_PROCESSING_CLASS_KEY = "processing_cls"
+NR_PROCESSING_KW_KEY = "processer_kwargs"
+NR_PROCESSING_INIT_KW_KEY = "init_processer_kwargs"
+NR_PROCESSING_CLASS_KEY = "processer_cls"
 NR_STATS_KEY = "target_stats"
 NR_TILE_WH_KEY = "tile_wh"
 NR_PARAMS_KEY = "params"
+
+NR_MOVING = "moving"
+NR_TILE_MOVING_P_KEY = f"{NR_MOVING}_{NR_PROCESSING_CLASS_KEY}"
+NR_TILE_MOVING_P_INIT_KW_KEY = f"{NR_MOVING}_{NR_PROCESSING_INIT_KW_KEY}"
+NR_TILE_MOVING_P_KW_KEY = f"{NR_MOVING}_{NR_PROCESSING_KW_KEY}"
+
+NR_FIXED = "fixed"
+NR_TILE_FIXED_P_KEY = f"{NR_FIXED}_{NR_PROCESSING_CLASS_KEY}"
+NR_TILE_FIXED_P_INIT_KW_KEY = f"{NR_FIXED}_{NR_PROCESSING_INIT_KW_KEY}"
+NR_TILE_FIXED_P_KW_KEY = f"{NR_FIXED}_{NR_PROCESSING_KW_KEY}"
+
 # Abstract Classes #
 class NonRigidRegistrar(object):
     """Abstract class for non-rigid registration using displacement fields
@@ -1186,9 +1197,6 @@ class NonRigidTileRegistrar(object):
 
     fwd_dxdy : pyvips.Image
         Displacement field after stitching `fwd_dxdy_tiles` together
-
-    pbar : tqdm
-        Progress bar to track registration time
     """
 
     def __init__(self, params=None, tile_wh=512, tile_buffer=100):
@@ -1213,8 +1221,10 @@ class NonRigidTileRegistrar(object):
         self.tile_wh = tile_wh
         self.tile_buffer = tile_buffer
         self.params = params
+
         self.moving_img = None
         self.fixed_img = None
+
         self.mask = None
         self.shape = None
         self.warped_image = None
@@ -1224,9 +1234,6 @@ class NonRigidTileRegistrar(object):
 
         self.fwd_dxdy_tiles = None
         self.fwd_dxdy = None
-
-        self.pbar = None
-
 
     def norm_img(self, img, stats, mask=None):
         normed_img = exposure.rescale_intensity(img, out_range=(0, 255)).astype(np.uint8)
@@ -1264,20 +1271,23 @@ class NonRigidTileRegistrar(object):
 
         return moving_normed, fixed_normed
 
-    def process_tile(self, img):
+    def process_tile(self, img, img_processer_cls, processer_init_kwargs={}, processer_kwargs={}):
         """Process tiles
         """
-        processor = self.processing_cls(image=img, src_f=None, level=None, series=None)
+
+        processer_init_kwargs["image"] = img
+        processer_init_kwargs['reader'] = deepcopy(processer_init_kwargs["reader"])
+        processer_init_kwargs['level'] = 0
+        processer = img_processer_cls(**processer_init_kwargs)
         try:
-            processed_img = processor.process_image(**self.processing_kwargs)
+            processed_img = processer.process_image(**processer_kwargs)
         except TypeError:
             # processor.process_image doesn't take kwargs
-            processed_img = processor.process_image()
+            processed_img = processer.process_image()
 
         return processed_img
 
     def reg_tile(self, tile_idx, lock):
-
         with lock:
             # Use lock when accessing images
             tile_bbox_xywh = self.expanded_bboxes[tile_idx]
@@ -1303,7 +1313,6 @@ class NonRigidTileRegistrar(object):
                 else:
                     np_mask = edge_mask
 
-
             # Check if either of the tiles are empty
             is_empty = fixed_tile.max() == fixed_tile.min() or moving_tile.max() == moving_tile.min()
             if np_mask is not None:
@@ -1314,28 +1323,34 @@ class NonRigidTileRegistrar(object):
                 empty_dxdy = pyvips.Image.black(moving_tile.width, moving_tile.height, bands=2).cast("float")
                 self.bk_dxdy_tiles[tile_idx] = empty_dxdy
                 self.fwd_dxdy_tiles[tile_idx] = empty_dxdy
-                self.pbar.update(1)
 
                 return None
 
-            if self.processing_cls is not None:
-                # Process tiles #
-                fixed_processed = self.process_tile(np_fixed)
-                moving_processed = self.process_tile(np_moving)
+            # Process tiles
+            if self.moving_processer_cls is not None:
+                moving_processed = self.process_tile(img=np_moving,
+                                                    img_processer_cls=self.moving_processer_cls,
+                                                    processer_init_kwargs=self.moving_processer_init_kwargs,
+                                                    processer_kwargs=self.moving_processer_kwargs)
 
             else:
-
-                if np_fixed.ndim > 2:
-                    fixed_g = np.abs(1 - skcolor.rgb2gray(np_fixed))
-                    fixed_processed = util.img_as_ubyte(fixed_g)
-                else:
-                    fixed_processed = np_fixed
-
                 if np_moving.ndim > 2:
                     moving_g = np.abs(1 - skcolor.rgb2gray(np_moving))
                     moving_processed = util.img_as_ubyte(moving_g)
                 else:
                     moving_processed = np_moving
+
+            if self.fixed_processer_cls is not None:
+                fixed_processed = self.process_tile(img=np_fixed,
+                                            img_processer_cls=self.fixed_processer_cls,
+                                            processer_init_kwargs=self.fixed_processer_init_kwargs,
+                                            processer_kwargs=self.fixed_processer_kwargs)
+            else:
+                if np_fixed.ndim > 2:
+                    fixed_g = np.abs(1 - skcolor.rgb2gray(np_fixed))
+                    fixed_processed = util.img_as_ubyte(fixed_g)
+                else:
+                    fixed_processed = np_fixed
 
             moving_normed, fixed_normed = self.norm_tiles(moving_processed, fixed_processed, np_mask)
 
@@ -1350,19 +1365,18 @@ class NonRigidTileRegistrar(object):
             self.bk_dxdy_tiles[tile_idx] = vips_tile_bk_dxdy
             self.fwd_dxdy_tiles[tile_idx] = vips_tile_fwd_dxdy
 
-            self.pbar.update(1)
-
     def calc(self, *args, **kwargs):
         """Cacluate displacement fields
         Each tile is registered and then stitched together
         """
 
         print("======== Registering tiles\n")
-        lock = multiprocessing.Lock()
+
         n_cpu = multiprocessing.cpu_count() - 1
-        self.pbar = tqdm(total=self.n_tiles)
-        with parallel_backend("threading", n_jobs=n_cpu):
-            Parallel()(delayed(self.reg_tile)(i, lock) for i in range(self.n_tiles))
+
+        lock = multiprocessing.Lock()
+        args = [{"tile_idx":i, "lock":lock} for i in range(self.n_tiles)]
+        res = pqdm(args, self.reg_tile, n_jobs=n_cpu, unit="image", leave=None, argument_type='kwargs')
 
         bk_dxdy = warp_tools.stitch_tiles(self.bk_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
         fwd_dxdy = warp_tools.stitch_tiles(self.fwd_dxdy_tiles, self.expanded_bboxes, self.n_rows, self.n_cols, self.tile_buffer)
@@ -1370,7 +1384,9 @@ class NonRigidTileRegistrar(object):
         return bk_dxdy, fwd_dxdy
 
     def register(self, moving_img, fixed_img, mask=None, non_rigid_registrar_cls=OpticalFlowWarper,
-                 processing_cls=None, processing_kwargs=None, target_stats=None, **kwargs):
+                 moving_processer_cls=None, moving_init_processer_kwargs={}, moving_processer_kwargs=None,
+                 fixed_processer_cls=None, fixed_init_processer_kwargs={}, fixed_processer_kwargs=None,
+                 target_stats=None, **kwargs):
         """
         Register images, warping moving_img to align with fixed_img
 
@@ -1437,9 +1453,15 @@ class NonRigidTileRegistrar(object):
         self.shape = shape_rc
 
         self.non_rigid_registrar_cls = non_rigid_registrar_cls
-        self.processing_cls = processing_cls
         self.target_stats = target_stats
-        self.processing_kwargs = processing_kwargs
+
+        self.moving_processer_cls = moving_processer_cls
+        self.moving_processer_kwargs = moving_processer_kwargs
+        self.moving_processer_init_kwargs = moving_init_processer_kwargs
+
+        self.fixed_processer_cls = fixed_processer_cls
+        self.fixed_processer_kwargs = fixed_processer_kwargs
+        self.fixed_processer_init_kwargs = fixed_init_processer_kwargs
 
         if self.is_array:
             moving_img = warp_tools.numpy2vips(moving_img)

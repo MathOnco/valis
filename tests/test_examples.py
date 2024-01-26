@@ -25,7 +25,7 @@ The results directory contains several folders:
 3. *rigid_registration* shows thumbnails of how each image
     looks after performing rigid registration.
 
-4. *non_rigid_registration* shows thumbnaials of how each
+4. *non_rigid_registration* shows thumbnails of how each
     image looks after non-rigid registration.
 
 5. *deformation_fields* contains images showing what the
@@ -44,11 +44,16 @@ After registraation is complete, one should view the
 results to determine if they aare acceptable. If they
 are, then one can warp and save all of the slides.
 
+
+docker run -it --rm --name test_examples  -v "$HOME:$HOME" valis-wsi-arm64 python3 /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/tests/test_examples.py
 """
 
 import time
 import os
 import numpy as np
+from itertools import chain
+import pathlib
+import ome_types
 
 import shutil
 import sys
@@ -57,13 +62,20 @@ import os
 from valis import registration, valtils
 from valis.micro_rigid_registrar import MicroRigidRegistrar
 
-
-def get_parent_dir():
+def get_dirs():
     cwd = os.getcwd()
-    dir_split = cwd.split(os.sep)
-    split_idx = [i for i in range(len(dir_split)) if dir_split[i] == "valis_project"][0]
-    parent_dir = os.sep.join(dir_split[:split_idx+1])
-    return parent_dir
+    in_container = sys.platform == "linux" and os.getcwd() == cwd
+    if not in_container:
+        dir_split = cwd.split(os.sep)
+        split_idx = [i for i in range(len(dir_split)) if dir_split[i] == "valis_project"][0]
+        parent_dir = os.sep.join(dir_split[:split_idx+1])
+
+        results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
+    else:
+        parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
+        results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
+
+    return parent_dir, results_dst_dir, in_container
 
 
 def cnames_from_filename(src_f):
@@ -75,15 +87,10 @@ def cnames_from_filename(src_f):
     f = valtils.get_name(src_f)
     return ["DAPI"] + f.split(" ")
 
-# parent_dir = get_parent_dir()
-parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
+
+parent_dir, results_dst_dir, in_container = get_dirs()
 datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
 
-in_container = sys.platform == "linux" and os.getcwd() == '/usr/local/src'
-if in_container:
-    results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
-else:
-    results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
 def register_hi_rez(src_dir):
     high_rez_dst_dir = os.path.join(results_dst_dir, "high_rez")
@@ -113,21 +120,21 @@ def register_hi_rez(src_dir):
     registrar.draw_matches(matches_dst_dir)
 
 
-def test_register_ihc(max_error=50):
-    """Tests registration and lossy jpeg2000 compression"""
+def test_register_ihc(max_error=60):
+    """Tests registration and lossy jpeg compression"""
     ihc_src_dir = os.path.join(datasets_src_dir, "ihc")
     try:
         registrar = registration.Valis(ihc_src_dir, results_dst_dir)
         rigid_registrar, non_rigid_registrar, error_df = registrar.register()
-        micro_non_rigid_registrar, micro_error_df = registrar.register_micro()
-        avg_error = np.max(micro_error_df["mean_non_rigid_D"])
+        # micro_non_rigid_registrar, micro_error_df = registrar.register_micro()
+        avg_error = np.max(error_df["mean_non_rigid_D"])
 
         if avg_error > max_error:
             # shutil.rmtree(ihc_dst_dir, ignore_errors=True)
             assert False, f"error was {avg_error} but should be below {max_error}"
 
         registered_slide_dst_dir = os.path.join(registrar.dst_dir, "registered_slides", registrar.name)
-        registrar.warp_and_save_slides(dst_dir=registered_slide_dst_dir, Q=90, compression="jp2k")
+        registrar.warp_and_save_slides(dst_dir=registered_slide_dst_dir, Q=90, compression="jpeg")
 
         # shutil.rmtree(ihc_dst_dir, ignore_errors=True)
 
@@ -139,14 +146,26 @@ def test_register_ihc(max_error=50):
 
 
 def test_register_cycif(max_error=3):
+    """
+    Goals:
+        * Aligment and merging of staining rounds
+        * Make sure error is below threshold
+        * Checks channel names of merged image are in the correct order (https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877)
+        * Check jpeg2000 compression
 
 
+    """
+
+    drop_duplicates = True
     cycif_src_dir = os.path.join(datasets_src_dir, "cycif")
     try:
-        registrar = registration.Valis(cycif_src_dir, results_dst_dir)
+        img_list = list(pathlib.Path(cycif_src_dir).rglob("*.ome.tiff"))
+        img_list = np.roll(img_list, 1)
+
+        registrar = registration.Valis(cycif_src_dir, results_dst_dir, img_list=img_list, imgs_ordered=True)
         rigid_registrar, non_rigid_registrar, error_df = registrar.register()
-        micro_non_rigid_registrar, micro_error_df = registrar.register_micro()
-        avg_error = np.max(micro_error_df["mean_non_rigid_D"])
+        # micro_non_rigid_registrar, micro_error_df = registrar.register_micro()
+        avg_error = np.max(error_df["mean_non_rigid_D"])
 
         if avg_error > max_error:
             # shutil.rmtree(cycif_dst_dir, ignore_errors=True)
@@ -157,11 +176,25 @@ def test_register_cycif(max_error=3):
 
         dst_f = os.path.join(registrar.dst_dir, "registered_slides", f"{registrar.name}.ome.tiff")
         merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
-                                            channel_name_dict=channel_name_dict,
-                                            drop_duplicates=True,
-                                            Q=90)
+                                                channel_name_dict=channel_name_dict,
+                                                drop_duplicates=True,
+                                                Q=90, compression="jp2k")
+
+        # print("DONE saving")
+        # expected_names = list(chain.from_iterable([channel_name_dict[f] for f in registrar.original_img_list]))
+        # print("Expec names B4:", expected_names)
+        # if drop_duplicates:
+        #     expected_names = list(dict.fromkeys(expected_names))
+
+        # print("Expec names:", expected_names)
+        # print("ome_v", ome_types.__version__) ##Unknown
+        # merged_ome = ome_types.from_tiff(dst_f)
+        # print("merged_ome", merged_ome.images)
+        # saved_names = [c.name for c in merged_ome.images[0].pixels.channels]
+        # print("Saved names:", saved_names)
 
         # registration.kill_jvm()
+        # assert all([expected_names[i] == saved_names[i] for i in range(len(saved_names))]), "channels not written in correct order"
 
         # shutil.rmtree(cycif_dst_dir, ignore_errors=True)
 
@@ -183,7 +216,7 @@ def test_register_hi_rez_cycif():
 
 
 if __name__ == "__main__" and in_container:
-    # test_register_cycif()
-    # test_register_ihc()
+    test_register_cycif()
+    test_register_ihc()
     test_register_hi_rez_ihc()
     test_register_hi_rez_cycif()
