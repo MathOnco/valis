@@ -3,7 +3,6 @@
 
 import numpy as np
 import cv2
-# import numba as nba
 import torch
 from copy import deepcopy
 from sklearn import metrics
@@ -48,7 +47,6 @@ DEFAULT_RANSAC = 7
 """int: Default RANSAC threshold"""
 
 
-# @nba.njit()
 def convert_distance_to_similarity(d, n_features=64):
     """
     Convert distance to similarity
@@ -70,7 +68,6 @@ def convert_distance_to_similarity(d, n_features=64):
     return np.exp(-d * (1 / n_features))
 
 
-# @nba.njit()
 def convert_similarity_to_distance(s, n_features=64):
     """Convert similarity to distance
 

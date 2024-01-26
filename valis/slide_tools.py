@@ -9,7 +9,6 @@ import numpy as np
 import colour
 from matplotlib import colormaps
 import re
-import sys
 from PIL import Image
 from collections import Counter
 from . import warp_tools
