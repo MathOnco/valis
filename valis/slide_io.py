@@ -657,7 +657,7 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
         if has_channel_info:
             metadata.channel_names = [ome_img.pixels.channels[i].name for i in range(metadata.n_channels)]
         else:
-            metadata.channel_names = get_default_channel_names(ome_img.pixels.size_c)
+            metadata.channel_names = get_default_channel_names(ome_img.pixels.size_c, src_f=name)
 
     return metadata
 
@@ -1049,9 +1049,10 @@ class BioFormatsSlideReader(SlideReader):
         if series is None:
             img_areas = [np.multiply(*meta.slide_dimensions[0]) for meta in self.meta_list]
             series = np.argmax(img_areas)
-            msg = (f"No series provided. "
-                   f"Selecting series with largest image, "
-                   f"which is series {series}")
+            if len(img_areas) > 1:
+                msg = (f"No series provided. "
+                    f"Selecting series with largest image, "
+                    f"which is series {series}")
 
             valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
 
@@ -1740,7 +1741,8 @@ class VipsSlideReader(SlideReader):
                         channel_names.append(cname.text)
 
         if channel_names is None and not vips_img.interpretation == "srgb":
-            channel_names = get_default_channel_names(vips_img.bands)
+            channel_names = get_default_channel_names(vips_img.bands,
+                                                      src_f=self.src_f)
 
         return channel_names
 
@@ -2084,9 +2086,8 @@ class FlattenedPyramidReader(VipsSlideReader):
 
             return names
 
-
-        # default_channel_names = [f"C{i+1}" for i in range(vips_img.bands)]
-        default_channel_names = get_default_channel_names(vips_img.bands)
+        default_channel_names = get_default_channel_names(vips_img.bands,
+                                                          src_f=self.src_f)
 
         vips_fields = vips_img.get_fields()
         if "image-description" in vips_fields:
@@ -2232,11 +2233,12 @@ class CziJpgxrReader(SlideReader):
         if series is None:
             img_areas = [np.multiply(*meta.slide_dimensions[0]) for meta in self.meta_list]
             series = np.argmax(img_areas)
-            msg = (f"No series provided. "
-                   f"Selecting series with largest image, "
-                   f"which is series {series}")
+            if len(img_areas) > 1:
+                msg = (f"No series provided. "
+                       f"Selecting series with largest image, "
+                       f"which is series {series}")
 
-            valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
+                valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
 
         self._series = series
         self.series = series
@@ -2944,19 +2946,28 @@ def check_colormap(colormap, channel_names):
 
     msg = None
     updated_colormap = colormap
-    if colormap == CMAP_AUTO:
+    if isinstance(colormap, str) and colormap == CMAP_AUTO:
         updated_colormap = get_colormap(channel_names, is_rgb=False)
 
-    elif isinstance(colormap, list):
-        if len(colormap) < len(channel_names):
-            msg = f"Not enough colors in colormap. Only {len(colormap)} colors provided, but there are {len(channel_names)} channels"
+    elif isinstance(colormap, list) or isinstance(colormap, np.ndarray) or isinstance(colormap, tuple):
+        if np.array(colormap).ndim == 1 and len(channel_names) == 1:
+            # colormap is an array for a single channel
+            updated_colormap = np.array([updated_colormap])
+        if len(updated_colormap) < len(channel_names):
+            msg = f"Not enough colors in colormap. Only {len(updated_colormap)} colors provided, but there are {len(channel_names)} channels"
 
-        updated_colormap = {channel_names[i]:tuple(colormap[i]) for i in range(len(channel_names))}
+        # updated_colormap = {channel_names[i]:tuple(updated_colormap[i]) for i in range(len(channel_names))}
+            updated_colormap = {channel_names[i]:updated_colormap[i] for i in range(len(channel_names))}
     elif isinstance(colormap, dict):
+
         missing_channels = set(channel_names) - set(colormap.keys())
 
         if len(missing_channels) != 0:
             msg = f"Missing colors in colormap for the following channels: {missing_channels}"
+        # elif len(channel_names) == 1:
+        #     if np.array(updated_colormap[channel_names[0]]).ndim == 1:
+        #         updated_colormap[channel_names[0]] = np.array([updated_colormap[channel_names[0]]])
+
 
     elif colormap is not None:
         msg = (f"Colormap must be {CMAP_AUTO}, "
@@ -2971,19 +2982,23 @@ def check_colormap(colormap, channel_names):
 
     return updated_colormap
 
-def get_default_channel_names(nc):
 
-    default_channel_names = [f"C{i+1}" for i in range(nc)]
+def get_default_channel_names(nc, src_f=None):
+
+    if src_f is not None and nc == 1:
+        default_channel_names = [valtils.get_name(src_f)]
+    else:
+        default_channel_names = [f"C{i+1}" for i in range(nc)]
 
     return default_channel_names
 
 
-def check_channel_names(channel_names, is_rgb, nc):
+def check_channel_names(channel_names, is_rgb, nc, src_f=None):
 
     if is_rgb:
         return None
 
-    default_channel_names = get_default_channel_names(nc)
+    default_channel_names = get_default_channel_names(nc, src_f=src_f)
 
     if channel_names is None:
         channel_names = []
@@ -3066,12 +3081,16 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
 
     else:
         updated_channel_names = check_channel_names(channel_names, is_rgb, nc=c)
-        if colormap == CMAP_AUTO:
+        if isinstance(colormap, str) and colormap == CMAP_AUTO:
             colormap = get_colormap(updated_channel_names, is_rgb)
 
         if colormap is not None:
+            colormap = check_colormap(colormap, updated_channel_names)
             try:
-                channels = [create_channel(i, name=updated_channel_names[i], color=colormap[updated_channel_names[i]]) for i in range(c)]
+                if isinstance(colormap, dict):
+                    channels = [create_channel(i, name=updated_channel_names[i], color=colormap[updated_channel_names[i]]) for i in range(c)]
+                elif isinstance(colormap, np.ndarray) or isinstance(colormap, list) or isinstance(colormap, tuple):
+                    channels = [create_channel(i, name=updated_channel_names[i], color=colormap[i]) for i in range(c)]
             except KeyError as e:
                 msg = f"Mismatch between channel names and keys in colormap. Cannot find channel name {e} in colormap"
                 if colormap is not None:
@@ -3171,7 +3190,7 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
     updated_channel_names = check_channel_names(channel_names, is_rgb, nc=nc)
 
     if not is_rgb:
-        if colormap == CMAP_AUTO:
+        if isinstance(colormap, str) and colormap == CMAP_AUTO:
             colormap = get_colormap(updated_channel_names, is_rgb=is_rgb, series=series, original_xml=current_ome_xml_str)
 
         colormap = check_colormap(colormap, channel_names=updated_channel_names)
