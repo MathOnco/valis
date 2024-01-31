@@ -983,6 +983,7 @@ class Slide(object):
         pyramid : bool
             Whether or not to save an image pyramid.
         """
+        # self = slide_obj
         if src_f is None:
             src_f = self.src_f
 
@@ -1000,6 +1001,7 @@ class Slide(object):
                                        reader=reader)
 
         # Get ome-xml #
+        # colormap = slide_cmap
         ome_xml_obj = slide_io.update_xml_for_new_img(img=warped_slide,
                                                       reader=reader,
                                                       level=level,
@@ -4507,7 +4509,7 @@ class Valis(object):
                              crop=True,
                              colormap=slide_io.CMAP_AUTO,
                              interp_method="bicubic",
-                             tile_wh=None, compression="lzw", Q=100):
+                             tile_wh=None, compression="lzw", Q=100, pyramid=True):
 
         f"""Warp and save all slides
 
@@ -4556,14 +4558,24 @@ class Valis(object):
         """
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
-        for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
+        src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
+
+        # self = registrar
+        if colormap is not None:
+            named_color_map = {self.get_slide(x).name:colormap[x] for x in colormap.keys()}
+        # for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
+        for src_f in tqdm.tqdm(src_f_list, desc=SAVING_IMG_MSG, unit="image"):
+            slide_obj = self.get_slide(src_f)
             slide_cmap = None
             is_rgb = slide_obj.reader.metadata.is_rgb
             if colormap is not None and not is_rgb:
                 chnl_names = slide_obj.reader.metadata.channel_names
                 updated_channel_names = slide_io.check_channel_names(chnl_names, is_rgb, nc=slide_obj.reader.metadata.n_channels)
                 try:
-                    colormap = slide_io.check_colormap(colormap, updated_channel_names)
+                    # colormap = slide_io.check_colormap(colormap, updated_channel_names)
+                    slide_cmap = named_color_map[slide_obj.name]
+                    # slide_cmap = {slide_obj.name:[slide_cmap]}
+                    slide_cmap = slide_io.check_colormap(colormap=slide_cmap, channel_names=updated_channel_names)
                 except Exception as e:
                     traceback_msg = traceback.format_exc()
                     msg = f"Could not create colormap for the following reason:{e}"
@@ -4578,7 +4590,11 @@ class Valis(object):
                                           src_f=slide_obj.src_f,
                                           interp_method=interp_method,
                                           colormap=slide_cmap,
-                                          tile_wh=tile_wh, compression=compression, Q=Q)
+                                          tile_wh=tile_wh,
+                                          compression=compression,
+                                          channel_names=updated_channel_names,
+                                          Q=Q,
+                                          pyramid=pyramid)
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_merge_slides(self, dst_f=None, level=0, non_rigid=True,
@@ -4667,12 +4683,15 @@ class Valis(object):
                                         for slide_obj in self.slide_dict.values()}
 
         if src_f_list is None:
-            src_f_list = self.original_img_list
+            # src_f_list = self.original_img_list
+            # Save in the sorted order
+            src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
 
         all_channel_names = []
         merged_slide = None
 
-        expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in self.original_img_list]))
+        # expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in self.original_img_list]))
+        expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in src_f_list]))
         if drop_duplicates:
             expected_channel_order = list(dict.fromkeys(expected_channel_order))
 
