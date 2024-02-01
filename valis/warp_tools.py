@@ -991,6 +991,8 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
                                                                      bk_dxdy=bk_dxdy)
     if bbox_xywh is not None:
         do_crop = True
+        # print("BBOX CEILING")
+        bbox_xywh = np.ceil(bbox_xywh)
     else:
         do_crop = False
 
@@ -1019,9 +1021,9 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         bg_color = list(bg_color)
 
     interpolator = pyvips.Interpolate.new(interp_method)
+
     if do_rigid:
         if not np.all(src_sxy == 1):
-
             img_corners_xy = get_corners_of_image(src_shape_rc)[:, ::-1]
             warped_corners = warp_xy(img_corners_xy, M=M,
                                      transformation_src_shape_rc=transformation_src_shape_rc,
@@ -1038,6 +1040,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         tx, ty = warp_M[:2, 2]
         warp_M = np.linalg.inv(warp_M)
         vips_M = warp_M[:2, :2].reshape(-1).tolist()
+
         affine_warped = img.affine(vips_M,
             oarea=[0, 0, out_shape_rc[1], out_shape_rc[0]],
             interpolate=interpolator,
@@ -1047,6 +1050,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
             background=bg_color,
             extend=bg_extender
             )
+
     else:
         affine_warped = img
 
@@ -1095,7 +1099,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         warped = affine_warped
 
     if bbox_xywh is not None:
-            warped = warped.extract_area(*bbox_xywh)
+        warped = warped.extract_area(*bbox_xywh)
 
     if is_array:
         warped = vips2numpy(warped)

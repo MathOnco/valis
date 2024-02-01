@@ -618,7 +618,59 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
     return is_flattended_pyramid, can_use_bf, slide_dimensions, levels_start_idx, n_channels
 
 
-def metadata_from_xml(xml, name, server, series=0, metadata=None):
+def check_xml_img_match(xml, vips_img, metadata, series=0):
+    """ Make sure that provided xml and image match.
+    If there is a mismatch (i.e. channel number), the values in the image take precedence
+    """
+    ome_obj = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
+    if len(ome_obj.images) > 0:
+        ome_img = ome_obj.images[series].pixels
+        ome_nc = ome_img.size_c
+        ome_size_x = ome_img.size_x
+        ome_size_y = ome_img.size_y
+        ome_dtype = ome_img.type.name.lower()
+    else:
+        msg = f"ome-xml for {metadata.name} does not contain any metadata for any images"
+        valtils.print_warning(msg)
+        ome_nc = None
+        ome_size_x = None
+        ome_size_y = None
+        ome_dtype = None
+
+    vips_nc = vips_img.bands
+    vips_size_x = vips_img.width
+    vips_size_y = vips_img.height
+    np_dtype = slide_tools.VIPS_FORMAT_NUMPY_DTYPE[vips_img.format]
+    vips_bf_dtype = slide_tools.NUMPY_FORMAT_BF_DTYPE[str(np_dtype().dtype)].lower()
+
+    if ome_nc != vips_nc:
+        msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are only {vips_nc} channel(s) in the image"
+        metadata.n_channels = vips_nc
+        if ome_nc is not None :
+            valtils.print_warning(msg)
+
+    if ome_size_x != vips_size_x:
+        msg = f"For {metadata.name}, the ome-xml states the width should be {ome_size_x}, but the image has a width of {vips_size_x}"
+        if ome_size_x is not None:
+            valtils.print_warning(msg)
+
+    if ome_size_y != vips_size_y:
+        msg = f"For {metadata.name}, the ome-xml states the height should be {ome_size_y}, but the image has a width of {vips_size_y}"
+        if ome_size_y is not None:
+            valtils.print_warning(msg)
+
+    if ome_dtype != vips_bf_dtype:
+        msg = f"For {metadata.name}, the ome-xml states the image type should be {ome_dtype}, but the image has type of {vips_bf_dtype}"
+        metadata.bf_datatype = vips_bf_dtype
+        metadata.bf_pixel_type = slide_tools.BF_DTYPE_PIXEL_TYPE[vips_bf_dtype]
+
+        if ome_dtype is not None:
+            valtils.print_warning(msg)
+
+    return metadata
+
+
+def metadata_from_xml(xml, name, server, series=0, metadata=None, vips_img=None):
     """
     Use ome-types to extract metadata from xml.
     """
@@ -653,11 +705,23 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
     metadata.bf_datatype = ome_img.pixels.type.value
     metadata.bf_pixel_type = slide_tools.BF_DTYPE_PIXEL_TYPE[metadata.bf_datatype]
 
+    if vips_img is not None:
+        # Verify basic info matches
+        metadata = check_xml_img_match(xml, vips_img, metadata, series=series)
+
     if not metadata.is_rgb:
+        if vips_img is not None and "filename" in vips_img.get_fields():
+            src_f = vips_img.get("filename")
+            if src_f.startswith("temp-"):
+                src_f = name
+            else:
+                src_f = name
+
         if has_channel_info:
             metadata.channel_names = [ome_img.pixels.channels[i].name for i in range(metadata.n_channels)]
+            metadata.channel_names = check_channel_names(metadata.channel_names, metadata.is_rgb, metadata.n_channels, src_f=src_f)
         else:
-            metadata.channel_names = get_default_channel_names(ome_img.pixels.size_c, src_f=name)
+            metadata.channel_names = get_default_channel_names(metadata.n_channels, src_f=src_f)
 
     return metadata
 
@@ -1051,10 +1115,10 @@ class BioFormatsSlideReader(SlideReader):
             series = np.argmax(img_areas)
             if len(img_areas) > 1:
                 msg = (f"No series provided. "
-                    f"Selecting series with largest image, "
-                    f"which is series {series}")
+                       f"Selecting series with largest image, "
+                       f"which is series {series}")
 
-            valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
+                valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
 
         self._series = series
         self.series = series
@@ -1520,8 +1584,10 @@ class VipsSlideReader(SlideReader):
                slide_meta = metadata_from_xml(xml=img_xml,
                                               name=slide_meta.name,
                                               server=server,
-                                              metadata=slide_meta)
+                                              metadata=slide_meta,
+                                              vips_img=vips_img)
             except Exception as e:
+                # print(f"Can't parse xml for {slide_meta.name} due to error {e}")
                 slide_meta = self._get_metadata_vips(slide_meta, vips_img)
 
         else:
@@ -1740,10 +1806,9 @@ class VipsSlideReader(SlideReader):
                     if cname.text not in channel_names:
                         channel_names.append(cname.text)
 
-        if channel_names is None and not vips_img.interpretation == "srgb":
+        if (channel_names is None or len(channel_names) == 0) and not vips_img.interpretation == "srgb":
             channel_names = get_default_channel_names(vips_img.bands,
                                                       src_f=self.src_f)
-
         return channel_names
 
     def _get_slide_dimensions(self, vips_img):
@@ -1952,7 +2017,8 @@ class FlattenedPyramidReader(VipsSlideReader):
                slide_meta = metadata_from_xml(xml=img_xml,
                                               name=slide_meta.name,
                                               server=server,
-                                              metadata=slide_meta)
+                                              metadata=slide_meta,
+                                              vips_img=vips_img)
             except Exception as e:
                 slide_meta = self._get_metadata_vips(slide_meta, vips_img)
 
@@ -2737,8 +2803,8 @@ def get_slide_reader(src_f, series=None):
     if is_tiff:
         is_flattened_tiff, _ = check_flattened_pyramid_tiff(src_f, check_with_bf=False)[0:2]
 
-    if series is None:
-        series = 0
+    # if series is None:
+    #     series = 0
 
     one_series = True
     if is_ome_tiff:
@@ -2749,7 +2815,7 @@ def get_slide_reader(src_f, series=None):
     can_use_openslide = check_to_use_openslide(src_f) # Checks openslide is installed
 
     # Give preference to vips/openslide since it will be fastest
-    if (can_use_vips or can_use_openslide) and one_series and series == 0 and not is_flattened_tiff:
+    if (can_use_vips or can_use_openslide) and one_series and series in [0, None] and not is_flattened_tiff:
         return VipsSlideReader
 
     if is_czi:
@@ -2761,7 +2827,7 @@ def get_slide_reader(src_f, series=None):
 
     # Check to see if Bio-formats will work
     init_jvm()
-    can_read_meta_bf, can_read_img_bf = check_to_use_bioformats(src_f)
+    can_read_meta_bf, can_read_img_bf = check_to_use_bioformats(src_f, series=series)
     can_use_bf = can_read_meta_bf and can_read_img_bf
     if is_flattened_tiff:
         _, bf_reads_flat = check_flattened_pyramid_tiff(src_f, check_with_bf=True)[0:2]
@@ -2946,6 +3012,9 @@ def check_colormap(colormap, channel_names):
 
     msg = None
     updated_colormap = colormap
+    if channel_names is None or len(channel_names) == 0:
+        return None
+
     if isinstance(colormap, str) and colormap == CMAP_AUTO:
         updated_colormap = get_colormap(channel_names, is_rgb=False)
 
@@ -2964,10 +3033,6 @@ def check_colormap(colormap, channel_names):
 
         if len(missing_channels) != 0:
             msg = f"Missing colors in colormap for the following channels: {missing_channels}"
-        # elif len(channel_names) == 1:
-        #     if np.array(updated_colormap[channel_names[0]]).ndim == 1:
-        #         updated_colormap[channel_names[0]] = np.array([updated_colormap[channel_names[0]]])
-
 
     elif colormap is not None:
         msg = (f"Colormap must be {CMAP_AUTO}, "

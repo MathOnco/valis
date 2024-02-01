@@ -461,9 +461,9 @@ class SerialRigidRegistrar(object):
         if self.align_to_reference is False and reference_img_f is not None:
             og_ref_name = valtils.get_name(reference_img_f)
             msg = (f"The reference was specified as {og_ref_name} ",
-                   f"but `align_to_reference` is `False`, and so images will be aligned serially. ",
-                   f"If you would like all images to be directly aligned to {og_ref_name}, "
-                   f"then set `align_to_reference` to `True`")
+                   f"but `align_to_reference` is `False`, and so images will be aligned serially *towards* the reference image. ",
+                   f"If you would like all images to be *directly* aligned to {og_ref_name}, "
+                   f"then set `align_to_reference` to `True`. Note that in both cases, {og_ref_name} will remain unwarped.")
             valtils.print_warning(msg)
 
 
