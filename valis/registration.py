@@ -884,13 +884,35 @@ class Slide(object):
                 if crop_method == CROP_REF:
                     ref_slide = self.val_obj.get_ref_slide()
                     scaled_aligned_shape_rc = ref_slide.slide_dimensions_wh[level][::-1]
+
                 elif crop_method == CROP_OVERLAP:
                     scaled_aligned_shape_rc = aligned_slide_shape
 
                 slide_bbox_xywh, _ = self.get_crop_xywh(crop=crop_method,
                                                         out_shape_rc=scaled_aligned_shape_rc)
+
                 if crop_method == CROP_REF:
-                    assert np.all(slide_bbox_xywh[2:]==scaled_aligned_shape_rc[::-1])
+                    assert np.all(slide_bbox_xywh[2:] == scaled_aligned_shape_rc[::-1])
+                    if src_f == self.src_f and self == ref_slide:
+                        # Shouldn't need to warp, but do checks just in case
+                        no_rigid = True
+                        no_non_rigid = True
+                        if self.M is not None:
+                            sxy = (scaled_aligned_shape_rc/self.processed_img_shape_rc)[::-1]
+                            scaled_txy = sxy*self.M[:2, 2]
+                            no_transforms = all(self.M[:2, :2].reshape(-1) == [1, 0, 0, 1])
+                            crop_to_origin = np.all(np.abs(slide_bbox_xywh[0:2] + scaled_txy) < 1)
+                            no_rigid = no_transforms and crop_to_origin
+
+                        if self.bk_dxdy is not None:
+                            no_non_rigid = self.bk_dxdy.min() == 0 and self.bk_dxdy.max() == 0
+
+                        if no_rigid and no_non_rigid:
+                            # Don't need to warp, so return original image
+                            ref_img = self.reader.slide2vips(level=level)
+                            return ref_img
+                        else:
+                            print("unexpectedly have to warp reference image. This may be due to an error")
             else:
                 slide_bbox_xywh = None
 
@@ -1885,8 +1907,12 @@ class Valis(object):
 
         """
 
+        # Get name, based on src directory
         if name is None:
-            name = os.path.split(src_dir)[1]
+            if src_dir.endswith(os.path.sep):
+                name = os.path.split(src_dir[:-1])[1]
+            else:
+                name = os.path.split(src_dir)[1]
         self.name = name.replace(" ", "_")
 
         # Set paths #
@@ -4560,27 +4586,35 @@ class Valis(object):
 
         src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
 
-        # self = registrar
+        cmap_is_str = False
+        named_color_map = None
         if colormap is not None:
-            named_color_map = {self.get_slide(x).name:colormap[x] for x in colormap.keys()}
+            if isinstance(colormap, str) and colormap == slide_io.CMAP_AUTO:
+                cmap_is_str = True
+            else:
+                named_color_map = {self.get_slide(x).name:colormap[x] for x in colormap.keys()}
+
         # for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
         for src_f in tqdm.tqdm(src_f_list, desc=SAVING_IMG_MSG, unit="image"):
             slide_obj = self.get_slide(src_f)
             slide_cmap = None
             is_rgb = slide_obj.reader.metadata.is_rgb
-            if colormap is not None and not is_rgb:
+            if is_rgb:
+                updated_channel_names = None
+            elif colormap is not None:
                 chnl_names = slide_obj.reader.metadata.channel_names
                 updated_channel_names = slide_io.check_channel_names(chnl_names, is_rgb, nc=slide_obj.reader.metadata.n_channels)
                 try:
-                    # colormap = slide_io.check_colormap(colormap, updated_channel_names)
-                    slide_cmap = named_color_map[slide_obj.name]
-                    # slide_cmap = {slide_obj.name:[slide_cmap]}
+                    if not cmap_is_str and named_color_map is not None:
+                        slide_cmap = named_color_map[slide_obj.name]
+                    else:
+                        slide_cmap = colormap
+
                     slide_cmap = slide_io.check_colormap(colormap=slide_cmap, channel_names=updated_channel_names)
                 except Exception as e:
                     traceback_msg = traceback.format_exc()
                     msg = f"Could not create colormap for the following reason:{e}"
                     valtils.print_warning(msg, traceback_msg=traceback_msg)
-
 
             dst_f = os.path.join(dst_dir, slide_obj.name + ".ome.tiff")
 
@@ -4595,6 +4629,7 @@ class Valis(object):
                                           channel_names=updated_channel_names,
                                           Q=Q,
                                           pyramid=pyramid)
+
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_merge_slides(self, dst_f=None, level=0, non_rigid=True,
@@ -4683,14 +4718,12 @@ class Valis(object):
                                         for slide_obj in self.slide_dict.values()}
 
         if src_f_list is None:
-            # src_f_list = self.original_img_list
             # Save in the sorted order
             src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
 
         all_channel_names = []
         merged_slide = None
 
-        # expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in self.original_img_list]))
         expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in src_f_list]))
         if drop_duplicates:
             expected_channel_order = list(dict.fromkeys(expected_channel_order))
