@@ -908,11 +908,11 @@ class Slide(object):
                             no_non_rigid = self.bk_dxdy.min() == 0 and self.bk_dxdy.max() == 0
 
                         if no_rigid and no_non_rigid:
-                            # Don't need to warp, so return original image
+                            # Don't need to warp, so return original reference image
                             ref_img = self.reader.slide2vips(level=level)
                             return ref_img
-                        else:
-                            print("unexpectedly have to warp reference image. This may be due to an error")
+                        # else:
+                        #     print("unexpectedly have to warp reference image. This may be due to an error")
             else:
                 slide_bbox_xywh = None
 
@@ -1005,7 +1005,7 @@ class Slide(object):
         pyramid : bool
             Whether or not to save an image pyramid.
         """
-        # self = slide_obj
+
         if src_f is None:
             src_f = self.src_f
 
@@ -1023,7 +1023,6 @@ class Slide(object):
                                        reader=reader)
 
         # Get ome-xml #
-        # colormap = slide_cmap
         ome_xml_obj = slide_io.update_xml_for_new_img(img=warped_slide,
                                                       reader=reader,
                                                       level=level,
@@ -4594,7 +4593,6 @@ class Valis(object):
             else:
                 named_color_map = {self.get_slide(x).name:colormap[x] for x in colormap.keys()}
 
-        # for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
         for src_f in tqdm.tqdm(src_f_list, desc=SAVING_IMG_MSG, unit="image"):
             slide_obj = self.get_slide(src_f)
             slide_cmap = None
@@ -4718,7 +4716,7 @@ class Valis(object):
                                         for slide_obj in self.slide_dict.values()}
 
         if src_f_list is None:
-            # Save in the sorted order
+            # Save in the sorted order. Will still be original order if imgs_ordered= True
             src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
 
         all_channel_names = []

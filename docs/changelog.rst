@@ -1,6 +1,17 @@
 Change Log
 **********
 
+Version 1.0.4 (February 1, 2024)
+-------------------------------------
+#. Added checks and unit tests to verify reference image is not being warped. Can confirm no transformations were being applied to the reference image, but values may have differed slightly due to interpolation effects, as the reference image was being padded and cropped. To avoid these interpolation effects, the original reference image is returned when "warping" the reference slide with :code:`crop="reference"`, which occurs regardless of the :code:`align_to_reference` setting. This avoids unnecessary computation and potential interpolation errors. There are still checks to make sure that the warped image would have been the same as the unwarped image.
+#. Merge channels based on the position of each slide in the stack. This will be the same as the original order when :code:`imgs_ordered=True`.
+#. Can provide colormaps for each slide when calling :code:`Valis.warp_and_save_slides`
+#. Added :code:`pyramid` argument to :code:`Valis.warp_and_save_slides`
+#. Ignore setting series=0 message when there is only 1 series
+#. Updated openCV version in project.toml, as suggested in Github issue `76 <https://github.com/MathOnco/valis/issues/76#issuecomment-1916501989>`_
+#. Added :code:`slide_io.check_xml_img_match` to determine if there are mismatches between the xml metadata and the image that was read. If there are mismatches, the metadata will be updated based on the image (instead of the xml) and warning messages will be printed to let the user know about the mismatch.
+#. If a single channel image does not have channel names in the metadata, the channel name will be set to the image's name.
+
 Version 1.0.3 (January 25, 2024)
 -------------------------------------
 #. Can specify which slide readers to use for each image by passing a dictionary to the :code:`reader_dict` argument in :code:`Valis.register`. The keys, value pairs are image filename and instantiated :code:`SlideReader` to use to read that file. Valis will try to find an appropriate reader for any omitted files. Can be especially useful in cases where one needs different series for different images, as the :code:`series` argument is set when the :code:`SlideReader` is created.

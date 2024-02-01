@@ -11,6 +11,7 @@ from valis import registration
 
 
 from valis.slide_tools import *
+from valis.slide_io import *
 
 def get_parent_dir():
     cwd = os.getcwd()
@@ -28,14 +29,23 @@ else:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
 
+# from valis.registration import *
 def test_align_min_metadata():
     src_dir = os.path.join(parent_dir, "resources/slides/cycif_no_meta")
     dst_dir = os.path.join(results_dst_dir, "align_min_metadata")
     registrar = registration.Valis(src_dir, dst_dir)
     registrar.register()
 
+    src_f = registrar.original_img_list[0]
+    self = VipsSlideReader(src_f)
+
     registrar.warp_and_save_slides(dst_dir)
+    # self = registrar
     registrar.warp_and_merge_slides(dst_f=os.path.join(dst_dir, "merged.ome.tiff"))
+
+    from valis.slide_io import *
+    self = slide_obj.reader
+    src_f =
 
     assert True
 

@@ -991,7 +991,6 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
                                                                      bk_dxdy=bk_dxdy)
     if bbox_xywh is not None:
         do_crop = True
-        # print("BBOX CEILING")
         bbox_xywh = np.ceil(bbox_xywh)
     else:
         do_crop = False
@@ -2759,21 +2758,6 @@ def get_xy_inside_mask(xy, mask):
 
     keep_idx = np.where(in_mask > 0)[0]
 
-
-    # draw_img = np.dstack([mask]*3)
-    # from skimage import draw
-    # for i in range(xy.shape[0]):
-    #     circ_pos = draw.disk(xy[i][::-1], radius=3)
-    #     if i in keep_idx:
-    #         clr = [0, 255, 0]
-    #     else:
-    #         clr = [255, 0, 0]
-
-    #     draw_img[circ_pos] = clr
-
-    # io.imsave(os.path.join(registrar.dst_dir, f"{slide_obj.name}_pt.png"), draw_img)
-
-
     return keep_idx
 
 
@@ -2900,8 +2884,6 @@ def get_overlapping_poly(mesh_poly_coords):
 
     n_cpu = multiprocessing.cpu_count() - 1
     res = pqdm(range(n_poly), clip_poly, n_jobs=n_cpu, unit="image", leave=None)
-    # with parallel_backend("threading", n_jobs=n_cpu):
-    #     Parallel()(delayed(clip_poly)(i) for i in tqdm.tqdm(range(n_poly)))
 
     return overlapping_poly_list, poly_diffs
 

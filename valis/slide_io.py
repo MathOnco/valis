@@ -670,7 +670,7 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     return metadata
 
 
-def metadata_from_xml(xml, name, server, series=0, metadata=None, vips_img=None):
+def metadata_from_xml(xml, name, server, series=0, metadata=None):
     """
     Use ome-types to extract metadata from xml.
     """
@@ -705,23 +705,12 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None, vips_img=None)
     metadata.bf_datatype = ome_img.pixels.type.value
     metadata.bf_pixel_type = slide_tools.BF_DTYPE_PIXEL_TYPE[metadata.bf_datatype]
 
-    if vips_img is not None:
-        # Verify basic info matches
-        metadata = check_xml_img_match(xml, vips_img, metadata, series=series)
-
     if not metadata.is_rgb:
-        if vips_img is not None and "filename" in vips_img.get_fields():
-            src_f = vips_img.get("filename")
-            if src_f.startswith("temp-"):
-                src_f = name
-            else:
-                src_f = name
-
         if has_channel_info:
             metadata.channel_names = [ome_img.pixels.channels[i].name for i in range(metadata.n_channels)]
-            metadata.channel_names = check_channel_names(metadata.channel_names, metadata.is_rgb, metadata.n_channels, src_f=src_f)
+            metadata.channel_names = check_channel_names(metadata.channel_names, metadata.is_rgb, metadata.n_channels, src_f=name)
         else:
-            metadata.channel_names = get_default_channel_names(metadata.n_channels, src_f=src_f)
+            metadata.channel_names = get_default_channel_names(metadata.n_channels, src_f=name)
 
     return metadata
 
@@ -1162,8 +1151,6 @@ class BioFormatsSlideReader(SlideReader):
 
         n_cpu = multiprocessing.cpu_count() - 1
         res = pqdm(range(n_tiles), tile2vips_threaded, n_jobs=n_cpu, unit="tiles", leave=None)
-        # with parallel_backend("threading", n_jobs=n_cpu):
-        #     Parallel()(delayed(tile2vips_threaded)(i) for i in tqdm(range(n_tiles)))
 
         return tile_array
 
@@ -1558,6 +1545,7 @@ class VipsSlideReader(SlideReader):
         self.use_openslide = check_to_use_openslide(self.src_f)
         self.is_ome = check_is_ome(self.src_f)
         self.metadata = self.create_metadata()
+        self.verify_xml()
 
     def create_metadata(self):
 
@@ -1584,8 +1572,7 @@ class VipsSlideReader(SlideReader):
                slide_meta = metadata_from_xml(xml=img_xml,
                                               name=slide_meta.name,
                                               server=server,
-                                              metadata=slide_meta,
-                                              vips_img=vips_img)
+                                              metadata=slide_meta)
             except Exception as e:
                 # print(f"Can't parse xml for {slide_meta.name} due to error {e}")
                 slide_meta = self._get_metadata_vips(slide_meta, vips_img)
@@ -1597,6 +1584,19 @@ class VipsSlideReader(SlideReader):
             slide_meta.channel_names = None
 
         return slide_meta
+
+    def verify_xml(self):
+        vips_img = pyvips.Image.new_from_file(self.src_f)
+        img_xml = self._get_xml(vips_img)
+        if img_xml is not None:
+            try:
+                ome_info = ome_types.from_xml(img_xml, parser=OME_TYPES_PARSER)
+                assert len(ome_info.images) > 0
+            except:
+                return self.metadata
+
+        read_img = self.slide2vips(0)
+        self.metadata = check_xml_img_match(img_xml, read_img, self.metadata, series=self.series)
 
     def _get_metadata_vips(self, slide_meta, vips_img):
         slide_meta.n_channels = vips_img.bands
@@ -2012,23 +2012,27 @@ class FlattenedPyramidReader(VipsSlideReader):
         slide_meta.n_pages = self._get_page_count(vips_img)
 
         img_xml = self._get_xml(vips_img)
+        can_read_xml = False
         if img_xml is not None:
             try:
                slide_meta = metadata_from_xml(xml=img_xml,
                                               name=slide_meta.name,
                                               server=server,
-                                              metadata=slide_meta,
-                                              vips_img=vips_img)
+                                              metadata=slide_meta)
+               can_read_xml = True
             except Exception as e:
                 slide_meta = self._get_metadata_vips(slide_meta, vips_img)
-
-
 
         else:
             slide_meta = self._get_metadata_vips(slide_meta, vips_img)
 
         if slide_meta.is_rgb:
             slide_meta.channel_names = None
+
+        if can_read_xml:
+            # Verify basic info of read image matches xml
+            read_img = self.slide2vips(0)
+            slide_meta = check_xml_img_match(img_xml, read_img, slide_meta, series=self.series)
 
         return slide_meta
 
@@ -2368,47 +2372,6 @@ class CziJpgxrReader(SlideReader):
             vips_img = vips_img.insert(vips_tile, x, y)
 
         return vips_img
-
-    # def _read_mosaic(self, level=0, xywh=None, *args, **kwargs):
-    #     czi_reader = CziFile(self.src_f)
-
-    #     out_shape_wh = self.metadata.slide_dimensions[0]
-    #     tile_bboxes = czi_reader.get_all_mosaic_tile_bounding_boxes(C=0)
-
-    #     tile_bboxes_l = list(tile_bboxes.items())
-    #     vips_img = pyvips.Image.black(*out_shape_wh, bands=self.metadata.n_channels) #+ bg_rgba[0:3]
-
-    #     def _read_tile(idx):
-    #         tile_info, tile_bbox = tile_bboxes_l[idx]
-    #         m = tile_info.m_index
-    #         x = tile_bbox.x
-    #         y = tile_bbox.y
-    #         np_tile, tile_dims = czi_reader.read_image(S=self.series, M=m)
-
-    #         slice_dims = [v - 1 for k, v in tile_dims if k not in ["Y", "X", "A"]]
-
-    #         np_tile = np_tile[(*slice_dims, ...)]
-    #         if self.is_bgr:
-    #             np_tile = np_tile[..., ::-1]
-
-    #         vips_tile = warp_tools.numpy2vips(np_tile)
-    #         vips_img = vips_img.insert(vips_tile, x, y)
-
-    #     n_cpu = multiprocessing.cpu_count() - 1
-    #     n_tiles = len(tile_bboxes_l)
-    #     print(f"Building CZI mosaic for {valtils.get_name(self.src_f)}")
-    #     res = pqdm(range(n_tiles), _read_tile, n_jobs=n_cpu, unit="tiles", leave=None)
-
-    #     # small_img = warp_tools.rescale_img(vips_img, 0.05)
-
-    #     # small_np = small_img.numpy()
-
-    #     # # import matplotlib.pyplot as plt
-
-    #     # plt.imshow(small_np)
-    #     # plt.show()
-
-    #     return vips_img
 
     def slide2vips(self, level=0, xywh=None, *args, **kwargs):
         try:
@@ -3024,9 +2987,8 @@ def check_colormap(colormap, channel_names):
             updated_colormap = np.array([updated_colormap])
         if len(updated_colormap) < len(channel_names):
             msg = f"Not enough colors in colormap. Only {len(updated_colormap)} colors provided, but there are {len(channel_names)} channels"
+            updated_colormap = {channel_names[i]: updated_colormap[i] for i in range(len(channel_names))}
 
-        # updated_colormap = {channel_names[i]:tuple(updated_colormap[i]) for i in range(len(channel_names))}
-            updated_colormap = {channel_names[i]:updated_colormap[i] for i in range(len(channel_names))}
     elif isinstance(colormap, dict):
 
         missing_channels = set(channel_names) - set(colormap.keys())
