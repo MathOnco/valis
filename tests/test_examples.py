@@ -45,7 +45,7 @@ results to determine if they aare acceptable. If they
 are, then one can warp and save all of the slides.
 
 
-docker run -it --rm --name test_examples  -v "$HOME:$HOME" valis-wsi-arm64 python3 /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/tests/test_examples.py
+docker run -it --rm --name test_examples -v "$HOME:$HOME" valis-wsi-mac python3 /Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/tests/test_examples.py
 """
 
 import time

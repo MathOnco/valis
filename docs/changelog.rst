@@ -1,7 +1,7 @@
 Change Log
 **********
 
-Version 1.0.4 (February 1, 2024)
+Version 1.0.4 (February 2, 2024)
 -------------------------------------
 #. Added checks and unit tests to verify reference image is not being warped. Can confirm no transformations were being applied to the reference image, but values may have differed slightly due to interpolation effects, as the reference image was being padded and cropped. To avoid these interpolation effects, the original reference image is returned when "warping" the reference slide with :code:`crop="reference"`, which occurs regardless of the :code:`align_to_reference` setting. This avoids unnecessary computation and potential interpolation errors. There are still checks to make sure that the warped image would have been the same as the unwarped image.
 #. Merge channels based on the position of each slide in the stack. This will be the same as the original order when :code:`imgs_ordered=True`.
@@ -12,6 +12,7 @@ Version 1.0.4 (February 1, 2024)
 #. Added :code:`slide_io.check_xml_img_match` to determine if there are mismatches between the xml metadata and the image that was read. If there are mismatches, the metadata will be updated based on the image (instead of the xml) and warning messages will be printed to let the user know about the mismatch.
 #. If a single channel image does not have channel names in the metadata, the channel name will be set to the image's name.
 #. Added :code:`denoise_rigid` as an argument to initialize the :code:`Valis` object. Determines whether or not to denoise the processed images prior to rigid registration. Had been fixed as True in previous versions, but this makes it optional (default remains True).
+#. Fixed issue where merged images were being interpreted as RGB and saved with extra channels (reported in Github issue `76 <https://github.com/MathOnco/valis/issues/76#issuecomment-1916501989>`_)
 
 Version 1.0.3 (January 25, 2024)
 -------------------------------------

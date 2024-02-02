@@ -75,8 +75,9 @@ ALL_OPENSLIDE_READABLE_FORMATS = [".svs", ".tif", ".vms", ".vmu", ".ndpi", ".scn
 #                            ".nii", ".nii.gz",
 #                            ".dzi" ".xml", ".dcm", ".ome.tiff", ".ome.tif"]
 
-VIPS_READABLE_FORMATS = pyvips.get_suffixes()
-VIPS_READABLE_FORMATS += [".ome.tiff", ".ome.tif", *ALL_OPENSLIDE_READABLE_FORMATS]
+# VIPS_READABLE_FORMATS = pyvips.get_suffixes()
+VIPS_READABLE_FORMATS = [*pyvips.get_suffixes(), *ALL_OPENSLIDE_READABLE_FORMATS, ".ome.tiff", ".ome.tif"]
+# VIPS_READABLE_FORMATS += [".ome.tiff", ".ome.tif", *ALL_OPENSLIDE_READABLE_FORMATS]
 """list: File extensions that libvips can read. See https://github.com/libvips/libvips
 """
 
