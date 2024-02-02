@@ -4769,6 +4769,11 @@ class Valis(object):
 
             all_channel_names.extend(slide_channel_names)
 
+        if merged_slide.bands == 1:
+            merged_slide = merged_slide.copy(interpretation="b-w")
+        else:
+            merged_slide = merged_slide.copy(interpretation="multiband")
+
         assert all_channel_names == expected_channel_order
 
         if colormap is not None:

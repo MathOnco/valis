@@ -2888,7 +2888,7 @@ def get_shape_xyzct(shape_wh, n_channels):
     return xyzct
 
 
-def create_channel(channel_id, name=None, color=None):
+def create_channel(channel_id, name=None, color=None, samples_per_pixel=1):
     """Create an ome-xml channel
 
     Parameters
@@ -2918,6 +2918,7 @@ def create_channel(channel_id, name=None, color=None):
         decoded_name = None
 
     new_channel = ome_types.model.Channel(id=f"Channel:{channel_id}")
+    new_channel.samples_per_pixel = samples_per_pixel
     if name is not None:
         new_channel.name = decoded_name
     if color is not None:
