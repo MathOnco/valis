@@ -1588,15 +1588,17 @@ class VipsSlideReader(SlideReader):
     def verify_xml(self):
         vips_img = pyvips.Image.new_from_file(self.src_f)
         img_xml = self._get_xml(vips_img)
-        if img_xml is not None:
+        if img_xml is not None and not self.use_openslide:
+            # Don't check openslide images, as metadata counts alpha channel
             try:
                 ome_info = ome_types.from_xml(img_xml, parser=OME_TYPES_PARSER)
                 assert len(ome_info.images) > 0
-            except:
-                return self.metadata
 
-        read_img = self.slide2vips(0)
-        self.metadata = check_xml_img_match(img_xml, read_img, self.metadata, series=self.series)
+            except:
+                return None
+
+            read_img = self.slide2vips(0)
+            self.metadata = check_xml_img_match(img_xml, read_img, self.metadata, series=self.series)
 
     def _get_metadata_vips(self, slide_meta, vips_img):
         slide_meta.n_channels = vips_img.bands

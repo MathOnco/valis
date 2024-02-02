@@ -11,6 +11,7 @@ Version 1.0.4 (February 1, 2024)
 #. Updated openCV version in project.toml, as suggested in Github issue `76 <https://github.com/MathOnco/valis/issues/76#issuecomment-1916501989>`_
 #. Added :code:`slide_io.check_xml_img_match` to determine if there are mismatches between the xml metadata and the image that was read. If there are mismatches, the metadata will be updated based on the image (instead of the xml) and warning messages will be printed to let the user know about the mismatch.
 #. If a single channel image does not have channel names in the metadata, the channel name will be set to the image's name.
+#. Added :code:`denoise_rigid` as an argument to initialize the :code:`Valis` object. Determines whether or not to denoise the processed images prior to rigid registration. Had been fixed as True in previous versions, but this makes it optional (default remains True).
 
 Version 1.0.3 (January 25, 2024)
 -------------------------------------

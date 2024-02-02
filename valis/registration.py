@@ -1693,8 +1693,10 @@ class Valis(object):
                  do_rigid=True,
                  crop=None,
                  create_masks=True,
+                 denoise_rigid=True,
                  check_for_reflections=False,
-                 resolution_xyu=None, slide_dims_dict_wh=None,
+                 resolution_xyu=None,
+                 slide_dims_dict_wh=None,
                  max_image_dim_px=DEFAULT_MAX_IMG_DIM,
                  max_processed_image_dim_px=DEFAULT_MAX_PROCESSED_IMG_SIZE,
                  max_non_rigid_registration_dim_px=DEFAULT_MAX_PROCESSED_IMG_SIZE,
@@ -1838,6 +1840,10 @@ class Valis(object):
             Can help focus alignment on the tissue, but can sometimes
             mask too much if there is a lot of variation in the image.
 
+        denoise_rigid : bool, optional
+            Whether or not to denoise processed images before rigid registion.
+            Note that un-denoised images are used in the non-rigid registration
+
         check_for_reflections : bool, optional
             Determine if alignments are improved by relfecting/mirroring/flipping
             images. Optional because it requires re-detecting features in each version
@@ -1975,6 +1981,7 @@ class Valis(object):
         self.rigid_registrar = None
         self.micro_rigid_registrar_cls = micro_rigid_registrar_cls
         self.micro_rigid_registrar_params = micro_rigid_registrar_params
+        self.denoise_rigid = denoise_rigid
 
         self._set_rigid_reg_kwargs(name=name,
                                    feature_detector=feature_detector_cls,
@@ -3042,8 +3049,8 @@ class Valis(object):
             SerialRigidRegistrar object that performed the rigid registration.
 
         """
-        denoise = True
-        if denoise:
+
+        if self.denoise_rigid:
             self.denoise_images()
 
         print("\n==== Rigid registration\n")
@@ -3129,7 +3136,7 @@ class Valis(object):
             slide_obj.xy_matched_to_prev_in_bbox =  slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
             slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
 
-        if denoise:
+        if self.denoise_rigid:
             # Processed image may have been denoised for rigid registration. Replace with unblurred image
             for img_obj in rigid_registrar.img_obj_list:
                 matching_slide = self.slide_dict[img_obj.name]

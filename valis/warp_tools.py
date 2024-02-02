@@ -895,6 +895,7 @@ def pad_img(img, padded_shape):
 
     return padded_img, padding_T
 
+
 def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
              transformation_src_shape_rc=None,
              transformation_dst_shape_rc=None,
@@ -991,6 +992,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
                                                                      bk_dxdy=bk_dxdy)
     if bbox_xywh is not None:
         do_crop = True
+        # Taking ceiling can prevent shifting down & right by 1 pixel when warping images much larger than the one used to find M
         bbox_xywh = np.ceil(bbox_xywh)
     else:
         do_crop = False
