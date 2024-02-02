@@ -10,7 +10,8 @@ import sys
 from valis import registration
 
 
-from valis.slide_tools import *
+# from valis.slide_tools import *
+# from valis.slide_io import *
 
 def get_parent_dir():
     cwd = os.getcwd()
@@ -28,6 +29,7 @@ else:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
 
 
+# from valis.registration import *
 def test_align_min_metadata():
     src_dir = os.path.join(parent_dir, "resources/slides/cycif_no_meta")
     dst_dir = os.path.join(results_dst_dir, "align_min_metadata")

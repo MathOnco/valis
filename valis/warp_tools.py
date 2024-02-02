@@ -895,6 +895,7 @@ def pad_img(img, padded_shape):
 
     return padded_img, padding_T
 
+
 def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
              transformation_src_shape_rc=None,
              transformation_dst_shape_rc=None,
@@ -991,6 +992,8 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
                                                                      bk_dxdy=bk_dxdy)
     if bbox_xywh is not None:
         do_crop = True
+        # Taking ceiling can prevent shifting down & right by 1 pixel when warping images much larger than the one used to find M
+        bbox_xywh = np.ceil(bbox_xywh)
     else:
         do_crop = False
 
@@ -1019,9 +1022,9 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         bg_color = list(bg_color)
 
     interpolator = pyvips.Interpolate.new(interp_method)
+
     if do_rigid:
         if not np.all(src_sxy == 1):
-
             img_corners_xy = get_corners_of_image(src_shape_rc)[:, ::-1]
             warped_corners = warp_xy(img_corners_xy, M=M,
                                      transformation_src_shape_rc=transformation_src_shape_rc,
@@ -1038,6 +1041,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         tx, ty = warp_M[:2, 2]
         warp_M = np.linalg.inv(warp_M)
         vips_M = warp_M[:2, :2].reshape(-1).tolist()
+
         affine_warped = img.affine(vips_M,
             oarea=[0, 0, out_shape_rc[1], out_shape_rc[0]],
             interpolate=interpolator,
@@ -1047,6 +1051,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
             background=bg_color,
             extend=bg_extender
             )
+
     else:
         affine_warped = img
 
@@ -1095,7 +1100,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         warped = affine_warped
 
     if bbox_xywh is not None:
-            warped = warped.extract_area(*bbox_xywh)
+        warped = warped.extract_area(*bbox_xywh)
 
     if is_array:
         warped = vips2numpy(warped)
@@ -2755,21 +2760,6 @@ def get_xy_inside_mask(xy, mask):
 
     keep_idx = np.where(in_mask > 0)[0]
 
-
-    # draw_img = np.dstack([mask]*3)
-    # from skimage import draw
-    # for i in range(xy.shape[0]):
-    #     circ_pos = draw.disk(xy[i][::-1], radius=3)
-    #     if i in keep_idx:
-    #         clr = [0, 255, 0]
-    #     else:
-    #         clr = [255, 0, 0]
-
-    #     draw_img[circ_pos] = clr
-
-    # io.imsave(os.path.join(registrar.dst_dir, f"{slide_obj.name}_pt.png"), draw_img)
-
-
     return keep_idx
 
 
@@ -2896,8 +2886,6 @@ def get_overlapping_poly(mesh_poly_coords):
 
     n_cpu = multiprocessing.cpu_count() - 1
     res = pqdm(range(n_poly), clip_poly, n_jobs=n_cpu, unit="image", leave=None)
-    # with parallel_backend("threading", n_jobs=n_cpu):
-    #     Parallel()(delayed(clip_poly)(i) for i in tqdm.tqdm(range(n_poly)))
 
     return overlapping_poly_list, poly_diffs
 

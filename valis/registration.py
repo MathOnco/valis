@@ -884,13 +884,35 @@ class Slide(object):
                 if crop_method == CROP_REF:
                     ref_slide = self.val_obj.get_ref_slide()
                     scaled_aligned_shape_rc = ref_slide.slide_dimensions_wh[level][::-1]
+
                 elif crop_method == CROP_OVERLAP:
                     scaled_aligned_shape_rc = aligned_slide_shape
 
                 slide_bbox_xywh, _ = self.get_crop_xywh(crop=crop_method,
                                                         out_shape_rc=scaled_aligned_shape_rc)
+
                 if crop_method == CROP_REF:
-                    assert np.all(slide_bbox_xywh[2:]==scaled_aligned_shape_rc[::-1])
+                    assert np.all(slide_bbox_xywh[2:] == scaled_aligned_shape_rc[::-1])
+                    if src_f == self.src_f and self == ref_slide:
+                        # Shouldn't need to warp, but do checks just in case
+                        no_rigid = True
+                        no_non_rigid = True
+                        if self.M is not None:
+                            sxy = (scaled_aligned_shape_rc/self.processed_img_shape_rc)[::-1]
+                            scaled_txy = sxy*self.M[:2, 2]
+                            no_transforms = all(self.M[:2, :2].reshape(-1) == [1, 0, 0, 1])
+                            crop_to_origin = np.all(np.abs(slide_bbox_xywh[0:2] + scaled_txy) < 1)
+                            no_rigid = no_transforms and crop_to_origin
+
+                        if self.bk_dxdy is not None:
+                            no_non_rigid = self.bk_dxdy.min() == 0 and self.bk_dxdy.max() == 0
+
+                        if no_rigid and no_non_rigid:
+                            # Don't need to warp, so return original reference image
+                            ref_img = self.reader.slide2vips(level=level)
+                            return ref_img
+                        # else:
+                        #     print("unexpectedly have to warp reference image. This may be due to an error")
             else:
                 slide_bbox_xywh = None
 
@@ -983,6 +1005,7 @@ class Slide(object):
         pyramid : bool
             Whether or not to save an image pyramid.
         """
+
         if src_f is None:
             src_f = self.src_f
 
@@ -1670,8 +1693,10 @@ class Valis(object):
                  do_rigid=True,
                  crop=None,
                  create_masks=True,
+                 denoise_rigid=True,
                  check_for_reflections=False,
-                 resolution_xyu=None, slide_dims_dict_wh=None,
+                 resolution_xyu=None,
+                 slide_dims_dict_wh=None,
                  max_image_dim_px=DEFAULT_MAX_IMG_DIM,
                  max_processed_image_dim_px=DEFAULT_MAX_PROCESSED_IMG_SIZE,
                  max_non_rigid_registration_dim_px=DEFAULT_MAX_PROCESSED_IMG_SIZE,
@@ -1815,6 +1840,10 @@ class Valis(object):
             Can help focus alignment on the tissue, but can sometimes
             mask too much if there is a lot of variation in the image.
 
+        denoise_rigid : bool, optional
+            Whether or not to denoise processed images before rigid registion.
+            Note that un-denoised images are used in the non-rigid registration
+
         check_for_reflections : bool, optional
             Determine if alignments are improved by relfecting/mirroring/flipping
             images. Optional because it requires re-detecting features in each version
@@ -1883,8 +1912,12 @@ class Valis(object):
 
         """
 
+        # Get name, based on src directory
         if name is None:
-            name = os.path.split(src_dir)[1]
+            if src_dir.endswith(os.path.sep):
+                name = os.path.split(src_dir[:-1])[1]
+            else:
+                name = os.path.split(src_dir)[1]
         self.name = name.replace(" ", "_")
 
         # Set paths #
@@ -1948,6 +1981,7 @@ class Valis(object):
         self.rigid_registrar = None
         self.micro_rigid_registrar_cls = micro_rigid_registrar_cls
         self.micro_rigid_registrar_params = micro_rigid_registrar_params
+        self.denoise_rigid = denoise_rigid
 
         self._set_rigid_reg_kwargs(name=name,
                                    feature_detector=feature_detector_cls,
@@ -3015,8 +3049,8 @@ class Valis(object):
             SerialRigidRegistrar object that performed the rigid registration.
 
         """
-        denoise = True
-        if denoise:
+
+        if self.denoise_rigid:
             self.denoise_images()
 
         print("\n==== Rigid registration\n")
@@ -3102,7 +3136,7 @@ class Valis(object):
             slide_obj.xy_matched_to_prev_in_bbox =  slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
             slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
 
-        if denoise:
+        if self.denoise_rigid:
             # Processed image may have been denoised for rigid registration. Replace with unblurred image
             for img_obj in rigid_registrar.img_obj_list:
                 matching_slide = self.slide_dict[img_obj.name]
@@ -4507,7 +4541,7 @@ class Valis(object):
                              crop=True,
                              colormap=slide_io.CMAP_AUTO,
                              interp_method="bicubic",
-                             tile_wh=None, compression="lzw", Q=100):
+                             tile_wh=None, compression="lzw", Q=100, pyramid=True):
 
         f"""Warp and save all slides
 
@@ -4556,19 +4590,36 @@ class Valis(object):
         """
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
-        for slide_obj in tqdm.tqdm(self.slide_dict.values(), desc=SAVING_IMG_MSG, unit="image"):
+        src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
+
+        cmap_is_str = False
+        named_color_map = None
+        if colormap is not None:
+            if isinstance(colormap, str) and colormap == slide_io.CMAP_AUTO:
+                cmap_is_str = True
+            else:
+                named_color_map = {self.get_slide(x).name:colormap[x] for x in colormap.keys()}
+
+        for src_f in tqdm.tqdm(src_f_list, desc=SAVING_IMG_MSG, unit="image"):
+            slide_obj = self.get_slide(src_f)
             slide_cmap = None
             is_rgb = slide_obj.reader.metadata.is_rgb
-            if colormap is not None and not is_rgb:
+            if is_rgb:
+                updated_channel_names = None
+            elif colormap is not None:
                 chnl_names = slide_obj.reader.metadata.channel_names
                 updated_channel_names = slide_io.check_channel_names(chnl_names, is_rgb, nc=slide_obj.reader.metadata.n_channels)
                 try:
-                    colormap = slide_io.check_colormap(colormap, updated_channel_names)
+                    if not cmap_is_str and named_color_map is not None:
+                        slide_cmap = named_color_map[slide_obj.name]
+                    else:
+                        slide_cmap = colormap
+
+                    slide_cmap = slide_io.check_colormap(colormap=slide_cmap, channel_names=updated_channel_names)
                 except Exception as e:
                     traceback_msg = traceback.format_exc()
                     msg = f"Could not create colormap for the following reason:{e}"
                     valtils.print_warning(msg, traceback_msg=traceback_msg)
-
 
             dst_f = os.path.join(dst_dir, slide_obj.name + ".ome.tiff")
 
@@ -4578,7 +4629,12 @@ class Valis(object):
                                           src_f=slide_obj.src_f,
                                           interp_method=interp_method,
                                           colormap=slide_cmap,
-                                          tile_wh=tile_wh, compression=compression, Q=Q)
+                                          tile_wh=tile_wh,
+                                          compression=compression,
+                                          channel_names=updated_channel_names,
+                                          Q=Q,
+                                          pyramid=pyramid)
+
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_merge_slides(self, dst_f=None, level=0, non_rigid=True,
@@ -4667,12 +4723,13 @@ class Valis(object):
                                         for slide_obj in self.slide_dict.values()}
 
         if src_f_list is None:
-            src_f_list = self.original_img_list
+            # Save in the sorted order. Will still be original order if imgs_ordered= True
+            src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
 
         all_channel_names = []
         merged_slide = None
 
-        expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in self.original_img_list]))
+        expected_channel_order = list(chain.from_iterable([channel_name_dict_by_name[valtils.get_name(f)] for f in src_f_list]))
         if drop_duplicates:
             expected_channel_order = list(dict.fromkeys(expected_channel_order))
 
@@ -4711,6 +4768,11 @@ class Valis(object):
                 merged_slide = merged_slide.bandjoin(warped_slide)
 
             all_channel_names.extend(slide_channel_names)
+
+        if merged_slide.bands == 1:
+            merged_slide = merged_slide.copy(interpretation="b-w")
+        else:
+            merged_slide = merged_slide.copy(interpretation="multiband")
 
         assert all_channel_names == expected_channel_order
 
