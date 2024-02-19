@@ -491,9 +491,13 @@ class SerialRigidRegistrar(object):
 
         out_w, out_h = get_max_image_dimensions(sorted_img_list)
 
-        # Get dimensions if images were rotated 45 degrees or 90 degrees
-        max_new_w = out_w*np.cos(45) + out_h*np.sin(45)
-        max_new_h = out_w*np.sin(45) + out_h*np.cos(45)
+        # Get dimensions if images were rotated 45 degrees
+        # max_new_w = out_w*np.cos(45) + out_h*np.sin(45)
+        # max_new_h = out_w*np.sin(45) + out_h*np.cos(45)
+
+        rad_45 = np.deg2rad(45)
+        max_new_w = out_w*np.cos(rad_45) + out_h*np.sin(rad_45)
+        max_new_h = out_w*np.sin(rad_45) + out_h*np.cos(rad_45)
 
         max_dist = np.ceil(np.max([out_w, out_h, max_new_h, max_new_w])).astype(int)
         out_shape = (max_dist, max_dist)

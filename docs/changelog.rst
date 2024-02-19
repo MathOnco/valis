@@ -1,6 +1,11 @@
 Change Log
 **********
 
+Version 1.0.5
+-------------------------------------
+#. Passing radians to :code:`np.cos` and :code:`np.sin` when determining how much to pad images, as noted in `Github issue 103 <https://github.com/MathOnco/valis/issues/103>`_. These images get cropped, so this should not affect registration accuracy.
+
+
 Version 1.0.4 (February 2, 2024)
 -------------------------------------
 #. Added checks and unit tests to verify reference image is not being warped. Can confirm no transformations were being applied to the reference image, but values may have differed slightly due to interpolation effects, as the reference image was being padded and cropped. To avoid these interpolation effects, the original reference image is returned when "warping" the reference slide with :code:`crop="reference"`, which occurs regardless of the :code:`align_to_reference` setting. This avoids unnecessary computation and potential interpolation errors. There are still checks to make sure that the warped image would have been the same as the unwarped image.
