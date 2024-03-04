@@ -141,6 +141,7 @@ def load_registrar(src_f):
         Valis object used for registration
 
     """
+
     registrar = pickle.load(open(src_f, 'rb'))
 
     data_dir = registrar.data_dir
@@ -1944,6 +1945,8 @@ class Valis(object):
 
         self.check_for_duplicated_names(self.original_img_list)
 
+        # valtils.sort_nicely(self.original_img_list)
+
         self.set_dst_paths()
 
         # Some information may already be provided #
@@ -3091,13 +3094,12 @@ class Valis(object):
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
 
         # Create original overlap image #
-        self.original_overlap_img = self.create_original_composite_img(rigid_registrar)
-
         pathlib.Path(self.overlap_dir).mkdir(exist_ok=True, parents=True)
+        self.original_overlap_img = self.create_original_composite_img(rigid_registrar)
         original_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_original_overlap.png")
         warp_tools.save_img(original_overlap_img_fout,  self.original_overlap_img, thumbnail_size=self.thumbnail_size)
 
-        pathlib.Path(self.reg_dst_dir).mkdir(exist_ok=  True, parents=  True)
+        pathlib.Path(self.reg_dst_dir).mkdir(exist_ok=True, parents=True)
         # Update attributes in slide_obj #
         n_digits = len(str(rigid_registrar.size))
         for slide_reg_obj in rigid_registrar.img_obj_list:
@@ -4797,9 +4799,10 @@ class Valis(object):
             pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
             ref_slide = self.get_ref_slide()
-            tile_wh = slide_io.get_tile_wh(reader=ref_slide.reader,
-                                level=level,
-                                out_shape_wh=out_xyczt[0:2])
+            if tile_wh is None:
+                tile_wh = slide_io.get_tile_wh(reader=ref_slide.reader,
+                                    level=level,
+                                    out_shape_wh=out_xyczt[0:2])
 
             slide_io.save_ome_tiff(merged_slide, dst_f=dst_f,
                                    ome_xml=ome_xml,tile_wh=tile_wh,
