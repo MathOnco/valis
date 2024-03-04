@@ -555,7 +555,7 @@ class SerialRigidRegistrar(object):
                                          additional_filtering_kwargs=filter_kwargs)
 
             if len(filtered_match_info12.matched_kp1_xy) == 0:
-                warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} between {img_obj_1.name} and {img_obj_2.name}")
+                warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} matches between {img_obj_1.name} and {img_obj_2.name}")
 
             # Update match dictionaries
             if keep_unfiltered:

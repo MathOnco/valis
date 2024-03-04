@@ -1849,7 +1849,12 @@ class VipsSlideReader(SlideReader):
     def _get_slide_dimensions_ometiff(self, vips_img, *args):
 
         if "n-subifds" not in vips_img.get_fields():
-            return self._get_slide_dimensions_vips(vips_img)
+            # non-pyramid ome.tiff
+            slide_dims_wh = self._get_slide_dimensions_vips(vips_img)
+            _, unique_dim_idx = np.unique(slide_dims_wh, axis=0, return_index=True)
+            slide_dims_wh = np.array([slide_dims_wh[i] for i in sorted(unique_dim_idx)])
+
+            return slide_dims_wh
 
         n_levels = vips_img.get("n-subifds") + 1
         slide_dims_wh = [None] * n_levels
@@ -3141,10 +3146,11 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
     return new_ome
 
 
-def get_tile_wh(reader, level, out_shape_wh):
+def get_tile_wh(reader, level, out_shape_wh, default_wh=512):
     """Get tile width and height to write image
+    If predefined optimal tile wh is too large, will try to
+    find the size that minimizes the overhangs
     """
-    default_wh = 1024
 
     if reader.metadata is None:
         tile_wh = default_wh
@@ -3161,8 +3167,18 @@ def get_tile_wh(reader, level, out_shape_wh):
         tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
         if tile_wh < 16:
             tile_wh = 16
-        if np.any(np.array(out_shape_wh[0:2]) < tile_wh):
-            tile_wh = min(out_shape_wh[0:2])
+
+    if np.any(np.array(out_shape_wh[0:2]) < tile_wh):
+        # Tile is too big for the image
+        if tile_wh < default_wh:
+            min_wh = 16
+        else:
+            min_wh = default_wh
+
+        max_tile_exp = np.floor(np.log2(np.min(out_shape_wh)))
+        possible_wh = 2**np.arange(np.log2(min_wh), max_tile_exp+1)
+        overhangs = [np.max(np.ceil(out_shape_wh/wh)*wh - out_shape_wh) for wh in possible_wh]
+        tile_wh = int(possible_wh[np.argmin(overhangs)])
 
     return tile_wh
 
@@ -3369,7 +3385,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                   tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
 
 
-def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=100, pyramid=True):
+def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression="lzw", Q=100, pyramid=True):
     """Save an image in the ome.tiff format using pyvips
 
     Parameters
@@ -3497,7 +3513,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
     # Write image #
     tile_wh = tile_wh - (tile_wh % 16)  # Tile shape must be multiple of 16
 
-    if max(xyzct[0:2]) < tile_wh:
+    if min(xyzct[0:2]) < tile_wh:
         tile = False
     else:
         tile = True
@@ -3514,9 +3530,10 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw", Q=1
 
     lossless = Q == 100
     rgbjpeg = compression in ["jp2k", "jpeg"] and img.interpretation == "srgb"
+    subifd = pyramid # a pyramid will still be created if subifd = True and pyramid = False
     img.tiffsave(dst_f, compression=compression, tile=tile,
                  tile_width=tile_wh, tile_height=tile_wh,
-                 pyramid=pyramid, subifd=True, bigtiff=True,
+                 pyramid=pyramid, subifd=subifd, bigtiff=True,
                  lossless=lossless, Q=Q, rgbjpeg=rgbjpeg)
 
     # Print total time to completion #
