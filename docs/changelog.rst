@@ -4,7 +4,10 @@ Change Log
 Version 1.0.5
 -------------------------------------
 #. Passing radians to :code:`np.cos` and :code:`np.sin` when determining how much to pad images, as noted in `Github issue 103 <https://github.com/MathOnco/valis/issues/103>`_. These images get cropped, so this should not affect registration accuracy.
-
+#. Can now read ome.tiff that do not have a SUBIFD, reported in Github issue `101 <https://github.com/MathOnco/valis/issues/101>`_
+#. Improved saving of non-pyarmid images, related to Github issue `101 <https://github.com/MathOnco/valis/issues/101>`_
+#. Addressed error when creating an overlap image when aligning more than 360 images (e-mailed issue. TODO CREATE Github issue). Will now create grayscale image based on each pixels' average
+#. Updated code to ensure merged images have channels in the same order as when sorted or specified.
 
 Version 1.0.4 (February 2, 2024)
 -------------------------------------

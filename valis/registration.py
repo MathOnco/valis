@@ -1945,7 +1945,7 @@ class Valis(object):
 
         self.check_for_duplicated_names(self.original_img_list)
 
-        # valtils.sort_nicely(self.original_img_list)
+        valtils.sort_nicely(self.original_img_list)
 
         self.set_dst_paths()
 
@@ -2472,20 +2472,30 @@ class Valis(object):
             min_c = min(warped_corners_xy[:, 0].min(), min_c)
             max_c = max(warped_corners_xy[:, 0].max(), max_c)
 
-        composite_img = np.dstack(composite_img_list)
-        cmap = viz.jzazbz_cmap()
-        channel_colors = viz.get_n_colors(cmap, composite_img.shape[2])
-        overlap_img = viz.color_multichannel(composite_img, channel_colors,
-                                             rescale_channels=True,
-                                             normalize_by="channel",
-                                             cspace="CAM16UCS")
+        # composite_img = np.dstack(composite_img_list)
 
+        # channel_colors = viz.get_n_colors(cmap, composite_img.shape[2])
+        # overlap_img = viz.color_multichannel(composite_img, channel_colors,
+        #                                      rescale_channels=True,
+        #                                      normalize_by="channel",
+        #                                      cspace="CAM16UCS")
+
+        # cmap = viz.jzazbz_cmap()
+        overlap_img = self.draw_overlap_img(composite_img_list)
+        # overlap_img = self.draw_overlap_img([warp_tools.numpy2vips(x) for x in composite_img_list])
+        # from valis.viz import *
         min_r = int(min_r)
         max_r = int(np.ceil(max_r))
         min_c = int(min_c)
         max_c = int(np.ceil(max_c))
         overlap_img = overlap_img[min_r:max_r, min_c:max_c]
-        overlap_img = (255*overlap_img).astype(np.uint8)
+
+        # cmap = viz.jzazbz_cmap()
+        # l_overlap_img = viz.create_overlap_img(img_list=[warp_tools.numpy2vips(x) for x in composite_img_list], cmap=cmap)
+        # import matplotlib.pyplot as plt
+        # plt.imshow(l_overlap_img)
+        # plt.show()
+        # overlap_img = (255*overlap_img).astype(np.uint8)
 
         return overlap_img
 
@@ -2748,22 +2758,46 @@ class Valis(object):
 
         return thumbnail
 
+    # def draw_overlap_img(self, img_list):
+    #     """Create image showing the overlap of registered images
+    #     """
+    #     cmap = viz.jzazbz_cmap()
+    #     n_clrs = cmap.shape[0]
+    #     if n_clrs < self.size:
+    #         print("large number of channels in composite. Will take average of each channel")
+    #         # Large number of channels, so just take mean. Take running average to keep memory down
+    #         running_mean_img = img_list[0]/img_list[0].max()
+    #         for i in range(1, len(img_list)):
+    #             running_mean_img = running_mean_img + (img_list[i]/img_list[i].max() - running_mean_img)/(i+1)
+
+    #         overlap_img = np.dstack([running_mean_img]*3)
+
+    #     else:
+    #         composite_img = np.dstack(img_list)
+    #         channel_colors = viz.get_n_colors(cmap, composite_img.shape[2])
+
+    #         overlap_img = viz.color_multichannel(composite_img, channel_colors,
+    #                                             rescale_channels=True,
+    #                                             normalize_by="channel",
+    #                                             cspace="CAM16UCS")
+
+    #     overlap_img = exposure.equalize_adapthist(overlap_img)
+    #     overlap_img = exposure.rescale_intensity(overlap_img, out_range=(0, 255)).astype(np.uint8)
+
+    #     return overlap_img
+
+
     def draw_overlap_img(self, img_list):
         """Create image showing the overlap of registered images
         """
-
-        composite_img = np.dstack(img_list)
         cmap = viz.jzazbz_cmap()
-        channel_colors = viz.get_n_colors(cmap, composite_img.shape[2])
-        overlap_img = viz.color_multichannel(composite_img, channel_colors,
-                                             rescale_channels=True,
-                                             normalize_by="channel",
-                                             cspace="CAM16UCS")
-
+        overlap_img = viz.create_overlap_img(img_list, cmap=cmap, blending="weighted")
         overlap_img = exposure.equalize_adapthist(overlap_img)
         overlap_img = exposure.rescale_intensity(overlap_img, out_range=(0, 255)).astype(np.uint8)
 
         return overlap_img
+
+
 
     def get_ref_img_mask(self, rigid_registrar):
         """Create mask that covers reference image
@@ -3075,6 +3109,14 @@ class Valis(object):
         self.end_rigid_time = time()
         self.rigid_registrar = rigid_registrar
 
+        print("Dumping rigid")
+        pathlib.Path(self.data_dir).mkdir(exist_ok=True,  parents=True)
+        f_out = os.path.join(self.data_dir, self.name + "_registrar_with_rigid.pickle")
+        self.rigid_reg_kwargs["feature_detector"] = None
+        self.reg_f = f_out
+        pickle.dump(self, open(f_out, 'wb'))
+
+
         if rigid_registrar is False:
             msg = "Rigid registration failed"
             valtils.print_warning(msg, rgb=Fore.RED)
@@ -3135,7 +3177,7 @@ class Valis(object):
                 warp_tools.get_pts_in_bbox(current_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
 
             matched_kp_in_bbox = np.intersect1d(prev_kp_in_bbox_idx, current_kp_in_bbox_idx)
-            slide_obj.xy_matched_to_prev_in_bbox =  slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
+            slide_obj.xy_matched_to_prev_in_bbox = slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
             slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
 
         if self.denoise_rigid:
@@ -3147,7 +3189,8 @@ class Valis(object):
                 img_obj.image = matching_slide.processed_img
 
         rigid_img_list = [img_obj.registered_img for img_obj in rigid_registrar.img_obj_list]
-        self.rigid_overlap_img = self.draw_overlap_img(rigid_img_list)
+        self.rigid_overlap_img = self.draw_overlap_img(img_list=rigid_img_list)
+        # self.rigid_overlap_img = overlap_img
         self.rigid_overlap_img = warp_tools.crop_img(self.rigid_overlap_img, overlap_mask_bbox_xywh)
 
         rigid_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_rigid_overlap.png")
@@ -3156,16 +3199,20 @@ class Valis(object):
         # Overwrite black and white processed images #
         for slide_name, slide_obj in self.slide_dict.items():
             slide_reg_obj = rigid_registrar.img_obj_dict[slide_name]
+
             if not slide_obj.is_rgb:
                 img_to_warp = slide_reg_obj.image
             else:
                 img_to_warp = slide_obj.image
             img_to_warp = warp_tools.resize_img(img_to_warp, slide_obj.processed_img_shape_rc)
             warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=self.crop)
+            # warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=overlap_mask_bbox_xywh)
             warp_tools.save_img(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8), thumbnail_size=self.thumbnail_size)
 
             # Replace processed image with a thumbnail #
             warp_tools.save_img(slide_obj.processed_img_f, slide_reg_obj.image, thumbnail_size=self.thumbnail_size)
+        print("Re-dumping rigid with saved info")
+        pickle.dump(self, open(f_out, 'wb'))
 
         return rigid_registrar
 
@@ -3369,8 +3416,13 @@ class Valis(object):
         else:
             vips_dxdy = dxdy
 
-        full_dxdy = pyvips.Image.black(out_shape_rc[1], out_shape_rc[0], bands=2).cast("float")
-        full_dxdy = full_dxdy.insert(vips_dxdy, *bbox_xywh[0:2])
+        # full_dxdy = pyvips.Image.black(out_shape_rc[1], out_shape_rc[0], bands=2).cast("float")
+        # full_dxdy = full_dxdy.insert(vips_dxdy, *bbox_xywh[0:2])
+        print("embedding")
+        full_dxdy = vips_dxdy.embed(bbox_xywh[0], bbox_xywh[1],
+                            out_shape_rc[1], out_shape_rc[0],
+                            extend=pyvips.enums.Extend.BLACK,
+                            background=[0,0])
 
         if is_array:
             full_dxdy = warp_tools.vips2numpy(full_dxdy)
@@ -3747,10 +3799,28 @@ class Valis(object):
             pathlib.Path(d).mkdir(exist_ok=True, parents=True)
         self.non_rigid_registrar = non_rigid_registrar
 
+        print("CLEAN UP BLOCK")
+        # from pprint import pprint
+        # from copy import deepcopy
+
+
+        print("Dumping non-rigid but no params in slides")
+        non_rigid_registrar.src["mask_list"] = []
+        for nr_obj in non_rigid_registrar.non_rigid_obj_list:
+            nr_obj.mask = None
+
+        pathlib.Path(self.data_dir).mkdir(exist_ok=True,  parents=True)
+        f_out = os.path.join(self.data_dir, self.name + "_registrar_with_non_rigid_but_no_data.pickle")
+        self.reg_f = f_out
+        pickle.dump(self, open(f_out, 'wb'))
+        print("Done")
+
 
         # Clean up displacements and expand if mask was used
+        # Crashing here
         for nr_name, nr_obj in non_rigid_registrar.non_rigid_obj_dict.items():
             if nr_on_scaled_img:
+                print(nr_obj.name)
                 # If a mask was used, the displacement fields will be smaller
                 # So need to insert them in the full image
                 bk_dxdy = self.pad_displacement(nr_obj.bk_dxdy, full_out_shape_rc, mask_bbox_xywh)
@@ -4537,6 +4607,12 @@ class Valis(object):
 
         return aligned_out_shape_rc
 
+    def get_sorted_img_f_list(self):
+        img_idx = [slide_obj.stack_idx for slide_obj in self.slide_dict.values()]
+        img_order = np.argsort(img_idx)
+        src_f_list = [self.original_img_list[i] for i in img_order]
+
+        return src_f_list
 
     @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
     def warp_and_save_slides(self, dst_dir, level=0, non_rigid=True,
@@ -4592,7 +4668,8 @@ class Valis(object):
         """
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
-        src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
+        # src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
+        src_f_list = self.get_sorted_img_f_list()
 
         cmap_is_str = False
         named_color_map = None
@@ -4726,7 +4803,8 @@ class Valis(object):
 
         if src_f_list is None:
             # Save in the sorted order. Will still be original order if imgs_ordered= True
-            src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
+            # src_f_list = [self.original_img_list[slide_obj.stack_idx] for slide_obj in self.slide_dict.values()]
+            src_f_list = self.get_sorted_img_f_list()
 
         all_channel_names = []
         merged_slide = None
