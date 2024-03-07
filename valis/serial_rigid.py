@@ -1419,7 +1419,6 @@ class SerialRigidRegistrar(object):
         return summary_df
 
 
-
 def register_images(img_dir, dst_dir=None, name="registrar",
                     feature_detector=VggFD(),
                     matcher=Matcher(), transformer=EuclideanTransform(),
