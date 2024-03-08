@@ -84,6 +84,12 @@ class ImageProcesser(object):
 
         self.reader = reader
 
+        self.original_shape_rc = warp_tools.get_shape(image)[0:2] # Size of image passed into processor
+        self.uncropped_shape_rc = None # Size of uncropped image (bigger than `original_shape_rc`)
+        self.crop_bbox = None # bbox (x, y, w, h) of cropped area
+        self.cropped = False
+
+
     def create_mask(self):
         return np.full(self.image.shape[0:2], 255, dtype=np.uint8)
 

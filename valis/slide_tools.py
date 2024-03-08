@@ -195,6 +195,16 @@ def get_slide_extension(src_f):
 
 
 
+def get_level_idx(dims_wh, max_dim):
+    possible_levels = np.where(np.max(dims_wh, axis=1) <= max_dim)[0]
+    if len(possible_levels):
+        level = possible_levels[0]
+    else:
+        level = len(dims_wh) - 1
+
+    return level
+
+
 def get_img_type(img_f):
     """Determine if file is a slide or an image
 

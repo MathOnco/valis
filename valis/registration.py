@@ -391,6 +391,12 @@ class Slide(object):
 
         self.is_empty = self.check_if_empty(image)
 
+        self.processed_crop_bbox = None
+        self.uncropped_processed_img_shape_rc = None
+        self.rigid_cropped = False
+        self.M_for_cropped = None
+        self.rigid_reg_cropped_shape_rc = None
+
     def check_if_empty(self, img):
         """Check if the image is empty
 
@@ -1439,7 +1445,20 @@ class Slide(object):
 
         return warped_geojson
 
+    def pad_cropped_processed_img(self):
+        """
+        Pad cropped processed image to have original dimensions
+        """
+        vips_img = warp_tools.numpy2vips(self.processed_img)
 
+        padded = vips_img.embed(self.processed_crop_bbox[0], self.processed_crop_bbox[1],
+                    self.uncropped_processed_img_shape_rc[1], self.uncropped_processed_img_shape_rc[0],
+                    extend=pyvips.enums.Extend.BLACK
+                    )
+        scaled_padded = warp_tools.resize_img(padded, self.processed_img_shape_rc)
+        scaled_padded_np = warp_tools.vips2numpy(scaled_padded)
+
+        return scaled_padded_np
 class Valis(object):
     """Reads, registers, and saves a series of slides/images
 
@@ -2385,11 +2404,14 @@ class Valis(object):
             slide_name = valtils.get_name(f)
             reader = named_reader_dict[slide_name]
             slide_dims = reader.metadata.slide_dimensions
-            levels_in_range = np.where(slide_dims.max(axis=1) < self.max_image_dim_px)[0]
+            levels_in_range = np.where(slide_dims.max(axis=1) <= self.max_image_dim_px)[0]
+
             if len(levels_in_range) > 0:
-                level = levels_in_range[0]
+                # level = levels_in_range[0]
+                level = levels_in_range[0] - 1
             else:
                 level = len(slide_dims) - 1
+                # level = slide_dims.shape[0] - 2
 
             vips_img = reader.slide2vips(level=level)
 
@@ -2426,6 +2448,7 @@ class Valis(object):
             img_types.append(slide_obj.img_type)
             self.slide_dict[slide_obj.name] = slide_obj
             self.size += 1
+
 
         if self.image_type is None:
             unique_img_types = list(set(img_types))
@@ -2475,6 +2498,7 @@ class Valis(object):
         max_c = 0
         composite_img_list = [None] * self.size
 
+        # thumbnail_s = np.min(self.thumbnail_size/np.array(rigid_registrar.img_obj_list[0].padded_shape_rc))
         thumbnail_s = np.min(self.thumbnail_size/np.array(rigid_registrar.img_obj_list[0].padded_shape_rc))
         for i, img_obj in enumerate(rigid_registrar.img_obj_list):
             img = img_obj.image
@@ -2500,7 +2524,8 @@ class Valis(object):
         #                                      cspace="CAM16UCS")
 
         # cmap = viz.jzazbz_cmap()
-        overlap_img = self.draw_overlap_img(composite_img_list)
+        overlap_img = self.draw_overlap_img(img_list=composite_img_list)
+
         # overlap_img = self.draw_overlap_img([warp_tools.numpy2vips(x) for x in composite_img_list])
         # from valis.viz import *
         min_r = int(min_r*thumbnail_s)
@@ -2509,6 +2534,8 @@ class Valis(object):
         max_c = int(np.ceil(max_c*thumbnail_s))
         overlap_img = overlap_img[min_r:max_r, min_c:max_c]
 
+        # plt.imshow(overlap_img)
+        # plt.show()
         # cmap = viz.jzazbz_cmap()
         # l_overlap_img = viz.create_overlap_img(img_list=[warp_tools.numpy2vips(x) for x in composite_img_list], cmap=cmap)
         # import matplotlib.pyplot as plt
@@ -2637,7 +2664,8 @@ class Valis(object):
 
             levels_in_range = np.where(slide_obj.slide_dimensions_wh.max(axis=1) < self.max_processed_image_dim_px)[0]
             if len(levels_in_range) > 0:
-                level = levels_in_range[0]
+                # level = levels_in_range[0]
+                level = levels_in_range[0] - 1
             else:
                 level = len(slide_obj.slide_dimensions_wh) - 1
 
@@ -2665,8 +2693,8 @@ class Valis(object):
 
                 # Slice region from slide and process too
                 mask = processor.create_mask()
-                if not np.all(mask.shape == processed_img.shape[0:2]):
-                    mask = warp_tools.resize_img(mask, processed_img.shape[0:2], interp_method="nearest")
+                if not np.all(mask.shape == processor.original_shape_rc):
+                    mask = warp_tools.resize_img(mask, processor.original_shape_rc, interp_method="nearest")
 
                 slide_obj.rigid_reg_mask = mask
 
@@ -2682,14 +2710,25 @@ class Valis(object):
                 warp_tools.save_img(outline_f_out, thumbnail_mask_outline)
 
             else:
-                mask = np.full(processed_img.shape, 255, dtype=np.uint8)
+                # mask = np.full(processed_img.shape, 255, dtype=np.uint8)
+                mask = np.full(processor.original_shape_rc, 255, dtype=np.uint8)
 
             slide_obj.rigid_reg_mask = mask
             slide_obj.processed_img = processed_img
 
             processed_f_out = os.path.join(self.processed_dir, slide_obj.name + ".png")
             slide_obj.processed_img_f = processed_f_out
-            slide_obj.processed_img_shape_rc = np.array(processed_img.shape[0:2])
+            # slide_obj.processed_img_shape_rc = np.array(processed_img.shape[0:2])
+            slide_obj.processed_img_shape_rc = np.array(processor.original_shape_rc)
+            if hasattr(processor, "cropped") and processor.cropped:
+                slide_obj.rigid_cropped = True
+                slide_obj.uncropped_processed_img_shape_rc = processor.uncropped_shape_rc
+                slide_obj.processed_crop_bbox = processor.crop_bbox
+            else:
+                slide_obj.rigid_cropped = False
+                slide_obj.uncropped_processed_img_shape_rc = processor.original_shape_rc
+                slide_obj.processed_crop_bbox = np.array([0, 0, processor.original_shape_rc[::-1]])
+
             warp_tools.save_img(processed_f_out, processed_img)
 
             img_for_stats = processed_img.reshape(-1)
@@ -2710,6 +2749,21 @@ class Valis(object):
 
             self.normalize_images(target_stats)
 
+    def crop_rigid_reg_mask(self, slide_obj, mask=None):
+        if mask is None:
+            mask = slide_obj.rigid_reg_mask
+
+        if not slide_obj.rigid_cropped:
+            return mask
+
+        vips_mask = warp_tools.numpy2vips(mask)
+        scaled_mask = warp_tools.resize_img(vips_mask, slide_obj.uncropped_processed_img_shape_rc, interp_method="nearest")
+        cropped_mask = scaled_mask.extract_area(*slide_obj.processed_crop_bbox)
+        if isinstance(mask, np.ndarray):
+            cropped_mask = warp_tools.vips2numpy(cropped_mask)
+
+        return cropped_mask
+
     def denoise_images(self):
         for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values(), desc=DENOISE_MSG, unit="image")):
             if slide_obj.rigid_reg_mask is None:
@@ -2723,6 +2777,7 @@ class Valis(object):
             else:
                 denoise_mask = slide_obj.rigid_reg_mask
 
+            denoise_mask = self.crop_rigid_reg_mask(slide_obj=slide_obj, mask=denoise_mask)
             denoised = preprocessing.denoise_img(slide_obj.processed_img, mask=denoise_mask)
             warp_tools.save_img(slide_obj.processed_img_f, denoised)
 
@@ -2749,7 +2804,7 @@ class Valis(object):
             normed_img = exposure.rescale_intensity(normed_img, out_range=(0, 255)).astype(np.uint8)
             slide_obj.processed_img = normed_img
 
-            slide_obj.processed_img_shape_rc = np.array(normed_img.shape[0:2])
+            # slide_obj.processed_img_shape_rc = np.array(normed_img.shape[0:2])
             warp_tools.save_img(slide_obj.processed_img_f, normed_img)
 
     def create_thumbnail(self, img, rescale_color=False):
@@ -2805,20 +2860,95 @@ class Valis(object):
 
     #     return overlap_img
 
-
-    def draw_overlap_img(self, img_list):
+    def draw_overlap_img(self, img_list, blending="weighted"):
         """Create image showing the overlap of registered images
         """
         cmap = viz.jzazbz_cmap()
-        overlap_img = viz.create_overlap_img(img_list, cmap=cmap, blending="weighted")
+        overlap_img = viz.create_overlap_img(img_list, cmap=cmap, blending=blending)
         overlap_img = exposure.equalize_adapthist(overlap_img)
         overlap_img = exposure.rescale_intensity(overlap_img, out_range=(0, 255)).astype(np.uint8)
-
         return overlap_img
 
+    # def get_ref_img_mask(self, rigid_registrar):
+    #     """Create mask that covers reference image
+
+    #     Returns
+    #     -------
+    #     mask : ndarray
+    #         Mask that covers reference image in registered images
+    #     mask_bbox_xywh : tuple of int
+    #         XYWH of mask in reference image
+
+    #     """
+
+    #     # ref_name = self.name_dict[self.reference_img_f]
+    #     ref_slide = rigid_registrar.img_obj_dict[ref_name]
+    #     ref_shape_wh = ref_slide.image.shape[0:2][::-1]
+
+    #     uw_mask = np.full(ref_shape_wh[::-1], 255, dtype=np.uint8)
+    #     mask = warp_tools.warp_img(uw_mask, ref_slide.M,
+    #                                out_shape_rc=ref_slide.registered_shape_rc)
+
+    #     reg_txy = -ref_slide.M[0:2, 2]
+    #     mask_bbox_xywh = np.array([*reg_txy, *ref_shape_wh])
+
+    #     return mask, mask_bbox_xywh
 
 
-    def get_ref_img_mask(self, rigid_registrar):
+    # def get_all_overlap_mask(self, rigid_registrar):
+    #     """Create mask that covers all tissue
+
+
+    #     Returns
+    #     -------
+    #     mask : ndarray
+    #         Mask that covers reference image in registered images
+    #     mask_bbox_xywh : tuple of int
+    #         XYWH of mask in reference image
+
+    #     """
+
+    #     ref_name = self.name_dict[self.reference_img_f]
+    #     ref_slide = rigid_registrar.img_obj_dict[ref_name]
+    #     combo_mask = np.zeros(ref_slide.registered_shape_rc, dtype=int)
+    #     for img_obj in rigid_registrar.img_obj_list:
+
+    #         img_mask = self.slide_dict[img_obj.name].rigid_reg_mask
+    #         warped_img_mask = warp_tools.warp_img(img_mask,
+    #                                               M=img_obj.M,
+    #                                               out_shape_rc=img_obj.registered_shape_rc,
+    #                                               interp_method="nearest")
+
+    #         combo_mask[warped_img_mask > 0] += 1
+
+    #     temp_mask = 255*filters.apply_hysteresis_threshold(combo_mask, 0.5, self.size-0.5).astype(np.uint8)
+    #     mask = 255*ndimage.binary_fill_holes(temp_mask).astype(np.uint8)
+    #     mask = preprocessing.mask2contours(mask)
+
+    #     mask_bbox_xywh = warp_tools.xy2bbox(warp_tools.mask2xy(mask))
+
+    #     return mask, mask_bbox_xywh
+
+    # def get_null_overlap_mask(self, rigid_registrar):
+    #     """Create mask that covers all of the image.
+    #     Not really a mask
+
+
+    #     Returns
+    #     -------
+    #     mask : ndarray
+    #         Mask that covers reference image in registered images
+    #     mask_bbox_xywh : tuple of int
+    #         XYWH of mask in reference image
+
+    #     """
+    #     reg_shape = rigid_registrar.img_obj_list[0].registered_shape_rc
+    #     mask = np.full(reg_shape, 255, dtype=np.uint8)
+    #     mask_bbox_xywh = np.array([0, 0, reg_shape[1], reg_shape[0]])
+
+    #     return mask, mask_bbox_xywh
+
+    def get_ref_img_mask(self):
         """Create mask that covers reference image
 
         Returns
@@ -2829,21 +2959,22 @@ class Valis(object):
             XYWH of mask in reference image
 
         """
-
-        ref_name = self.name_dict[self.reference_img_f]
-        ref_slide = rigid_registrar.img_obj_dict[ref_name]
+        # rigid_reg_shape_rc = rigid_reg_shape
+        # ref_name = self.name_dict[self.reference_img_f]
+        # ref_slide = rigid_registrar.img_obj_dict[ref_name]
+        ref_slide = self.get_ref_slide()
         ref_shape_wh = ref_slide.image.shape[0:2][::-1]
+        # ref_M = rigid_transform_dict[ref_slide.name]
 
         uw_mask = np.full(ref_shape_wh[::-1], 255, dtype=np.uint8)
         mask = warp_tools.warp_img(uw_mask, ref_slide.M,
-                                   out_shape_rc=ref_slide.registered_shape_rc)
-
+                                   out_shape_rc=ref_slide.reg_img_shape_rc)
         reg_txy = -ref_slide.M[0:2, 2]
         mask_bbox_xywh = np.array([*reg_txy, *ref_shape_wh])
 
         return mask, mask_bbox_xywh
 
-    def get_all_overlap_mask(self, rigid_registrar):
+    def get_all_overlap_mask(self):
         """Create mask that covers all tissue
 
 
@@ -2856,15 +2987,15 @@ class Valis(object):
 
         """
 
-        ref_name = self.name_dict[self.reference_img_f]
-        ref_slide = rigid_registrar.img_obj_dict[ref_name]
-        combo_mask = np.zeros(ref_slide.registered_shape_rc, dtype=int)
-        for img_obj in rigid_registrar.img_obj_list:
-
-            img_mask = self.slide_dict[img_obj.name].rigid_reg_mask
-            warped_img_mask = warp_tools.warp_img(img_mask,
-                                                  M=img_obj.M,
-                                                  out_shape_rc=img_obj.registered_shape_rc,
+        # ref_name = self.name_dict[self.reference_img_f]
+        ref_slide = self.get_ref_slide()
+        combo_mask = np.zeros(self.aligned_img_shape_rc, dtype=int)
+        # for img_obj in rigid_registrar.img_obj_list:
+            # img_mask = self.slide_dict[img_obj.name].rigid_reg_mask
+        for slide_obj in self.slide_dict.values():
+            warped_img_mask = warp_tools.warp_img(slide_obj.rigid_reg_mask,
+                                                  M=slide_obj.M,
+                                                  out_shape_rc=slide_obj.reg_img_shape_rc,
                                                   interp_method="nearest")
 
             combo_mask[warped_img_mask > 0] += 1
@@ -2877,9 +3008,7 @@ class Valis(object):
 
         return mask, mask_bbox_xywh
 
-
-
-    def get_null_overlap_mask(self, rigid_registrar):
+    def get_null_overlap_mask(self):
         """Create mask that covers all of the image.
         Not really a mask
 
@@ -2892,20 +3021,20 @@ class Valis(object):
             XYWH of mask in reference image
 
         """
-        reg_shape = rigid_registrar.img_obj_list[0].registered_shape_rc
+        reg_shape = self.aligned_img_shape_rc#rigid_registrar.img_obj_list[0].registered_shape_rc
         mask = np.full(reg_shape, 255, dtype=np.uint8)
         mask_bbox_xywh = np.array([0, 0, reg_shape[1], reg_shape[0]])
 
         return mask, mask_bbox_xywh
 
-    def create_crop_masks(self, rigid_registrar):
+    def create_crop_masks(self):
         """Create masks based on rigid registration
 
         """
         mask_dict = {}
-        mask_dict[CROP_REF] = self.get_ref_img_mask(rigid_registrar)
-        mask_dict[CROP_OVERLAP] = self.get_all_overlap_mask(rigid_registrar)
-        mask_dict[CROP_NONE] = self.get_null_overlap_mask(rigid_registrar)
+        mask_dict[CROP_REF] = self.get_ref_img_mask()
+        mask_dict[CROP_OVERLAP] = self.get_all_overlap_mask()
+        mask_dict[CROP_NONE] = self.get_null_overlap_mask()
         self.mask_dict = mask_dict
 
     def get_crop_mask(self, overlap_type):
@@ -2924,6 +3053,99 @@ class Valis(object):
             overlap_type = CROP_NONE
 
         return self.mask_dict[overlap_type]
+
+    def extract_rigid_transforms_from_serial_rigid(self, rigid_registrar):
+        """
+        If rigid transforms were found on cropped images, they will need to be
+        altered to account for cropping and scaling.
+        """
+
+        min_x = np.inf
+        max_x = 0
+        min_y = np.inf
+        max_y = 0
+        slide_M_dict = {}
+        matches_dict = {}
+        cropped_M_dict = {}
+        for slide_obj in self.slide_dict.values():
+            rigid_obj = rigid_registrar.img_obj_dict[slide_obj.name]
+            cropped_M_dict[slide_obj.name] = rigid_obj.M
+            # Add cropping to transform
+            crop_M = np.eye(3)
+            # if slide_obj.processed_crop_bbox is not None:
+            crop_M[0:2, 2] = slide_obj.processed_crop_bbox[0:2]
+            M_for_uncropped = crop_M @ rigid_obj.M
+
+            # Scale transform for Slide's image
+            resized_corners_xy = warp_tools.get_corners_of_image(slide_obj.processed_img_shape_rc)[:, ::-1]
+            resized_warped_corners = warp_tools.warp_xy(resized_corners_xy, M=M_for_uncropped,
+                                            transformation_src_shape_rc=slide_obj.uncropped_processed_img_shape_rc,
+                                            src_shape_rc=slide_obj.processed_img_shape_rc)
+
+            M_tform = transform.ProjectiveTransform()
+            M_tform.estimate(resized_warped_corners, resized_corners_xy)
+
+            slide_M_dict[slide_obj.name] = M_tform.params
+
+            min_x = np.min([np.min(resized_warped_corners[:, 0]), min_x])
+            max_x = np.max([np.max(resized_warped_corners[:, 0]), max_x])
+            min_y = np.min([np.min(resized_warped_corners[:, 1]), min_y])
+            max_y = np.max([np.max(resized_warped_corners[:, 1]), max_y])
+
+            # Get matches in small, uncropped image
+            fixed_rigid_obj = rigid_obj.fixed_obj
+            if fixed_rigid_obj is None:
+                continue
+
+            match_info = rigid_obj.match_dict[fixed_rigid_obj]
+            moving_s = np.array(slide_obj.processed_img_shape_rc)/np.array(slide_obj.uncropped_processed_img_shape_rc)
+            kp1_xy_in_uncropped = moving_s*(match_info.matched_kp1_xy + slide_obj.processed_crop_bbox[0:2])
+
+            fixed_slide = self.slide_dict[fixed_rigid_obj.name]
+            fixed_s = np.array(fixed_slide.processed_img_shape_rc)/np.array(fixed_slide.uncropped_processed_img_shape_rc)
+            kp2_xy_in_uncropped = fixed_s*(match_info.matched_kp2_xy + fixed_slide.processed_crop_bbox[0:2])
+
+            # match_img = viz.draw_matches(slide_obj.image, kp1_xy_in_uncropped, fixed_slide.image, kp2_xy_in_uncropped)
+            # warp_tools.save_img(os.path.join(dst_dir, f"{slide_obj.name}_to_{fixed_slide.name}.png"), match_img)
+
+            uncropped_matches = {rigid_obj.name:kp1_xy_in_uncropped, fixed_rigid_obj.name:kp2_xy_in_uncropped}
+            matches_dict[rigid_obj.name] = uncropped_matches
+
+
+        # Determine size of registered image
+        w = int(np.ceil(max_x - min_x))
+        h = int(np.ceil(max_y - min_y))
+
+        registerd_out_shape_rc = np.array([h, w])
+        crop_T = np.identity(3)
+        crop_T[0, 2] = min_x
+        crop_T[1, 2] = min_y
+
+        for slide_obj in self.slide_dict.values():
+            M = slide_M_dict[slide_obj.name] @ crop_T
+            slide_M_dict[slide_obj.name] = M
+
+            # uncropped_registered_img = warp_tools.warp_img(img=slide_obj.image,
+            #                                                 M=M,
+            #                                                 out_shape_rc=registerd_out_shape_rc)
+
+
+            # fout = os.path.join(self.reg_dst_dir, f"{slide_obj.name}.png")
+            # warp_tools.save_img(fout, uncropped_registered_img)
+        cropped_registerd_out_shape_rc = rigid_registrar.img_obj_list[0].registered_shape_rc
+        return slide_M_dict, registerd_out_shape_rc, cropped_M_dict, cropped_registerd_out_shape_rc, matches_dict
+
+    def get_cropped_img_for_rigid_warp(self, slide_obj):
+        level = slide_tools.get_level_idx(slide_obj.slide_dimensions_wh, np.max(slide_obj.uncropped_processed_img_shape_rc))
+        if level > 0:
+            level -= 1
+
+        vips_img = slide_obj.slide2vips(level)
+        vips_img = warp_tools.resize_img(vips_img, slide_obj.uncropped_processed_img_shape_rc)
+        vips_cropped_img = vips_img.extract_area(*slide_obj.processed_crop_bbox)
+        cropped_img = warp_tools.vips2numpy(vips_cropped_img)
+
+        return cropped_img
 
     def rigid_register_partial(self, tform_dict=None):
         """Perform rigid registration using provided parameters
@@ -3128,6 +3350,10 @@ class Valis(object):
         self.end_rigid_time = time()
         self.rigid_registrar = rigid_registrar
 
+        rigid_transform_dict, rigid_reg_shape, cropped_M_dict, cropped_registerd_out_shape_rc, rigid_matches_dict = \
+              self.extract_rigid_transforms_from_serial_rigid(rigid_registrar)
+
+
         # print("Dumping rigid")
         # pathlib.Path(self.data_dir).mkdir(exist_ok=True,  parents=True)
         # f_out = os.path.join(self.data_dir, self.name + "_registrar_with_rigid.pickle")
@@ -3142,14 +3368,65 @@ class Valis(object):
 
             return False
 
-        # Draw and save overlap image #
-        self.aligned_img_shape_rc = rigid_registrar.img_obj_list[0].registered_shape_rc
+        self.aligned_img_shape_rc = rigid_reg_shape #rigid_registrar.img_obj_list[0].registered_shape_rc
         self.reference_img_idx = rigid_registrar.reference_img_idx
 
         ref_slide = self.slide_dict[valtils.get_name(rigid_registrar.reference_img_f)]
         self.reference_img_f = ref_slide.src_f
+        n_digits = len(str(rigid_registrar.size))
+        for slide_reg_obj in rigid_registrar.img_obj_list:
+            slide_obj = self.slide_dict[slide_reg_obj.name]
+            slide_obj.M_for_cropped = cropped_M_dict[slide_obj.name]
+            slide_obj.rigid_reg_cropped_shape_rc = cropped_registerd_out_shape_rc
+            # slide_obj.M = slide_reg_obj.M
+            # slide_obj.reg_img_shape_rc = slide_reg_obj.registered_img.shape
+            slide_obj.M = rigid_transform_dict[slide_obj.name]
+            slide_obj.reg_img_shape_rc = rigid_reg_shape
+            slide_obj.stack_idx = slide_reg_obj.stack_idx
+            slide_obj.rigid_reg_img_f = os.path.join(self.reg_dst_dir,
+                                                     str.zfill(str(slide_obj.stack_idx), n_digits) + "_" + slide_obj.name + ".png")
+            if slide_obj.image.ndim > 2:
+                # Won't know if single channel image is processed RGB (bight bg) or IF channel (dark bg)
+                slide_obj.get_bg_color_px_pos()
 
-        self.create_crop_masks(rigid_registrar)
+            if slide_reg_obj.stack_idx == self.reference_img_idx:
+                continue
+
+            if slide_reg_obj.fixed_obj is None:
+                fixed_name = ref_slide.name
+            else:
+                fixed_name = slide_reg_obj.fixed_obj.name
+
+            fixed_slide = self.slide_dict[fixed_name]
+            slide_obj.fixed_slide = fixed_slide
+
+            match_dict = rigid_matches_dict[slide_obj.name]
+            slide_obj.xy_matched_to_prev = match_dict[slide_obj.name]
+            slide_obj.xy_in_prev = match_dict[fixed_slide.name]
+
+            # match_img = viz.draw_matches(slide_obj.image, slide_obj.xy_matched_to_prev, fixed_slide.image, slide_obj.xy_in_prev)
+            # warp_tools.save_img(os.path.join(dst_dir, f"{slide_obj.name}_to_{fixed_slide.name}.png"), match_img)
+
+            # slide_obj.xy_matched_to_prev = match_dict.matched_kp1_xy
+            # slide_obj.xy_in_prev = match_dict.matched_kp2_xy
+
+            # Get points in overlap box #
+            # prev_kp_warped_for_bbox_test = warp_tools.warp_xy(slide_obj.xy_in_prev, M=slide_obj.M)
+            # _, prev_kp_in_bbox_idx = \
+            #     warp_tools.get_pts_in_bbox(prev_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
+
+            # current_kp_warped_for_bbox_test = \
+            #     warp_tools.warp_xy(slide_obj.xy_matched_to_prev, M=slide_obj.M)
+
+            # _, current_kp_in_bbox_idx = \
+            #     warp_tools.get_pts_in_bbox(current_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
+
+            # matched_kp_in_bbox = np.intersect1d(prev_kp_in_bbox_idx, current_kp_in_bbox_idx)
+            # slide_obj.xy_matched_to_prev_in_bbox = slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
+            # slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
+
+
+        self.create_crop_masks()
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
 
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
@@ -3163,57 +3440,63 @@ class Valis(object):
 
         pathlib.Path(self.reg_dst_dir).mkdir(exist_ok=True, parents=True)
         # Update attributes in slide_obj #
-        n_digits = len(str(rigid_registrar.size))
-        for slide_reg_obj in rigid_registrar.img_obj_list:
-            slide_obj = self.slide_dict[slide_reg_obj.name]
-            slide_obj.M = slide_reg_obj.M
-            slide_obj.stack_idx = slide_reg_obj.stack_idx
-            slide_obj.reg_img_shape_rc = slide_reg_obj.registered_img.shape
-            slide_obj.rigid_reg_img_f = os.path.join(self.reg_dst_dir,
-                                                     str.zfill(str(slide_obj.stack_idx), n_digits) + "_" + slide_obj.name + ".png")
-            if slide_obj.image.ndim > 2:
-                # Won't know if single channel image is processed RGB (bight bg) or IF channel (dark bg)
-                slide_obj.get_bg_color_px_pos()
+        # n_digits = len(str(rigid_registrar.size))
+        # for slide_reg_obj in rigid_registrar.img_obj_list:
+        #     slide_obj = self.slide_dict[slide_reg_obj.name]
+        #     # slide_obj.M = slide_reg_obj.M
+        #     # slide_obj.reg_img_shape_rc = slide_reg_obj.registered_img.shape
+        #     slide_obj.M = rigid_transform_dict[slide_obj.name]
+        #     slide_obj.reg_img_shape_rc = rigid_reg_shape
+        #     slide_obj.stack_idx = slide_reg_obj.stack_idx
+        #     slide_obj.rigid_reg_img_f = os.path.join(self.reg_dst_dir,
+        #                                              str.zfill(str(slide_obj.stack_idx), n_digits) + "_" + slide_obj.name + ".png")
+        #     if slide_obj.image.ndim > 2:
+        #         # Won't know if single channel image is processed RGB (bight bg) or IF channel (dark bg)
+        #         slide_obj.get_bg_color_px_pos()
 
-            if slide_reg_obj.stack_idx == self.reference_img_idx:
-                continue
+        #     if slide_reg_obj.stack_idx == self.reference_img_idx:
+        #         continue
 
-            fixed_slide = self.slide_dict[slide_reg_obj.fixed_obj.name]
-            slide_obj.fixed_slide = fixed_slide
+        #     fixed_slide = self.slide_dict[slide_reg_obj.fixed_obj.name]
+        #     slide_obj.fixed_slide = fixed_slide
 
-            match_dict = slide_reg_obj.match_dict[slide_reg_obj.fixed_obj]
-            slide_obj.xy_matched_to_prev = match_dict.matched_kp1_xy
-            slide_obj.xy_in_prev = match_dict.matched_kp2_xy
+        #     match_dict = slide_reg_obj.match_dict[slide_reg_obj.fixed_obj]
+        #     slide_obj.xy_matched_to_prev = match_dict.matched_kp1_xy
+        #     slide_obj.xy_in_prev = match_dict.matched_kp2_xy
 
-            # Get points in overlap box #
-            prev_kp_warped_for_bbox_test = warp_tools.warp_xy(slide_obj.xy_in_prev, M=slide_obj.M)
-            _, prev_kp_in_bbox_idx = \
-                warp_tools.get_pts_in_bbox(prev_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
+        #     # Get points in overlap box #
+        #     prev_kp_warped_for_bbox_test = warp_tools.warp_xy(slide_obj.xy_in_prev, M=slide_obj.M)
+        #     _, prev_kp_in_bbox_idx = \
+        #         warp_tools.get_pts_in_bbox(prev_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
 
-            current_kp_warped_for_bbox_test = \
-                warp_tools.warp_xy(slide_obj.xy_matched_to_prev, M=slide_obj.M)
+        #     current_kp_warped_for_bbox_test = \
+        #         warp_tools.warp_xy(slide_obj.xy_matched_to_prev, M=slide_obj.M)
 
-            _, current_kp_in_bbox_idx = \
-                warp_tools.get_pts_in_bbox(current_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
+        #     _, current_kp_in_bbox_idx = \
+        #         warp_tools.get_pts_in_bbox(current_kp_warped_for_bbox_test, overlap_mask_bbox_xywh)
 
-            matched_kp_in_bbox = np.intersect1d(prev_kp_in_bbox_idx, current_kp_in_bbox_idx)
-            slide_obj.xy_matched_to_prev_in_bbox = slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
-            slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
+        #     matched_kp_in_bbox = np.intersect1d(prev_kp_in_bbox_idx, current_kp_in_bbox_idx)
+        #     slide_obj.xy_matched_to_prev_in_bbox = slide_obj.xy_matched_to_prev[matched_kp_in_bbox]
+        #     slide_obj.xy_in_prev_in_bbox = slide_obj.xy_in_prev[matched_kp_in_bbox]
 
         if self.denoise_rigid:
+
             # Processed image may have been denoised for rigid registration. Replace with unblurred image
             for img_obj in rigid_registrar.img_obj_list:
                 matching_slide = self.slide_dict[img_obj.name]
-                reg_img = matching_slide.warp_img(matching_slide.processed_img, non_rigid=False, crop=False)
+                # reg_img = matching_slide.warp_img(matching_slide.processed_img, non_rigid=False, crop=False)
+                reg_img = warp_tools.warp_img(matching_slide.processed_img, M=img_obj.M, out_shape_rc=img_obj.registered_shape_rc)
                 img_obj.registered_img = reg_img
                 img_obj.image = matching_slide.processed_img
 
-        thumbnail_s = np.min(self.thumbnail_size/np.array(rigid_registrar.img_obj_list[0].registered_img.shape[0:2]))
-        rigid_img_list = [warp_tools.rescale_img(img_obj.registered_img, thumbnail_s) for img_obj in rigid_registrar.img_obj_list]
 
+        # rigid_img_list = [warp_tools.rescale_img(img_obj.registered_img, thumbnail_s) for img_obj in rigid_registrar.img_obj_list]
+        rigid_img_list = [self.create_thumbnail(img_obj.registered_img) for img_obj in rigid_registrar.img_obj_list]
+        thumbnail_s = np.min(np.array(rigid_img_list[0].shape)/np.array(rigid_registrar.img_obj_list[0].registered_img.shape[0:2]))
         self.rigid_overlap_img = self.draw_overlap_img(img_list=rigid_img_list)
-        # self.rigid_overlap_img = overlap_img
-        self.rigid_overlap_img = warp_tools.crop_img(self.rigid_overlap_img, overlap_mask_bbox_xywh*thumbnail_s)
+        # plt.imshow(self.rigid_overlap_img)
+        # plt.show()
+        # self.rigid_overlap_img = warp_tools.crop_img(self.rigid_overlap_img, overlap_mask_bbox_xywh*thumbnail_s)
 
         rigid_overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_rigid_overlap.png")
         warp_tools.save_img(rigid_overlap_img_fout, self.rigid_overlap_img, thumbnail_size=self.thumbnail_size)
@@ -3223,18 +3506,42 @@ class Valis(object):
             slide_reg_obj = rigid_registrar.img_obj_dict[slide_name]
 
             if not slide_obj.is_rgb:
-                img_to_warp = slide_reg_obj.image
+                img_to_warp = slide_obj.pad_cropped_processed_img()
             else:
                 img_to_warp = slide_obj.image
             img_to_warp = warp_tools.resize_img(img_to_warp, slide_obj.processed_img_shape_rc)
-            warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=self.crop)
-            # warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=overlap_mask_bbox_xywh)
+
+            warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=overlap_mask_bbox_xywh)
             warp_tools.save_img(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8), thumbnail_size=self.thumbnail_size)
 
             # Replace processed image with a thumbnail #
             warp_tools.save_img(slide_obj.processed_img_f, slide_reg_obj.image, thumbnail_size=self.thumbnail_size)
         # print("Re-dumping rigid with saved info")
         # pickle.dump(self, open(f_out, 'wb'))
+
+        # for slide_name, slide_obj in self.slide_dict.items():
+        #     slide_reg_obj = rigid_registrar.img_obj_dict[slide_name]
+
+        #     if not slide_obj.is_rgb:
+        #         img_to_warp = slide_reg_obj.image
+        #     else:
+        #         img_to_warp = slide_obj.image
+        #         img_to_warp = self.get_cropped_img_for_rigid_warp(slide_obj)
+        #         #
+        #     # img_to_warp = warp_tools.resize_img(img_to_warp, slide_obj.processed_img_shape_rc)
+        #     img_to_warp = warp_tools.resize_img(img_to_warp, slide_reg_obj.image.shape)
+        #     warped_img = warp_tools.warp_img(img_to_warp, M=slide_reg_obj.M, out_shape_rc=slide_reg_obj.registered_shape_rc)
+
+        #     # plt.imshow(warped_img)
+        #     # plt.show()
+        #     # # warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=self.crop)
+        #     # warped_img = slide_obj.warp_img(img_to_warp, non_rigid=False, crop=overlap_mask_bbox_xywh)
+        #     warp_tools.save_img(slide_obj.rigid_reg_img_f, warped_img.astype(np.uint8), thumbnail_size=self.thumbnail_size)
+
+        #     # Replace processed image with a thumbnail #
+        #     warp_tools.save_img(slide_obj.processed_img_f, slide_reg_obj.image, thumbnail_size=self.thumbnail_size)
+        # # print("Re-dumping rigid with saved info")
+        # # pickle.dump(self, open(f_out, 'wb'))
 
         return rigid_registrar
 
@@ -3306,14 +3613,18 @@ class Valis(object):
 
             # RGB draw images
             if moving_slide.image.ndim == 3 and moving_slide.is_rgb:
-                moving_draw_img = warp_tools.resize_img(moving_slide.image, moving_slide.processed_img.shape[0:2])
+                # moving_draw_img = warp_tools.resize_img(moving_slide.image, moving_slide.processed_img.shape[0:2])
+                moving_draw_img = warp_tools.resize_img(moving_slide.image, moving_slide.processed_img_shape_rc])
             else:
-                moving_draw_img = moving_slide.processed_img
+                # moving_draw_img = moving_slide.processed_img
+                moving_draw_img = moving_slide.pad_cropped_processed_img()
 
             if fixed_slide.image.ndim == 3 and fixed_slide.is_rgb:
-                fixed_draw_img = warp_tools.resize_img(fixed_slide.image, fixed_slide.processed_img.shape[0:2])
+                # fixed_draw_img = warp_tools.resize_img(fixed_slide.image, fixed_slide.processed_img.shape[0:2])
+                fixed_draw_img = warp_tools.resize_img(fixed_slide.image, fixed_slide.processed_img_shape_rc)
             else:
-                fixed_draw_img = fixed_slide.processed_img
+                # fixed_draw_img = fixed_slide.processed_img
+                fixed_draw_img = fixed_slide.pad_cropped_processed_img()
 
             all_matches_img = viz.draw_matches(src_img=moving_draw_img, kp1_xy=moving_slide.xy_matched_to_prev,
                                                dst_img=fixed_draw_img,  kp2_xy=moving_slide.xy_in_prev,
