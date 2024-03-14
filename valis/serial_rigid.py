@@ -907,7 +907,7 @@ class SerialRigidRegistrar(object):
         self.similarity_mat = self.unsorted_similarity_mat[sorted_idx, :]
         self.similarity_mat = self.similarity_mat[:, sorted_idx]
         self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
-        self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
+        # self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
         self.img_obj_list = [self.img_obj_list[i] for i in sorted_idx]
         for z, img_obj in enumerate(self.img_obj_list):
             img_obj.stack_idx = z

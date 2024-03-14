@@ -89,7 +89,6 @@ class ImageProcesser(object):
         self.crop_bbox = None # bbox (x, y, w, h) of cropped area
         self.cropped = False
 
-
     def create_mask(self):
         return np.full(self.image.shape[0:2], 255, dtype=np.uint8)
 

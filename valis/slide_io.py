@@ -645,7 +645,7 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     vips_bf_dtype = slide_tools.NUMPY_FORMAT_BF_DTYPE[str(np_dtype().dtype)].lower()
 
     if ome_nc != vips_nc:
-        msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are only {vips_nc} channel(s) in the image"
+        msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are {vips_nc} channel(s) in the image"
         metadata.n_channels = vips_nc
         if ome_nc is not None :
             valtils.print_warning(msg)

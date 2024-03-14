@@ -890,7 +890,8 @@ def vips2numpy(vi):
 
 
 def pad_img(img, padded_shape):
-    padding_T = get_padding_matrix(img.shape[0:2], padded_shape)
+    # padding_T = get_padding_matrix(img.shape[0:2], padded_shape)
+    padding_T = get_padding_matrix(get_shape(img)[0:2], padded_shape)
     padded_img = warp_img(img, padding_T, out_shape_rc=padded_shape)
 
     return padded_img, padding_T

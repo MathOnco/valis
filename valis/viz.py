@@ -575,7 +575,7 @@ def create_overlap_img(img_list, cmap=jzazbz_cmap(), blending="weighted"):
 
         vips_lab_color_list = [warp_tools.numpy2vips(np.array([[255*clr]])).colourspace(pyvips.enums.Interpretation.LAB) for clr in color_list]
 
-        for i in range(1, len(img_list)):
+        for i in range(len(img_list)):
             weight = img_list[i]/sum_img
             if is_np:
                 lab_clr = warp_tools.vips2numpy(vips_lab_color_list[i])
@@ -593,6 +593,7 @@ def create_overlap_img(img_list, cmap=jzazbz_cmap(), blending="weighted"):
         blended_vips_rgb = blended_vips_lab.colourspace(pyvips.enums.Interpretation.SRGB)[0:3]
     if is_np:
         blended = warp_tools.vips2numpy(blended_vips_rgb)
+
     else:
         blended = blended_vips_rgb
 
