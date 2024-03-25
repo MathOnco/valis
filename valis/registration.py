@@ -722,7 +722,6 @@ class Slide(object):
 
         """
 
-
         if img is None:
             img = self.image
 
@@ -738,6 +737,12 @@ class Slide(object):
             img_shape_rc = img.shape[0:2]
             img_dim = img.ndim
 
+        ref_slide = self.val_obj.get_ref_slide()
+
+        if self == ref_slide and crop == CROP_REF and np.all(warp_tools.get_shape(img)[0:2] == self.processed_img_shape_rc):
+            # Save on computation time and avoid interpolation/rounding issues and return the original image
+            return img
+
         if not np.all(img_shape_rc == self.processed_img_shape_rc):
             msg = ("scaling transformation for image with different shape. "
                    "However, without knowing all of other image's shapes, "
@@ -749,7 +754,6 @@ class Slide(object):
             img_scale_rc = np.array(img_shape_rc)/(np.array(self.processed_img_shape_rc))
             out_shape_rc = self.val_obj.get_aligned_slide_shape(img_scale_rc)
 
-
         else:
             same_shape = True
             out_shape_rc = self.reg_img_shape_rc
@@ -758,7 +762,6 @@ class Slide(object):
             crop_method = self.get_crop_method(crop)
             if crop_method is not False:
                 if crop_method == CROP_REF:
-                    ref_slide = self.val_obj.get_ref_slide()
                     if not same_shape:
                         scaled_shape_rc = np.array(ref_slide.processed_img_shape_rc)*img_scale_rc
                     else:
@@ -780,8 +783,6 @@ class Slide(object):
         else:
             bg_color = None
 
-        # bbox_xywh = np.array(bbox_xywh)
-        # bbox_xywh[0:2] *= -1
         warped_img = \
             warp_tools.warp_img(img, M=self.M,
                                 bk_dxdy=dxdy,
@@ -1732,7 +1733,7 @@ class Valis(object):
                  do_rigid=True,
                  crop=None,
                  create_masks=True,
-                 denoise_rigid=True,
+                 denoise_rigid=False,
                  crop_for_rigid_reg=True,
                  check_for_reflections=False,
                  resolution_xyu=None,
@@ -2834,6 +2835,7 @@ class Valis(object):
             else:
                 all_v = [None]*self.size
 
+
         for i, slide_obj in enumerate(tqdm.tqdm(self.slide_dict.values(), desc=PROCESS_IMG_MSG, unit="image")):
 
             processing_cls, processing_kwargs = processor_dict[slide_obj.name]
@@ -2916,7 +2918,8 @@ class Valis(object):
                 if slide_obj.img_type == slide_tools.IHC_NAME:
                     thumbnail_img = self.create_thumbnail(slide_obj.image)
                 else:
-                    thumbnail_img = self.create_thumbnail(processed_img)
+                    # thumbnail_img = self.create_thumbnail(processed_img)
+                    thumbnail_img = self.create_thumbnail(slide_obj.pad_cropped_processed_img())
 
                 thumbnail_mask_outline = viz.draw_outline(thumbnail_img, thumbnail_mask)
                 outline_f_out = os.path.join(self.mask_dir, f'{slide_obj.name}.png')
@@ -3903,7 +3906,7 @@ class Valis(object):
         # rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in draw_list]
         # dir(draw_list[0])
         thumbnail_s = np.min(self.thumbnail_size/np.array(draw_list[0].reg_img_shape_rc))
-        rigid_img_list = [warp_tools.rescale_img(slide_obj.warp_img(slide_obj.processed_img, non_rigid=False), scaling=thumbnail_s) for slide_obj in draw_list]
+        rigid_img_list = [warp_tools.rescale_img(slide_obj.warp_img(slide_obj.pad_cropped_processed_img(), non_rigid=False), scaling=thumbnail_s) for slide_obj in draw_list]
 
         self.micro_rigid_overlap_img = self.draw_overlap_img(rigid_img_list)
 
@@ -4054,8 +4057,16 @@ class Valis(object):
             rigid_mask = slide_obj.warp_img(slide_obj.rigid_reg_mask, non_rigid=False, crop=False, interp_method="nearest")
             combo_mask[rigid_mask > 0] += 1
 
-        temp_non_rigid_mask = 255*filters.apply_hysteresis_threshold(combo_mask, 0.5, self.size-0.5).astype(np.uint8)
+        # if self.size > 2:
+        temp_non_rigid_mask = 255*filters.apply_hysteresis_threshold(combo_mask, 1, self.size-0.5).astype(np.uint8) # At least 2 images are touching
+        # else:
+            # temp_non_rigid_mask = 255*filters.apply_hysteresis_threshold(combo_mask, 0.5, self.size-0.5).astype(np.uint8)
+
         overlap_mask = 255*ndimage.binary_fill_holes(temp_non_rigid_mask).astype(np.uint8)
+
+        # temp_non_rigid_mask = 255*filters.apply_hysteresis_threshold(combo_mask, 1, self.size-0.5).astype(np.uint8)
+        # plt.imshow(temp_non_rigid_mask)
+        # plt.show()
 
         to_combine_list = [None] * len(slide_list)
         for i, slide_obj in enumerate(slide_list):
@@ -4068,17 +4079,27 @@ class Valis(object):
 
         combo_img = np.dstack(to_combine_list)
 
-        summary_img = np.median(combo_img, axis=2)
 
+        summary_img = np.median(combo_img, axis=2)
+        # summary_img = np.max(combo_img, axis=2)
+        # summary_img = np.mean(combo_img, axis=2)
         summary_img[overlap_mask == 0] = 0
 
+        # ent_img, _ = preprocessing.calc_shannon(summary_img, 100)
+        # plt.imshow(ent_img)
+        # plt.show()
+
         low_t, high_t = filters.threshold_multiotsu(summary_img[overlap_mask > 0])
+        # low_t, high_t = filters.threshold_multiotsu(summary_img)
         fg = 255*filters.apply_hysteresis_threshold(summary_img, low_t, high_t).astype(np.uint8)
         fg_bbox_mask = np.zeros_like(overlap_mask)
         fg_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(fg))
         c0, r0 = fg_bbox[0:2]
         c1, r1 = fg_bbox[0:2] + fg_bbox[2:]
         fg_bbox_mask[r0:r1, c0:c1] = 255
+
+        # plt.imshow(summary_img)
+        # plt.show()
 
         return fg_bbox_mask
 
@@ -5318,7 +5339,7 @@ class Valis(object):
         self._full_displacement_shape_rc = full_out_shape_rc
         for slide_obj in self.slide_dict.values():
             if not slide_obj.is_rgb:
-                img_to_warp = slide_obj.processed_img
+                img_to_warp = slide_obj.pad_cropped_processed_img() #slide_obj.processed_img
             else:
                 img_to_warp = slide_obj.image
 
@@ -5330,7 +5351,8 @@ class Valis(object):
             micro_thumb = self.create_thumbnail(micro_reg_img)
             warp_tools.save_img(micro_fout, micro_thumb)
 
-            processed_micro_reg_img = slide_obj.warp_img(slide_obj.processed_img)
+            # processed_micro_reg_img = slide_obj.warp_img(slide_obj.processed_img)
+            processed_micro_reg_img = slide_obj.warp_img(slide_obj.pad_cropped_processed_img())
             # micro_reg_imgs[slide_obj.stack_idx] = processed_micro_reg_img
 
             thumbnail_s = np.min(self.thumbnail_size/np.array(processed_micro_reg_img.shape[0:2]))
