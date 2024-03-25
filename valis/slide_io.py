@@ -645,7 +645,7 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     vips_bf_dtype = slide_tools.NUMPY_FORMAT_BF_DTYPE[str(np_dtype().dtype)].lower()
 
     if ome_nc != vips_nc:
-        msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are only {vips_nc} channel(s) in the image"
+        msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are {vips_nc} channel(s) in the image"
         metadata.n_channels = vips_nc
         if ome_nc is not None :
             valtils.print_warning(msg)
@@ -3169,16 +3169,20 @@ def get_tile_wh(reader, level, out_shape_wh, default_wh=512):
             tile_wh = 16
 
     if np.any(np.array(out_shape_wh[0:2]) < tile_wh):
-        # Tile is too big for the image
+        # Tile is too big for the image. Get niggest tile size that fit in image
         if tile_wh < default_wh:
             min_wh = 16
         else:
             min_wh = default_wh
 
         max_tile_exp = np.floor(np.log2(np.min(out_shape_wh)))
+        if max_tile_exp <= np.log2(min_wh):
+            min_wh = 16
+
         possible_wh = 2**np.arange(np.log2(min_wh), max_tile_exp+1)
-        overhangs = [np.max(np.ceil(out_shape_wh/wh)*wh - out_shape_wh) for wh in possible_wh]
-        tile_wh = int(possible_wh[np.argmin(overhangs)])
+        overhangs = np.array([np.max(np.ceil(out_shape_wh/wh)*wh - out_shape_wh) for wh in possible_wh])
+        min_overhang = np.min(overhangs)
+        tile_wh = int(np.max(possible_wh[overhangs == min_overhang]))
 
     return tile_wh
 

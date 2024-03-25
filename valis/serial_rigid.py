@@ -907,7 +907,7 @@ class SerialRigidRegistrar(object):
         self.similarity_mat = self.unsorted_similarity_mat[sorted_idx, :]
         self.similarity_mat = self.similarity_mat[:, sorted_idx]
         self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
-        self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
+        # self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
         self.img_obj_list = [self.img_obj_list[i] for i in sorted_idx]
         for z, img_obj in enumerate(self.img_obj_list):
             img_obj.stack_idx = z
@@ -1062,7 +1062,6 @@ class SerialRigidRegistrar(object):
 
             if qt_emitter is not None:
                 qt_emitter.emit(1)
-
 
     def align_to_prev(self, transformer, qt_emitter=None):
         """Use key points to align current image to previous image in the stack
@@ -1533,7 +1532,8 @@ def register_images(img_dir, dst_dir=None, name="registrar",
             # Remove feature points outside of mask
             for img_obj in registrar.img_obj_dict.values():
                 slide_obj = valis_obj.get_slide(img_obj.name)
-                features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=slide_obj.rigid_reg_mask)
+                reg_mask = valis_obj.crop_rigid_reg_mask(slide_obj, mask=slide_obj.rigid_reg_mask)
+                features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=reg_mask)
                 if len(features_in_mask_idx) > 0:
                     img_obj.kp_pos_xy = img_obj.kp_pos_xy[features_in_mask_idx, :]
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]

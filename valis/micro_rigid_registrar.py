@@ -105,7 +105,8 @@ class MicroRigidRegistrar(object):
         roi : string
             Determines how the region of interest is defined. `roi="mask"` will
             use the bounding box of non-rigid registration mask to define the search area.
-            `roi=matches` will use the bo
+            `roi=matches` will use the bounding box around the matching features, which may
+            be smaller than the registration mask.
 
         """
 

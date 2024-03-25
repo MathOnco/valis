@@ -2,7 +2,8 @@
 Collection of pre-processing methods for aligning images
 """
 from scipy.interpolate import Akima1DInterpolator
-from skimage import exposure, filters, measure, morphology, restoration
+from skimage import exposure, filters, measure, morphology, restoration, util
+from skimage.feature import peak_local_max
 from sklearn.cluster import estimate_bandwidth, MiniBatchKMeans, MeanShift
 import numpy as np
 import cv2
@@ -14,6 +15,8 @@ from shapely import LineString
 from scipy import stats
 from sklearn import cluster
 from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import shapely
 
 from . import slide_io
 from . import warp_tools
@@ -84,6 +87,11 @@ class ImageProcesser(object):
 
         self.reader = reader
 
+        self.original_shape_rc = warp_tools.get_shape(image)[0:2] # Size of image passed into processor
+        self.uncropped_shape_rc = None # Size of uncropped image (bigger than `original_shape_rc`)
+        self.crop_bbox = None # bbox (x, y, w, h) of cropped area
+        self.cropped = False
+
     def create_mask(self):
         return np.full(self.image.shape[0:2], 255, dtype=np.uint8)
 
@@ -125,9 +133,9 @@ class ChannelGetter(ImageProcesser):
             else:
                 chnl_idx = self.reader.get_channel_index(channel)
                 chnl = self.image[..., chnl_idx]
-        chnl = exposure.rescale_intensity(chnl, in_range="image", out_range=(0.0, 1.0))
 
         if adaptive_eq:
+            chnl = exposure.rescale_intensity(chnl, in_range="image", out_range=(0.0, 1.0))
             chnl = exposure.equalize_adapthist(chnl)
 
         chnl = exposure.rescale_intensity(chnl, in_range="image", out_range=(0, 255)).astype(np.uint8)
@@ -396,6 +404,71 @@ class HEDeconvolution(ImageProcesser):
         return processed_img
 
 
+def remove_bg(img, radius, invert=True, algo="rb"):
+    _img = exposure.rescale_intensity(img, out_range=(0, 1))
+    if invert:
+        _img = 1 - _img
+
+    if algo == "rb":
+        background = restoration.rolling_ball(_img, radius=radius)
+        if invert:
+            filtered_inverted = _img - background
+            filtered = 1 - filtered_inverted
+        else:
+            filtered = img - background
+    elif algo == "hat":
+        filtered = morphology.white_tophat(_img, morphology.disk(radius))
+        if invert:
+            filtered = 1 - filtered
+
+    filtered = exposure.rescale_intensity(filtered, out_range=(img.min(), img.max()))
+
+    return filtered
+
+
+def remove_rgb_bg_in_j(img, radius=50, cspace="CAM16UCS", algo="rb", ad_eq=False):
+    jab = rgb2jab(img, cspace=cspace)
+
+    filtered_j = remove_bg(jab[..., 0], radius=radius, invert=True, algo=algo)
+    if ad_eq:
+        filtered_j = exposure.equalize_adapthist(exposure.rescale_intensity(filtered_j, out_range=(0, 1)))
+        filtered_j = exposure.rescale_intensity(filtered_j, out_range=(jab[..., 0].min(), jab[..., 0].max()))
+
+    img_no_bg = jab2rgb(np.dstack([filtered_j, jab[..., 1], jab[..., 2]]), cspace=cspace)
+    img_no_bg = np.clip(img_no_bg, 0, 1)
+    img_no_bg = exposure.rescale_intensity(img_no_bg, out_range=np.uint8)
+
+    return img_no_bg
+
+
+def remove_bg_each_channel_rgb(img, radius=50):
+
+    image_inverted = util.invert(img)
+    background_R = restoration.rolling_ball(image_inverted[..., 0], radius=radius)
+    background_G = restoration.rolling_ball(image_inverted[..., 1], radius=radius)
+    background_B = restoration.rolling_ball(image_inverted[..., 2], radius=radius)
+    background = np.stack([background_R, background_G, background_B], 2)
+    filtered_image_inverted = image_inverted - background
+    filtered_image = util.invert(filtered_image_inverted)
+
+    return filtered_image
+
+def remove_bg_in_jch(img, radius=50, cspace="JzAzBz", algo="rb"):
+
+    image_inverted = util.invert(img)
+    jch = rgb2jch(image_inverted, cspace=cspace)
+    filtered_j = remove_bg(jch[..., 0], radius=radius, invert=False, algo=algo)
+    filtered_c = remove_bg(jch[..., 1], radius=radius, invert=False, algo=algo)
+
+    img_inverted_no_bg = jch2rgb(np.dstack([filtered_j, filtered_c, jch[..., 2]]), cspace=cspace)
+    img_no_bg = util.invert(img_inverted_no_bg)
+
+
+    return img_no_bg
+
+
+
+
 def denoise_img(img, mask=None, weight=None):
     if mask is None:
         sigma = restoration.estimate_sigma(img)
@@ -484,7 +557,7 @@ def get_luminosity(img, **kwargs):
     return lum
 
 
-def calc_background_color_dist(img, brightness_q=0.99, mask=None):
+def calc_background_color_dist(img, brightness_q=0.99, mask=None, cspace="CAM16UCS"):
     """Create mask that only covers tissue
 
     #. Find background pixel (most luminescent)
@@ -503,9 +576,9 @@ def calc_background_color_dist(img, brightness_q=0.99, mask=None):
     eps = np.finfo("float").eps
     with colour.utilities.suppress_warnings(colour_usage_warnings=True):
         if 1 < img.max() <= 255 and np.issubdtype(img.dtype, np.integer):
-            cam = colour.convert(img/255 + eps, 'sRGB', 'CAM16UCS')
+            cam = colour.convert(img/255 + eps, 'sRGB', cspace)
         else:
-            cam = colour.convert(img + eps, 'sRGB', 'CAM16UCS')
+            cam = colour.convert(img + eps, 'sRGB', cspace)
 
     if mask is None:
         brightest_thresh = np.quantile(cam[..., 0], brightness_q)
@@ -717,6 +790,158 @@ def deconvolve_img(rgb_img, D):
     return deconvolved_img
 
 
+def view_as_scatter(img, cspace_name, cspace_fxn=None, channel_1_idx=None, channel_2_idx=None, channel_3_idx=None, log3d=False, cspace_kwargs=None, mask=None, s=3):
+    """View colors in image, transformed used the `cspace_fxn`, as a scatterplot. Useful when trying to find color thresholds
+
+    """
+
+    if mask is None:
+        img_flat = img.reshape((-1, 3))
+    else:
+        img_flat = img[mask > 0]
+
+
+    unique_colors = np.unique(img_flat, axis=0)
+    # unique_colors =unique_colors[:-1]
+    flat_size = unique_colors.shape[0]
+
+    h = 2
+    while flat_size%h != 0:
+        h += 1
+
+    w = int(flat_size/h)
+    # added = h*w - flat_size
+
+    rgb_block = np.reshape(unique_colors, (h, w, 3))
+    if cspace_fxn is None:
+        cspace = rgb_block
+    else:
+        if cspace_kwargs is not None:
+            cspace = cspace_fxn(rgb_block, **cspace_kwargs)
+        else:
+            cspace = cspace_fxn(rgb_block)
+    if channel_2_idx is None:
+        a = cspace[:, :, channel_1_idx]
+        a = np.unique(a)
+        y = np.random.uniform(-0.01, 0.01, size=a.size)
+
+        # plt.subplot(1, 2, 1)
+        plt.scatter(a, y, c=unique_colors, s=s)
+        plt.xlabel(cspace_name[channel_1_idx])
+
+        # plt.subplot(1, 2, 2)
+        # a_scaled = log_color(a)
+        # plt.scatter(a_scaled, y, c=unique_colors, s=3)
+        # plt.xlabel(cspace_name[channel_1_idx])
+        # plt.title("Log")
+
+    elif channel_3_idx is None:
+
+        a = cspace[:, :, channel_1_idx]
+        b = cspace[:, :, channel_2_idx]
+
+        a = a.ravel()
+        b = b.ravel()
+
+        # plt.subplot(1, 2, 1)
+        plt.scatter(a, b, c=unique_colors/255, s=s)
+        plt.xlabel(cspace_name[channel_1_idx])
+        plt.ylabel(cspace_name[channel_2_idx])
+
+        # a_scaled = log_color(a)
+        # b_scaled = log_color(b)
+        # plt.subplot(1, 2, 2)
+        # plt.title("Log")
+        # plt.scatter(a_scaled, b_scaled, c=unique_colors, s=3)
+        # plt.xlabel(cspace_name[channel_1_idx])
+        # plt.ylabel(cspace_name[channel_2_idx])
+
+    else:
+        a = cspace[:, :, channel_1_idx]
+        b = cspace[:, :, channel_2_idx]
+        c = cspace[:, :, channel_3_idx]
+
+        a = a.ravel()
+        b = b.ravel()
+        c = c.ravel()
+
+        # if log3d:
+        #     a = log_color(a)
+        #     b = log_color(b)
+        #     c = log_color(c)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(a, b, c, c=unique_colors, depthshade=False, edgecolor=unique_colors, lw=0)
+        plt.xlabel(cspace_name[channel_1_idx])
+        plt.ylabel(cspace_name[channel_2_idx])
+        ax.set_zlabel(cspace_name[channel_3_idx])
+        if log3d:
+            plt.title("Log")
+
+
+def seg_jch(img, j_range=[0, 1], c_range=[0, 1], h_range=[0, 360], cspace='CAM16UCS', h_rotation=0):
+    """Segment image in a JCH colorspace
+
+    """
+
+    jch_img = rgb2jch(img, cspace=cspace, h_rotation=h_rotation)
+
+    jch_mask_idx = np.where((jch_img[..., 0] >= j_range[0]) & (jch_img[..., 0] < j_range[1]) &
+                            (jch_img[..., 1] >= c_range[0]) & (jch_img[..., 1] < c_range[1]) &
+                            (jch_img[..., 2] >= h_range[0]) & (jch_img[..., 2] < h_range[1])
+                            )
+
+    jch_mask = np.zeros(img.shape[0:2], dtype=np.uint8)
+    jch_mask[jch_mask_idx] = 255
+
+    return jch_mask
+
+
+def calc_shannon(img, n_bins=10, mask=None):
+    """Calculate Shannon's entropy for each pixel in `img`
+
+    """
+
+    img01 = exposure.rescale_intensity(img, out_range=(0, 1))
+    if img.ndim > 2:
+        img01 = img01.reshape(-1, img.shape[2])
+    else:
+        img01 = img01.reshape(-1)
+
+    if mask is None:
+        x = np.round(img01*(n_bins-1)).astype(int)
+    else:
+        flat_mask = mask.reshape(-1)
+        fg_idx = np.where(flat_mask > 0)[0]
+        x = np.round(img01*(n_bins-1)).astype(int)[fg_idx]
+
+    unique_x, counts = np.unique(x, return_counts=True, axis=0)
+    probs = counts/counts.sum()
+    if img.ndim > 2:
+        prob_dict = {tuple(unique_x[i]): probs[i] for i in range(len(probs))}
+        prob_img = np.array([prob_dict[tuple(k)] for k in x])
+    else:
+        prob_dict = {unique_x[i]: probs[i] for i in range(len(probs))}
+        prob_img = np.array([prob_dict[k] for k in x])
+
+    ent_img = -np.log(prob_img)
+
+    if mask is None:
+        prob_img = prob_img.reshape(img.shape[0:2])
+        ent_img = ent_img.reshape(img.shape[0:2])
+    else:
+        _prob_img = np.zeros(np.multiply(*img.shape[0:2]))
+        _prob_img[fg_idx] = prob_img
+        prob_img = _prob_img.reshape(img.shape[0:2])
+
+        _ent_img = np.zeros(np.multiply(*img.shape[0:2]))
+        _ent_img[fg_idx] = ent_img
+        ent_img = _ent_img.reshape(img.shape[0:2])
+
+    return ent_img, prob_img
+
+
 def thresh_unimodal(x, bins=256):
     """
     https://users.cs.cf.ac.uk/Paul.Rosin/resources/papers/unimodal2.pdf
@@ -905,6 +1130,67 @@ def combine_masks(mask1, mask2, op="or"):
     return combo_mask
 
 
+def split_shapely_line(line_poly, step_size=10, close_line=False):
+
+    if not line_poly.is_closed and close_line:
+        line_coords = np.dstack(line_poly.coords.xy).squeeze()
+        closed_coords = np.vstack([line_coords, line_coords[0]])
+        to_split = shapely.geometry.LineString(closed_coords)
+    else:
+        to_split = line_poly
+
+    nseg = int(np.ceil(to_split.length/step_size))
+    nseg = max(2, nseg)
+    line_seg_idx = np.linspace(0, to_split.length, nseg)
+    geom_list = [None] * (nseg-1)
+    for i in range(nseg - 1):
+        pos = np.linspace(line_seg_idx[i], line_seg_idx[i+1], step_size)
+        seg_geom = shapely.geometry.LineString(to_split.interpolate(pos))
+        geom_list[i] = seg_geom
+
+    return geom_list
+
+
+def polygon_tortuosity(img, step_size=10):
+    """Calculate tortuosity of a polygon.
+
+    Regular, smooth shapes, like rectanlges and circles have a value ~ 0.05. Irregular shapes are much higher, > 1
+    """
+    contours, _ = cv2.findContours(img.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours_xy = contours[0].squeeze()
+    lines = [(contours_xy[i], contours_xy[i+1]) for i in range(contours_xy.shape[0]-1)]
+    line_poly = shapely.ops.linemerge(lines)
+
+    if isinstance(line_poly, shapely.LineString):
+        line_list = [line_poly]
+        close_poly = True
+    else:
+        line_list = list(line_poly.geoms)
+        close_poly = False
+    line_torts = []
+    n = 0
+    total_length = 0
+    for i, l in enumerate(line_list):
+        # Split lines into equal segments
+        line_segs = split_shapely_line(l, step_size=step_size, close_line=close_poly)
+        for s in line_segs:
+            n += 1
+            poly_xy = np.dstack(s.coords.xy).squeeze()
+            if s.is_closed:
+                poly_xy = poly_xy[0:-1]
+
+            line_distance = np.sqrt(sum((poly_xy[0] - poly_xy[-1])**2))
+            line_length = np.sum(np.sqrt(np.diff(poly_xy[:, 0])**2 + np.diff(poly_xy[:, 1])**2))
+            total_length += line_length
+
+            line_arc_chord = (line_length/line_distance) - 1
+            line_torts.append(line_arc_chord)
+
+    poly_tort = ((n-1)/total_length)*sum(line_torts)
+
+    return poly_tort
+
+
 def remove_small_obj_and_lines_by_dist(mask):
     """
     Will remove smaller objects and thin lines that
@@ -998,8 +1284,377 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
     tissue_mask[cam_d_no_lines >= cam_d_t] = 255
 
     concave_tissue_mask = mask2contours(tissue_mask, kernel_size)
+    cleaned_mask = clean_mask(mask=concave_tissue_mask, img=img, kernel_size=kernel_size)
 
-    return tissue_mask, concave_tissue_mask
+    return tissue_mask, cleaned_mask #concave_tissue_mask
+
+
+def clean_mask(mask, img, kernel_size=3, rel_min_size=0.0001, line_thresh_wh_thresh=2, min_tortosity=0.1):
+        """
+        Remove small objects, regions that are not very colorful (relativey), and retangularly shaped objects
+        """
+
+        # _, mask = preprocessing.create_tissue_mask_from_rgb(self.image, kernel_size=kernel_size)
+        # mask = concave_tissue_mask
+        # Get colorful regions
+        jch = rgb2jch(img, cspace="JzAzBz")
+        ct, _ = filters.threshold_multiotsu(jch[..., 1][mask > 0])
+        c_mask = 255*(jch[..., 1] > ct).astype(np.uint8)
+        # Remove very small objects above color threshold
+        c_mask = filters.rank.median(c_mask, morphology.disk(kernel_size))
+
+        combo_mask = combine_masks_by_hysteresis([mask, c_mask])
+        # plt.imshow(jch[..., 1])
+        # plt.imshow(np.hstack([mask, c_mask, combo_mask]))
+        # plt.show()
+
+        min_abs_size = int(rel_min_size*np.multiply(*combo_mask.shape[0:2]))*kernel_size
+        labeled_img = measure.label(combo_mask)
+
+        regions = measure.regionprops(labeled_img)
+        regions_above_thresh = [r for r in regions if r.area >= min_abs_size]
+        if len(regions_above_thresh) == 0:
+            biggest_idx = np.argmax([r.area for r in regions])
+            regions_above_thresh = [regions[biggest_idx]]
+
+        r = regions_above_thresh[0]
+        mask_cleaned = np.zeros_like(combo_mask)
+        for i, r in enumerate(regions_above_thresh):
+            region_img = 255*r.image.astype(np.uint8)
+            region_tortuosity = polygon_tortuosity(region_img)
+
+            #Remove lines
+            region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
+
+            # Remove regularly shaped objects. Probably bubbles, cracks, etc...
+            if region_tortuosity < min_tortosity and region_wh_ratio >= line_thresh_wh_thresh:
+            # ori_degrees = abs(np.rad2deg(r.orientation))
+            # if (region_wh_ratio > line_thresh_wh_thresh) and \
+            #     region_tortuosity < min_tortosity and \
+            #    (ori_degrees < 1 or ori_degrees > 89) :
+                # print(f"classified region {i} as a regularly shaped")
+                continue
+
+            mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
+
+            # plt.imshow(mask_cleaned)
+            # plt.show()
+
+        return mask_cleaned
+
+        # import matplotlib.pyplot as plt
+        # plt.imshow(np.hstack([mask, c_mask, tissue_mask, tissue_mask_cleaned]))
+
+# def find_dominant_colors(img, cspace_fxn=rgb2jab, cspace_kwargs={}, min_colorfulness=0.1, min_distance=5, alpha_range=(0.15, 1), max_lum=0.8, nbins=100, max_colors=np.inf):
+
+#     od_img = rgb2od(img)
+
+#     ## Low OD (min 0)= clear, high OD (max=15.65) = saturated
+#     cspace_img = cspace_fxn(img, **cspace_kwargs)
+
+#     jch = rgb2jch(img)
+
+#     fg_px = np.where(((np.any(img > 0, axis=2)) &
+#                       (np.any(od_img > alpha_range[0], axis=2)) & # Keep non-transparent pixels
+#                       (np.any(od_img <= alpha_range[1], axis=2)) & # Keep pixels that are not oversaturated
+#                       (jch[..., 1] > min_colorfulness) # Remove shades
+#                       ))
+
+#     c1 = cspace_img[..., 1][fg_px]
+#     c2 = cspace_img[..., 2][fg_px]
+#     bins1 = np.linspace(c1.min(), c1.max(), nbins)
+#     bins2 = np.linspace(c2.min(), c2.max(), nbins)
+
+#     colorhist, histbins_1, histbins_2 = np.histogram2d(x=c1, y=c2, bins=[bins1, bins2])
+#     color_coordinates = peak_local_max(colorhist, min_distance=min_distance, num_peaks=max_colors)
+#     n_peaks = len(color_coordinates)
+
+#     main_colors = np.zeros((n_peaks, 3))
+#     color_counts = np.zeros(n_peaks)
+#     for i, (idx1, idx2) in enumerate(color_coordinates):
+#         min_idx1 = np.round(np.clip(idx1-1, 0, len(bins1) - 1)).astype(int)
+#         max_idx1 = np.round(np.clip(idx1+1, 0, len(bins1) - 1)).astype(int)
+#         min_idx2 = np.round(np.clip(idx2-1, 0, len(bins2) - 1)).astype(int)
+#         max_idx2 = np.round(np.clip(idx2+1, 0, len(bins2) - 1)).astype(int)
+
+#         in_bins_idx = np.where((cspace_img[..., 0] < max_lum) &
+#                             (cspace_img[..., 1] >= bins1[min_idx1]) & (cspace_img[..., 1] < bins1[max_idx1]) &
+#                             (cspace_img[..., 2] >= bins2[min_idx2]) & (cspace_img[..., 2] < bins2[max_idx2])
+#                             )
+
+#         if len(in_bins_idx[0]) == 0:
+#             continue
+
+#         rgb_in_bins = img[in_bins_idx]
+#         mean_rgb = mean_color(rgb_in_bins)
+#         main_colors[i] = mean_rgb
+#         color_counts[i] = len(in_bins_idx[0])
+
+#     # Sort from most to least common
+#     count_idx = np.argsort(color_counts)[::-1]
+#     main_colors = main_colors[count_idx, ]
+#     color_counts = color_counts[count_idx, ]
+
+#     # Drop colors not actually counted
+#     main_colors = main_colors[color_counts > 0]
+#     color_counts = color_counts[color_counts > 0]
+
+#     return main_colors, color_counts
+
+
+
+def find_dominant_colors(img, cspace_fxn=rgb2jab, cspace_kwargs={}, min_colorfulness=0.1, min_distance=5, alpha_range=(0.15, 1), max_lum=0.9, nbins=100, max_colors=np.inf):
+
+    # od_img = rgb2od(img)
+
+    ## Low OD (min 0)= clear, high OD (max=15.65) = saturated
+    cspace_img = cspace_fxn(img, **cspace_kwargs)
+
+    jch = rgb2jch(img)
+
+    # fg_px = np.where(((np.any(img > 0, axis=2)) &
+    #                   (np.any(od_img > alpha_range[0], axis=2)) & # Keep non-transparent pixels
+    #                   (np.any(od_img <= alpha_range[1], axis=2)) & # Keep pixels that are not oversaturated
+    #                   (jch[..., 1] > min_colorfulness) # Remove shades
+    #                   ))
+
+    fg_px = np.where((
+                    #   (np.any(img > 0, axis=2)) &
+                    #   (np.any(od_img > alpha_range[0], axis=2)) & # Keep non-transparent pixels
+                    #   (np.any(od_img <= alpha_range[1], axis=2)) & # Keep pixels that are not oversaturated
+                      (jch[..., 1] > min_colorfulness) # Remove shades of grey
+                      ))
+
+    if len(fg_px[0]) > 0:
+        c1 = cspace_img[..., 1][fg_px]
+        c2 = cspace_img[..., 2][fg_px]
+    else:
+        c1 = cspace_img[..., 1].reshape(-1)
+        c2 = cspace_img[..., 2].reshape(-1)
+
+    bins1 = np.linspace(c1.min(), c1.max(), nbins)
+    bins2 = np.linspace(c2.min(), c2.max(), nbins)
+    # max_colors = 10
+    colorhist, histbins_1, histbins_2 = np.histogram2d(x=c1, y=c2, bins=[bins1, bins2])
+    color_coordinates = peak_local_max(colorhist, min_distance=min_distance, num_peaks=max_colors)
+    n_peaks = len(color_coordinates)
+
+    # plt.imshow(colorhist)
+    # plt.show()
+
+    main_colors = np.zeros((n_peaks, 3))
+    color_counts = np.zeros(n_peaks)
+    for i, (idx1, idx2) in enumerate(color_coordinates):
+        min_idx1 = np.round(np.clip(idx1-1, 0, len(bins1) - 1)).astype(int)
+        max_idx1 = np.round(np.clip(idx1+1, 0, len(bins1) - 1)).astype(int)
+        min_idx2 = np.round(np.clip(idx2-1, 0, len(bins2) - 1)).astype(int)
+        max_idx2 = np.round(np.clip(idx2+1, 0, len(bins2) - 1)).astype(int)
+
+        in_bins_idx = np.where(
+                               (cspace_img[..., 0] < max_lum) &
+                               (cspace_img[..., 1] >= bins1[min_idx1]) & (cspace_img[..., 1] < bins1[max_idx1]) &
+                               (cspace_img[..., 2] >= bins2[min_idx2]) & (cspace_img[..., 2] < bins2[max_idx2])
+                            )
+
+        if len(in_bins_idx[0]) == 0:
+            continue
+
+        rgb_in_bins = img[in_bins_idx]
+        mean_rgb = mean_color(rgb_in_bins)
+        main_colors[i] = mean_rgb
+        color_counts[i] = len(in_bins_idx[0])
+
+    # Sort from most to least common
+    count_idx = np.argsort(color_counts)[::-1]
+    main_colors = main_colors[count_idx, ]
+    color_counts = color_counts[count_idx, ]
+
+    # Drop colors not actually counted
+    main_colors = main_colors[color_counts > 0]
+    color_counts = color_counts[color_counts > 0]
+
+    # plt.imshow([main_colors/255])
+    # plt.show()
+    return main_colors, color_counts
+
+
+def mean_color(rgb_vals, summary_fxn=np.mean):
+    jab_vals = rgb2jab(rgb_vals)
+    mean_jab = summary_fxn(jab_vals, axis=0)
+    mean_rgb = jab2rgb(mean_jab)
+    mean_rgb = (255*np.clip(mean_rgb, 0, 1))
+    return mean_rgb
+
+
+# Find dominant colors, but remove those with low C
+# def _create_tissue_mask_from_rgb(img, kernel_size=3, cspace="JzAzBz", rel_min_size=0.0001, line_thresh_wh_thresh=2, line_ecc_thresh=0.9):
+
+#     # dom_colors, _ = find_dominant_colors(img, max_colors=10)
+#     # # plt.imshow([dom_colors/255])
+#     # # plt.show()
+#     # if len(dom_colors) > 0:
+#     #     D = stainmat2decon(dom_colors)
+#     #     deconvolved = deconvolve_img(img, D)
+
+#     #     q = 95
+#     #     d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
+#     #     dmax = np.percentile(d_flat, q, axis=0) + np.finfo("float").eps
+#     #     for i in range(deconvolved.shape[2]):
+
+#     #         deconvolved[..., i] = np.clip(deconvolved[..., i], 0, dmax[i])
+#     #         deconvolved[..., i] /= dmax[i]
+
+#     #     decon_med = np.median(deconvolved, axis=2)
+#     # else:
+#     #     decon_med = np.ones(img.shape[0:2])
+#     # # plt.imshow(decon_med)
+#     # # plt.show()
+#     jab = rgb2jab(img, cspace)
+#     jch = colour.models.Jab_to_JCh(jab)
+#     # cd = exposure.rescale_intensity(decon_med, out_range=(0, 1)) * exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
+#     cd = exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
+#     # ent_img, prob_img = calc_shannon(img=cd, n_bins=10)
+
+
+#     # cd_t = filters.threshold_otsu(cd)
+#     cd_t, _ = filters.threshold_multiotsu(cd)
+#     cd_mask = 255*(cd > cd_t).astype(np.uint8)
+#     color_mask = mask2contours(cd_mask, 0)
+#     # plt.imshow(color_mask) #*(1-exposure.rescale_intensity(jch[..., 0], out_range=(0, 1)))*(exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))))
+#     # plt.show()
+
+#     bg_rgb = mean_color(img[color_mask == 0])
+#     bg_jab = rgb2jab(bg_rgb, cspace)
+#     bg_d = np.sqrt(np.sum((jab - bg_jab)**2, axis=2))
+
+#     # plt.imshow(bg_d) #*(1-exposure.rescale_intensity(jch[..., 0], out_range=(0, 1)))*(exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))))
+#     # plt.show()
+
+#     w = exposure.rescale_intensity(bg_d, out_range=(0, 1))*cd
+#     wt, _ = filters.threshold_multiotsu(w)
+#     og_tissue_mask = 255*(w > wt).astype(np.uint8)
+
+#     tissue_mask = mask2contours(og_tissue_mask, kernel_size)
+#     # plt.imshow(tissue_mask)
+#     # plt.show()
+
+#     min_rel_size = int(rel_min_size*np.multiply(*tissue_mask.shape[0:2]))*kernel_size
+#     labeled_img = measure.label(tissue_mask)
+#     # plt.imshow(labeled_img)
+#     # plt.show()
+
+#     tissue_regions = measure.regionprops(labeled_img)
+#     regions_above_thresh = [r for r in tissue_regions if r.area >= min_rel_size]
+#     if len(regions_above_thresh) == 0:
+#         biggest_idx = np.argmax([r.area for r in tissue_regions])
+#         regions_above_thresh = [tissue_regions[biggest_idx]]
+
+#     tissue_mask_cleaned = np.zeros_like(tissue_mask)
+#     # i = 0
+#     # r = regions_above_thresh[i]
+#     for i, r in enumerate(regions_above_thresh):
+#         region_img = 255*r.image.astype(np.uint8)
+#         # Remove horizontal and vertical lines
+#         region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
+#         ori_degrees = abs(np.rad2deg(r.orientation))
+
+#         if region_wh_ratio > line_thresh_wh_thresh and \
+#             r.eccentricity > line_ecc_thresh and \
+#             (ori_degrees < 1 or ori_degrees > 89):
+#             # print(f"classified region {i} as a line")
+#             continue
+
+#         tissue_mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
+
+#     # Combine mask from bg removal and object detection
+#     # final_mask = combine_masks_by_hysteresis([tissue_mask_cleaned, initial_mask])
+#     # plt.imshow(tissue_mask_cleaned)
+#     # plt.show()
+#     # concave_tissue_mask = mask2contours(tissue_mask, kernel_size)
+#     # mask_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(tissue_mask_cleaned))
+#     # roi_mask = np.zeros_like(tissue_mask_cleaned)
+#     # c0, r0 = mask_bbox[0:2]
+#     # c1, r1 = mask_bbox[0:2] + mask_bbox[2:]
+#     # roi_mask[r0:r1, c0:c1] = 255
+#     # # roi_mask[tissue_mask_cleaned == 255] = 128
+#     # plt.imshow(roi_mask)
+#     # plt.show()
+
+#     return og_tissue_mask, tissue_mask_cleaned
+
+
+# def create_tissue_mask_from_rgb(img, kernel_size=3, cspace="JzAzBz", rel_min_size=0.0001, line_thresh_wh_thresh=2, line_ecc_thresh=0.9):
+
+#     dom_colors, _ = find_dominant_colors(img, max_colors=10)
+#     # plt.imshow([dom_colors/255])
+#     # plt.show()
+#     if len(dom_colors) > 0:
+#         D = stainmat2decon(dom_colors)
+#         deconvolved = deconvolve_img(img, D)
+
+#         q = 95
+#         d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
+#         dmax = np.percentile(d_flat, q, axis=0) + np.finfo("float").eps
+#         for i in range(deconvolved.shape[2]):
+
+#             deconvolved[..., i] = np.clip(deconvolved[..., i], 0, dmax[i])
+#             deconvolved[..., i] /= dmax[i]
+
+#         decon_med = np.median(deconvolved, axis=2)
+#     else:
+#         decon_med = np.ones(img.shape[0:2])
+#     # plt.imshow(decon_med)
+#     # plt.show()
+#     jab = rgb2jab(img, cspace)
+#     jch = colour.models.Jab_to_JCh(jab)
+#     cd = exposure.rescale_intensity(decon_med, out_range=(0, 1)) * exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
+#     # ent_img, prob_img = calc_shannon(img=cd, n_bins=10)
+
+#     # cd_t = filters.threshold_otsu(cd)
+#     cd_t, _ = filters.threshold_multiotsu(cd)
+#     cd_mask = 255*(cd > cd_t).astype(np.uint8)
+#     tissue_mask = mask2contours(cd_mask, 0)
+
+#     min_rel_size = int(rel_min_size*np.multiply(*tissue_mask.shape[0:2]))
+#     labeled_img = measure.label(tissue_mask)
+#     # plt.imshow(tissue_mask)
+#     # plt.show()
+
+#     tissue_regions = measure.regionprops(labeled_img)
+#     regions_above_thresh = [r for r in tissue_regions if r.area >= min_rel_size]
+#     if len(regions_above_thresh) == 0:
+#         biggest_idx = np.argmax([r.area for r in tissue_regions])
+#         regions_above_thresh = [tissue_regions[biggest_idx]]
+
+#     tissue_mask_cleaned = np.zeros_like(tissue_mask)
+#     # i = 0
+#     # r = regions_above_thresh[i]
+#     for i, r in enumerate(regions_above_thresh):
+#         region_img = 255*r.image.astype(np.uint8)
+#         # Remove horizontal and vertical lines
+#         region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
+#         ori_degrees = abs(np.rad2deg(r.orientation))
+
+#         if region_wh_ratio > line_thresh_wh_thresh and \
+#             r.eccentricity > line_ecc_thresh and \
+#             (ori_degrees < 1 or ori_degrees > 89):
+#             # print(f"classified region {i} as a line")
+#             continue
+
+#         tissue_mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
+
+#     # Combine mask from bg removal and object detection
+#     # final_mask = combine_masks_by_hysteresis([tissue_mask_cleaned, initial_mask])
+#     # plt.imshow(concave_tissue_mask)
+#     # plt.show()
+#     concave_tissue_mask = mask2contours(tissue_mask_cleaned, kernel_size)
+#     # mask_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(tissue_mask_cleaned))
+#     # roi_mask = np.zeros_like(tissue_mask_cleaned)
+#     # c0, r0 = mask_bbox[0:2]
+#     # c1, r1 = mask_bbox[0:2] + mask_bbox[2:]
+#     # roi_mask[r0:r1, c0:c1] = 255
+
+#     return tissue_mask_cleaned, concave_tissue_mask
 
 
 def create_tissue_mask_from_multichannel(img, kernel_size=3):
@@ -1089,15 +1744,79 @@ def mask2bbox_mask(mask, merge_bbox=True):
     return updated_mask
 
 
+# def mask2contours(mask, kernel_size=3):
+#     kernel = morphology.disk(kernel_size)
+#     mask_dilated = cv2.dilate(mask, kernel)
+#     contours, _ = cv2.findContours(mask_dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#     contour_mask = np.zeros_like(mask_dilated)
+#     for cnt in contours:
+#         cv2.drawContours(contour_mask, [cnt], 0, 255, -1)
+
+#     return contour_mask
+
+
 def mask2contours(mask, kernel_size=3):
     kernel = morphology.disk(kernel_size)
     mask_dilated = cv2.dilate(mask, kernel)
     contours, _ = cv2.findContours(mask_dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contour_mask = np.zeros_like(mask_dilated)
     for cnt in contours:
-        cv2.drawContours(contour_mask, [cnt], 0, 255, -1)
+        corners_xy = cnt.squeeze()
+        on_top_border = corners_xy[:, 1].min() == 0
+        on_btm_border = corners_xy[:, 1].max() == mask.shape[0] - 1
+        on_left_border = corners_xy[:, 0].min() == 0
+        on_right_border = corners_xy[:, 0].max() == mask.shape[1] - 1
 
+        on_border = any([on_top_border, on_btm_border, on_left_border, on_right_border])
+        if not on_border:
+            cv2.drawContours(contour_mask, [cnt], 0, 255, -1)
+        else:
+            # Need to close contours on the border in order to fill holes
+            contour_w_border = np.zeros_like(mask)
+            cv2.drawContours(contour_w_border, [cnt], 0, 255, -1)
+            if on_top_border:
+                # Check top border
+                idx_at_min_y = np.where(corners_xy[:, 1] == 0)[0]
+                min_x = corners_xy[:, 0][idx_at_min_y.min()]
+                max_x = corners_xy[:, 0][idx_at_min_y.max()]
+                contour_w_border[0, min_x:max_x] = 255
+
+            if on_left_border:
+                # Check left border
+                # min_x = np.min(corners_xy[:, 0])
+                idx_at_min_x = np.where(corners_xy[:, 0] == 0)[0]
+                min_y = corners_xy[:, 1][idx_at_min_x.min()]
+                max_y = corners_xy[:, 1][idx_at_min_x.max()]
+                contour_w_border[min_y:max_y, 0] = 255
+
+            if on_right_border:
+                # Check right border
+                max_x = mask.shape[1] - 1 #np.max(corners_xy[:, 0])
+                idx_at_max_x = np.where(corners_xy[:, 0] == max_x)[0]
+                min_y = corners_xy[:, 1][idx_at_max_x.min()]
+                max_y = corners_xy[:, 1][idx_at_max_x.max()]
+                contour_w_border[min_y:max_y, max_x] = 255
+
+            if on_btm_border:
+                # Check bottom border
+                max_y = mask.shape[0] - 1 #np.max(corners_xy[:, 1])
+                idx_at_max_y = np.where(corners_xy[:, 1] == max_y)[0]
+                min_x = corners_xy[:, 0][idx_at_max_y.min()]
+                max_x = corners_xy[:, 0][idx_at_max_y.max()]
+                contour_w_border[max_y, min_x:max_x] = 255
+
+            on_border_contours, _ = cv2.findContours(contour_w_border, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for b_cnt in on_border_contours:
+                cv2.drawContours(contour_mask, [b_cnt], 0, 255, -1)
+
+
+            # plt.imshow(contour_w_border)
+            # plt.show()
+
+    # plt.imshow(contour_mask)
+    # plt.show()
     return contour_mask
+
 
 
 def match_histograms(src_image, ref_histogram, bins=256):
