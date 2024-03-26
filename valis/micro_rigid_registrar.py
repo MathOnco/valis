@@ -398,7 +398,8 @@ class MicroRigidRegistrar(object):
         return tile_bbox_list
 
     def norm_imgs(self, img_list):
-        target_processing_stats = preprocessing.get_channel_stats(np.hstack([img.reshape(-1) for img in img_list]))
+        # target_processing_stats = preprocessing.get_channel_stats(np.hstack([img.reshape(-1) for img in img_list]))
+        _, target_processing_stats = preprocessing.collect_img_stats(img_list)
 
         normed_list = [None] * len(img_list)
         for i, img in enumerate(img_list):

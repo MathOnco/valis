@@ -1883,15 +1883,36 @@ def match_histograms(src_image, ref_histogram, bins=256):
     return image_after_matching
 
 
-def get_channel_stats(img):
-    img_stats = [None] * 5
-    img_stats[0] = np.percentile(img, 1)
-    img_stats[1] = np.percentile(img, 5)
-    img_stats[2] = np.mean(img)
-    img_stats[3] = np.percentile(img, 95)
-    img_stats[4] = np.percentile(img, 99)
+# def get_channel_stats(img):
+    # img_stats = [None] * 5
+    # img_stats[0] = np.percentile(img, 1)
+    # img_stats[1] = np.percentile(img, 5)
+    # img_stats[2] = np.mean(img)
+    # img_stats[3] = np.percentile(img, 95)
+    # img_stats[4] = np.percentile(img, 99)
+#
+#     return np.array(img_stats)
 
-    return np.array(img_stats)
+def collect_img_stats(img_list, norm_percentiles=[1, 5, 95, 99]):
+
+    all_histogram, _ = np.histogram(img_list[0].reshape(-1), bins=256)
+
+    n = img_list[0].size
+    total_x = img_list[0].sum()
+    for i in range(1, len(img_list)):
+        img = img_list[i]
+        img_hist, _ = np.histogram(img.reshape(-1), bins=256)
+        all_histogram += img_hist
+        n += img.size
+        total_x += img.sum()
+
+    mean_x = total_x/n
+    ref_cdf = 100*np.cumsum(all_histogram)/np.sum(all_histogram)
+    all_img_stats = np.array([len(np.where(ref_cdf <= q)[0]) for q in norm_percentiles])
+    all_img_stats = np.hstack([all_img_stats, mean_x])
+    all_img_stats = all_img_stats[np.argsort(all_img_stats)]
+
+    return all_histogram, all_img_stats
 
 
 def norm_img_stats(img, target_stats, mask=None):
@@ -1908,7 +1929,8 @@ def norm_img_stats(img, target_stats, mask=None):
     """
 
     if mask is None:
-        src_stats_flat = get_channel_stats(img)
+        # src_stats_flat = get_channel_stats(img)
+        _, src_stats_flat = collect_img_stats([img])
     else:
 
         if isinstance(mask, pyvips.Image):
@@ -1916,11 +1938,13 @@ def norm_img_stats(img, target_stats, mask=None):
         else:
             np_mask = mask
 
-        src_stats_flat = get_channel_stats(img[np_mask > 0])
+        # src_stats_flat = get_channel_stats(img[np_mask > 0])
+        _, src_stats_flat = collect_img_stats([img[np_mask > 0]])
 
     # Avoid duplicates and keep in ascending order
     lower_knots = np.array([0])
     upper_knots = np.array([300, 350, 400, 450])
+    # upper_knots = np.array([256])
     src_stats_flat = np.hstack([lower_knots, src_stats_flat, upper_knots]).astype(float)
     target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots]).astype(float)
 

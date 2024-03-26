@@ -1245,14 +1245,14 @@ class NonRigidTileRegistrar(object):
     def norm_tiles(self, moving_img, fixed_img, tile_mask):
         try:
             # Try norming using these tile stats
-            if tile_mask is not None:
-                pos_px = np.where(tile_mask != 0)
-                tile_v = np.hstack([fixed_img[pos_px], moving_img[pos_px]])
-            else:
-                tile_v = np.hstack([fixed_img.reshape(-1), moving_img.reshape(-1)])
+            # if tile_mask is not None:
+            #     pos_px = np.where(tile_mask != 0)
+            #     tile_v = np.hstack([fixed_img[pos_px], moving_img[pos_px]])
+            # else:
+            #     tile_v = np.hstack([fixed_img.reshape(-1), moving_img.reshape(-1)])
 
-            target_processing_stats = preprocessing.get_channel_stats(tile_v)
-
+            # target_processing_stats = preprocessing.get_channel_stats(tile_v)
+            target_processing_stats = preprocessing.collect_img_stats([fixed_img, moving_img])
             fixed_normed = self.norm_img(fixed_img, target_processing_stats, tile_mask)
             moving_normed = self.norm_img(moving_img, target_processing_stats, tile_mask)
 
