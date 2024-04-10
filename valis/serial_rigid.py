@@ -22,6 +22,8 @@ from . import warp_tools
 from . import slide_tools
 from .feature_detectors import VggFD
 from .feature_matcher import Matcher, convert_distance_to_similarity, GMS_NAME
+from .valtils import get_ncpus_available
+
 
 DENOISE_MSG = "Denoising images"
 FEATURE_MSG = "Detecting features"
@@ -570,7 +572,7 @@ class SerialRigidRegistrar(object):
             if qt_emitter is not None:
                 qt_emitter.emit(1)
 
-        n_cpu = multiprocessing.cpu_count() - 1
+        n_cpu = get_ncpus_available() - 1
         res = pqdm(range(self.size), match_adj_img_obj, n_jobs=n_cpu, desc=MATCHING_MSG, unit="image", leave=None)
 
         # with parallel_backend("threading", n_jobs=n_cpu):
@@ -632,7 +634,7 @@ class SerialRigidRegistrar(object):
                 if qt_emitter is not None:
                     qt_emitter.emit(1)
 
-        n_cpu = multiprocessing.cpu_count() - 1
+        n_cpu = get_ncpus_available() - 1
         res = pqdm(range(self.size), match_img_obj, n_jobs=n_cpu, desc=MATCHING_MSG, unit="image", leave=None)
 
         # with parallel_backend("threading", n_jobs=n_cpu):

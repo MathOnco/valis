@@ -23,6 +23,8 @@ import os
 import re
 from copy import deepcopy
 from . import valtils
+from .valtils import get_ncpus_available
+
 
 pyvips.cache_set_max(0)
 
@@ -2877,7 +2879,7 @@ def get_overlapping_poly(mesh_poly_coords):
             else:
                 poly_diffs.append(diff.buffer(buffer_v))
 
-    n_cpu = multiprocessing.cpu_count() - 1
+    n_cpu = get_ncpus_available() - 1
     with parallel_backend("threading", n_jobs=n_cpu):
         Parallel()(delayed(clip_poly)(i) for i in tqdm.tqdm(range(n_poly)))
 
