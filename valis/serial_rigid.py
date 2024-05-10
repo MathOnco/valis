@@ -18,6 +18,7 @@ from time import time
 from pqdm.threads import pqdm
 
 from . import valtils
+from . import preprocessing
 from . import warp_tools
 from . import slide_tools
 from .feature_detectors import VggFD
@@ -1533,6 +1534,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
             for img_obj in registrar.img_obj_dict.values():
                 slide_obj = valis_obj.get_slide(img_obj.name)
                 reg_mask = valis_obj.crop_rigid_reg_mask(slide_obj, mask=slide_obj.rigid_reg_mask)
+                reg_mask = preprocessing.mask2bbox_mask(reg_mask)
                 features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=reg_mask)
                 if len(features_in_mask_idx) > 0:
                     img_obj.kp_pos_xy = img_obj.kp_pos_xy[features_in_mask_idx, :]

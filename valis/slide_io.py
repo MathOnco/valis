@@ -273,7 +273,6 @@ def get_bioformats_version():
 
     return v
 
-
 def get_bf_readable_formats():
     """Get extensions of formats that BioFormats can read
 
@@ -1798,6 +1797,10 @@ class VipsSlideReader(SlideReader):
             channel_names = []
             for i in range(n_pages):
                 page = pyvips.Image.new_from_file(self.src_f, page=i)
+                page_fields = page.get_fields()
+                if "image-description" not in page_fields:
+                    continue
+
                 page_metadata = page.get("image-description")
 
                 with valtils.HiddenPrints():
