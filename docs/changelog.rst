@@ -13,6 +13,7 @@ Version 1.1.0
 #. Passing radians to :code:`np.cos` and :code:`np.sin` when determining how much to pad images, as noted in `Github issue 103 <https://github.com/MathOnco/valis/issues/103>`_. These images get cropped, so this should not affect registration accuracy.
 #. Can now read ome.tiff that do not have a SUBIFD, reported in Github issue `101 <https://github.com/MathOnco/valis/issues/101>`_
 #. Improved saving of non-pyarmid images, related to Github issue `101 <https://github.com/MathOnco/valis/issues/101>`_
+#. Better compatibility with non-uint8 RGB images.
 #. Updated code to ensure merged images have channels in the same order as when sorted or specified.
 
 Version 1.0.4 (February 2, 2024)
@@ -72,7 +73,6 @@ Version 1.0.0 (October 4, 2023)
 #. Fixed issue converting big-endian WSI to :code:`pyvips.Image` (reported on `image.sc <https://forum.image.sc/t/problems-registering-fluorescence-ome-tiffs-using-valis/82685>_`)
 #. Added citation information
 #. Updated docker container to include pytorch
-
 
 Version 1.0.0rc15 (May 10, 2023)
 -------------------------------------

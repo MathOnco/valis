@@ -353,6 +353,9 @@ class Slide(object):
         self.units = reader.metadata.pixel_physical_size_xyu[2]
         self.original_xml = reader.metadata.original_xml
 
+        if self.is_rgb and self.image.dtype != np.uint8:
+            self.image = exposure.rescale_intensity(self.image, out_range=np.uint8)
+
         if name is None:
             name = valtils.get_name(src_f)
 
@@ -397,6 +400,19 @@ class Slide(object):
         self.rigid_cropped = False
         self.M_for_cropped = None
         self.rigid_reg_cropped_shape_rc = None
+
+
+    def __repr__(self):
+        repr_str = (f'<{self.__class__.__name__}, name = {self.name}>'
+                #    f', width={self.slide_dimensions_wh[0][0]}'
+                #    f', height={self.slide_dimensions_wh[0][1]}'
+                #    f', channels={self.reader.metadata.n_channels}'
+                #    f', levels={len(self.slide_dimensions_wh)}'
+                #    f', RGB={self.is_rgb}'
+                #    f', dtype={self.image.dtype}>'
+                   )
+        return (repr_str)
+
 
     def check_if_empty(self, img):
         """Check if the image is empty
@@ -3298,32 +3314,15 @@ class Valis(object):
     #     If rigid transforms were found on cropped images, they will need to be
     #     altered to account for cropping and scaling.
     #     """
-    #     ref_slide = self.get_ref_slide()
-    #     # rigid_ref = rigid_registrar.img_obj_dict[ref_slide.name]
-    #     # rigid_ref_corners_xy = warp_tools.get_corners_of_image(rigid_ref.image.shape[0:2])[:, ::-1]
 
-    #     # rigid_ref.M
-    #     # ref_s = np.array(ref_slide.processed_img_shape_rc)/np.array(ref_slide.uncropped_processed_img_shape_rc)
-
-    #     # ref_corners_in_uncropped = ref_s*(rigid_ref_corners_xy + ref_slide.processed_crop_bbox[0:2])
-
-    #     # min_x = np.inf # Reference image will
-    #     # max_x = 0
-    #     # min_y = np.inf
-    #     # max_y = 0
-    #     # Reference image will always be unwarped,
-    #     min_x = 0
-    #     max_x = ref_slide.processed_img_shape_rc[1]
-    #     min_y = 0
-    #     max_y = ref_slide.processed_img_shape_rc[0]
     #     slide_M_dict = {}
     #     matches_dict = {}
     #     cropped_M_dict = {}
 
-
     #     # ref_img_obj = rigid_registrar.img_obj_list[self.reference_img_idx]
 
     #     # warp_tools.save_img(os.path.join(dst_dir, f"{ref_slide.stack_idx} {ref_slide.name}.png"), ref_slide.image)
+    #     ref_slide = self.get_ref_slide()
     #     for moving_idx, fixed_idx in rigid_registrar.iter_order:
     #         img_obj = rigid_registrar.img_obj_list[moving_idx]
     #         prev_img_obj = rigid_registrar.img_obj_list[fixed_idx]
@@ -3352,12 +3351,27 @@ class Valis(object):
     #         # Estimate transform
     #         M_tform = transform.SimilarityTransform()
     #         M_tform.estimate(kp2_xy_in_uncropped_warped, kp1_xy_in_uncropped_scaled)
+    #         # uncropped_M = M_tform.params
+    #         if np.any(img_obj.reflection_M != np.eye(3)):
+    #             # Found reflection, so need to include here too
+    #             rx, ry = img_obj.reflection_M[[0, 1], [0, 1]] < 0
+    #             uncropped_reflect_M = warp_tools.get_reflection_M(rx, ry, slide_obj.processed_img_shape_rc)
+    #             # padded_img = slide_obj.pad_cropped_processed_img()
+    #             # slide_obj.image.shape
+    #             # padded_img.shape
+    #             # reflected = warp_tools.warp_img(padded_img, M=uncropped_reflect_M, out_shape_rc=slide_obj.processed_img_shape_rc)
+    #             # plt.imshow(reflected)
+    #             # plt.show()
+    #             scaled_M = uncropped_reflect_M @ M_tform.params
 
-    #         slide_M_dict[slide_obj.name] = M_tform.params
-    #         cropped_M_dict[slide_obj.name] = img_obj.M
+    #         else:
+    #             scaled_M = M_tform.params
 
-    #         scaled_M = M_tform.params
+    #         # scaled_M = M_tform.params
     #         prev_M = scaled_M
+
+    #         slide_M_dict[slide_obj.name] = scaled_M #M_tform.params
+    #         cropped_M_dict[slide_obj.name] = img_obj.M
 
     #         # small_aligned = warp_tools.warp_img(slide_obj.image, M=scaled_M, out_shape_rc=ref_slide.image.shape[0:2])
     #         # warp_tools.save_img(os.path.join(dst_dir, f"{slide_obj.stack_idx} {slide_obj.name}.png"), small_aligned)
@@ -3368,27 +3382,28 @@ class Valis(object):
 
     #         matches_dict[slide_obj.name] = uncropped_matches
 
-    #         # Determine size of output images
-    #         resized_corners_xy = warp_tools.get_corners_of_image(slide_obj.processed_img_shape_rc)[:, ::-1]
-    #         resized_warped_corners = warp_tools.warp_xy(resized_corners_xy, M=scaled_M)
+    #     # Determine size of output images and any padding need to get them all to fit
+    #     min_x = np.inf
+    #     max_x = 0
+    #     min_y = np.inf
+    #     max_y = 0
+    #     for slide_obj in self.slide_dict.values():
+    #         temp_M = slide_M_dict[slide_obj.name]
+    #         corners_xy = warp_tools.get_corners_of_image(slide_obj.processed_img_shape_rc)[:, ::-1]
+    #         warped_corners = warp_tools.warp_xy(corners_xy, M=temp_M)
 
-    #         min_x = np.min([np.min(resized_warped_corners[:, 0]), min_x])
-    #         max_x = np.max([np.max(resized_warped_corners[:, 0]), max_x])
-    #         min_y = np.min([np.min(resized_warped_corners[:, 1]), min_y])
-    #         max_y = np.max([np.max(resized_warped_corners[:, 1]), max_y])
+    #         min_x = np.min([np.min(warped_corners[:, 0]), min_x])
+    #         max_x = np.max([np.max(warped_corners[:, 0]), max_x])
+    #         min_y = np.min([np.min(warped_corners[:, 1]), min_y])
+    #         max_y = np.max([np.max(warped_corners[:, 1]), max_y])
 
-
-    #     # Determine size of registered image. Make sure unwarped but padded reference fits.
+    #     # Determine size of registered image.
     #     pad_T = np.identity(3)
     #     pad_T[0, 2] = min_x
     #     pad_T[1, 2] = min_y
 
-    #     ref_corners_xy = warp_tools.get_corners_of_image(ref_slide.processed_img_shape_rc)[:, ::-1]
-    #     padded_ref_corners = warp_tools.warp_xy(ref_corners_xy, pad_T)
-    #     # w = int(np.ceil(max(np.max(padded_ref_corners[:, 0]), int(np.ceil(max_x - min_x)))))
-    #     # h = int(np.ceil(max(np.max(padded_ref_corners[:, 1]), int(np.ceil(max_y - min_y)))))
-    #     w = int(np.ceil(max(np.max(padded_ref_corners[:, 0]), max_x - min_x)))
-    #     h = int(np.ceil(max(np.max(padded_ref_corners[:, 1]), max_y - min_y)))
+    #     w = int(np.ceil(max_x - min_x))
+    #     h = int(np.ceil(max_y - min_y))
     #     registerd_out_shape_rc = np.array([h, w])
 
     #     for slide_obj in self.slide_dict.values():
@@ -3413,19 +3428,6 @@ class Valis(object):
         altered to account for cropping and scaling.
         """
 
-        # rigid_ref = rigid_registrar.img_obj_dict[ref_slide.name]
-        # rigid_ref_corners_xy = warp_tools.get_corners_of_image(rigid_ref.image.shape[0:2])[:, ::-1]
-
-        # rigid_ref.M
-        # ref_s = np.array(ref_slide.processed_img_shape_rc)/np.array(ref_slide.uncropped_processed_img_shape_rc)
-
-        # ref_corners_in_uncropped = ref_s*(rigid_ref_corners_xy + ref_slide.processed_crop_bbox[0:2])
-
-        # Reference image will always be unwarped,
-        # min_x = 0
-        # max_x = ref_slide.processed_img_shape_rc[1]
-        # min_y = 0
-        # max_y = ref_slide.processed_img_shape_rc[0]
         slide_M_dict = {}
         matches_dict = {}
         cropped_M_dict = {}
@@ -3449,8 +3451,16 @@ class Valis(object):
             match_info = img_obj.match_dict[prev_img_obj]
 
             # Put points back in uncropped images
+            rx, ry = img_obj.reflection_M[[0, 1], [0, 1]] < 0
+            any_reflections = any([rx, ry])
+            if any_reflections:
+                uncropped_reflect_M = warp_tools.get_reflection_M(rx, ry, slide_obj.processed_img_shape_rc)
+                kp1_xy = warp_tools.warp_xy(match_info.matched_kp1_xy, img_obj.reflection_M)
+            else:
+                kp1_xy = match_info.matched_kp1_xy
+
             s = np.array(slide_obj.processed_img_shape_rc)/np.array(slide_obj.uncropped_processed_img_shape_rc)
-            kp1_xy_in_uncropped_scaled = s*(match_info.matched_kp1_xy + slide_obj.processed_crop_bbox[0:2])
+            kp1_xy_in_uncropped_scaled = s*(kp1_xy + slide_obj.processed_crop_bbox[0:2])
 
             prev_s = np.array(prev_slide_obj.processed_img_shape_rc)/np.array(prev_slide_obj.uncropped_processed_img_shape_rc)
             kp2_xy_in_uncropped_scaled = prev_s*(match_info.matched_kp2_xy + prev_slide_obj.processed_crop_bbox[0:2])
@@ -3463,11 +3473,17 @@ class Valis(object):
             M_tform = transform.SimilarityTransform()
             M_tform.estimate(kp2_xy_in_uncropped_warped, kp1_xy_in_uncropped_scaled)
 
-            slide_M_dict[slide_obj.name] = M_tform.params
-            cropped_M_dict[slide_obj.name] = img_obj.M
+            # uncropped_M = M_tform.params
+            if any_reflections:
+                scaled_M = uncropped_reflect_M @ M_tform.params
+            else:
+                scaled_M = M_tform.params
 
-            scaled_M = M_tform.params
+            # scaled_M = M_tform.params
             prev_M = scaled_M
+
+            slide_M_dict[slide_obj.name] = scaled_M #M_tform.params
+            cropped_M_dict[slide_obj.name] = img_obj.M
 
             # small_aligned = warp_tools.warp_img(slide_obj.image, M=scaled_M, out_shape_rc=ref_slide.image.shape[0:2])
             # warp_tools.save_img(os.path.join(dst_dir, f"{slide_obj.stack_idx} {slide_obj.name}.png"), small_aligned)
@@ -3515,7 +3531,6 @@ class Valis(object):
         cropped_registerd_out_shape_rc = rigid_registrar.img_obj_list[0].registered_shape_rc
 
         return slide_M_dict, registerd_out_shape_rc, cropped_M_dict, cropped_registerd_out_shape_rc, matches_dict
-
 
 
     def get_cropped_img_for_rigid_warp(self, slide_obj):

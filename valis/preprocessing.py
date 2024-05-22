@@ -88,6 +88,8 @@ class ImageProcesser(object):
             reader = reader_cls(src_f, series=series)
 
         self.reader = reader
+        if self.reader.metadata.is_rgb and self.image.dtype != np.uint8:
+            self.image = exposure.rescale_intensity(self.image, out_range=np.uint8)
 
         self.original_shape_rc = warp_tools.get_shape(image)[0:2] # Size of image passed into processor
         self.uncropped_shape_rc = None # Size of uncropped image (bigger than `original_shape_rc`)
@@ -125,7 +127,7 @@ class ChannelGetter(ImageProcesser):
 
         return tissue_mask
 
-    def process_image(self, channel="dapi", adaptive_eq=True, *args, **kwaargs):
+    def process_image(self, channel="dapi", adaptive_eq=True, invert=False, *args, **kwaargs):
         if self.image is None:
             chnl = self.reader.get_channel(channel=channel, level=self.level, series=self.series).astype(float)
         else:
@@ -141,6 +143,8 @@ class ChannelGetter(ImageProcesser):
             chnl = exposure.equalize_adapthist(chnl)
 
         chnl = exposure.rescale_intensity(chnl, in_range="image", out_range=(0, 255)).astype(np.uint8)
+        if invert:
+            chnl = util.invert(chnl)
 
         return chnl
 
@@ -1005,8 +1009,6 @@ def stainmat2decon(stain_mat_srgb255):
 def deconvolve_img(rgb_img, D):
     od_img = rgb2od(rgb_img)
     deconvolved_img = np.dot(od_img, D)
-    # if clip:
-        # deconvolved_img[deconvolved_img < 0] = 0
 
     return deconvolved_img
 
@@ -1736,6 +1738,7 @@ def create_tissue_mask_with_jc_dist(img):
     jc_dist_img = jc_dist(img, metric="chebyshev")
     jc_dist_img[np.isnan(jc_dist_img)] = np.nanmax(jc_dist_img)
 
+
     jc_t, _ = filters.threshold_multiotsu(jc_dist_img)
     jc_mask = 255*(jc_dist_img > jc_t).astype(np.uint8)
     jc_dist_img = exposure.equalize_adapthist(exposure.rescale_intensity(jc_dist_img, out_range=(0, 1)))
@@ -1743,6 +1746,7 @@ def create_tissue_mask_with_jc_dist(img):
     img_edges = filters.scharr(jc_dist_img)
     p_t = filters.threshold_otsu(img_edges)
     edges_mask = 255*(img_edges > p_t).astype(np.uint8)
+
 
     temp_mask = edges_mask.copy()
     temp_mask[jc_mask == 0] = 0
@@ -1769,14 +1773,13 @@ def clean_mask(mask, img, rel_min_size=0.001):
     # no_lines_mask = mask.copy()
     fg_labeled = measure.label(mask)
     fg_regions = measure.regionprops(fg_labeled)
+
+    if len(fg_regions) == 1:
+        return mask
     # region_sizes = np.array([x.area for x in fg_regions])
 
     jch = rgb2jch(img, cspace="JzAzBz")
-    # jch = rgb2jch(img, cspace="CAM16UCS")
     c = exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
-    # hys = colour.models.RGB_to_IHLS(img) # Hue, luminance, saturation/colorfulness
-    # c = exposure.rescale_intensity(hys[..., 2], out_range=(0, 1))
-
     colorfulness_img = np.zeros(mask.shape)
 
     for i, r in enumerate(fg_regions):
@@ -1811,11 +1814,11 @@ def clean_mask(mask, img, rel_min_size=0.001):
         colorfulness_img[r.slice][r_filled_img] = np.max(c[r.slice][r_filled_img])
         # colorfulness_img[r.slice][r_filled_img] = np.percentile(c[r.slice][r_filled_img], 90)
 
+
     color_thresh = filters.threshold_otsu(colorfulness_img[mask > 0])
     # color_thresh, _ = filters.threshold_multiotsu(colorfulness_img[mask > 0])
     color_mask = colorfulness_img > color_thresh
 
-    # plt.show()
     # mask_list = [mask.astype(bool), color_mask, het_mask, line_mask, tort_mask]
     # mask_list = [mask.astype(bool), color_mask, het_mask, tort_mask]
     mask_list = [mask.astype(bool), color_mask]

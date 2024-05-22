@@ -450,14 +450,30 @@ def check_to_use_openslide(src_f):
     return use_openslide
 
 
+def get_ome_obj(src_f):
+    try:
+        ome_obj = ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
+
+    except Exception as e:
+        # Sometimes the image description found by `ome_types.from_tiff`
+        # does not contain the ome-xml. Seems to be the case for ImageJ exports, at least
+        try:
+            bf_rdr, bf_meta = get_bioformats_reader_and_meta(str(src_f))
+            meta_xml = bf_meta.dumpXML()
+            ome_obj = ome_types.from_xml(str(meta_xml), parser=OME_TYPES_PARSER)
+        except Exception as e:
+            valtils.print_warning(f"Could not get ome-xml for {src_f}")
+            ome_obj = None
+
+    return ome_obj
+
+
 def check_is_ome(src_f):
     is_ome = re.search(".ome", src_f) is not None and re.search(".tif*", src_f) is not None
     if is_ome:
         # Verify that image is valid ome.tiff
-        try:
-            ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
-            is_ome = True
-        except:
+        ome_obj = get_ome_obj(src_f)
+        if ome_obj is None:
             is_ome = False
 
     return is_ome
@@ -668,6 +684,22 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
             valtils.print_warning(msg)
 
     return metadata
+
+
+def get_bioformats_reader_and_meta(src_f):
+    init_jvm()
+    rdr = loci.formats.ImageReader()
+    factory = loci.common.services.ServiceFactory()
+    OMEXMLService_class = loci.formats.services.OMEXMLService
+
+    service = factory.getInstance(OMEXMLService_class)
+    ome_meta = service.createOMEXMLMetadata()
+    rdr.setMetadataStore(ome_meta)
+    rdr.setFlattenedResolutions(False)
+    rdr.setId(src_f)
+    meta = rdr.getMetadataStore()
+
+    return rdr, meta
 
 
 def metadata_from_xml(xml, name, server, series=0, metadata=None):
@@ -1211,7 +1243,7 @@ class BioFormatsSlideReader(SlideReader):
 
         print(f"Converting slide to pyvips image")
         vips_slide = pyvips.Image.arrayjoin(
-                                  self.get_tiles_parallel(level, tile_bbox, pixel_type, series, z=z, t=t),
+                                  self.get_tiles_parallel(level, tile_bbox_list=tile_bbox, pixel_type=pixel_type, series=series, z=z, t=t),
                                   across=n_across).crop(0, 0, *slide_shape_wh)
         if xywh is not None:
             vips_slide = vips_slide.extract_area(*xywh)
@@ -1394,16 +1426,17 @@ class BioFormatsSlideReader(SlideReader):
         # Jpype #
         #-------#
 
-        rdr = loci.formats.ImageReader()
-        factory = loci.common.services.ServiceFactory()
-        OMEXMLService_class = loci.formats.services.OMEXMLService
+        rdr, meta = get_bioformats_reader_and_meta(self.src_f)
+        # rdr = loci.formats.ImageReader()
+        # factory = loci.common.services.ServiceFactory()
+        # OMEXMLService_class = loci.formats.services.OMEXMLService
 
-        service = factory.getInstance(OMEXMLService_class)
-        ome_meta = service.createOMEXMLMetadata()
-        rdr.setMetadataStore(ome_meta)
-        rdr.setFlattenedResolutions(False)
-        rdr.setId(self.src_f)
-        meta = rdr.getMetadataStore()
+        # service = factory.getInstance(OMEXMLService_class)
+        # ome_meta = service.createOMEXMLMetadata()
+        # rdr.setMetadataStore(ome_meta)
+        # rdr.setFlattenedResolutions(False)
+        # rdr.setId(self.src_f)
+        # meta = rdr.getMetadataStore()
 
         return rdr, meta
 
@@ -1747,6 +1780,12 @@ class VipsSlideReader(SlideReader):
     def _check_rgb(self, vips_img):
         """Determine if image is RGB
 
+        See https://github.com/libvips/libvips/issues/580#issuecomment-272804812
+        3 types of RGB
+        srgb = 0-255, uint8
+        rgb16 =  0-65535, uint16
+        scrgb = 0-1, float
+
         Parameters
         ----------
         vips_img : pyvips.Image
@@ -1759,7 +1798,9 @@ class VipsSlideReader(SlideReader):
 
         """
 
-        return vips_img.interpretation == "srgb"
+        livbips_rgb_formats = [x.lower() for x in dir(pyvips.enums.Interpretation) if re.search("RGB", x) is not None]
+
+        return vips_img.interpretation in livbips_rgb_formats
 
     def _get_xml(self, vips_img):
         img_desc = None
@@ -2782,7 +2823,7 @@ def get_slide_reader(src_f, series=None):
 
     one_series = True
     if is_ome_tiff:
-        ome_obj = ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
+        ome_obj = get_ome_obj(src_f) #ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
         one_series = len(ome_obj.images) == 1
 
     can_use_vips = check_to_use_vips(src_f)

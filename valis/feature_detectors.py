@@ -408,7 +408,6 @@ class SuperPointFD(FeatureDD):
 
         """
         super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
-
         self.keypoint_threshold = keypoint_threshold
         self.nms_radius = nms_radius
         self.device = 'cuda' if torch.cuda.is_available() and not force_cpu else "cpu"
@@ -429,11 +428,12 @@ class SuperPointFD(FeatureDD):
             'superpoint': {
                 'nms_radius': self.nms_radius,
                 'keypoint_threshold': self.keypoint_threshold,
-                'max_keypoints': 1000#MAX_FEATURES
+                'max_keypoints': MAX_FEATURES
             }}
 
     def frame2tensor(self, img):
-        tensor = torch.from_numpy(img/255.).float()[None, None].to(self.device)
+        float_img = exposure.rescale_intensity(img, out_range=np.float64)
+        tensor = torch.from_numpy(float_img).float()[None, None].to(self.device)
 
         return tensor
 
