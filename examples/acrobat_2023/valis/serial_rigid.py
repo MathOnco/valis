@@ -22,7 +22,6 @@ from . import valtils
 from . import warp_tools
 from .feature_detectors import VggFD
 from .feature_matcher import Matcher, convert_distance_to_similarity, GMS_NAME
-from .valtils import get_ncpus_available
 
 def get_image_files(img_dir, imgs_ordered=False):
     """Get images filenames in img_dir
@@ -565,7 +564,7 @@ class SerialRigidRegistrar(object):
             if qt_emitter is not None:
                 qt_emitter.emit(1)
 
-        n_cpu = get_ncpus_available() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
         with parallel_backend("threading", n_jobs=n_cpu):
             Parallel()(delayed(match_adj_img_obj)(i) for i in range(self.size))
 
@@ -630,7 +629,7 @@ class SerialRigidRegistrar(object):
                 if qt_emitter is not None:
                     qt_emitter.emit(1)
 
-        n_cpu = get_ncpus_available() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
         with parallel_backend("threading", n_jobs=n_cpu):
             Parallel()(delayed(match_img_obj)(i) for i in range(self.size))
 

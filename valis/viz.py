@@ -207,7 +207,6 @@ def draw_clusterd_D(D, optimal_Z):
 
 
 # Non-rigid visualization #
-# @nb.njit()
 def get_grid(shape, grid_spacing, thickness=1):
     """
     Get points for a grid. Can be used to view deformation field
@@ -600,7 +599,6 @@ def create_overlap_img(img_list, cmap=jzazbz_cmap(), blending="weighted"):
     return blended
 
 
-# @nb.njit(fastmath=True, cache=True)
 def blend_colors(img, colors, scale_by):
     """ Color an image by blending
 
@@ -872,7 +870,6 @@ def draw_trimesh(shape_rc, tri_verts, tri_faces, thickness=2):
                                 lineType=cv2.LINE_AA)
 
     return tri_img.astype(float)
-
 
 
 def color_displacement_tri_grid(bk_dx, bk_dy, img=None, n_grid_pts=25, c_range=DXDY_CRANGE, l_range=DXDY_LRANGE, thickness=None, cspace=DXDY_CSPACE):

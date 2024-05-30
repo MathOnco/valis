@@ -1003,8 +1003,8 @@ class SuperPointAndGlue(Matcher):
         self.config = {
             'superpoint': {
                 'nms_radius': self.nms_radius,
-                'keypoint_threshold': self.keypoint_threshold#,
-                # 'max_keypoints': 100 #feature_detectors.MAX_FEATURES
+                'keypoint_threshold': self.keypoint_threshold,
+                'max_keypoints': feature_detectors.MAX_FEATURES
             },
             'superglue': {
                 'weights': self.weights,
@@ -1291,10 +1291,6 @@ class SuperGlueMatcher(Matcher):
         return inp, kp_xy_inp, desc_inp, scores
 
     def _match_images(self, img1=None, desc1=None, kp1_xy=None, img2=None, desc2=None, kp2_xy=None, additional_filtering_kwargs=None):
-
-        # scores1.shape
-        # kp1_xy_inp.shape
-        # desc1_inp.shape
 
         inp1, kp1_xy_inp, desc1_inp, scores1 = self.prep_data(img=img1, kp_xy=kp1_xy)
         inp2, kp2_xy_inp, desc2_inp, scores2 = self.prep_data(img=img2, kp_xy=kp2_xy)

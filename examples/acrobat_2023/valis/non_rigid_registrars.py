@@ -17,8 +17,7 @@ from tqdm import tqdm
 from . import viz
 from . import warp_tools
 from . import preprocessing
-
-from .valtils import get_ncpus_available
+from . import valtils
 
 NR_CLS_KEY = "non_rigid_registrar_cls"
 NR_PROCESSING_KW_KEY = "processing_kwargs"
@@ -1361,7 +1360,7 @@ class NonRigidTileRegistrar(object):
 
         print("======== Registering tiles\n")
         lock = multiprocessing.Lock()
-        n_cpu = get_ncpus_available() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
         self.pbar = tqdm(total=self.n_tiles)
         with parallel_backend("threading", n_jobs=n_cpu):
             Parallel()(delayed(self.reg_tile)(i, lock) for i in range(self.n_tiles))

@@ -9,7 +9,6 @@ from . import feature_detectors
 from . import preprocessing
 from . import warp_tools
 from . import valtils
-from .valtils import get_ncpus_available
 
 from pqdm.threads import pqdm
 
@@ -17,11 +16,17 @@ ROI_MASK = "mask"
 ROI_MATCHES = "matches"
 
 DEFAULT_ROI = ROI_MASK
+# DEFAULT_FD = feature_detectors.SuperPointFD
+# DEFAULT_MATCHER = feature_matcher.SuperPointAndGlue
+
+# DEFAULT_BF_PROCESSOR = preprocessing.StainFlattener
+# DEFAULT_BF_PROCESSOR_KWARGS = {"adaptive_eq":False, "with_mask":False}
+
 DEFAULT_FD = feature_detectors.SuperPointFD
 DEFAULT_MATCHER = feature_matcher.SuperPointAndGlue
 
-DEFAULT_BF_PROCESSOR = preprocessing.StainFlattener
-DEFAULT_BF_PROCESSOR_KWARGS = {"adaptive_eq":False, "with_mask":False}
+DEFAULT_BF_PROCESSOR = preprocessing.OD
+DEFAULT_BF_PROCESSOR_KWARGS = {}
 
 DEFAULT_FLOURESCENCE_CLASS = preprocessing.ChannelGetter
 DEFAULT_FLOURESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
@@ -280,8 +285,6 @@ class MicroRigidRegistrar(object):
                     return None
 
             except Exception as e:
-                # traceback_msg = traceback.format_exc()
-                # print(traceback_msg)
                 return None
 
             matched_moving_xy = filtered_matched_moving_xy.copy()
@@ -295,7 +298,7 @@ class MicroRigidRegistrar(object):
             high_rez_fixed_match_xy_list[bbox_id] = matched_fixed_xy
 
         print(f"Aligning {moving_slide.name} to {fixed_slide.name}. ROI width, height is {reg_bbox[2:]} pixels")
-        n_cpu = get_ncpus_available() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
 
         with suppress(UserWarning):
             # Avoid printing warnings that not enough matches were found, which can happen frequently with this
@@ -323,8 +326,6 @@ class MicroRigidRegistrar(object):
 
             if len(moving_features_in_mask_idx) > 0 and len(fixed_features_in_mask_idx) > 0:
                 matches_in_masks = np.intersect1d(moving_features_in_mask_idx, fixed_features_in_mask_idx)
-                # n_removed = scaled_moving_kp.shape[0] - len(matches_in_masks)
-                # print(f"Removed {n_removed} features outside of the micro rigid mask for {moving_slide.name}. Went from {scaled_moving_kp.shape[0]} to {len(matches_in_masks)}")
                 if len(matches_in_masks) > 0:
                     scaled_moving_kp = scaled_moving_kp[matches_in_masks, :]
                     scaled_fixed_kp = scaled_fixed_kp[matches_in_masks, :]
@@ -360,8 +361,7 @@ class MicroRigidRegistrar(object):
         n_old_matches = moving_slide.xy_matched_to_prev.shape[0]
         n_new_matches = high_rez_fixed_matched_kp_xy.shape[0]
 
-        # improved = (n_new_matches >= n_old_matches) and (new_d < og_d)
-        improved = (n_new_matches >= n_old_matches) #and (new_d < og_d)
+        improved = (n_new_matches >= n_old_matches)
         if improved:
             res_msg = "micro rigid registration improved alignments."
             msg_clr = Fore.GREEN
@@ -400,7 +400,6 @@ class MicroRigidRegistrar(object):
         return tile_bbox_list
 
     def norm_imgs(self, img_list):
-        # target_processing_stats = preprocessing.get_channel_stats(np.hstack([img.reshape(-1) for img in img_list]))
         _, target_processing_stats = preprocessing.collect_img_stats(img_list)
 
         normed_list = [None] * len(img_list)
