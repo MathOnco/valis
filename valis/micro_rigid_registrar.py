@@ -9,6 +9,8 @@ from . import feature_detectors
 from . import preprocessing
 from . import warp_tools
 from . import valtils
+from .valtils import get_ncpus_available
+
 from pqdm.threads import pqdm
 
 ROI_MASK = "mask"
@@ -293,7 +295,7 @@ class MicroRigidRegistrar(object):
             high_rez_fixed_match_xy_list[bbox_id] = matched_fixed_xy
 
         print(f"Aligning {moving_slide.name} to {fixed_slide.name}. ROI width, height is {reg_bbox[2:]} pixels")
-        n_cpu = multiprocessing.cpu_count() - 1
+        n_cpu = get_ncpus_available() - 1
 
         with suppress(UserWarning):
             # Avoid printing warnings that not enough matches were found, which can happen frequently with this

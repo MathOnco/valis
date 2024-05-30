@@ -32,6 +32,8 @@ from colorama import Fore
 from . import valtils
 from . import slide_tools
 from . import warp_tools
+from .valtils import get_ncpus_available
+
 
 pyvips.cache_set_max(0)
 
@@ -1181,7 +1183,7 @@ class BioFormatsSlideReader(SlideReader):
             tile_array[idx] = slide_tools.numpy2vips(tile, self.metadata.pyvips_interpretation)
 
 
-        n_cpu = multiprocessing.cpu_count() - 1
+        n_cpu = get_ncpus_available() - 1
         res = pqdm(range(n_tiles), tile2vips_threaded, n_jobs=n_cpu, unit="tiles", leave=None)
 
         return tile_array

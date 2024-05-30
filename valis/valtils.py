@@ -1,5 +1,6 @@
 import re
 import os
+import multiprocessing
 from colorama import init as color_init
 from colorama import Fore, Style
 import functools
@@ -184,4 +185,15 @@ def hex_to_rgb(value):
     value = value.lstrip('#')
     lv = len(value)
     return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
+
+def get_ncpus_available():
+    ncpus = 2 ## returning 2 by default as code assumes ncpus > 1 (or that packages gracefully handle scheduling 0 jobs/threads)
+
+    if hasattr(os, "sched_getaffinity"):
+        ncpus = len(os.sched_getaffinity(0))
+    elif hasattr(multiprocessing, "cpu_count"):
+        ncpus = multiprocessing.cpu_count()
+
+    return int(ncpus)
 
