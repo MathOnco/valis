@@ -32,7 +32,7 @@ from colorama import Fore
 from . import valtils
 from . import slide_tools
 from . import warp_tools
-from .valtils import get_ncpus_available
+from . import valtils
 
 
 pyvips.cache_set_max(0)
@@ -1183,7 +1183,7 @@ class BioFormatsSlideReader(SlideReader):
             tile_array[idx] = slide_tools.numpy2vips(tile, self.metadata.pyvips_interpretation)
 
 
-        n_cpu = get_ncpus_available() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
         res = pqdm(range(n_tiles), tile2vips_threaded, n_jobs=n_cpu, unit="tiles", leave=None)
 
         return tile_array
@@ -1429,16 +1429,6 @@ class BioFormatsSlideReader(SlideReader):
         #-------#
 
         rdr, meta = get_bioformats_reader_and_meta(self.src_f)
-        # rdr = loci.formats.ImageReader()
-        # factory = loci.common.services.ServiceFactory()
-        # OMEXMLService_class = loci.formats.services.OMEXMLService
-
-        # service = factory.getInstance(OMEXMLService_class)
-        # ome_meta = service.createOMEXMLMetadata()
-        # rdr.setMetadataStore(ome_meta)
-        # rdr.setFlattenedResolutions(False)
-        # rdr.setId(self.src_f)
-        # meta = rdr.getMetadataStore()
 
         return rdr, meta
 
@@ -2407,7 +2397,7 @@ class CziJpgxrReader(SlideReader):
         out_shape_wh = self.metadata.slide_dimensions[0]
         tile_bboxes = czi_reader.get_all_mosaic_tile_bounding_boxes(C=0)
 
-        vips_img = pyvips.Image.black(*out_shape_wh, bands=self.metadata.n_channels) #+ bg_rgba[0:3]
+        vips_img = pyvips.Image.black(*out_shape_wh, bands=self.metadata.n_channels)
         print(f"Building CZI mosaic for {valtils.get_name(self.src_f)}")
         for tile_info, tile_bbox in tqdm(tile_bboxes.items()):
             m = tile_info.m_index
@@ -2820,12 +2810,9 @@ def get_slide_reader(src_f, series=None):
     if is_tiff:
         is_flattened_tiff, _ = check_flattened_pyramid_tiff(src_f, check_with_bf=False)[0:2]
 
-    # if series is None:
-    #     series = 0
-
     one_series = True
     if is_ome_tiff:
-        ome_obj = get_ome_obj(src_f) #ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
+        ome_obj = get_ome_obj(src_f)
         one_series = len(ome_obj.images) == 1
 
     can_use_vips = check_to_use_vips(src_f)
@@ -3512,7 +3499,6 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression="lzw", Q=10
             ome_xml_obj = create_ome_xml(xyzct, bf_dtype, is_rgb)
 
     ome_xml_obj.creator = f"pyvips version {pyvips.__version__}"
-    # ome_xml_obj.creator = f"libvips version {valtils.get_vips_version()}"
     ome_metadata = ome_xml_obj.to_xml()
 
     # Save ome-tiff using vips #

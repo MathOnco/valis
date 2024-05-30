@@ -121,7 +121,6 @@ def numpy2vips(a, pyvips_interpretation=None):
         linear = a.reshape(width * height * bands)
         if linear.dtype.byteorder == ">":
             #vips seems to expect the array to be little endian, but `a` is big endian
-            # linear.byteswap(inplace=True)
             linear = linear.byteswap(inplace=False)
 
         vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,
@@ -156,46 +155,6 @@ def get_slide_extension(src_f):
     slide_format = "." + ".".join(f.split(".")[format_split:])
 
     return slide_format
-
-
-# def get_img_type(img_f):
-#     """Determine if file is a slide or an image
-
-#     Parameters
-#     ----------
-#     img_f : str
-#         Path to image
-
-#     Returns
-#     -------
-#     kind : str
-#         Type of file, either 'image', 'slide', or None if they type
-#         could not be determined
-
-#     """
-
-#     if os.path.isdir(img_f):
-#         return None
-
-#     f_extension = get_slide_extension(img_f)
-#     what_img = imghdr.what(img_f)
-#     if slide_io.BF_READABLE_FORMATS is None:
-#         slide_io.init_jvm()
-
-#     can_use_bf = f_extension in slide_io.BF_READABLE_FORMATS
-#     can_use_openslide = slide_io.check_to_use_openslide(img_f)
-#     is_tiff = f_extension == ".tiff" or f_extension == ".tif"
-#     can_use_skimage = ".".join(f_extension.split(".")[1:]) == what_img and not is_tiff
-
-#     kind = None
-#     if can_use_skimage:
-#         kind = TYPE_IMG_NAME
-#     elif can_use_bf or can_use_openslide:
-#         kind = TYPE_SLIDE_NAME
-
-#     return kind
-
-
 
 def get_level_idx(dims_wh, max_dim):
     possible_levels = np.where(np.max(dims_wh, axis=1) <= max_dim)[0]
@@ -232,12 +191,10 @@ def get_img_type(img_f):
 
     if f_extension.lower() == '.ds_store':
         return kind
-    # what_img = imghdr.what(img_f)
 
     is_ome_tiff = slide_io.check_is_ome(img_f)
     is_czi = f_extension == ".czi"
 
-    # is_tiff = re.search(".tif*", f_extension) is not None and not is_ome_tiff
     can_use_pil = False
     if not is_ome_tiff:
         try:
@@ -417,7 +374,6 @@ def get_matplotlib_channel_colors(n_colors, name="gist_rainbow", min_lum=0.5, mi
     n = 200
     if n_colors > n:
         n = n_colors
-    # all_colors =  cm.get_cmap(name)(np.linspace(0, 1, n))[..., 0:3]
     all_colors = colormaps[name](np.linspace(0, 1, n))[..., 0:3]
 
     # Only allow bright colors #

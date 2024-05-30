@@ -16,6 +16,7 @@ from pqdm.threads import pqdm
 from . import viz
 from . import warp_tools
 from . import preprocessing
+from . import valtils
 
 NR_CLS_KEY = "non_rigid_registrar_cls"
 NR_PROCESSING_KW_KEY = "processer_kwargs"
@@ -1244,14 +1245,6 @@ class NonRigidTileRegistrar(object):
 
     def norm_tiles(self, moving_img, fixed_img, tile_mask):
         try:
-            # Try norming using these tile stats
-            # if tile_mask is not None:
-            #     pos_px = np.where(tile_mask != 0)
-            #     tile_v = np.hstack([fixed_img[pos_px], moving_img[pos_px]])
-            # else:
-            #     tile_v = np.hstack([fixed_img.reshape(-1), moving_img.reshape(-1)])
-
-            # target_processing_stats = preprocessing.get_channel_stats(tile_v)
             target_processing_stats = preprocessing.collect_img_stats([fixed_img, moving_img])
             fixed_normed = self.norm_img(fixed_img, target_processing_stats, tile_mask)
             moving_normed = self.norm_img(moving_img, target_processing_stats, tile_mask)
@@ -1372,7 +1365,7 @@ class NonRigidTileRegistrar(object):
 
         print("======== Registering tiles\n")
 
-        n_cpu = get_ncpus_available() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
 
         lock = multiprocessing.Lock()
         args = [{"tile_idx":i, "lock":lock} for i in range(self.n_tiles)]

@@ -373,7 +373,6 @@ class ColorDeconvolver(ImageProcesser):
         fg_thresh = filters.threshold_otsu(color_weights)
         fg_idx = np.where(color_weights > fg_thresh)[0]
 
-
         fg_stains = unmixed_img[..., fg_idx]
         fg_norm = np.linalg.norm(fg_stains, axis=2)
         fg_norm = exposure.rescale_intensity(fg_norm, out_range=(0, 1))
@@ -925,10 +924,6 @@ def deconvolution_he(img: np.array, normalized_concentrations: np.array, stain: 
 
 def rgb2jab(rgb, cspace='CAM16UCS'):
     eps = np.finfo("float").eps
-    # if np.issubdtype(rgb.dtype, np.integer) and rgb.max() > 1:
-    #     rgb01 = rgb/255.0
-    # else:
-    #     rgb01 = rgb
     rgb01 = rgb255_to_rgb1(rgb)
     with colour.utilities.suppress_warnings(colour_usage_warnings=True):
         jab = colour.convert(rgb01+eps, 'sRGB', cspace)
@@ -1014,7 +1009,9 @@ def deconvolve_img(rgb_img, D):
 
 
 def view_as_scatter(img, cspace_name, cspace_fxn=None, channel_1_idx=None, channel_2_idx=None, channel_3_idx=None, log3d=False, cspace_kwargs=None, mask=None, s=3):
-    """View colors in image, transformed used the `cspace_fxn`, as a scatterplot. Useful when trying to find color thresholds
+    """View colors in image, transformed used the `cspace_fxn`, as a scatterplot, where the color of each point is the corresponding RGB color
+
+    Useful when trying to find color thresholds
 
     """
 
@@ -1025,7 +1022,6 @@ def view_as_scatter(img, cspace_name, cspace_fxn=None, channel_1_idx=None, chann
 
 
     unique_colors = np.unique(img_flat, axis=0)
-    # unique_colors =unique_colors[:-1]
     flat_size = unique_colors.shape[0]
 
     h = 2
@@ -1033,7 +1029,6 @@ def view_as_scatter(img, cspace_name, cspace_fxn=None, channel_1_idx=None, chann
         h += 1
 
     w = int(flat_size/h)
-    # added = h*w - flat_size
 
     rgb_block = np.reshape(unique_colors, (h, w, 3))
     if cspace_fxn is None:
@@ -1048,15 +1043,8 @@ def view_as_scatter(img, cspace_name, cspace_fxn=None, channel_1_idx=None, chann
         a = np.unique(a)
         y = np.random.uniform(-0.01, 0.01, size=a.size)
 
-        # plt.subplot(1, 2, 1)
         plt.scatter(a, y, c=unique_colors, s=s)
         plt.xlabel(cspace_name[channel_1_idx])
-
-        # plt.subplot(1, 2, 2)
-        # a_scaled = log_color(a)
-        # plt.scatter(a_scaled, y, c=unique_colors, s=3)
-        # plt.xlabel(cspace_name[channel_1_idx])
-        # plt.title("Log")
 
     elif channel_3_idx is None:
 
@@ -1066,18 +1054,9 @@ def view_as_scatter(img, cspace_name, cspace_fxn=None, channel_1_idx=None, chann
         a = a.ravel()
         b = b.ravel()
 
-        # plt.subplot(1, 2, 1)
         plt.scatter(a, b, c=unique_colors/255, s=s)
         plt.xlabel(cspace_name[channel_1_idx])
         plt.ylabel(cspace_name[channel_2_idx])
-
-        # a_scaled = log_color(a)
-        # b_scaled = log_color(b)
-        # plt.subplot(1, 2, 2)
-        # plt.title("Log")
-        # plt.scatter(a_scaled, b_scaled, c=unique_colors, s=3)
-        # plt.xlabel(cspace_name[channel_1_idx])
-        # plt.ylabel(cspace_name[channel_2_idx])
 
     else:
         a = cspace[:, :, channel_1_idx]
@@ -1087,11 +1066,6 @@ def view_as_scatter(img, cspace_name, cspace_fxn=None, channel_1_idx=None, chann
         a = a.ravel()
         b = b.ravel()
         c = c.ravel()
-
-        # if log3d:
-        #     a = log_color(a)
-        #     b = log_color(b)
-        #     c = log_color(c)
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -1396,78 +1370,20 @@ def split_shapely_line(line_poly, step_size=10, close_line=False):
 
 
 def get_poly_corners(img, tolerance=2):
-
-    # xy = np.vstack(measure.find_contours(img))
     contours, _ = cv2.findContours(img.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     xy = contours[0].squeeze()
 
     new_xy = measure.subdivide_polygon(xy, degree=3, preserve_ends=True)
     contours_xy = measure.approximate_polygon(new_xy, tolerance=tolerance)
-    # plt.scatter(xy[:, 0], xy[:, 1])
-    # plt.imshow(img)
-    # plt.plot(contours_xy[:, 0], contours_xy[:, 1])
-    # plt.show()
-
-
-    # corner_img = feature.corner_harris(img)
-    # corner_img = feature.corner_shi_tomasi(img)
-    # coords = feature.corner_peaks(corner_img, min_distance=1, threshold_rel=0.15)
-    # coords_subpix = feature.corner_subpix(img, coords)
-    # contours_xy = coords_subpix[:, ::-1]
-    # contours_xy = contours_xy[np.any(np.isnan(contours_xy), axis=1)==False]
-
-    # # Sort points
-    # center_y, center_x = measure.centroid(img)
-    # angles = np.arctan2(contours_xy[:, 1]-center_y, contours_xy[:, 0]-center_x)
-    # counterclockwise_indices = np.argsort(angles)
-    # contours_xy = contours_xy[counterclockwise_indices]
-
-    # plt.imshow(img)
-    # plt.plot(contours_xy[:, 0], contours_xy[:, 1])
-    # plt.scatter(contours_xy[:, 0], contours_xy[:, 1])
-    # plt.scatter(center_x, center_y)
-    # plt.show()
 
     return contours_xy
 
 
 def polygon_tortuosity(img, window_size=3):
-    # contours = measure.find_contours(filters.gaussian(img, 1), 0.68) # ~ 1SD
-    # contours_xy = np.vstack(contours)[:, ::-1]
+    """Calculate tortuosity of a contour in `img`. Should be masked so there is only 1 contour
+    """
 
-    # full_poly = shapely.Polygon(contours_xy)
-    # if isinstance(full_poly, shapely.MultiPolygon):
-    #     poly_list = list(full_poly.geoms)
-    # else:
-    #     poly_list= [full_poly]
-
-    # for poly in poly_list:
-    #     poly.is_closed
-    # contours = measure.find_contours(img) # ~ 1SD
-
-#
-    # contours, _ = cv2.findContours(img.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # contours_xy = contours[0].squeeze()
     contours_xy = get_poly_corners(img)
-    # contours, _ = cv2.findContours(img.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # all_xy = contours[0].squeeze()
-    # plt.imshow(img)
-    # plt.scatter(contours_xy[:, 0], contours_xy[:, 1])
-    # plt.show()
-
-    # poly = shapely.Polygon(contours_xy)
-    # # simplified = poly
-    # simplified = poly.simplify(tolerance=simplify_tol)
-    # contours_xy = np.dstack(c)[0]
-    # if np.all(contours_xy[0] == contours_xy[-1])
-
-    # plt.plot(contours_xy[:, 1], contours_xy[:, 0])
-    # plt.show()
-
-    # contours_xy = warp_tools.get_corners_of_image(img.shape)[:, ::-1]
-
-    # contours_xy = np.vstack([contours_xy, contours_xy[0:2]])
-    # n_seg = contours_xy.shape[0]//window_size
     n_over = contours_xy.shape[0] % window_size
     if n_over > 0:
         n_append = window_size - contours_xy.shape[0] % window_size
@@ -1480,7 +1396,6 @@ def polygon_tortuosity(img, window_size=3):
     n = 0
     total_length = 0
     tort_list = []
-    # tort_img = np.zeros(img.shape)
     for idx1 in range(0, len(window_edges)-1):
         idx2 = idx1 + 1
         window_idx1 = window_edges[idx1]
@@ -1499,61 +1414,12 @@ def polygon_tortuosity(img, window_size=3):
         total_length += path_length
         tort_list.append(line_arc_chord)
 
-        # for i in range(verts_in_window.shape[0]-1):
-        #     c0, r0 = verts_in_window[i].astype(int)
-        #     c1, r1 = verts_in_window[i+1].astype(int)
-        #     line_rc = draw.line(r0, c0, r1, c1)
-        #     tort_img[line_rc[0], line_rc[1]] = line_arc_chord
-
     if total_length == 0:
         poly_tort = 0
     else:
         poly_tort = ((n-1)/total_length)*sum(tort_list)
-    # plt.imshow(tort_img)
-    # plt.show()
 
-    return poly_tort #, tort_img
-
-
-
-# def polygon_tortuosity_old(img, step_size=10):
-#     """Calculate tortuosity of a polygon.
-
-#     Regular, smooth shapes, like rectanlges and circles have a value ~ 0.05. Irregular shapes are much higher, > 1
-#     """
-#     contours, _ = cv2.findContours(img.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#     contours_xy = contours[0].squeeze()
-#     lines = [(contours_xy[i], contours_xy[i+1]) for i in range(contours_xy.shape[0]-1)]
-#     line_poly = ops.linemerge(lines)
-
-#     if isinstance(line_poly, shapely.LineString):
-#         line_list = [line_poly]
-#         close_poly = True
-#     else:
-#         line_list = list(line_poly.geoms)
-#         close_poly = False
-#     line_torts = []
-#     n = 0
-#     total_length = 0
-#     for i, l in enumerate(line_list):
-#         # Split lines into equal segments
-#         line_segs = split_shapely_line(l, step_size=step_size, close_line=close_poly)
-#         for s in line_segs:
-#             n += 1
-#             poly_xy = np.dstack(s.coords.xy).squeeze()
-#             if s.is_closed:
-#                 poly_xy = poly_xy[0:-1]
-
-#             line_distance = np.sqrt(sum((poly_xy[0] - poly_xy[-1])**2))
-#             line_length = np.sum(np.sqrt(np.diff(poly_xy[:, 0])**2 + np.diff(poly_xy[:, 1])**2))
-#             total_length += line_length
-
-#             line_arc_chord = (line_length/line_distance) - 1
-#             line_torts.append(line_arc_chord)
-
-#     poly_tort = ((n-1)/total_length)*sum(line_torts)
-
-#     return poly_tort
+    return poly_tort
 
 
 def remove_small_obj_and_lines_by_dist(mask):
@@ -1643,16 +1509,6 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
     no_h_lines = morphology.opening(cam_d, horiz_knl)
     cam_d_no_lines = np.dstack([no_v_lines, no_h_lines]).min(axis=2)
 
-
-    # line_kern = 5
-    # vert_knl = np.ones((1, line_kern))
-    # horiz_knl = np.ones((line_kern, 1))
-    # diag_knl = np.eye(line_kern)
-    # cam_d_no_lines = cam_d.copy()
-    # for krn in [vert_knl, horiz_knl, diag_knl, np.rot90(diag_knl)]:
-    #     no_lines = morphology.opening(cam_d_no_lines, krn)
-    #     cam_d_no_lines = np.dstack([cam_d_no_lines, no_lines]).min(axis=2)
-
     # Foreground is where color is different than backaground color
     cam_d_t, _ = filters.threshold_multiotsu(cam_d_no_lines[grey_mask == 0])
     tissue_mask = np.zeros(cam_d_no_lines.shape, dtype=np.uint8)
@@ -1738,7 +1594,6 @@ def create_tissue_mask_with_jc_dist(img):
     jc_dist_img = jc_dist(img, metric="chebyshev")
     jc_dist_img[np.isnan(jc_dist_img)] = np.nanmax(jc_dist_img)
 
-
     jc_t, _ = filters.threshold_multiotsu(jc_dist_img)
     jc_mask = 255*(jc_dist_img > jc_t).astype(np.uint8)
     jc_dist_img = exposure.equalize_adapthist(exposure.rescale_intensity(jc_dist_img, out_range=(0, 1)))
@@ -1746,7 +1601,6 @@ def create_tissue_mask_with_jc_dist(img):
     img_edges = filters.scharr(jc_dist_img)
     p_t = filters.threshold_otsu(img_edges)
     edges_mask = 255*(img_edges > p_t).astype(np.uint8)
-
 
     temp_mask = edges_mask.copy()
     temp_mask[jc_mask == 0] = 0
@@ -1762,21 +1616,12 @@ def clean_mask(mask, img, rel_min_size=0.001):
     """
     Remove small objects, regions that are not very colorful (relativey), and retangularly shaped objects
     """
-    # print("W SIZE")
-    #Get colorful regions
-    # plt.imshow(combo_mask)
-    # plt.show()
-    # Remove straight lines
-    # plt.imshow(no_lines_mask)
-    # plt.show()
 
-    # no_lines_mask = mask.copy()
     fg_labeled = measure.label(mask)
     fg_regions = measure.regionprops(fg_labeled)
 
     if len(fg_regions) == 1:
         return mask
-    # region_sizes = np.array([x.area for x in fg_regions])
 
     jch = rgb2jch(img, cspace="JzAzBz")
     c = exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
@@ -1816,31 +1661,13 @@ def clean_mask(mask, img, rel_min_size=0.001):
 
 
     color_thresh = filters.threshold_otsu(colorfulness_img[mask > 0])
-    # color_thresh, _ = filters.threshold_multiotsu(colorfulness_img[mask > 0])
     color_mask = colorfulness_img > color_thresh
-
-    # mask_list = [mask.astype(bool), color_mask, het_mask, line_mask, tort_mask]
-    # mask_list = [mask.astype(bool), color_mask, het_mask, tort_mask]
     mask_list = [mask.astype(bool), color_mask]
-    # mask_list = [color_mask, het_mask, size_mask]
-    # plt.imshow(np.hstack(mask_list))
-    # plt.show()
-
-    # Marjority vote
-    # print("voteing")
-
-    # mask_list=[color_mask, het_mask, line_mask]
-
-    # mask_list=[color_mask, het_mask]
 
     feature_mask = combine_masks_by_hysteresis(mask_list)
     if feature_mask.max() == 0:
 
         feature_mask = np.sum(np.dstack(mask_list), axis=2)
-        # # feature_thresh = filters.threshold_otsu(feature_mask)
-        # feature_thresh = np.max(feature_mask)
-
-        # feature_mask = combine_masks_by_hysteresis(mask_list, upper_t=feature_thresh)
         feature_thresh = len(mask_list)//2
         feature_mask[feature_mask <= feature_thresh] = 0
         feature_mask[feature_mask != 0] = 255
@@ -1865,693 +1692,6 @@ def clean_mask(mask, img, rel_min_size=0.001):
         fg_mask[r.slice][r.image_filled] = 255
 
     return fg_mask
-
-
-
-def _clean_mask(mask, img, w_img=None, kernel_size=3, rel_min_size=0.001, min_tortuosity=0.001, min_color_het="auto"):
-    """
-    Remove small objects, regions that are not very colorful (relativey), and retangularly shaped objects
-    """
-    # print("W SIZE")
-    #Get colorful regions
-    # plt.imshow(combo_mask)
-    # plt.show()
-    # Remove straight lines
-    # plt.imshow(no_lines_mask)
-    # plt.show()
-
-    # no_lines_mask = mask.copy()
-    fg_labeled = measure.label(mask)
-    fg_regions = measure.regionprops(fg_labeled)
-    # region_sizes = np.array([x.area for x in fg_regions])
-
-    no_lines_mask = mask.copy()
-    line_kern = 11
-    vert_knl = np.ones((1, line_kern))
-    horiz_knl = np.ones((line_kern, 1))
-    diag_knl = np.eye(line_kern)
-    # lines_mask = np.zeros(mask.shape)
-    for krn in [vert_knl, horiz_knl, diag_knl, np.rot90(diag_knl)]:
-        no_lines = morphology.opening(no_lines_mask, krn)
-        no_lines_mask = np.dstack([no_lines_mask, no_lines]).min(axis=2)
-
-    # plt.imshow(no_lines_mask)
-    # plt.show()
-    # ### Using color:
-    nbins = 25
-    # nbins = 10
-    jab = rgb2jab(img, cspace="JzAzBz")
-    x = jab[..., 1]
-    y = jab[..., 2]
-    ch = colour.algebra.cartesian_to_polar(np.dstack([x, y]))
-    c = exposure.rescale_intensity(ch[..., 0], out_range=(0, 1))
-    # inv_j = 1 - exposure.rescale_intensity(jab[..., 0], out_range=(0, 1))
-    x *= c
-    y *= c
-
-    # x = filters.rank.median(x, morphology.disk(3))
-    # y = filters.rank.median(y, morphology.disk(3))
-    # z = jab[..., 0]
-    x_bins = np.linspace(x.min(), x.max(), nbins)
-    y_bins = np.linspace(y.min(), y.max(), nbins)
-    # z_bins = np.linspace(z.min(), z.max(), nbins)
-    # ### processed image
-    # nbins = 25
-    # h_bins = np.linspace(w_img.min(), w_img.max(), nbins)
-    size_img = np.zeros(mask.shape)
-    tort_img = np.zeros(mask.shape)
-    het_img = np.zeros(mask.shape)
-    colorfulness_img = np.zeros(mask.shape)
-    line_img = np.zeros(mask.shape)
-    # noise_img = np.zeros(mask.shape)
-
-    # w01 = w_img/w_img.max()
-    # whet_img = np.zeros(mask.shape)
-    # h_bins = np.linspace(w01.min(), w01.max(), nbins)
-
-    # noise_img = filters.rank.noise_filter(img.astype(float)/255, morphology.ball(3))
-    # noise_img = filters.rank.noise_filter(w_img, morphology.disk(3))
-    # # plt.imshow(np.sum(noise_img, axis=2))
-    # plt.imshow(exposure.equalize_adapthist(noise_img/noise_img.max()))
-    # plt.show()
-
-    for i, r in enumerate(fg_regions):
-        # Fill in contours that are touching border
-        r0, c0, r1, c1 = r.bbox
-        r_filled_img = r.image_filled.copy()
-        if r0 == 0:
-            # Touching top
-            lr = np.where(r.image_filled[0, :])[0]
-            r_filled_img[0, min(lr):max(lr)] = 255
-
-        if r1 == mask.shape[0]:
-            # Touching bottom
-            lr = np.where(r.image_filled[-1, :])[0]
-            r_filled_img[-1, min(lr):max(lr)] = 255
-
-        if c0 == 0:
-            tb = np.where(r.image_filled[:, 0])[0]
-            # Touchng left border
-            r_filled_img[min(tb):max(tb), 0] = 255
-
-        if c1 == mask.shape[1]:
-            # Touchng right border
-            tb = np.where(r.image_filled[:, -1])[0]
-            r_filled_img[min(tb):max(tb), -1] = 255
-
-        # r_filled_img = 255*ndimage.binary_fill_holes(r_filled_img).astype(np.uint8)
-        r_filled_img = ndimage.binary_fill_holes(r_filled_img)
-        # Calculate color heterogeneity
-        rx = x[r.slice][r_filled_img]
-        ry = y[r.slice][r_filled_img]
-        r_hist, _, _ = np.histogram2d(rx, ry, bins=[x_bins, y_bins])
-
-        # rch = colour.algebra.cartesian_to_polar(np.dstack([rx, ry]))
-        # colorfulness_img[r.slice][r_filled_img] = np.mean(rch[..., 0])
-        # colorfulness_img[r.slice][r_filled_img] = np.max(rch[..., 0])
-        colorfulness_img[r.slice][r_filled_img] = np.max(c[r.slice][r_filled_img])
-        # colorfulness_img[r.slice][r_filled_img] = np.percentile(c[r.slice][r_filled_img], 90)
-        # colorfulness_img[r.slice][r_filled_img] = c[r.slice][r_filled_img] #rch[..., 0].reshape(-1)
-
-        # rent = filters.rank.entropy(inv_j[r.slice], morphology.disk(3), mask=r_filled_img)
-        # rent = filters.rank.entropy(inv_j, morphology.disk(3))
-        # plt.imshow(rent)
-        # plt.show()
-        # Calculate pixel heterogeneity
-        # rx = w_img[r.slice][r_filled_img]
-        # r_hist, _ = np.histogram(rx, bins=h_bins)
-
-        flat_hist = r_hist.reshape(-1)
-        p = flat_hist/flat_hist.sum()
-        p = p[p > 0]
-        het = 1 - np.sum(p**2)
-        # color_het = -np.sum(p*np.log(p))
-        het_img[r.slice][r_filled_img] = het
-
-        # Caclculate weighted het
-        # rw = w01[r.slice][r_filled_img]
-        # hist, _ = np.histogram(rw, bins=h_bins)
-        # wp = hist/hist.sum()
-        # wp = wp[wp > 0]
-        # whet = 1 - np.sum(wp**2)
-        # whet_img[r.slice][r_filled_img] = whet
-
-        size_img[r.slice][r_filled_img] = len(np.where(r_filled_img)[0])
-        # Caclualte tortuosity
-        padded, _ = warp_tools.pad_img(r_filled_img, np.array(r_filled_img.shape)+5, interp_method="nearest")
-        tort = polygon_tortuosity(img=padded)
-        tort_img[r.slice][r_filled_img] = tort
-
-        # Calculate area lost when removing line
-        line_loss = (np.sum(no_lines_mask[r.slice][r_filled_img])/255)/r.area
-        line_img[r.slice][r_filled_img] = line_loss
-
-
-        # Calculate noise
-        # region_noise_img = filters.rank.noise_filter(img[r.slice], morphology.ball(kernel_size))
-        # noise_v = np.mean(np.max(region_noise_img[r_filled_img], axis=1))
-        # noise_img[r.slice][r_filled_img] = noise_v
-
-    # plt.imshow(noise_img > filters.threshold_otsu(noise_img[mask>0]))
-    # plt.title("Noise")
-    # plt.show()
-
-    z_tort = tort_img/tort_img.max() # (tort_img - tort_img.mean())/tort_img.std()
-    # plt.imshow(tort_img)
-    # plt.show()
-
-    z_size = size_img/size_img.max()
-    # plt.imshow(z_size)
-    # plt.show()
-
-    # plt.imshow(line_img)
-    # plt.show()
-    z_line = line_img/line_img.max()
-    # plt.imshow(z_line)
-    # plt.show()
-
-    # z_het = (het_img - het_img.mean())/het_img.std()
-    z_het = het_img/het_img.max()
-    # plt.imshow(z_het)
-    # plt.show()
-
-    # zcolor = (colorfulness_img - colorfulness_img.mean())/colorfulness_img.std()
-    z_color = colorfulness_img/colorfulness_img.max()
-    # plt.imshow(z_color)
-    # plt.show()
-
-    # z_whet = whet_img/whet_img.max()
-    # plt.imshow(z_whet)
-    # plt.show()
-
-    # if w_img is not None:
-    # #     tort_img *= w_img
-    #     z_line *= w_img
-    #     z_het *= w_img
-    #     z_color *= w_img
-
-
-    tort_thresh = filters.threshold_otsu(z_tort[mask > 0])
-    # tort_thresh, _ = filters.threshold_multiotsu(tort_img[mask > 0])
-    tort_mask = z_tort > tort_thresh
-    # plt.imshow(tort_mask)
-    # plt.show()
-
-    het_thresh = filters.threshold_otsu(z_het[mask > 0])
-    # # het_thresh, _ = filters.threshold_multiotsu(het_img[mask > 0])
-    het_mask = z_het > het_thresh
-    # plt.imshow(het_mask)
-    # plt.show()
-    # feature_mask = het_mask
-    # z_color *= z_het
-
-    color_thresh = filters.threshold_otsu(z_color[mask > 0])
-    # # het_thresh, _ = filters.threshold_multiotsu(het_img[mask > 0])
-    color_mask = z_color > color_thresh
-    # color_mask = mask2contours(255*color_mask.astype(np.uint8), 3)
-    # color_mask = color_mask.astype(bool)
-    # plt.imshow(color_mask)
-    # plt.show()
-
-    # whet_thresh = filters.threshold_otsu(z_whet[mask > 0])
-    # # het_thresh, _ = filters.threshold_multiotsu(het_img[mask > 0])
-    # whet_mask = z_whet > whet_thresh
-
-
-    line_thresh = filters.threshold_otsu(z_line[mask > 0])
-    # # het_thresh, _ = filters.threshold_multiotsu(het_img[mask > 0])
-    line_mask = z_line > line_thresh
-
-    size_mask = size_img > filters.threshold_otsu(size_img[mask > 0])
-    # plt.imshow(size_mask)
-    # plt.show()
-
-    # plt.show()
-    # mask_list = [mask.astype(bool), color_mask, het_mask, line_mask, tort_mask]
-    # mask_list = [mask.astype(bool), color_mask, het_mask, tort_mask]
-    mask_list = [mask.astype(bool), color_mask, tort_mask, line_mask]
-    # mask_list = [color_mask, het_mask, size_mask]
-    plt.imshow(np.hstack(mask_list))
-    plt.show()
-
-    # Marjority vote
-    # print("voteing")
-
-    # mask_list=[color_mask, het_mask, line_mask]
-
-    # mask_list=[color_mask, het_mask]
-
-    # feature_mask = combine_masks_by_hysteresis(mask_list)
-    # if feature_mask.max() == 0:
-
-    feature_mask = np.sum(np.dstack(mask_list), axis=2)
-    # # feature_thresh = filters.threshold_otsu(feature_mask)
-    # feature_thresh = np.max(feature_mask)
-
-    # feature_mask = combine_masks_by_hysteresis(mask_list, upper_t=feature_thresh)
-    feature_thresh = len(mask_list)//2
-    feature_mask[feature_mask <= feature_thresh] = 0
-    feature_mask[feature_mask != 0] = 255
-
-    # DO hysteresis thresholding, but use max as upper treshold, not number of masks
-
-    # combo_mask = 255*(feature_mask > feature_thresh)
-    # combo_mask = feature_mask.copy()
-    # combo_mask[combo_mask > 0] = 255
-    # plt.imshow(np.hstack(mask_list))
-    # plt.show()
-
-# plt.imshow(feature_mask)
-# plt.show()
-
-
-
-
-    # feature_img = np.linalg.norm(np.dstack([z_het, z_color, z_tort]), axis=2)
-    # # feature_img = np.linalg.norm(np.dstack([z_het, z_color, z_size]), axis=2)
-    # # feature_t, _ = filters.threshold_multiotsu(feature_img[combo_mask > 0])
-    # # # feature_t = filters.threshold_otsu(feature_img[combo_mask > 0])
-    # # feature_mask = 255*(feature_img > feature_t).astype(np.uint8)
-
-    # plt.imshow(feature_img)
-    # plt.colorbar()
-    # plt.show()
-
-    features_labeled = measure.label(feature_mask)
-    feature_regions = measure.regionprops(features_labeled)
-
-    if len(feature_regions) == 1:
-        return feature_mask
-
-    # plt.imshow(feature_mask)
-    # plt.show()
-    # plt.imshow(w_norm > filters.threshold_otsu(w_norm[mask>0]))
-    # plt.show()
-    region_sizes = np.array([r.area for r in feature_regions])
-    ### Threshold to get FG regions
-    # region_order = np.argsort(region_sizes)[::-1] #  biggest to smallest
-    # fg_regions = [fg_regions[i] for i in region_order]
-    # if len(fg_regions) > 1:
-    #     region_sizes = region_sizes[region_order]
-    #     region_size_thresh = thresh_unimodal(region_sizes)
-    #     keep_region_idx = np.where(region_sizes > region_size_thresh)[0]
-    # else:
-    #     keep_region_idx = [0]
-
-    ### Use constant for thresholding
-
-    min_abs_size = int(rel_min_size*np.multiply(*mask.shape[0:2]))#*kernel_size
-    keep_region_idx = np.where(region_sizes > min_abs_size)[0]
-    if len(keep_region_idx) == 0:
-        biggest_idx = np.argmax([r.area for r in fg_regions])
-        keep_region_idx = [biggest_idx]
-
-    # Get final regions
-    fg_mask = np.zeros(mask.shape[0:2], np.uint8)
-    for i, rid in enumerate(keep_region_idx):
-        r = feature_regions[rid]
-        fg_mask[r.slice][r.image_filled] = 255
-
-        # plt.imshow(fg_mask)
-        # # plt.imshow(np.hstack([mask, c_mask, combo_mask]))
-        # plt.show()
-
-        # min_abs_size = int(rel_min_size*np.multiply(*combo_mask.shape[0:2]))*kernel_size
-        # labeled_img = measure.label(combo_mask)
-
-        # regions = measure.regionprops(labeled_img)
-        # regions_above_thresh = [r for r in regions if r.area >= min_abs_size]
-        # if len(regions_above_thresh) == 0:
-        #     biggest_idx = np.argmax([r.area for r in regions])
-        #     regions_above_thresh = [regions[biggest_idx]]
-
-        # mask_cleaned = np.zeros_like(combo_mask)
-        # for i, r in enumerate(regions_above_thresh):
-        #     region_img = 255*r.image.astype(np.uint8)
-        #     region_tortuosity = polygon_tortuosity(region_img)
-
-        #     #Remove lines
-        #     region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
-
-        #     # Remove regularly shaped objects. Probably bubbles, cracks, etc...
-        #     # # if region_tortuosity < min_tortuosity and region_wh_ratio >= line_thresh_wh_thresh:
-        #     # if region_tortuosity < min_tortuosity and region_wh_ratio >= line_thresh_wh_thresh:
-        #     # # ori_degrees = abs(np.rad2deg(r.orientation))
-        #     # # if (region_wh_ratio > line_thresh_wh_thresh) and \
-        #     # #     region_tortuosity < min_tortosity and \
-        #     # #    (ori_degrees < 1 or ori_degrees > 89) :
-        #     #     # print(f"classified region {i} as a regularly shaped")
-        #     #     continue
-
-        #     mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
-
-        #     # plt.imshow(mask_cleaned)
-        #     # plt.show()
-
-    # plt.imshow(fg_mask)
-    # plt.show()
-
-    return fg_mask
-
-
-def __clean_mask(mask, img, kernel_size=3, rel_min_size=0.0001, line_thresh_wh_thresh=2, min_tortuosity=0.001):
-    """
-    Remove small objects, regions that are not very colorful (relativey), and retangularly shaped objects
-    """
-
-    # _, mask = preprocessing.create_tissue_mask_from_rgb(self.image, kernel_size=kernel_size)
-    # mask = concave_tissue_mask
-
-    #Get colorful regions
-    jch = rgb2jch(img, cspace="JzAzBz")
-    ct, _ = filters.threshold_multiotsu(jch[..., 1][mask > 0])
-    c_mask = 255*(jch[..., 1] > ct).astype(np.uint8)
-    # Remove very small objects above color threshold
-    c_mask = filters.rank.median(c_mask, morphology.disk(kernel_size))
-    combo_mask = combine_masks_by_hysteresis([mask, c_mask])
-
-
-    # plt.imshow(combo_mask)
-    # plt.show()
-    # Remove straight lines
-    line_kern = 5
-    vert_knl = np.ones((1, line_kern))
-    horiz_knl = np.ones((line_kern, 1))
-    diag_knl = np.eye(line_kern)
-
-    for krn in [vert_knl, horiz_knl, diag_knl, np.rot90(diag_knl)]:
-        no_lines = morphology.opening(combo_mask, krn)
-        combo_mask = np.dstack([combo_mask, no_lines]).min(axis=2)
-
-    fg_labeled = measure.label(combo_mask)
-    fg_regions = measure.regionprops(fg_labeled)
-    region_sizes = np.array([x.area for x in fg_regions])
-
-    ### Threshold to get FG regions
-    # region_order = np.argsort(region_sizes)[::-1] #  biggest to smallest
-    # fg_regions = [fg_regions[i] for i in region_order]
-    # if len(fg_regions) > 1:
-    #     region_sizes = region_sizes[region_order]
-    #     region_size_thresh = thresh_unimodal(region_sizes)
-    #     keep_region_idx = np.where(region_sizes > region_size_thresh)[0]
-    # else:
-    #     keep_region_idx = [0]
-
-    ### Use constant for thresholding
-    min_abs_size = int(rel_min_size*np.multiply(*mask.shape[0:2]))*kernel_size
-    keep_region_idx = np.where(region_sizes > min_abs_size)[0]
-    if len(keep_region_idx) == 0:
-        biggest_idx = np.argmax([r.area for r in fg_regions])
-        keep_region_idx = [biggest_idx]
-
-    fg_mask = np.zeros(mask.shape[0:2], np.uint8)
-    for i, rid in enumerate(keep_region_idx):
-        r = fg_regions[rid]
-        # plt.imshow(r.image)
-        # plt.show()
-        r0, c0, r1, c1 = r.bbox
-        r_filled_img = r.image_filled.copy()
-        if r0 == 0:
-            # Touching top
-            lr = np.where(r.image_filled[0, :])[0]
-            r_filled_img[0, min(lr):max(lr)] = 255
-
-        if r1 == mask.shape[0]:
-            # Touching bottom
-            lr = np.where(r.image_filled[-1, :])[0]
-            r_filled_img[-1, min(lr):max(lr)] = 255
-
-        if c0 == 0:
-            tb = np.where(r.image_filled[:, 0])[0]
-            # Touchng left border
-            r_filled_img[min(tb):max(tb), 0] = 255
-
-        if c1 == mask.shape[1]:
-            # Touchng right border
-            tb = np.where(r.image_filled[:, -1])[0]
-            r_filled_img[min(tb):max(tb), -1] = 255
-
-        r_filled_img = 255*ndimage.binary_fill_holes(r_filled_img).astype(np.uint8)
-
-        padded, _ = warp_tools.pad_img(r_filled_img, np.array(r_filled_img.shape)+5, interp_method="nearest")
-        tort = polygon_tortuosity(img=padded)
-        if tort >= min_tortuosity:
-            # print("Tort=", tort)
-        # tort = polygon_tortuosity_2(img=padded, simplify_tol=0)
-        # print(tort)
-            # fg_tort[r.slice][r_filled_img > 0] = tort
-            # fg_mask[r.slice] = 255
-            fg_mask[r.slice][r_filled_img > 0] = 255
-
-
-        # plt.imshow(jch[..., 1])
-        # plt.imshow(np.hstack([mask, c_mask, combo_mask]))
-        # plt.show()
-
-        # min_abs_size = int(rel_min_size*np.multiply(*combo_mask.shape[0:2]))*kernel_size
-        # labeled_img = measure.label(combo_mask)
-
-        # regions = measure.regionprops(labeled_img)
-        # regions_above_thresh = [r for r in regions if r.area >= min_abs_size]
-        # if len(regions_above_thresh) == 0:
-        #     biggest_idx = np.argmax([r.area for r in regions])
-        #     regions_above_thresh = [regions[biggest_idx]]
-
-        # mask_cleaned = np.zeros_like(combo_mask)
-        # for i, r in enumerate(regions_above_thresh):
-        #     region_img = 255*r.image.astype(np.uint8)
-        #     region_tortuosity = polygon_tortuosity(region_img)
-
-        #     #Remove lines
-        #     region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
-
-        #     # Remove regularly shaped objects. Probably bubbles, cracks, etc...
-        #     # # if region_tortuosity < min_tortuosity and region_wh_ratio >= line_thresh_wh_thresh:
-        #     # if region_tortuosity < min_tortuosity and region_wh_ratio >= line_thresh_wh_thresh:
-        #     # # ori_degrees = abs(np.rad2deg(r.orientation))
-        #     # # if (region_wh_ratio > line_thresh_wh_thresh) and \
-        #     # #     region_tortuosity < min_tortosity and \
-        #     # #    (ori_degrees < 1 or ori_degrees > 89) :
-        #     #     # print(f"classified region {i} as a regularly shaped")
-        #     #     continue
-
-        #     mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
-
-        #     # plt.imshow(mask_cleaned)
-        #     # plt.show()
-
-    # plt.imshow(fg_mask)
-    # plt.show()
-
-    return fg_mask
-
-        # import matplotlib.pyplot as plt
-        # plt.imshow(np.hstack([mask, c_mask, tissue_mask, tissue_mask_cleaned]))
-
-
-
-
-# def clean_mask_old(mask, img, kernel_size=3, rel_min_size=0.0001, line_thresh_wh_thresh=2, min_tortuosity=0.1):
-#         """
-#         Remove small objects, regions that are not very colorful (relativey), and retangularly shaped objects
-#         """
-
-#         # _, mask = preprocessing.create_tissue_mask_from_rgb(self.image, kernel_size=kernel_size)
-#         # mask = concave_tissue_mask
-#         # Get colorful regions
-#         jch = rgb2jch(img, cspace="JzAzBz")
-#         ct, _ = filters.threshold_multiotsu(jch[..., 1][mask > 0])
-#         c_mask = 255*(jch[..., 1] > ct).astype(np.uint8)
-#         # Remove very small objects above color threshold
-#         c_mask = filters.rank.median(c_mask, morphology.disk(kernel_size))
-
-#         combo_mask = combine_masks_by_hysteresis([mask, c_mask])
-#         # plt.imshow(jch[..., 1])
-#         # plt.imshow(np.hstack([mask, c_mask, combo_mask]))
-#         # plt.show()
-
-#         min_abs_size = int(rel_min_size*np.multiply(*combo_mask.shape[0:2]))*kernel_size
-#         labeled_img = measure.label(combo_mask)
-
-#         regions = measure.regionprops(labeled_img)
-#         regions_above_thresh = [r for r in regions if r.area >= min_abs_size]
-#         if len(regions_above_thresh) == 0:
-#             biggest_idx = np.argmax([r.area for r in regions])
-#             regions_above_thresh = [regions[biggest_idx]]
-
-#         r = regions_above_thresh[0]
-#         mask_cleaned = np.zeros_like(combo_mask)
-#         for i, r in enumerate(regions_above_thresh):
-#             region_img = 255*r.image.astype(np.uint8)
-#             region_tortuosity = polygon_tortuosity(region_img)
-
-#             #Remove lines
-#             region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
-
-#             # Remove regularly shaped objects. Probably bubbles, cracks, etc...
-#             # # if region_tortuosity < min_tortuosity and region_wh_ratio >= line_thresh_wh_thresh:
-#             # if region_tortuosity < min_tortuosity and region_wh_ratio >= line_thresh_wh_thresh:
-#             # # ori_degrees = abs(np.rad2deg(r.orientation))
-#             # # if (region_wh_ratio > line_thresh_wh_thresh) and \
-#             # #     region_tortuosity < min_tortosity and \
-#             # #    (ori_degrees < 1 or ori_degrees > 89) :
-#             #     # print(f"classified region {i} as a regularly shaped")
-#             #     continue
-
-#             mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
-
-#             # plt.imshow(mask_cleaned)
-#             # plt.show()
-
-#         return mask_cleaned
-
-#         # import matplotlib.pyplot as plt
-#         # plt.imshow(np.hstack([mask, c_mask, tissue_mask, tissue_mask_cleaned]))
-
-
-
-# def find_dominant_colors(img, cspace_fxn=rgb2jab, cspace_kwargs={}, min_colorfulness=0.1, min_distance=5, alpha_range=(0.15, 1), max_lum=0.8, nbins=100, max_colors=np.inf):
-
-#     od_img = rgb2od(img)
-
-#     ## Low OD (min 0)= clear, high OD (max=15.65) = saturated
-#     cspace_img = cspace_fxn(img, **cspace_kwargs)
-
-#     jch = rgb2jch(img)
-
-#     fg_px = np.where(((np.any(img > 0, axis=2)) &
-#                       (np.any(od_img > alpha_range[0], axis=2)) & # Keep non-transparent pixels
-#                       (np.any(od_img <= alpha_range[1], axis=2)) & # Keep pixels that are not oversaturated
-#                       (jch[..., 1] > min_colorfulness) # Remove shades
-#                       ))
-
-#     c1 = cspace_img[..., 1][fg_px]
-#     c2 = cspace_img[..., 2][fg_px]
-#     bins1 = np.linspace(c1.min(), c1.max(), nbins)
-#     bins2 = np.linspace(c2.min(), c2.max(), nbins)
-
-#     colorhist, histbins_1, histbins_2 = np.histogram2d(x=c1, y=c2, bins=[bins1, bins2])
-#     color_coordinates = peak_local_max(colorhist, min_distance=min_distance, num_peaks=max_colors)
-#     n_peaks = len(color_coordinates)
-
-#     main_colors = np.zeros((n_peaks, 3))
-#     color_counts = np.zeros(n_peaks)
-#     for i, (idx1, idx2) in enumerate(color_coordinates):
-#         min_idx1 = np.round(np.clip(idx1-1, 0, len(bins1) - 1)).astype(int)
-#         max_idx1 = np.round(np.clip(idx1+1, 0, len(bins1) - 1)).astype(int)
-#         min_idx2 = np.round(np.clip(idx2-1, 0, len(bins2) - 1)).astype(int)
-#         max_idx2 = np.round(np.clip(idx2+1, 0, len(bins2) - 1)).astype(int)
-
-#         in_bins_idx = np.where((cspace_img[..., 0] < max_lum) &
-#                             (cspace_img[..., 1] >= bins1[min_idx1]) & (cspace_img[..., 1] < bins1[max_idx1]) &
-#                             (cspace_img[..., 2] >= bins2[min_idx2]) & (cspace_img[..., 2] < bins2[max_idx2])
-#                             )
-
-#         if len(in_bins_idx[0]) == 0:
-#             continue
-
-#         rgb_in_bins = img[in_bins_idx]
-#         mean_rgb = mean_color(rgb_in_bins)
-#         main_colors[i] = mean_rgb
-#         color_counts[i] = len(in_bins_idx[0])
-
-#     # Sort from most to least common
-#     count_idx = np.argsort(color_counts)[::-1]
-#     main_colors = main_colors[count_idx, ]
-#     color_counts = color_counts[count_idx, ]
-
-#     # Drop colors not actually counted
-#     main_colors = main_colors[color_counts > 0]
-#     color_counts = color_counts[color_counts > 0]
-
-#     return main_colors, color_counts
-
-
-
-# def find_dominant_colors(img, cspace_fxn=rgb2jab, cspace_kwargs={}, min_colorfulness=0.1, min_distance=5, alpha_range=(0.15, 1), max_lum=0.9, nbins=100, max_colors=np.inf):
-
-#     # od_img = rgb2od(img)
-
-#     ## Low OD (min 0)= clear, high OD (max=15.65) = saturated
-#     cspace_img = cspace_fxn(img, **cspace_kwargs)
-
-#     jch = rgb2jch(img)
-
-#     # fg_px = np.where(((np.any(img > 0, axis=2)) &
-#     #                   (np.any(od_img > alpha_range[0], axis=2)) & # Keep non-transparent pixels
-#     #                   (np.any(od_img <= alpha_range[1], axis=2)) & # Keep pixels that are not oversaturated
-#     #                   (jch[..., 1] > min_colorfulness) # Remove shades
-#     #                   ))
-
-#     fg_px = np.where((
-#                     #   (np.any(img > 0, axis=2)) &
-#                     #   (np.any(od_img > alpha_range[0], axis=2)) & # Keep non-transparent pixels
-#                     #   (np.any(od_img <= alpha_range[1], axis=2)) & # Keep pixels that are not oversaturated
-#                       (jch[..., 1] > min_colorfulness) # Remove shades of grey
-#                       ))
-
-#     if len(fg_px[0]) > 0:
-#         c0 = cspace_img[..., 0][fg_px]
-#         c1 = cspace_img[..., 1][fg_px]
-#         c2 = cspace_img[..., 2][fg_px]
-#         fg_rgb = img[fg_px]
-#     else:
-#         c0 = cspace_img[..., 0].reshape(-1)
-#         c1 = cspace_img[..., 1].reshape(-1)
-#         c2 = cspace_img[..., 2].reshape(-1)
-#         fg_rgb = img.reshape((-1, 3))
-
-#     bins1 = np.linspace(c1.min(), c1.max(), nbins)
-#     bins2 = np.linspace(c2.min(), c2.max(), nbins)
-#     # max_colors = 10
-#     colorhist, histbins_1, histbins_2 = np.histogram2d(x=c1, y=c2, bins=[bins1, bins2])
-#     color_coordinates = peak_local_max(colorhist, min_distance=min_distance, num_peaks=max_colors)
-#     n_peaks = len(color_coordinates)
-
-#     # plt.imshow(colorhist)
-#     # plt.show()
-
-#     main_colors = np.zeros((n_peaks, 3))
-#     color_counts = np.zeros(n_peaks)
-#     for i, (idx1, idx2) in enumerate(color_coordinates):
-#         min_idx1 = np.round(np.clip(idx1-1, 0, len(bins1) - 1)).astype(int)
-#         max_idx1 = np.round(np.clip(idx1+1, 0, len(bins1) - 1)).astype(int)
-#         min_idx2 = np.round(np.clip(idx2-1, 0, len(bins2) - 1)).astype(int)
-#         max_idx2 = np.round(np.clip(idx2+1, 0, len(bins2) - 1)).astype(int)
-
-#         # in_bins_idx = np.where(
-#         #                        (cspace_img[..., 0] < max_lum) &
-#         #                        (cspace_img[..., 1] >= bins1[min_idx1]) & (cspace_img[..., 1] < bins1[max_idx1]) &
-#         #                        (cspace_img[..., 2] >= bins2[min_idx2]) & (cspace_img[..., 2] < bins2[max_idx2])
-#         #                     )
-
-#         in_bins_idx = np.where(
-#                             (c0 < max_lum) &
-#                             (c1 >= bins1[min_idx1]) & (c1 < bins1[max_idx1]) &
-#                             (c2 >= bins2[min_idx2]) & (c2 < bins2[max_idx2])
-#                         )
-
-#         if len(in_bins_idx[0]) == 0:
-#             continue
-
-#         # rgb_in_bins = img[in_bins_idx]
-#         rgb_in_bins = fg_rgb[in_bins_idx]
-#         mean_rgb = mean_color(rgb_in_bins)
-#         main_colors[i] = mean_rgb
-#         color_counts[i] = len(in_bins_idx[0])
-
-#     # Sort from most to least common
-#     count_idx = np.argsort(color_counts)[::-1]
-#     main_colors = main_colors[count_idx, ]
-#     color_counts = color_counts[count_idx, ]
-
-#     # Drop colors not actually counted
-#     main_colors = main_colors[color_counts > 0]
-#     color_counts = color_counts[color_counts > 0]
-
-#     # plt.imshow([main_colors/255])
-#     # plt.show()
-#     return main_colors, color_counts
 
 
 def separate_colors(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.0001, n_hue_bins=360, max_colors=5, n_colors=None, hue_only=False, method="deconvolve"):
@@ -2694,13 +1834,9 @@ def separate_colors(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.00
 
 
 def find_dominant_hues(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.0001, n_hue_bins=360, min_hue_dist=18, lamb=0):
-    # img = masked_img
-    # cspace="JzAzBz"
     jab_img = rgb2jab(img, cspace=cspace)
     jch_img = colour.models.Jab_to_JCh(jab_img)
 
-    # plt.plot(h_bins, smoothed_h)
-    # plt.show()
     if min_colorfulness == "auto":
         min_colorfulness = filters.threshold_otsu(jch_img[..., 1])
 
@@ -2742,8 +1878,6 @@ def find_dominant_hues(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0
         order_idx = np.argsort(bin_counts)[::-1]
         mean_rgb_from_jch = mean_rgb_from_jch[order_idx]
         bin_counts = bin_counts[order_idx]
-    # plt.imshow([mean_rgb_from_jch/255])
-    # plt.show()
 
     return mean_rgb_from_jch, hue_mask, bin_counts
 
@@ -2836,11 +1970,8 @@ def find_dominant_colors(img, cspace="JzAzBz", min_colorfulness=0, px_thresh=0.0
 
         k_intertia = []
         cluster_number = []
-        # sil_list = []
         cluster_centroids = []
         for i in range(1, max_colors+1):
-            # if i >= xy.shape[0]:
-            #     continue
             if i >= xy.shape[0]:
                 continue
             if i == 1:
@@ -2861,7 +1992,6 @@ def find_dominant_colors(img, cspace="JzAzBz", min_colorfulness=0, px_thresh=0.0
                 k_centroids_xy = intial_xy[diff_idx]
 
             temp_xy_clusterer = cluster.KMeans(n_clusters=i, init=k_centroids_xy, random_state=0)
-            temp_labels = temp_xy_clusterer.fit_predict(xy, sample_weight=weights)
             k_intertia.append(temp_xy_clusterer.inertia_)
             cluster_number.append(i)
             cluster_centroids.append(temp_xy_clusterer.cluster_centers_)
@@ -2939,177 +2069,6 @@ def mean_color(rgb_vals, summary_fxn=np.mean):
     mean_rgb = jab2rgb(mean_jab)
     mean_rgb = (255*np.clip(mean_rgb, 0, 1))
     return mean_rgb
-
-
-# Find dominant colors, but remove those with low C
-# def _create_tissue_mask_from_rgb(img, kernel_size=3, cspace="JzAzBz", rel_min_size=0.0001, line_thresh_wh_thresh=2, line_ecc_thresh=0.9):
-
-#     # dom_colors, _ = find_dominant_colors(img, max_colors=10)
-#     # # plt.imshow([dom_colors/255])
-#     # # plt.show()
-#     # if len(dom_colors) > 0:
-#     #     D = stainmat2decon(dom_colors)
-#     #     deconvolved = deconvolve_img(img, D)
-
-#     #     q = 95
-#     #     d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
-#     #     dmax = np.percentile(d_flat, q, axis=0) + np.finfo("float").eps
-#     #     for i in range(deconvolved.shape[2]):
-
-#     #         deconvolved[..., i] = np.clip(deconvolved[..., i], 0, dmax[i])
-#     #         deconvolved[..., i] /= dmax[i]
-
-#     #     decon_med = np.median(deconvolved, axis=2)
-#     # else:
-#     #     decon_med = np.ones(img.shape[0:2])
-#     # # plt.imshow(decon_med)
-#     # # plt.show()
-#     jab = rgb2jab(img, cspace)
-#     jch = colour.models.Jab_to_JCh(jab)
-#     # cd = exposure.rescale_intensity(decon_med, out_range=(0, 1)) * exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
-#     cd = exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
-#     # ent_img, prob_img = calc_shannon(img=cd, n_bins=10)
-
-
-#     # cd_t = filters.threshold_otsu(cd)
-#     cd_t, _ = filters.threshold_multiotsu(cd)
-#     cd_mask = 255*(cd > cd_t).astype(np.uint8)
-#     color_mask = mask2contours(cd_mask, 0)
-#     # plt.imshow(color_mask) #*(1-exposure.rescale_intensity(jch[..., 0], out_range=(0, 1)))*(exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))))
-#     # plt.show()
-
-#     bg_rgb = mean_color(img[color_mask == 0])
-#     bg_jab = rgb2jab(bg_rgb, cspace)
-#     bg_d = np.sqrt(np.sum((jab - bg_jab)**2, axis=2))
-
-#     # plt.imshow(bg_d) #*(1-exposure.rescale_intensity(jch[..., 0], out_range=(0, 1)))*(exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))))
-#     # plt.show()
-
-#     w = exposure.rescale_intensity(bg_d, out_range=(0, 1))*cd
-#     wt, _ = filters.threshold_multiotsu(w)
-#     og_tissue_mask = 255*(w > wt).astype(np.uint8)
-
-#     tissue_mask = mask2contours(og_tissue_mask, kernel_size)
-#     # plt.imshow(tissue_mask)
-#     # plt.show()
-
-#     min_rel_size = int(rel_min_size*np.multiply(*tissue_mask.shape[0:2]))*kernel_size
-#     labeled_img = measure.label(tissue_mask)
-#     # plt.imshow(labeled_img)
-#     # plt.show()
-
-#     tissue_regions = measure.regionprops(labeled_img)
-#     regions_above_thresh = [r for r in tissue_regions if r.area >= min_rel_size]
-#     if len(regions_above_thresh) == 0:
-#         biggest_idx = np.argmax([r.area for r in tissue_regions])
-#         regions_above_thresh = [tissue_regions[biggest_idx]]
-
-#     tissue_mask_cleaned = np.zeros_like(tissue_mask)
-#     # i = 0
-#     # r = regions_above_thresh[i]
-#     for i, r in enumerate(regions_above_thresh):
-#         region_img = 255*r.image.astype(np.uint8)
-#         # Remove horizontal and vertical lines
-#         region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
-#         ori_degrees = abs(np.rad2deg(r.orientation))
-
-#         if region_wh_ratio > line_thresh_wh_thresh and \
-#             r.eccentricity > line_ecc_thresh and \
-#             (ori_degrees < 1 or ori_degrees > 89):
-#             # print(f"classified region {i} as a line")
-#             continue
-
-#         tissue_mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
-
-#     # Combine mask from bg removal and object detection
-#     # final_mask = combine_masks_by_hysteresis([tissue_mask_cleaned, initial_mask])
-#     # plt.imshow(tissue_mask_cleaned)
-#     # plt.show()
-#     # concave_tissue_mask = mask2contours(tissue_mask, kernel_size)
-#     # mask_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(tissue_mask_cleaned))
-#     # roi_mask = np.zeros_like(tissue_mask_cleaned)
-#     # c0, r0 = mask_bbox[0:2]
-#     # c1, r1 = mask_bbox[0:2] + mask_bbox[2:]
-#     # roi_mask[r0:r1, c0:c1] = 255
-#     # # roi_mask[tissue_mask_cleaned == 255] = 128
-#     # plt.imshow(roi_mask)
-#     # plt.show()
-
-#     return og_tissue_mask, tissue_mask_cleaned
-
-
-# def create_tissue_mask_from_rgb(img, kernel_size=3, cspace="JzAzBz", rel_min_size=0.0001, line_thresh_wh_thresh=2, line_ecc_thresh=0.9):
-
-#     dom_colors, _ = find_dominant_colors(img, max_colors=10)
-#     # plt.imshow([dom_colors/255])
-#     # plt.show()
-#     if len(dom_colors) > 0:
-#         D = stainmat2decon(dom_colors)
-#         deconvolved = deconvolve_img(img, D)
-
-#         q = 95
-#         d_flat = deconvolved.reshape(-1, deconvolved.shape[2])
-#         dmax = np.percentile(d_flat, q, axis=0) + np.finfo("float").eps
-#         for i in range(deconvolved.shape[2]):
-
-#             deconvolved[..., i] = np.clip(deconvolved[..., i], 0, dmax[i])
-#             deconvolved[..., i] /= dmax[i]
-
-#         decon_med = np.median(deconvolved, axis=2)
-#     else:
-#         decon_med = np.ones(img.shape[0:2])
-#     # plt.imshow(decon_med)
-#     # plt.show()
-#     jab = rgb2jab(img, cspace)
-#     jch = colour.models.Jab_to_JCh(jab)
-#     cd = exposure.rescale_intensity(decon_med, out_range=(0, 1)) * exposure.rescale_intensity(jch[..., 1], out_range=(0, 1))
-#     # ent_img, prob_img = calc_shannon(img=cd, n_bins=10)
-
-#     # cd_t = filters.threshold_otsu(cd)
-#     cd_t, _ = filters.threshold_multiotsu(cd)
-#     cd_mask = 255*(cd > cd_t).astype(np.uint8)
-#     tissue_mask = mask2contours(cd_mask, 0)
-
-#     min_rel_size = int(rel_min_size*np.multiply(*tissue_mask.shape[0:2]))
-#     labeled_img = measure.label(tissue_mask)
-#     # plt.imshow(tissue_mask)
-#     # plt.show()
-
-#     tissue_regions = measure.regionprops(labeled_img)
-#     regions_above_thresh = [r for r in tissue_regions if r.area >= min_rel_size]
-#     if len(regions_above_thresh) == 0:
-#         biggest_idx = np.argmax([r.area for r in tissue_regions])
-#         regions_above_thresh = [tissue_regions[biggest_idx]]
-
-#     tissue_mask_cleaned = np.zeros_like(tissue_mask)
-#     # i = 0
-#     # r = regions_above_thresh[i]
-#     for i, r in enumerate(regions_above_thresh):
-#         region_img = 255*r.image.astype(np.uint8)
-#         # Remove horizontal and vertical lines
-#         region_wh_ratio = r.axis_major_length/(r.axis_minor_length + np.finfo(float).resolution)
-#         ori_degrees = abs(np.rad2deg(r.orientation))
-
-#         if region_wh_ratio > line_thresh_wh_thresh and \
-#             r.eccentricity > line_ecc_thresh and \
-#             (ori_degrees < 1 or ori_degrees > 89):
-#             # print(f"classified region {i} as a line")
-#             continue
-
-#         tissue_mask_cleaned[r.slice][region_img > 0] = region_img[region_img > 0]
-
-#     # Combine mask from bg removal and object detection
-#     # final_mask = combine_masks_by_hysteresis([tissue_mask_cleaned, initial_mask])
-#     # plt.imshow(concave_tissue_mask)
-#     # plt.show()
-#     concave_tissue_mask = mask2contours(tissue_mask_cleaned, kernel_size)
-#     # mask_bbox = warp_tools.xy2bbox(warp_tools.mask2xy(tissue_mask_cleaned))
-#     # roi_mask = np.zeros_like(tissue_mask_cleaned)
-#     # c0, r0 = mask_bbox[0:2]
-#     # c1, r1 = mask_bbox[0:2] + mask_bbox[2:]
-#     # roi_mask[r0:r1, c0:c1] = 255
-
-#     return tissue_mask_cleaned, concave_tissue_mask
 
 
 def create_tissue_mask_from_multichannel(img, kernel_size=3):
@@ -3199,27 +2158,6 @@ def mask2bbox_mask(mask, merge_bbox=True):
     return updated_mask
 
 
-# def mask2contours(mask, kernel_size=3):
-#     kernel = morphology.disk(kernel_size)
-#     mask_dilated = cv2.dilate(mask, kernel)
-#     contours, _ = cv2.findContours(mask_dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#     contour_mask = np.zeros_like(mask_dilated)
-#     for cnt in contours:
-#         cv2.drawContours(contour_mask, [cnt], 0, 255, -1)
-
-#     return contour_mask
-
-# def mask2bbox_mask(mask):
-#     bbox = warp_tools.xy2bbox(warp_tools.mask2xy(mask))
-#     c0, r0 = bbox[:2]
-#     c1, r1 = bbox[:2] + bbox[2:]
-
-#     bbox_mask = np.zeros_like(mask)
-#     bbox_mask[r0:r1, c0:c1] = 255
-
-#     return bbox_mask
-
-
 def mask2contours(mask, kernel_size=3):
     kernel = morphology.disk(kernel_size)
     mask_dilated = cv2.dilate(mask, kernel)
@@ -3248,7 +2186,6 @@ def mask2contours(mask, kernel_size=3):
 
             if on_left_border:
                 # Check left border
-                # min_x = np.min(corners_xy[:, 0])
                 idx_at_min_x = np.where(corners_xy[:, 0] == 0)[0]
                 min_y = corners_xy[:, 1][idx_at_min_x.min()]
                 max_y = corners_xy[:, 1][idx_at_min_x.max()]
@@ -3256,7 +2193,7 @@ def mask2contours(mask, kernel_size=3):
 
             if on_right_border:
                 # Check right border
-                max_x = mask.shape[1] - 1 #np.max(corners_xy[:, 0])
+                max_x = mask.shape[1] - 1
                 idx_at_max_x = np.where(corners_xy[:, 0] == max_x)[0]
                 min_y = corners_xy[:, 1][idx_at_max_x.min()]
                 max_y = corners_xy[:, 1][idx_at_max_x.max()]
@@ -3264,7 +2201,7 @@ def mask2contours(mask, kernel_size=3):
 
             if on_btm_border:
                 # Check bottom border
-                max_y = mask.shape[0] - 1 #np.max(corners_xy[:, 1])
+                max_y = mask.shape[0] - 1
                 idx_at_max_y = np.where(corners_xy[:, 1] == max_y)[0]
                 min_x = corners_xy[:, 0][idx_at_max_y.min()]
                 max_x = corners_xy[:, 0][idx_at_max_y.max()]
@@ -3274,12 +2211,6 @@ def mask2contours(mask, kernel_size=3):
             for b_cnt in on_border_contours:
                 cv2.drawContours(contour_mask, [b_cnt], 0, 255, -1)
 
-
-            # plt.imshow(contour_w_border)
-            # plt.show()
-
-    # plt.imshow(contour_mask)
-    # plt.show()
     return contour_mask
 
 
@@ -3348,45 +2279,12 @@ def match_histograms(src_image, ref_histogram, bins=256):
     return image_after_matching
 
 
-# def get_channel_stats(img):
-    # img_stats = [None] * 5
-    # img_stats[0] = np.percentile(img, 1)
-    # img_stats[1] = np.percentile(img, 5)
-    # img_stats[2] = np.mean(img)
-    # img_stats[3] = np.percentile(img, 95)
-    # img_stats[4] = np.percentile(img, 99)
-#
-#     return np.array(img_stats)
-
-# def collect_img_stats(img_list, norm_percentiles=[1, 5, 95, 99], mask_list=None):
-
-#     all_histogram, _ = np.histogram(img_list[0].reshape(-1), bins=256)
-
-#     n = img_list[0].size
-#     total_x = img_list[0].sum()
-#     for i in range(1, len(img_list)):
-#         img = img_list[i]
-#         img_hist, _ = np.histogram(img.reshape(-1), bins=256)
-#         all_histogram += img_hist
-#         n += img.size
-#         total_x += img.sum()
-
-#     mean_x = total_x/n
-#     ref_cdf = 100*np.cumsum(all_histogram)/np.sum(all_histogram)
-#     all_img_stats = np.array([len(np.where(ref_cdf <= q)[0]) for q in norm_percentiles])
-#     all_img_stats = np.hstack([all_img_stats, mean_x])
-#     all_img_stats = all_img_stats[np.argsort(all_img_stats)]
-
-#     return all_histogram, all_img_stats
-
-
 def collect_img_stats(img_list, norm_percentiles=[1, 5, 95, 99], mask_list=None):
 
     use_masks = mask_list is not None
     if use_masks:
         use_masks = mask_list[0] is not None
 
-    # print(f"mask list: {mask_list}, use masks: {use_masks}")
     if use_masks:
         img0 = img_list[0][mask_list[0] > 0]
     else:
@@ -3447,7 +2345,6 @@ def norm_img_stats(img, target_stats, mask=None):
     # Avoid duplicates and keep in ascending order
     lower_knots = np.array([0])
     upper_knots = np.array([300, 350, 400, 450])
-    # upper_knots = np.array([256])
     src_stats_flat = np.hstack([lower_knots, src_stats_flat, upper_knots]).astype(float)
     target_stats_flat = np.hstack([lower_knots, target_stats, upper_knots]).astype(float)
 
@@ -3468,11 +2365,8 @@ def norm_img_stats(img, target_stats, mask=None):
         normed_img = cs(img.reshape(-1)).reshape(img.shape)
     else:
         normed_img = img.copy()
-        # normed_img = np.zeros_like(img)
         fg_px = np.where(np_mask > 0)
         normed_img[fg_px] = cs(img[fg_px])
-        # plt.imshow(normed_img)
-        # plt.show()
 
     if img.dtype == np.uint8:
         normed_img = np.clip(normed_img, 0, 255)

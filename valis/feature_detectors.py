@@ -21,9 +21,7 @@ from .superglue_models import superpoint
 DEFAULT_FEATURE_DETECTOR = cv2.BRISK_create()
 """The default OpenCV feature detector"""
 
-# MAX_FEATURES = 20000
-# MAX_FEATURES = 10000
-MAX_FEATURES = 5000
+MAX_FEATURES = 10000
 """Maximum number of image features that will be recorded. If the number
 of features exceeds this value, the MAX_FEATURES features with the
 highest response will be returned."""
