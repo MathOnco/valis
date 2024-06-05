@@ -1,6 +1,6 @@
 """Functions and classes to match and filter image features
 """
-
+import torch
 import numpy as np
 import cv2
 import torch
@@ -1004,7 +1004,8 @@ class SuperPointAndGlue(Matcher):
             'superpoint': {
                 'nms_radius': self.nms_radius,
                 'keypoint_threshold': self.keypoint_threshold,
-                'max_keypoints': feature_detectors.MAX_FEATURES
+                'max_keypoints': feature_detectors.MAX_FEATURES,
+                'device': self.device
             },
             'superglue': {
                 'weights': self.weights,
@@ -1217,7 +1218,8 @@ class SuperGlueMatcher(Matcher):
             'superpoint': {
                 'nms_radius': self.nms_radius,
                 'keypoint_threshold': self.keypoint_threshold,
-                'max_keypoints': feature_detectors.MAX_FEATURES
+                'max_keypoints': feature_detectors.MAX_FEATURES,
+                'device': self.device
             },
             'superglue': {
                 'weights': self.weights,

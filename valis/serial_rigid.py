@@ -510,6 +510,7 @@ class SerialRigidRegistrar(object):
             img_obj = ZImage(img, os.path.join(self.img_dir, img_f), i, name=img_name)
             img_obj.padded_shape_rc = out_shape
             img_obj.T = warp_tools.get_padding_matrix(img.shape, img_obj.padded_shape_rc)
+
             img_obj.kp_pos_xy, img_obj.desc = feature_detector.detect_and_compute(img)
             img_obj_list[i] = img_obj
             self.img_obj_dict[img_name] = img_obj

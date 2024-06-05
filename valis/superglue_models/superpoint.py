@@ -40,9 +40,9 @@
 # --------------------------------------------------------------------*/
 # %BANNER_END%
 
-from pathlib import Path
 import torch
 from torch import nn
+from pathlib import Path
 
 def simple_nms(scores, nms_radius: int):
     """ Fast Non-maximum suppression to remove nearby points """
@@ -127,16 +127,23 @@ class SuperPoint(nn.Module):
 
         self.convPa = nn.Conv2d(c4, c5, kernel_size=3, stride=1, padding=1)
         self.convPb = nn.Conv2d(c5, 65, kernel_size=1, stride=1, padding=0)
-
         self.convDa = nn.Conv2d(c4, c5, kernel_size=3, stride=1, padding=1)
         self.convDb = nn.Conv2d(
             c5, self.config['descriptor_dim'],
             kernel_size=1, stride=1, padding=0)
 
+        # print("set convDb")
+        # import os
         path = Path(__file__).parent / 'weights/superpoint_v1.pth'
-        self.load_state_dict(torch.load(str(path)))
+        device = self.config["device"]
+        # self.load_state_dict(torch.load(str(path), map_location=device))
+
+        weights = torch.load(str(path), map_location=device)
+        # print("loaded weights")
+        self.load_state_dict(weights)
 
         mk = self.config['max_keypoints']
+        # print(f"max kp = {mk}")
         if mk == 0 or mk < -1:
             raise ValueError('\"max_keypoints\" must be positive or \"-1\"')
 

@@ -315,6 +315,7 @@ class OD(ImageProcesser):
         # upper_p = 1
         upper_p = np.percentile(od_norm, p)
         lower_p = np.percentile(od_norm, 100-p)
+        # lower_p = 0 #np.percentile(od_norm, 100-p)
         od_clipped = np.clip(od_norm, lower_p, upper_p)
 
         # plt.imshow(od_clipped)

@@ -21,7 +21,8 @@ from .superglue_models import superpoint
 DEFAULT_FEATURE_DETECTOR = cv2.BRISK_create()
 """The default OpenCV feature detector"""
 
-MAX_FEATURES = 10000
+MAX_FEATURES = 5000
+# MAX_FEATURES = 500
 """Maximum number of image features that will be recorded. If the number
 of features exceeds this value, the MAX_FEATURES features with the
 highest response will be returned."""
@@ -233,6 +234,12 @@ class OrbVggFD(FeatureDD):
         super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
 
 
+class SKOrbVggFD(FeatureDD):
+    """Uses ORB for feature detection and VGG for feature description"""
+    def __init__(self,  kp_detector=cv2.ORB_create(nfeatures=MAX_FEATURES, fastThreshold=0), kp_descriptor=cv2.xfeatures2d.VGG_create(scale_factor=0.75)):
+        super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
+
+
 # Example of a custom detector that uses the Censure feature detector
 # from scikit-image along with the KAZE descriptor (OpenCV)
 class FeatureDetector(object):
@@ -272,6 +279,7 @@ class FeatureDetector(object):
 
 
 # Example of how to create a feature detector using OpenCV + skimage #
+
 class SkCensureDetector(FeatureDetector):
     """A CENSURE feature detector from scikit image
 
@@ -281,7 +289,7 @@ class SkCensureDetector(FeatureDetector):
     """
     def __init__(self, **kwargs):
         super().__init__()
-        self.detector = feature.CENSURE(**kwargs)
+        self.kp_detector = feature.CENSURE(**kwargs)
 
     def detect(self, image):
         """
@@ -301,15 +309,23 @@ class SkCensureDetector(FeatureDetector):
         kp : KeyPoints
             List of OpenCV KeyPoint objects
 
+
         """
-        self.detector.detect(image)
-
-        # Skimage returns keypoints as row, col, but need to be returned as xy
-        kp_xy = self.detector.keypoints[:, ::-1].astype(float)
-        # Now create a list of OpenCV KeyPoint objects with these coordinates
-        kp = cv2.KeyPoint_convert(kp_xy.tolist())
-
-        return kp
+        self.kp_detector.detect(image)
+        self.kp_detector.keypoints = self.kp_detector.keypoints.astype(np.float32)
+        base_patch_size = 31
+        kp_scales = self.kp_detector.scales
+        unique_scales = np.unique(kp_scales)
+        scale_diff = np.min(np.diff(unique_scales))
+        kp_ocatves = np.digitize(kp_scales, np.linspace(kp_scales.min(), kp_scales.max()+scale_diff, len(unique_scales)))
+        cv_kp = [cv2.KeyPoint(x=self.kp_detector.keypoints[i][1],
+                              y=self.kp_detector.keypoints[i][0],
+                              size=int(base_patch_size*kp_ocatves[i]),
+                              octave=kp_ocatves[i]
+                          )
+                    for i in range(self.kp_detector.keypoints.shape[0])
+                    ]
+        return cv_kp
 
 
 class CensureVggFD(FeatureDD):
@@ -371,7 +387,6 @@ class SkDaisy(FeatureDD):
 
         return kp_xy, desc2d
 
-
 class SuperPointFD(FeatureDD):
 
     """SuperPoint `FeatureDD`
@@ -402,7 +417,7 @@ class SuperPointFD(FeatureDD):
         force_cpu : bool
             Force pytorch to run in CPU mode
 
-        kp_descriptor : optional, OpenCV feature desrciptor
+        kp_descriptor : optional, OpenCV feature descriptor
 
         """
         super().__init__(kp_detector=kp_detector, kp_descriptor=kp_descriptor)
@@ -426,11 +441,13 @@ class SuperPointFD(FeatureDD):
             'superpoint': {
                 'nms_radius': self.nms_radius,
                 'keypoint_threshold': self.keypoint_threshold,
+                "device": self.device,
                 'max_keypoints': MAX_FEATURES
             }}
 
     def frame2tensor(self, img):
-        float_img = exposure.rescale_intensity(img, out_range=np.float64)
+        # float_img = exposure.rescale_intensity(img, out_range=np.float64)
+        float_img = exposure.rescale_intensity(img, out_range=np.float32)
         tensor = torch.from_numpy(float_img).float()[None, None].to(self.device)
 
         return tensor

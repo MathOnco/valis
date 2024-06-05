@@ -27,6 +27,12 @@ ColorfulStandardizer
     :members:  __init__, process_image, create_mask
     :show-inheritance:
 
+OD
+--------------------
+.. autoclass:: valis.preprocessing::OD
+    :members:  __init__, process_image, create_mask
+    :show-inheritance:
+
 StainFlattener
 ---------------
 .. autoclass:: valis.preprocessing::StainFlattener
