@@ -11,6 +11,7 @@ PROCESSOR_KEY = "image processors"
 IF_PROCESSOR_KEY = "if processor"
 BF_PROCESSOR_KEY = "bf processor"
 
+
 def _get_subclasses(module, base_class, exclude=()):
     include_list = []
     for name, obj in inspect.getmembers(module):
@@ -18,6 +19,7 @@ def _get_subclasses(module, base_class, exclude=()):
             if issubclass(obj, base_class) and obj.__name__ != base_class.__name__ and obj.__name__ not in exclude:
                 include_list.append(name)
     return include_list
+
 
 def get_feature_detectors():
     """Get all feature detectors

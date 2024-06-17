@@ -4,8 +4,7 @@ import numpy as np
 import os
 
 import sys
-# sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
-# from valis import warp_tools
+sys.path.append("/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis")
 
 from valis import slide_io, warp_tools, valtils, registration
 
@@ -24,6 +23,7 @@ if in_container:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
 else:
     results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
+    # results_dst_dir = os.path.join(parent_dir, f"valis/tests")
 
 def test_warp_other_images():
     # src_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/resources/slides/cycif_sep_channels"
@@ -49,10 +49,13 @@ def test_warp_other_images():
             dapi_thumb = dapi_thumb_vips.numpy()
             for img_f in other_img_list:
                 dst_f = os.path.join(slide_dst_dir, f"{valtils.get_name(img_f)}_warped.ome.tiff")
-                slide_obj.warp_and_save_slide(src_f=img_f, dst_f=dst_f, compression="jp2k")
+                slide_obj.warp_and_save_slide(src_f=img_f, dst_f=dst_f, compression="jpeg", pyramid=False, tile_wh=64)
 
-                thumb_reader = slide_io.get_slide_reader(dst_f)
-                thumb_img = thumb_reader(dst_f).slide2image(0)
+                thumb_reader_cls = slide_io.get_slide_reader(dst_f)
+                thumb_reader = thumb_reader_cls(dst_f)#.slide2image(0)
+                thumb_img = thumb_reader.slide2image(0)
+
+                assert len(thumb_reader.metadata.slide_dimensions) == 1, "Image is pyramid, but should not be."
                 assert not np.all(dapi_thumb==thumb_img), "slide warped version of itself"
 
                 os.remove(dst_f)
@@ -66,3 +69,6 @@ def test_warp_other_images():
     except Exception as e:
         print(e)
         assert False
+
+if __name__ == "__main__":
+    test_warp_other_images()

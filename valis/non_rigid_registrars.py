@@ -1238,15 +1238,15 @@ class NonRigidTileRegistrar(object):
 
     def norm_img(self, img, stats, mask=None):
         normed_img = exposure.rescale_intensity(img, out_range=(0, 255)).astype(np.uint8)
-        normed_img = preprocessing.norm_img_stats(normed_img, stats, mask)
+        normed_img = preprocessing.norm_img_stats(img=normed_img, target_stats=stats, mask=mask)
         normed_img = exposure.rescale_intensity(normed_img, out_range=(0, 255)).astype(np.uint8)
 
         return normed_img
 
     def norm_tiles(self, moving_img, fixed_img, tile_mask):
         try:
-            target_processing_stats = preprocessing.collect_img_stats([fixed_img, moving_img])
-            fixed_normed = self.norm_img(fixed_img, target_processing_stats, tile_mask)
+            _, target_processing_stats = preprocessing.collect_img_stats([fixed_img, moving_img])
+            fixed_normed = self.norm_img(img=fixed_img, stats=target_processing_stats, mask=tile_mask)
             moving_normed = self.norm_img(moving_img, target_processing_stats, tile_mask)
 
         except ValueError:

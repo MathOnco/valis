@@ -51,7 +51,7 @@ MASK_DIR = "masks"
 
 # Default image processing #
 DEFAULT_BRIGHTFIELD_CLASS = preprocessing.OD
-DEFAULT_BRIGHTFIELD_PROCESSING_ARGS = {} #{'c': preprocessing.DEFAULT_COLOR_STD_C, "h": 0}
+DEFAULT_BRIGHTFIELD_PROCESSING_ARGS = {"adaptive_eq": True} #{'c': preprocessing.DEFAULT_COLOR_STD_C, "h": 0}
 DEFAULT_FLOURESCENCE_CLASS = preprocessing.ChannelGetter
 DEFAULT_FLOURESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
 DEFAULT_NORM_METHOD = "img_stats"
@@ -101,6 +101,7 @@ CROP_OVERLAP = "overlap"
 CROP_REF = "reference"
 CROP_NONE = "all"
 
+DEFAULT_COMPRESSION=pyvips.enums.ForeignTiffCompression.DEFLATE
 # Messages
 WARP_ANNO_MSG = "Warping annotations"
 CONVERT_MSG = "Converting images"
@@ -647,7 +648,7 @@ class Slide(object):
         return bk_dxdy_f, fwd_dxdy_f
 
     def get_bk_dxdy(self):
-        if self._bk_dxdy_np is None:
+        if self._bk_dxdy_np is None and not self.stored_dxdy:
             return None
 
         elif self.stored_dxdy:
@@ -683,7 +684,7 @@ class Slide(object):
                        doc="Get and set backwards displacements")
 
     def get_fwd_dxdy(self):
-        if self._fwd_dxdy_np is None:
+        if self._fwd_dxdy_np is None and not self.stored_dxdy:
             return None
 
         elif self.stored_dxdy:
@@ -994,7 +995,8 @@ class Slide(object):
                             channel_names=None,
                             colormap=slide_io.CMAP_AUTO,
                             interp_method="bicubic",
-                            tile_wh=None, compression="lzw",
+                            tile_wh=None,
+                            compression=DEFAULT_COMPRESSION,
                             Q=100,
                             pyramid=True,
                             reader=None):
@@ -1045,8 +1047,7 @@ class Slide(object):
             Tile width and height used to save image
 
         compression : str
-            Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            Compression method used to save ome.tiff. See pyips for more details.
 
         Q : int
             Q factor for lossy compression
@@ -1065,18 +1066,23 @@ class Slide(object):
             else:
                 reader = self.reader
 
-        warped_slide = self.warp_slide(level=level, non_rigid=non_rigid,
+        warped_slide = self.warp_slide(level=level,
+                                       non_rigid=non_rigid,
                                        crop=crop,
                                        interp_method=interp_method,
                                        src_f=src_f,
                                        reader=reader)
 
         # Get ome-xml #
+        ref_slide = self.val_obj.get_ref_slide()
+        pixel_physical_size_xyu = ref_slide.reader.scale_physical_size(level)
+
         ome_xml_obj = slide_io.update_xml_for_new_img(img=warped_slide,
                                                       reader=reader,
                                                       level=level,
                                                       channel_names=channel_names,
-                                                      colormap=colormap)
+                                                      colormap=colormap,
+                                                      pixel_physical_size_xyu=pixel_physical_size_xyu)
 
         ome_xml = ome_xml_obj.to_xml()
 
@@ -1485,6 +1491,8 @@ class Slide(object):
         scaled_padded_np = warp_tools.vips2numpy(scaled_padded)
 
         return scaled_padded_np
+
+
 class Valis(object):
     """Reads, registers, and saves a series of slides/images
 
@@ -2010,10 +2018,12 @@ class Valis(object):
         else:
             self.get_imgs_in_dir()
 
+        self.original_img_list = [str(x) for x in self.original_img_list]
         if self.name_dict is None:
             self.name_dict = self.get_img_names(self.original_img_list)
 
         self.check_for_duplicated_names(self.original_img_list)
+
 
         valtils.sort_nicely(self.original_img_list)
 
@@ -3388,7 +3398,6 @@ class Valis(object):
         micro_rigid_registar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
         micro_rigid_registar.register()
 
-        dir(self)
         # Not all pairs will have keept high resolution M, so re-estimate M based on final matches
         slide_idx, slide_names = list(zip(*[[slide_obj.stack_idx, slide_obj.name] for slide_obj in self.slide_dict.values()]))
         slide_order = np.argsort(slide_idx) # sorts ascending
@@ -4047,6 +4056,7 @@ class Valis(object):
 
         """
 
+        # processor_dict = self.create_img_processor_dict()
         ref_slide = self.get_ref_slide()
 
         self.create_non_rigid_reg_mask()
@@ -4158,10 +4168,13 @@ class Valis(object):
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
 
-        thumbnail_s = np.min(self.thumbnail_size/np.array(non_rigid_registrar.non_rigid_obj_list[0].registered_img.shape))
+        # thumbnail_s = np.min(self.thumbnail_size/np.array(non_rigid_registrar.non_rigid_obj_list[0].registered_img.shape))
+        thumbnail_s = np.min(self.thumbnail_size/warp_tools.get_shape(non_rigid_registrar.non_rigid_obj_list[0].registered_img)[0:2])
         non_rigid_img_list = [warp_tools.rescale_img(nr_img_obj.registered_img, thumbnail_s) for nr_img_obj in non_rigid_registrar.non_rigid_obj_list]
+        if isinstance(non_rigid_img_list[0], pyvips.Image):
+            non_rigid_img_list = [warp_tools.vips2numpy(x) for x in non_rigid_img_list]
 
-        self.non_rigid_overlap_img  = self.draw_overlap_img(non_rigid_img_list)
+        self.non_rigid_overlap_img  = self.draw_overlap_img(img_list=non_rigid_img_list)
 
         overlap_img_fout = os.path.join(self.overlap_dir, self.name + "_non_rigid_overlap.png")
         warp_tools.save_img(overlap_img_fout, self.non_rigid_overlap_img)
@@ -4186,8 +4199,12 @@ class Valis(object):
                 slide_obj._bk_dxdy_f = bk_dxdy_f
                 slide_obj._fwd_dxdy_f = fwd_dxdy_f
                 # Save space by only writing the necessary areas. Most displacements may be 0
-                cropped_bk_dxdy = slide_nr_reg_obj.bk_dxdy.extract_area(*mask_bbox_xywh)
-                cropped_fwd_dxdy = slide_nr_reg_obj.fwd_dxdy.extract_area(*mask_bbox_xywh)
+                if np.all(warp_tools.get_shape(slide_nr_reg_obj.bk_dxdy)[0:2][::-1] > mask_bbox_xywh[2:]):
+                    cropped_bk_dxdy = slide_nr_reg_obj.bk_dxdy.extract_area(*mask_bbox_xywh)
+                    cropped_fwd_dxdy = slide_nr_reg_obj.fwd_dxdy.extract_area(*mask_bbox_xywh)
+                else:
+                    cropped_bk_dxdy = slide_nr_reg_obj.bk_dxdy
+                    cropped_fwd_dxdy = slide_nr_reg_obj.fwd_dxdy
 
                 cropped_bk_dxdy.cast("float").tiffsave(slide_obj._bk_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
                 cropped_fwd_dxdy.cast("float").tiffsave(slide_obj._fwd_dxdy_f, compression="lzw", lossless=True, tile=True, bigtiff=True)
@@ -4323,8 +4340,10 @@ class Valis(object):
 
             shape_list[i] = tuple(slide_obj.slide_shape_rc)
             processed_img_shape_list[i] = tuple(slide_obj.processed_img_shape_rc)
-            unit_list[i] = slide_obj.units
-            resolution_list[i] = slide_obj.resolution
+            # unit_list[i] = slide_obj.units
+            # resolution_list[i] = slide_obj.resolution
+            unit_list[i] = ref_slide.units
+            resolution_list[i] = ref_slide.resolution
             from_list[i] = slide_name
             path_list[i] = slide_obj.src_f
 
@@ -4385,8 +4404,6 @@ class Valis(object):
             all_rigid_tre[i] = median_rigid_tre
 
             if slide_obj.bk_dxdy is not None:
-
-
                 prev_warped_nr = prev_slide_obj.warp_xy(slide_obj.xy_in_prev,
                                                         M=prev_slide_obj.M,
                                                         pt_level= prev_slide_obj.processed_img_shape_rc,
@@ -4775,6 +4792,7 @@ class Valis(object):
             nr_obj = non_rigid_registrar.non_rigid_obj_dict[slide_obj.name]
             # Will be combining original and new dxdy as pyvips Images
             if not isinstance(slide_obj.bk_dxdy[0], pyvips.Image):
+            # if not isinstance(nr_obj.bk_dxdy[0], pyvips.Image):
                 vips_current_bk_dxdy = warp_tools.numpy2vips(np.dstack(slide_obj.bk_dxdy)).cast("float")
                 vips_current_fwd_dxdy = warp_tools.numpy2vips(np.dstack(slide_obj.fwd_dxdy)).cast("float")
             else:
@@ -4935,7 +4953,7 @@ class Valis(object):
                              crop=True,
                              colormap=slide_io.CMAP_AUTO,
                              interp_method="bicubic",
-                             tile_wh=None, compression="lzw", Q=100, pyramid=True):
+                             tile_wh=None, compression=DEFAULT_COMPRESSION, Q=100, pyramid=True):
 
         f"""Warp and save all slides
 
@@ -4975,8 +4993,7 @@ class Valis(object):
             Tile width and height used to save image
 
         compression : str, optional
-            Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            Compression method used to save ome.tiff. See pyips for more details.
 
         Q : int
             Q factor for lossy compression
@@ -5034,7 +5051,7 @@ class Valis(object):
                               crop=True, channel_name_dict=None,
                               src_f_list=None, colormap=slide_io.CMAP_AUTO,
                               drop_duplicates=True, tile_wh=None,
-                              interp_method="bicubic", compression="lzw",
+                              interp_method="bicubic", compression=DEFAULT_COMPRESSION,
                               Q=100, pyramid=True):
 
         """Warp and merge registered slides

@@ -2664,21 +2664,38 @@ def get_inside_mask_idx(xy, mask):
 
 
 def mask2xy(mask):
+
     if mask.ndim > 2:
         mask_y, mask_x = np.where(np.all(mask > 0, axis=2))
     else:
         mask_y, mask_x = np.where(mask > 0)
-    min_x = np.min(mask_x)
-    max_x = np.max(mask_x)
-    min_y = np.min(mask_y)
-    max_y = np.max(mask_y)
+
+    if len(mask_y) > 0:
+
+        min_x = np.min(mask_x) + 1
+        max_x = np.max(mask_x)
+        min_y = np.min(mask_y)
+        max_y = np.max(mask_y) + 1
+    else:
+        min_x = 0
+        max_x = mask.shape[1] - 1
+        min_y = 0
+        max_y = mask.shape[0] - 1
 
     bbox = np.array([
         [min_x, min_y],
-        [max_x+1, min_y],
-        [max_x+1, max_y+1],
-        [min_x, max_y+1]
+        [max_x, min_y],
+        [max_x, max_y],
+        [min_x, max_y]
     ])
+
+
+    # bbox = np.array([
+    #     [min_x, min_y],
+    #     [max_x+1, min_y],
+    #     [max_x+1, max_y+1],
+    #     [min_x, max_y+1]
+    # ])
 
     return bbox
 

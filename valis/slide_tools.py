@@ -156,6 +156,7 @@ def get_slide_extension(src_f):
 
     return slide_format
 
+
 def get_level_idx(dims_wh, max_dim):
     possible_levels = np.where(np.max(dims_wh, axis=1) <= max_dim)[0]
     if len(possible_levels):
@@ -187,28 +188,28 @@ def get_img_type(img_f):
         return kind
 
 
-    f_extension = get_slide_extension(img_f)
+    f_extension = get_slide_extension(str(img_f))
 
     if f_extension.lower() == '.ds_store':
         return kind
 
-    is_ome_tiff = slide_io.check_is_ome(img_f)
+    is_ome_tiff = slide_io.check_is_ome(str(img_f))
     is_czi = f_extension == ".czi"
 
     can_use_pil = False
     if not is_ome_tiff:
         try:
             with valtils.HiddenPrints():
-                pil_image = Image.open(img_f)
+                pil_image = Image.open(str(img_f))
             can_use_pil = True
         except:
             pass
 
-    can_use_vips = slide_io.check_to_use_vips(img_f)
+    can_use_vips = slide_io.check_to_use_vips(str(img_f))
     if not is_ome_tiff and (can_use_pil or can_use_vips):
         return TYPE_IMG_NAME
 
-    can_use_openslide = slide_io.check_to_use_openslide(img_f)
+    can_use_openslide = slide_io.check_to_use_openslide(str(img_f))
     if can_use_openslide or is_ome_tiff or is_czi:
         return TYPE_SLIDE_NAME
 
