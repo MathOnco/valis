@@ -303,7 +303,7 @@ class OD(ImageProcesser):
 
         return mask
 
-    def process_image(self, adaptive_eq=True, p=95, *args, **kwargs):
+    def process_image(self, adaptive_eq=False, p=95, *args, **kwargs):
         """
         Calculate norm of the OD image
         """
@@ -311,15 +311,14 @@ class OD(ImageProcesser):
         eps = np.finfo("float").eps
         img01 = self.image/255
         od = -np.log10(img01 + eps)
-        od_norm = np.linalg.norm(od, axis=2)
+        # od_norm = np.linalg.norm(od, axis=2)
+        # print("OD norm")
+        od_norm = np.mean(od, axis=2)
         # upper_p = 1
         upper_p = np.percentile(od_norm, p)
-        lower_p = np.percentile(od_norm, 100-p)
-        # lower_p = 0 #np.percentile(od_norm, 100-p)
+        # lower_p = np.percentile(od_norm, 100-p)
+        lower_p = 0 #np.percentile(od_norm, 100-p)
         od_clipped = np.clip(od_norm, lower_p, upper_p)
-
-        # plt.imshow(od_clipped)
-        # plt.show()
 
         if adaptive_eq:
             od_clipped = exposure.equalize_adapthist(exposure.rescale_intensity(od_clipped, out_range=(0, 1)))
@@ -702,7 +701,7 @@ def denoise_img(img, mask=None, weight=None):
         sigma_scale = 400
 
     if weight is None:
-        weight=sigma/sigma_scale
+        weight = sigma/sigma_scale
 
     denoised_img = restoration.denoise_tv_chambolle(img, weight=weight)
     denoised_img = exposure.rescale_intensity(denoised_img, out_range="uint8")
@@ -1232,7 +1231,7 @@ def thresh_unimodal(x, bins=256):
     t = all_xi[max_d_idx]
 
     if skew < 0:
-        t*= -1
+        t *= -1
 
     return t
 
@@ -1652,14 +1651,8 @@ def clean_mask(mask, img, rel_min_size=0.001):
             tb = np.where(r.image_filled[:, -1])[0]
             r_filled_img[min(tb):max(tb), -1] = 255
 
-        # r_filled_img = 255*ndimage.binary_fill_holes(r_filled_img).astype(np.uint8)
         r_filled_img = ndimage.binary_fill_holes(r_filled_img)
-        # rch = colour.algebra.cartesian_to_polar(np.dstack([rx, ry]))
-        # colorfulness_img[r.slice][r_filled_img] = np.mean(rch[..., 0])
-        # colorfulness_img[r.slice][r_filled_img] = np.max(rch[..., 0])
         colorfulness_img[r.slice][r_filled_img] = np.max(c[r.slice][r_filled_img])
-        # colorfulness_img[r.slice][r_filled_img] = np.percentile(c[r.slice][r_filled_img], 90)
-
 
     color_thresh = filters.threshold_otsu(colorfulness_img[mask > 0])
     color_mask = colorfulness_img > color_thresh
@@ -1830,8 +1823,6 @@ def separate_colors(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.00
             sep_img[..., i] = svm.fit(chnl_X[idx], chnl_Y[idx]).predict_proba(jab_flat)[..., 0].reshape(img.shape[0:2])
 
     return sep_img, img_colors, color_mask, color_counts
-
-
 
 
 def find_dominant_hues(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.0001, n_hue_bins=360, min_hue_dist=18, lamb=0):
@@ -2305,7 +2296,6 @@ def collect_img_stats(img_list, norm_percentiles=[1, 5, 95, 99], mask_list=None)
             else:
                 img_flat = img[mask_list[i] > 0]
 
-
         img_hist, _ = np.histogram(img_flat, bins=256)
         all_histogram += img_hist
         n += img.size
@@ -2341,7 +2331,7 @@ def norm_img_stats(img, target_stats, mask=None):
     else:
         np_mask = None
 
-    _, src_stats_flat = collect_img_stats([img], mask_list=np_mask)
+    _, src_stats_flat = collect_img_stats([img], mask_list=[np_mask])
 
     # Avoid duplicates and keep in ascending order
     lower_knots = np.array([0])

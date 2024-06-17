@@ -552,8 +552,29 @@ def create_overlap_img(img_list, cmap=jzazbz_cmap(), blending="weighted"):
     color_list = get_n_colors(cmap, n_imgs)
 
     is_np = isinstance(img_list[0], np.ndarray)
+    if is_np:
+        is_rgb = img_list[0].dtype == np.uint8 and img_list[0].ndim==3 and img_list[0].shape[2] == 3
+        if is_rgb:
+            grey_img_list = [color.rgb2gray(x) if x.ndim == 3 else x for x in img_list]
+        elif img_list[0].ndim > 2:
+            grey_img_list = [x[..., 0] for x in img_list]
+        else:
+            grey_img_list = img_list
+    else:
+        is_rgb = img_list[0].interpretation == pyvips.enums.Interpretation.SRGB
+        if is_rgb:
+            grey_img_list = [x.colourspace(pyvips.enums.Interpretation.B_W) if x.bands == 3 else x for x in img_list]
+        elif img_list[0].bands > 2:
+            grey_img_list = [x[0] for x in img_list]
+        else:
+            grey_img_list = img_list
+
     if blending == "light":
-        tinted_img_list = [tint_grey(warp_tools.numpy2vips(img_list[i]), color_list[i]) for i in range(n_imgs)]
+        if is_np:
+            tinted_img_list = [tint_grey(warp_tools.numpy2vips(grey_img_list[i]), color_list[i]) for i in range(n_imgs)]
+        else:
+            tinted_img_list = [tint_grey(grey_img_list[i], color_list[i]) for i in range(n_imgs)]
+
         base = tinted_img_list[0]
         blended_vips_rgb = base.composite(other=tinted_img_list[1:], mode=pyvips.enums.BlendMode.LIGHTEN, compositing_space=pyvips.enums.Interpretation.SRGB)
         blended_vips_rgb = blended_vips_rgb[0:3] # remove alpha channel
@@ -561,27 +582,27 @@ def create_overlap_img(img_list, cmap=jzazbz_cmap(), blending="weighted"):
     else:
         eps = np.finfo("float").eps
         if is_np:
-            sum_img = np.full(warp_tools.get_shape(img_list[0])[0:2], eps)
+            sum_img = np.full(warp_tools.get_shape(grey_img_list[0])[0:2], eps)
             blended_img = np.zeros((*sum_img.shape, 3))
         else:
-            sum_img = pyvips.Image.black(img_list[0].width, img_list[0].height) + eps
-            blended_img = pyvips.Image.black(img_list[0].width, img_list[0].height, bands=3)
+            sum_img = pyvips.Image.black(grey_img_list[0].width, grey_img_list[0].height) + eps
+            blended_img = pyvips.Image.black(grey_img_list[0].width, grey_img_list[0].height, bands=3)
 
         max_v = 0
-        for i in range(len(img_list)):
-            sum_img += img_list[i]
-            max_v = max(max_v, img_list[i].max())
+        for i in range(len(grey_img_list)):
+            sum_img += grey_img_list[i]
+            max_v = max(max_v, grey_img_list[i].max())
 
         vips_lab_color_list = [warp_tools.numpy2vips(np.array([[255*clr]])).colourspace(pyvips.enums.Interpretation.LAB) for clr in color_list]
 
-        for i in range(len(img_list)):
-            weight = img_list[i]/sum_img
+        for i in range(len(grey_img_list)):
+            weight = grey_img_list[i]/sum_img
             if is_np:
                 lab_clr = warp_tools.vips2numpy(vips_lab_color_list[i])
-                blended_img += lab_clr * np.dstack([img_list[i]/max_v * weight]*3)
+                blended_img += lab_clr * np.dstack([grey_img_list[i]/max_v * weight]*3)
             else:
                 lab_clr = vips_lab_color_list[i]
-                blended_img += lab_clr*weight*img_list[i]/max_v
+                blended_img += lab_clr*weight*grey_img_list[i]/max_v
 
         if is_np:
             blended_vips = warp_tools.numpy2vips(blended_img)

@@ -42,6 +42,11 @@ CMAP_AUTO = "auto"
 str: Default argument to get channel colors.
 """
 
+DEFAULT_COMPRESSION = pyvips.enums.ForeignTiffCompression.DEFLATE
+"""
+Default tiff compression method
+"""
+
 MAX_TILE_SIZE = 2**10
 """int: maximum tile used to read or write images"""
 
@@ -275,6 +280,7 @@ def get_bioformats_version():
 
     return v
 
+
 def get_bf_readable_formats():
     """Get extensions of formats that BioFormats can read
 
@@ -452,20 +458,52 @@ def check_to_use_openslide(src_f):
     return use_openslide
 
 
-def get_ome_obj(src_f):
+def get_ome_obj(x):
+    """Get ome_types.model.ome.OME object
+
+    Paramters
+    ---------
+    x: str
+        Either OME-XML or path to ome.tiff
+
+    Returns
+    -------
+    ome_obj : ome_types.model.ome.OME
+
+    """
+    x = str(x)
+
+    is_ome_tiff = x.endswith(".ome.tif") or x.endswith(".ome.tiff")
+    ome_obj = None
     try:
-        ome_obj = ome_types.from_tiff(src_f, parser=OME_TYPES_PARSER)
+        # Try to use ome-types
+        if is_ome_tiff:
+            ome_fxn = ome_types.from_tiff
+        # elif x.startswith("<"):
+        else:
+            ome_fxn = ome_types.from_xml
+
+        ome_obj = ome_fxn(x)
+        if len(ome_obj.images) == 0:
+            ome_obj = ome_fxn(x, parser=OME_TYPES_PARSER)
 
     except Exception as e:
         # Sometimes the image description found by `ome_types.from_tiff`
         # does not contain the ome-xml. Seems to be the case for ImageJ exports, at least
-        try:
-            bf_rdr, bf_meta = get_bioformats_reader_and_meta(str(src_f))
-            meta_xml = bf_meta.dumpXML()
-            ome_obj = ome_types.from_xml(str(meta_xml), parser=OME_TYPES_PARSER)
-        except Exception as e:
-            valtils.print_warning(f"Could not get ome-xml for {src_f}")
-            ome_obj = None
+        if is_ome_tiff:
+            try:
+                bf_rdr, bf_meta = get_bioformats_reader_and_meta(x)
+                meta_xml = bf_meta.dumpXML()
+                meta_xml = str(meta_xml)
+                ome_obj = ome_types.from_xml(meta_xml)
+                if len(ome_obj.images) == 0:
+                    ome_obj = ome_types.from_xml(meta_xml, parser=OME_TYPES_PARSER)
+
+            except Exception as e:
+                if ome_fxn == ome_types.from_tiff:
+                    valtils.print_warning(f"Could not get OME-XML for image {x}, due to the following error: {e}")
+                else:
+                    valtils.print_warning(f"Could not get OME-XML, due to the following error: {e}")
 
     return ome_obj
 
@@ -640,7 +678,9 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     """ Make sure that provided xml and image match.
     If there is a mismatch (i.e. channel number), the values in the image take precedence
     """
-    ome_obj = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
+    # ome_obj = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
+    # ome_obj = ome_types.from_xml(xml)
+    ome_obj = get_ome_obj(xml)
     if len(ome_obj.images) > 0:
         ome_img = ome_obj.images[series].pixels
         ome_nc = ome_img.size_c
@@ -709,7 +749,9 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
     Use ome-types to extract metadata from xml.
     """
 
-    ome_info = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
+    # ome_info = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
+    # ome_info = ome_types.from_xml(xml)
+    ome_info = get_ome_obj(xml)
     ome_img = ome_info.images[series]
 
     if metadata is None:
@@ -1616,9 +1658,10 @@ class VipsSlideReader(SlideReader):
         if img_xml is not None and not self.use_openslide:
             # Don't check openslide images, as metadata counts alpha channel
             try:
-                ome_info = ome_types.from_xml(img_xml, parser=OME_TYPES_PARSER)
+                # ome_info = ome_types.from_xml(img_xml, parser=OME_TYPES_PARSER)
+                # ome_info = ome_types.from_xml(img_xml)
+                ome_info = get_ome_obj(img_xml)
                 assert len(ome_info.images) > 0
-
             except:
                 return None
 
@@ -2813,7 +2856,7 @@ def get_slide_reader(src_f, series=None):
     one_series = True
     if is_ome_tiff:
         ome_obj = get_ome_obj(src_f)
-        one_series = len(ome_obj.images) == 1
+        one_series = len(ome_obj.images) <= 1
 
     can_use_vips = check_to_use_vips(src_f)
     can_use_openslide = check_to_use_openslide(src_f) # Checks openslide is installed
@@ -2986,7 +3029,8 @@ def get_colormap(channel_names, is_rgb, series=0, original_xml=None):
         if original_xml is not None:
             try:
                 # Try to get original colors
-                og_ome = ome_types.from_xml(original_xml, parser=OME_TYPES_PARSER)
+                og_ome = get_ome_obj(original_xml)
+
                 ome_img = og_ome.images[series]
                 colormap = {c.name: c.color.as_rgb_tuple() for c in ome_img.pixels.channels}
                 all_rgb = set(list(colormap.values()))
@@ -3220,7 +3264,7 @@ def get_tile_wh(reader, level, out_shape_wh, default_wh=512):
     return tile_wh
 
 
-def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CMAP_AUTO):
+def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CMAP_AUTO, pixel_physical_size_xyu=None):
     """Update dimensions ome-xml metadata
 
     Used to create a new ome-xmlthat reflects changes in an image, such as its shape
@@ -3265,13 +3309,13 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
 
     if channel_names is None:
         channel_names = slide_meta.channel_names
-
-    if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
-        pixel_physical_size_xyu = None
-    else:
-        pixel_physical_size_xyu = reader.scale_physical_size(level)
-
     updated_channel_names = check_channel_names(channel_names, is_rgb, nc=nc)
+
+    if pixel_physical_size_xyu is None:
+        if slide_meta.pixel_physical_size_xyu[2] == PIXEL_UNIT:
+            pixel_physical_size_xyu = None
+        else:
+            pixel_physical_size_xyu = reader.scale_physical_size(level)
 
     if not is_rgb:
         if isinstance(colormap, str) and colormap == CMAP_AUTO:
@@ -3284,7 +3328,9 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
     if current_ome_xml_str is not None:
         try:
             elementTree.fromstring(current_ome_xml_str)
-            og_ome = ome_types.from_xml(current_ome_xml_str, parser=OME_TYPES_PARSER)
+            # og_ome = ome_types.from_xml(current_ome_xml_str, parser=OME_TYPES_PARSER)
+            # og_ome = ome_types.from_xml(current_ome_xml_str)
+            og_ome = get_ome_obj(current_ome_xml_str)
         except elementTree.ParseError as e:
             traceback_msg = traceback.format_exc()
             msg = "xml in original file is invalid or missing. Will create one"
@@ -3312,7 +3358,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                         aligned_slide_shape_rc, M=None, dxdy=None,
                         level=0, series=None, interp_method="bicubic",
                         bbox_xywh=None, bg_color=None, colormap=None, channel_names=None,
-                        tile_wh=None, compression="lzw", Q=100, pyramid=True, reader=None):
+                        tile_wh=None, compression=DEFAULT_COMPRESSION, Q=100, pyramid=True, reader=None):
 
     """ Warp and save a slide
 
@@ -3373,7 +3419,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
         Tile width and height used to save image
 
     compression : str
-        Compression method used to save ome.tiff . Default is lzw, but can also
+        Compression method used to save ome.tiff .
         be jpeg or jp2k. See https://libvips.github.io/pyvips/enums.html#pyvips.enums.ForeignTiffCompression for more details.
 
     Q : int
@@ -3422,7 +3468,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
                   tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
 
 
-def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression="lzw", Q=100, pyramid=True):
+def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COMPRESSION, Q=100, pyramid=True):
     """Save an image in the ome.tiff format using pyvips
 
     Parameters
@@ -3439,8 +3485,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression="lzw", Q=10
         is both the width and height.
 
     compression : str
-        Compression method used to save ome.tiff . Default is lzw, but can also
-        be jpeg or jp2k. See pyips for more details.
+        Compression method used to save ome.tiff . See pyips for more details.
 
     Q : int
         Q factor for lossy compression
@@ -3457,12 +3502,12 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression="lzw", Q=10
     if not isinstance(img, pyvips.vimage.Image):
         img = slide_tools.numpy2vips(img)
 
-    if img.format in ["float", "double"] and compression != "lzw":
-        msg = f"Image has type {img.format} but compression method {compression} will convert image to uint8. To avoid this, change compression 'lzw' "
+    if img.format in ["float", "double"] and compression in [pyvips.enums.ForeignTiffCompression.JP2K, pyvips.enums.ForeignTiffCompression.JPEG]:
+        msg = f"Image has type {img.format} but compression method {compression} will convert image to uint8. To avoid this, change compression 'lzw', 'deflate', or 'none' "
         valtils.print_warning(msg)
         if compression == "jp2k":
             compression = "jpeg"
-            msg = f"Float images can't be saved using {compression} compression. Please change to another method, such as 'jpeg' "
+            msg = f"Float images can't be saved using {compression} compression. Please change to another method, such as 'lzw', 'deflate', or 'none' "
             valtils.print_warning(msg)
 
             return None
@@ -3485,7 +3530,9 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression="lzw", Q=10
         ome_xml_obj = create_ome_xml(shape_xyzct=xyzct, bf_dtype=bf_dtype, is_rgb=is_rgb)
     else:
         # Verify that vips image and ome-xml match
-        ome_xml_obj = ome_types.from_xml(ome_xml, parser=OME_TYPES_PARSER)
+        # ome_xml_obj = ome_types.from_xml(ome_xml, parser=OME_TYPES_PARSER) # `parser` argument dropped after ome.types 0.4.0
+        # ome_xml_obj = ome_types.from_xml(ome_xml)
+        ome_xml_obj = get_ome_obj(ome_xml)
         ome_img = ome_xml_obj.images[0].pixels
         match_dict = {"same_x": ome_img.size_x == img.width,
                       "same_y": ome_img.size_y == img.height,
@@ -3586,7 +3633,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression="lzw", Q=10
 
 @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
-                        colormap=CMAP_AUTO, tile_wh=None, compression="lzw", Q=100, pyramid=True, reader=None):
+                        colormap=CMAP_AUTO, tile_wh=None, compression=DEFAULT_COMPRESSION, Q=100, pyramid=True, reader=None):
     """Convert an image to an ome.tiff image
 
     Saves a new copy of the image as a tiled pyramid ome.tiff with valid ome-xml.
@@ -3622,8 +3669,7 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
         so `tile_wh` is both the width and height.
 
     compression : str
-        Compression method used to save ome.tiff . Default is lzw, but can also
-        be jpeg or jp2k. See pyips for more details.
+        Compression method used to save ome.tiff. See pyips for more details.
 
     Q : int
         Q factor for lossy compression

@@ -63,6 +63,10 @@ import os
 from valis import registration, valtils, slide_io
 from valis.micro_rigid_registrar import MicroRigidRegistrar
 
+from valis import preprocessing, feature_detectors, warp_tools
+
+from valis.micro_rigid_registrar import *
+
 
 def check_for_no_transforms_in_ref(ref_slide, reference_img_fname):
     from skimage import transform
@@ -145,6 +149,8 @@ def register_hi_rez(src_dir):
     start = time.time()
     registrar = registration.Valis(src_dir, high_rez_dst_dir, micro_rigid_registrar_cls=MicroRigidRegistrar)
     rigid_registrar, non_rigid_registrar, error_df = registrar.register()
+    # self = registrar
+    # self = registrar.micro_rigid_registrar_cls(val_obj=registrar, **registrar.micro_rigid_registrar_params)
 
     # Calculate what `max_non_rigid_registration_dim_px` needs to be to do non-rigid registration on an image that is 25% full resolution.
     img_dims = np.array([slide_obj.slide_dimensions_wh[0] for slide_obj in registrar.slide_dict.values()])
@@ -208,6 +214,11 @@ def test_register_cycif(max_error=3):
 
 
     """
+    # from valis.registration import *
+    # from valis.slide_io import *
+    # slide_f = '/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project/valis/examples/example_datasets/cycif/CD4 CD68 CD3.ome.tiff'
+    # series=None
+    # slide_io.get_slide_reader(slide_f, series=series)
 
     drop_duplicates = True
     cycif_src_dir = os.path.join(datasets_src_dir, "cycif")
@@ -217,6 +228,7 @@ def test_register_cycif(max_error=3):
         ref_img_f = str(img_list[0])
 
         registrar = registration.Valis(cycif_src_dir, results_dst_dir, img_list=img_list, imgs_ordered=True, reference_img_f=ref_img_f)
+        # self = registrar
         rigid_registrar, non_rigid_registrar, error_df = registrar.register()
         avg_error = np.max(error_df["mean_non_rigid_D"])
 
@@ -245,7 +257,8 @@ def test_register_cycif(max_error=3):
         if drop_duplicates:
             expected_channel_order = list(dict.fromkeys(expected_channel_order))
 
-        saved_ome_xml = ome_types.from_tiff(dst_f, parser=slide_io.OME_TYPES_PARSER)
+        # saved_ome_xml = ome_types.from_tiff(dst_f, parser=slide_io.OME_TYPES_PARSER)
+        saved_ome_xml = ome_types.from_tiff(dst_f)
         saved_channel_names = [x.name for x in saved_ome_xml.images[0].pixels.channels]
 
         assert np.all(expected_channel_order == saved_channel_names), "Channels not saved in correct order"

@@ -22,8 +22,8 @@ DEFAULT_ROI = ROI_MASK
 # DEFAULT_BF_PROCESSOR = preprocessing.StainFlattener
 # DEFAULT_BF_PROCESSOR_KWARGS = {"adaptive_eq":False, "with_mask":False}
 
-DEFAULT_FD = feature_detectors.SuperPointFD
-DEFAULT_MATCHER = feature_matcher.SuperPointAndGlue
+DEFAULT_FD = feature_detectors.VggFD
+DEFAULT_MATCHER = feature_matcher.Matcher
 
 DEFAULT_BF_PROCESSOR = preprocessing.OD
 DEFAULT_BF_PROCESSOR_KWARGS = {}
@@ -133,8 +133,9 @@ class MicroRigidRegistrar(object):
 
         pair_slide_list = [moving_slide, fixed_slide]
         if self.val_obj.create_masks:
-
             temp_mask = self.val_obj._create_mask_from_processed(slide_list=pair_slide_list)
+            if temp_mask.max() == 0:
+                temp_mask = self.val_obj._create_non_rigid_reg_mask_from_bbox(slide_list=pair_slide_list)
         else:
             temp_mask = self.val_obj._create_non_rigid_reg_mask_from_bbox(slide_list=pair_slide_list)
 
@@ -187,6 +188,8 @@ class MicroRigidRegistrar(object):
 
             mask = self.create_mask(moving_slide, fixed_slide)
 
+
+
             self.align_slides(moving_slide, fixed_slide, processor_dict=processor_dict, mask=mask)
 
     def align_slides(self, moving_slide, fixed_slide, processor_dict, mask=None):
@@ -204,7 +207,6 @@ class MicroRigidRegistrar(object):
 
         # Perform Rigid registration where masks overlap
         aligned_slide_shape_rc = warp_tools.get_shape(moving_img)[0:2]
-
         if self.roi == ROI_MASK:
             small_reg_bbox = warp_tools.mask2xy(mask)
         elif self.roi == ROI_MATCHES:
@@ -223,7 +225,7 @@ class MicroRigidRegistrar(object):
         high_rez_fixed_match_xy_list = [None]*n_tiles
 
         moving_processing_cls, moving_processing_kwargs = processor_dict[moving_slide.name]
-        fixed_processing_cls, fixed_processing_kwargs = processor_dict[moving_slide.name]
+        fixed_processing_cls, fixed_processing_kwargs = processor_dict[fixed_slide.name]
 
         def _match_tile(bbox_id):
             bbox_xy = bbox_tiles[bbox_id]
