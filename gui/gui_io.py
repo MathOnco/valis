@@ -31,17 +31,17 @@ USE_KEY = "Align"
 
 USE_KEY = "Align"
 
-class SampleInfo(object):
-    def __init__(self, image_list):
-        """
-        """
-        self.image_list = image_list
+# class SampleInfo(object):
+#     def __init__(self, image_list):
+#         """
+#         """
+#         self.image_list = image_list
 
-class ImageInfo(object):
-    def __init__(self, src_f):
-        """
-        """
-        self.src_f = src_f
+# class ImageInfo(object):
+#     def __init__(self, src_f):
+#         """
+#         """
+#         self.src_f = src_f
 
 # filepath = path_list[0]
 def get_image_list(src_dir, ignore_csv=True):

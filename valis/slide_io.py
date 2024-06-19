@@ -27,6 +27,8 @@ from tqdm import tqdm
 import scyjava
 from difflib import get_close_matches
 import traceback
+from PIL import Image
+from PIL.TiffTags import TAGS
 
 from colorama import Fore
 from . import valtils
@@ -471,26 +473,27 @@ def get_ome_obj(x):
     ome_obj : ome_types.model.ome.OME
 
     """
-    x = str(x)
 
-    is_ome_tiff = x.endswith(".ome.tif") or x.endswith(".ome.tiff")
+    x = str(x)
+    is_file = os.path.exists(x)
     ome_obj = None
     try:
         # Try to use ome-types
-        if is_ome_tiff:
+        if is_file:
             ome_fxn = ome_types.from_tiff
         # elif x.startswith("<"):
         else:
             ome_fxn = ome_types.from_xml
 
         ome_obj = ome_fxn(x)
+
         if len(ome_obj.images) == 0:
             ome_obj = ome_fxn(x, parser=OME_TYPES_PARSER)
 
     except Exception as e:
         # Sometimes the image description found by `ome_types.from_tiff`
         # does not contain the ome-xml. Seems to be the case for ImageJ exports, at least
-        if is_ome_tiff:
+        if is_file:
             try:
                 bf_rdr, bf_meta = get_bioformats_reader_and_meta(x)
                 meta_xml = bf_meta.dumpXML()
@@ -761,8 +764,12 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
         metadata.is_little_endian = ome_img.pixels.big_endian == False
 
     has_channel_info = len(ome_img.pixels.channels) > 0
+
     if has_channel_info:
-        metadata.is_rgb = ome_img.pixels.channels[0].samples_per_pixel == 3 and \
+        samples_per_pixel = ome_img.pixels.channels[0].samples_per_pixel
+        if samples_per_pixel is None:
+            samples_per_pixel = ome_img.pixels.size_c
+        metadata.is_rgb = samples_per_pixel == 3 and \
             ome_img.pixels.type.value == 'uint8' and \
             len(ome_img.pixels.channels) == 1
     else:
@@ -1641,7 +1648,6 @@ class VipsSlideReader(SlideReader):
                                               server=server,
                                               metadata=slide_meta)
             except Exception as e:
-                # print(f"Can't parse xml for {slide_meta.name} due to error {e}")
                 slide_meta = self._get_metadata_vips(slide_meta, vips_img)
 
         else:
@@ -1679,6 +1685,24 @@ class VipsSlideReader(SlideReader):
         slide_meta.original_xml = self._get_xml(vips_img)
         slide_meta.optimal_tile_wh = get_tile_wh(self, 0, warp_tools.get_shape(vips_img)[0:2][::-1])
 
+        # is_image_J = re.search("imagej", vips_img.get("image-description").lower()) is not None
+        # if is_image_J:
+
+            # image_j_desc = vips_img.get("image-description")
+            # desc_split = image_j_desc.split("\n")
+            # frame_desc = [x for x in desc_split if x.lower().startswith("frame")]
+            # if len(frame_desc) == 1:
+            #     nt = eval(frame_desc[0].split("=")[1])
+            #     spp_tag = [k for k, v in TAGS.items() if v == "SamplesPerPixel"]
+            #     with Image.open(self.src_f) as pil_img:
+            #         nc = pil_img.tag[spp_tag[0]][0]
+
+            #     slide_meta.n_t = nt
+            #     slide_meta.n_channels = nc
+                # In image J, frames are timepoints,
+
+
+
         return slide_meta
 
     def _get_metadata_bf(self, slide_meta):
@@ -1694,7 +1718,6 @@ class VipsSlideReader(SlideReader):
         slide_meta.original_xml = bf_reader.metadata.original_xml
         slide_meta.bf_datatype = bf_reader.metadata.bf_datatype
         slide_meta.optimal_tile_wh = bf_reader.metadata.optimal_tile_wh
-
 
     def _slide2vips_ome_one_series(self, level, *args, **kwargs):
         """Use pyvips to read an ome.tiff image that has only 1 series
@@ -1759,6 +1782,9 @@ class VipsSlideReader(SlideReader):
             An  of the slide or the region defined by xywh
 
         """
+        if level < 0:
+            print(f"level is negative {level} for {self.src_f}")
+        level = max(0, level)
 
         if self.use_openslide:
             vips_slide = pyvips.Image.new_from_file(self.src_f, level=level, access='random')[0:3]
@@ -1833,9 +1859,10 @@ class VipsSlideReader(SlideReader):
 
         """
 
-        livbips_rgb_formats = [x.lower() for x in dir(pyvips.enums.Interpretation) if re.search("RGB", x) is not None]
+        livbips_rgb_formats = [x.lower() for x in dir(pyvips.enums.Interpretation) if re.search("rgb", x.lower()) is not None]
+        is_rgb = vips_img.interpretation in livbips_rgb_formats
 
-        return vips_img.interpretation in livbips_rgb_formats
+        return is_rgb
 
     def _get_xml(self, vips_img):
         img_desc = None

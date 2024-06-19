@@ -147,12 +147,16 @@ def get_slide_extension(src_f):
 
     """
 
-    f = os.path.split(src_f)[1]
-    if re.search(".ome.tif", f) or re.search(".nii.gz", f):
-        format_split = -2
+    f = os.path.split(src_f)[1].lower()
+    if (re.search(".ome", f) is not None and re.search(".tif*", f) is not None):
+        slide_format = ".ome.tiff"
     else:
-        format_split = -1
-    slide_format = "." + ".".join(f.split(".")[format_split:])
+        if re.search(".nii.gz", f):
+            format_split = -2
+        else:
+            format_split = -1
+
+        slide_format = "." + ".".join(f.split(".")[format_split:])
 
     return slide_format
 
@@ -163,6 +167,8 @@ def get_level_idx(dims_wh, max_dim):
         level = possible_levels[0]
     else:
         level = len(dims_wh) - 1
+
+    level = max(0, level)
 
     return level
 
@@ -186,7 +192,6 @@ def get_img_type(img_f):
     kind = None
     if os.path.isdir(img_f):
         return kind
-
 
     f_extension = get_slide_extension(str(img_f))
 

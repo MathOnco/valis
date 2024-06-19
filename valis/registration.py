@@ -402,6 +402,8 @@ class Slide(object):
         self.M_for_cropped = None
         self.rigid_reg_cropped_shape_rc = None
 
+        print(self, reader, reader.metadata.is_rgb, self.image.shape)
+
 
     def __repr__(self):
         repr_str = (f'<{self.__class__.__name__}, name = {self.name}>'
@@ -2447,7 +2449,6 @@ class Valis(object):
         named_reader_dict = self.create_img_reader_dict(reader_dict=reader_dict,
                                                         default_reader=reader_cls,
                                                         series=series)
-
         img_types = []
         self.size = 0
         for f in tqdm.tqdm(self.original_img_list, desc=CONVERT_MSG, unit="image"):
@@ -2460,6 +2461,8 @@ class Valis(object):
                 level = levels_in_range[0] - 1
             else:
                 level = len(slide_dims) - 1
+
+            level = max(level, 0)  # Avoid negative level
 
             vips_img = reader.slide2vips(level=level)
 
@@ -2496,7 +2499,6 @@ class Valis(object):
             img_types.append(slide_obj.img_type)
             self.slide_dict[slide_obj.name] = slide_obj
             self.size += 1
-
 
         if self.image_type is None:
             unique_img_types = list(set(img_types))
@@ -2732,7 +2734,6 @@ class Valis(object):
                                         level=processing_level,
                                         series=slide_obj.series,
                                         reader=slide_obj.reader)
-
             try:
                 processed_img = processor.process_image(**processing_kwargs)
             except TypeError:
@@ -4056,7 +4057,7 @@ class Valis(object):
 
         """
 
-        # processor_dict = self.create_img_processor_dict()
+
         ref_slide = self.get_ref_slide()
 
         self.create_non_rigid_reg_mask()
