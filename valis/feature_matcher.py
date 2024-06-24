@@ -1,6 +1,6 @@
 """Functions and classes to match and filter image features
 """
-
+import torch
 import numpy as np
 import cv2
 import torch
@@ -1004,7 +1004,8 @@ class SuperPointAndGlue(Matcher):
             'superpoint': {
                 'nms_radius': self.nms_radius,
                 'keypoint_threshold': self.keypoint_threshold,
-                'max_keypoints': feature_detectors.MAX_FEATURES
+                'max_keypoints': feature_detectors.MAX_FEATURES,
+                'device': self.device
             },
             'superglue': {
                 'weights': self.weights,
@@ -1217,7 +1218,8 @@ class SuperGlueMatcher(Matcher):
             'superpoint': {
                 'nms_radius': self.nms_radius,
                 'keypoint_threshold': self.keypoint_threshold,
-                'max_keypoints': feature_detectors.MAX_FEATURES
+                'max_keypoints': feature_detectors.MAX_FEATURES,
+                'device': self.device
             },
             'superglue': {
                 'weights': self.weights,
@@ -1265,6 +1267,7 @@ class SuperGlueMatcher(Matcher):
         kp = [torch.from_numpy(kp_xy[:, ::-1].astype(int))]
         scores = [s[tuple(k.t())] for s, k in zip(scores, kp)]
         scores = scores[0].unsqueeze(dim=0)
+
         return scores
 
     def prep_data(self, img, kp_xy):
@@ -1275,7 +1278,7 @@ class SuperGlueMatcher(Matcher):
         """
 
         inp = self.frame2tensor(img)
-        scores = self.calc_scores(inp, kp_xy)
+        scores = self.calc_scores(tensor_img=inp, kp_xy=kp_xy)
         kp_xy_inp = torch.from_numpy(kp_xy[None, :].astype(np.float32))
 
         sp_fd = feature_detectors.SuperPointFD()
@@ -1292,9 +1295,9 @@ class SuperGlueMatcher(Matcher):
     def _match_images(self, img1=None, desc1=None, kp1_xy=None, img2=None, desc2=None, kp2_xy=None, additional_filtering_kwargs=None):
 
         inp1, kp1_xy_inp, desc1_inp, scores1 = self.prep_data(img=img1, kp_xy=kp1_xy)
-        inp2, kp2_xy_inp, desc2_inp, scores2 = self.prep_data(img2, kp2_xy)
+        inp2, kp2_xy_inp, desc2_inp, scores2 = self.prep_data(img=img2, kp_xy=kp2_xy)
 
-        data = {"image0":inp1,
+        data = {"image0": inp1,
                 "descriptors0": desc1_inp,
                 "keypoints0": kp1_xy_inp,
                 "scores0": scores1,

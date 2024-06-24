@@ -2877,7 +2877,7 @@ def get_overlapping_poly(mesh_poly_coords):
             else:
                 poly_diffs.append(diff.buffer(buffer_v))
 
-    n_cpu = multiprocessing.cpu_count() - 1
+    n_cpu = valtils.get_ncpus_available() - 1
     with parallel_backend("threading", n_jobs=n_cpu):
         Parallel()(delayed(clip_poly)(i) for i in tqdm.tqdm(range(n_poly)))
 

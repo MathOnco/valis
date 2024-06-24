@@ -1,6 +1,22 @@
 Change Log
 **********
 
+Version 1.1.0 (June 24, 2024)
+-------------------------------------
+#. Rigid registration now performed after detecting the tissue and slicing it from the image. This allows higher resolution images to be used for rigid registration, improving accuracy. Implementing this enhancement involved making several changes to VALIS' defaults (see below). Please note that this behavior can be disabled by setting :code:`crop_for_rigid_reg=False` when initializing the :code:`Valis` object.
+#. A new masking method was developed to better detect the tissue and pickup less noise (:code:`preprocessing.create_tissue_mask_with_jc_dist`)
+#. Added several new pre-processing methods, including :code:`preprocessing.OD`, :code:`preprocessing.JCDist`, :code:`preprocessing.ColorDeconvolver`, and :code:`preprocessing.ColorDeconvolver`.
+#. :code:`preprocessing.OD` has replaced :code:`preprocessing.ColorfulStandardizer` as the default RGB pre-processing method. Testing indicates that this method tends to (but doesn't always) perform better across a range of challenging images, as measured by median number of feature matches and mean TRE. To get results similar to previous versions of VALIS, one can set :code:`brightfield_processing_cls=preprocessing.ColorfulStandardizer` when calling :code:`Valis.register`.
+#. The default image size for rigid registration has been increased from 850 to 1024, (i.e. :code:`Valis(max_processed_image_dim_px=1024)`).
+#. Image denoising for rigid registration is no longer the default behavior. This can be turned back on by setting :code:`Valis(denoise_rigid=False)`.
+#. Reduced memory usage to help enable aligning a large number of images (Github issue `105 <https://github.com/MathOnco/valis/issues/105>`_). VALIS has now be tested aligning 556 serially sliced images.
+#. Passing radians to :code:`np.cos` and :code:`np.sin` when determining how much to pad images, as noted in `Github issue 103 <https://github.com/MathOnco/valis/issues/103>`_. These images get cropped, so this should not affect registration accuracy.
+#. Can now read ome.tiff that do not have a SUBIFD, reported in Github issue `101 <https://github.com/MathOnco/valis/issues/101>`_
+#. Improved saving of non-pyarmid images, related to Github issue `101 <https://github.com/MathOnco/valis/issues/101>`_
+#. Better compatibility with non-uint8 RGB images.
+#. Updated code to ensure merged images have channels in the same order as when sorted or specified.
+#. Dockerfile now compatible with Python 3.12
+
 Version 1.0.4 (February 2, 2024)
 -------------------------------------
 #. Added checks and unit tests to verify reference image is not being warped. Can confirm no transformations were being applied to the reference image, but values may have differed slightly due to interpolation effects, as the reference image was being padded and cropped. To avoid these interpolation effects, the original reference image is returned when "warping" the reference slide with :code:`crop="reference"`, which occurs regardless of the :code:`align_to_reference` setting. This avoids unnecessary computation and potential interpolation errors. There are still checks to make sure that the warped image would have been the same as the unwarped image.
@@ -58,7 +74,6 @@ Version 1.0.0 (October 4, 2023)
 #. Fixed issue converting big-endian WSI to :code:`pyvips.Image` (reported on `image.sc <https://forum.image.sc/t/problems-registering-fluorescence-ome-tiffs-using-valis/82685>_`)
 #. Added citation information
 #. Updated docker container to include pytorch
-
 
 Version 1.0.0rc15 (May 10, 2023)
 -------------------------------------

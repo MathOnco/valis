@@ -889,9 +889,9 @@ def vips2numpy(vi):
     return a
 
 
-def pad_img(img, padded_shape):
-    padding_T = get_padding_matrix(img.shape[0:2], padded_shape)
-    padded_img = warp_img(img, padding_T, out_shape_rc=padded_shape)
+def pad_img(img, padded_shape, interp_method="bicubic"):
+    padding_T = get_padding_matrix(get_shape(img)[0:2], padded_shape)
+    padded_img = warp_img(img, padding_T, out_shape_rc=padded_shape, interp_method=interp_method)
 
     return padded_img, padding_T
 
@@ -1214,7 +1214,7 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            #Option to set backround color in mapim added in libvips 8.13
+            # Option to set backround color in mapim added in libvips 8.13
             nr_warped = img.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,
@@ -1655,7 +1655,7 @@ def decompose_affine_transformation(M):
 
 
 def get_rotate_around_center_M(img_shape, rotation_rad):
-    #Based on skimage warp.rotate, but can have scaling at end
+    # Based on skimage warp.rotate, but can have scaling at end
     rows, cols = img_shape[0:2]
 
     # rotation around center
@@ -2663,20 +2663,29 @@ def get_inside_mask_idx(xy, mask):
 
 
 def mask2xy(mask):
+
     if mask.ndim > 2:
         mask_y, mask_x = np.where(np.all(mask > 0, axis=2))
     else:
         mask_y, mask_x = np.where(mask > 0)
-    min_x = np.min(mask_x)
-    max_x = np.max(mask_x)
-    min_y = np.min(mask_y)
-    max_y = np.max(mask_y)
+
+    if len(mask_y) > 0:
+
+        min_x = np.min(mask_x) + 1
+        max_x = np.max(mask_x)
+        min_y = np.min(mask_y)
+        max_y = np.max(mask_y) + 1
+    else:
+        min_x = 0
+        max_x = mask.shape[1] - 1
+        min_y = 0
+        max_y = mask.shape[0] - 1
 
     bbox = np.array([
         [min_x, min_y],
-        [max_x+1, min_y],
-        [max_x+1, max_y+1],
-        [min_x, max_y+1]
+        [max_x, min_y],
+        [max_x, max_y],
+        [min_x, max_y]
     ])
 
     return bbox
@@ -2884,7 +2893,7 @@ def get_overlapping_poly(mesh_poly_coords):
             else:
                 poly_diffs.append(diff.buffer(buffer_v))
 
-    n_cpu = multiprocessing.cpu_count() - 1
+    n_cpu = valtils.get_ncpus_available() - 1
     res = pqdm(range(n_poly), clip_poly, n_jobs=n_cpu, unit="image", leave=None)
 
     return overlapping_poly_list, poly_diffs

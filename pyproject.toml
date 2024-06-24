@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valis-wsi"
-version = "1.0.4"
+version = "1.1.0"
 description = ""
 authors = ["Chandler Gatenbee <chandlergatenbee@gmail.com>"]
 license = "MIT"
@@ -8,7 +8,7 @@ readme = "README.rst"
 packages = [{include = "valis"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<=3.12"
+python = ">=3.9,<=3.12.3"
 beautifulsoup4 = "^4.11.1"
 scyjava = "^1.8.1"
 colorama = "^0.4.6"
@@ -17,7 +17,7 @@ fastcluster = "^1.2.6"
 jpype1 = "^1.4.1"
 matplotlib = "^3.6.3"
 numpy = ">1.23"
-ome-types = "^0.3.2"
+ome-types = "^0.5.1.post1"
 opencv-contrib-python-headless = "^4.9.0.80"
 pandas = "^1.5.2"
 pillow = "^9.4.0"
@@ -34,6 +34,7 @@ markupsafe = "^2.0.0"
 torch = "^2.0.1"
 aicspylibczi = "^3.1.2"
 setuptools = "^69.0.3"
+lxml = "^5.2.2"
 
 
 [build-system]

@@ -396,7 +396,7 @@ class NonRigidZImage(object):
             if isinstance(mask, pyvips.Image):
                 reg_mask = warp_tools.vips2numpy(mask)
             else:
-                reg_mask =  mask.copy()
+                reg_mask = mask.copy()
         else:
             reg_mask = None
 

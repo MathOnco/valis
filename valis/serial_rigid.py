@@ -13,15 +13,17 @@ import pandas as pd
 import warnings
 from tqdm import tqdm
 import pathlib
-import multiprocessing
 from time import time
 from pqdm.threads import pqdm
 
 from . import valtils
+from . import preprocessing
 from . import warp_tools
 from . import slide_tools
 from .feature_detectors import VggFD
 from .feature_matcher import Matcher, convert_distance_to_similarity, GMS_NAME
+from . import valtils
+
 
 DENOISE_MSG = "Denoising images"
 FEATURE_MSG = "Detecting features"
@@ -485,15 +487,16 @@ class SerialRigidRegistrar(object):
 
         """
 
-        # NOTE tried parallelizing with joblib, but it's actually slower  #
+        # NOTE tried parallelizing, but it's actually slower  #
         sorted_img_list = [io.imread(os.path.join(self.img_dir, f), True)
                            for f in self.img_file_list]
 
         out_w, out_h = get_max_image_dimensions(sorted_img_list)
 
-        # Get dimensions if images were rotated 45 degrees or 90 degrees
-        max_new_w = out_w*np.cos(45) + out_h*np.sin(45)
-        max_new_h = out_w*np.sin(45) + out_h*np.cos(45)
+        # Get dimensions if images were rotated 45 degrees
+        rad_45 = np.deg2rad(45)
+        max_new_w = out_w*np.cos(rad_45) + out_h*np.sin(rad_45)
+        max_new_h = out_w*np.sin(rad_45) + out_h*np.cos(rad_45)
 
         max_dist = np.ceil(np.max([out_w, out_h, max_new_h, max_new_w])).astype(int)
         out_shape = (max_dist, max_dist)
@@ -507,6 +510,7 @@ class SerialRigidRegistrar(object):
             img_obj = ZImage(img, os.path.join(self.img_dir, img_f), i, name=img_name)
             img_obj.padded_shape_rc = out_shape
             img_obj.T = warp_tools.get_padding_matrix(img.shape, img_obj.padded_shape_rc)
+
             img_obj.kp_pos_xy, img_obj.desc = feature_detector.detect_and_compute(img)
             img_obj_list[i] = img_obj
             self.img_obj_dict[img_name] = img_obj
@@ -515,6 +519,7 @@ class SerialRigidRegistrar(object):
 
         self.img_obj_list = img_obj_list
         self.features = feature_detector.__class__.__name__
+
 
     def match_sorted_imgs(self, matcher_obj, keep_unfiltered=False, qt_emitter=None):
         """Conduct feature matching between images that have already been sorted.
@@ -551,7 +556,7 @@ class SerialRigidRegistrar(object):
                                          additional_filtering_kwargs=filter_kwargs)
 
             if len(filtered_match_info12.matched_kp1_xy) == 0:
-                warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} between {img_obj_1.name} and {img_obj_2.name}")
+                warnings.warn(f"{len(filtered_match_info12.matched_kp1_xy)} matches between {img_obj_1.name} and {img_obj_2.name}")
 
             # Update match dictionaries
             if keep_unfiltered:
@@ -570,11 +575,8 @@ class SerialRigidRegistrar(object):
             if qt_emitter is not None:
                 qt_emitter.emit(1)
 
-        n_cpu = multiprocessing.cpu_count() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
         res = pqdm(range(self.size), match_adj_img_obj, n_jobs=n_cpu, desc=MATCHING_MSG, unit="image", leave=None)
-
-        # with parallel_backend("threading", n_jobs=n_cpu):
-        #     Parallel()(delayed(match_adj_img_obj)(i) for i in range(self.size))
 
     def match_imgs(self, matcher_obj, keep_unfiltered=False, qt_emitter=None):
         """Conduct feature matching between all pairs of images.
@@ -593,9 +595,6 @@ class SerialRigidRegistrar(object):
             Used to emit signals that update the GUI's progress bars
 
         """
-
-        # n_comparisions = int((self.size*(self.size-1))/2)
-        # pbar = tqdm(total=n_comparisions, desc=MATCHING_MSG, unit="image", leave=None)
 
         def match_img_obj(i):
 
@@ -628,15 +627,11 @@ class SerialRigidRegistrar(object):
                 filtered_match_info21.set_names(img_obj_2.name, img_obj_1.name)
                 img_obj_2.match_dict[img_obj_1] = filtered_match_info21
 
-                # pbar.update(1)
                 if qt_emitter is not None:
                     qt_emitter.emit(1)
 
-        n_cpu = multiprocessing.cpu_count() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
         res = pqdm(range(self.size), match_img_obj, n_jobs=n_cpu, desc=MATCHING_MSG, unit="image", leave=None)
-
-        # with parallel_backend("threading", n_jobs=n_cpu):
-        #     Parallel()(delayed(match_img_obj)(i) for i in range(self.size))
 
     def get_neighbor_matches_idx(self, img_obj, prev_img_obj, next_img_obj):
         """Get indices of features found in both neighbors
@@ -903,7 +898,6 @@ class SerialRigidRegistrar(object):
         self.similarity_mat = self.unsorted_similarity_mat[sorted_idx, :]
         self.similarity_mat = self.similarity_mat[:, sorted_idx]
         self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
-        self.img_file_list = [self.img_file_list[i] for i in sorted_idx]
         self.img_obj_list = [self.img_obj_list[i] for i in sorted_idx]
         for z, img_obj in enumerate(self.img_obj_list):
             img_obj.stack_idx = z
@@ -961,7 +955,7 @@ class SerialRigidRegistrar(object):
                 prev_M = ref_img_obj.T.copy()
 
             if matcher_obj.match_filter_method == GMS_NAME:
-                    filter_kwargs = {"img1_shape":img_obj.image.shape[0:2], "img2_shape": prev_img_obj.image.shape[0:2]}
+                filter_kwargs = {"img1_shape":img_obj.image.shape[0:2], "img2_shape": prev_img_obj.image.shape[0:2]}
             else:
                 filter_kwargs = None
 
@@ -983,6 +977,8 @@ class SerialRigidRegistrar(object):
 
             # Estimate error with reflections
             dst_xy = warp_tools.warp_xy(prev_img_obj.kp_pos_xy, prev_M)
+            prev_warped = warp_tools.warp_img(prev_img_obj.image, prev_M, out_shape_rc=prev_img_obj.padded_shape_rc)
+
             for rx in [False, True]:
                 for ry in [False, True]:
                     if not rx and not ry:
@@ -992,10 +988,9 @@ class SerialRigidRegistrar(object):
                     reflected_img = warp_tools.warp_img(img_obj.image, rM @ img_obj.T, out_shape_rc=img_obj.padded_shape_rc)
 
                     reflected_src_xy, reflected_desc = feature_detector.detect_and_compute(reflected_img)
-
                     unfiltered_match_info12, filtered_match_info12, unfiltered_match_info21, filtered_match_info21 = \
                         matcher_obj.match_images(img1=reflected_img, desc1=reflected_desc, kp1_xy=reflected_src_xy,
-                                                 img2=prev_img_obj.image, desc2=prev_img_obj.desc, kp2_xy=dst_xy,
+                                                 img2=prev_warped, desc2=prev_img_obj.desc, kp2_xy=dst_xy,
                                                  additional_filtering_kwargs=filter_kwargs)
 
                     # Record info #
@@ -1045,7 +1040,7 @@ class SerialRigidRegistrar(object):
                     msg = f'{msg} x axis'
                 elif ref_y:
                     msg = f'{msg} y axis'
-
+                msg = f'{msg}. Will include reflection for {img_obj.name}'
                 valtils.print_warning(msg)
 
                 # Update matches
@@ -1415,7 +1410,6 @@ class SerialRigidRegistrar(object):
         return summary_df
 
 
-
 def register_images(img_dir, dst_dir=None, name="registrar",
                     feature_detector=VggFD(),
                     matcher=Matcher(), transformer=EuclideanTransform(),
@@ -1522,6 +1516,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
                                      name=name,
                                      align_to_reference=align_to_reference)
 
+    valis_obj.rigid_registrar = registrar
     # print("\n======== Detecting features\n")
     registrar.generate_img_obj_list(feature_detector, qt_emitter=qt_emitter)
 
@@ -1530,7 +1525,9 @@ def register_images(img_dir, dst_dir=None, name="registrar",
             # Remove feature points outside of mask
             for img_obj in registrar.img_obj_dict.values():
                 slide_obj = valis_obj.get_slide(img_obj.name)
-                features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=slide_obj.rigid_reg_mask)
+                reg_mask = valis_obj.crop_rigid_reg_mask(slide_obj, mask=slide_obj.rigid_reg_mask)
+                reg_mask = preprocessing.mask2bbox_mask(reg_mask)
+                features_in_mask_idx = warp_tools.get_xy_inside_mask(xy=img_obj.kp_pos_xy, mask=reg_mask)
                 if len(features_in_mask_idx) > 0:
                     img_obj.kp_pos_xy = img_obj.kp_pos_xy[features_in_mask_idx, :]
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]

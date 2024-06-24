@@ -16,6 +16,7 @@ from pqdm.threads import pqdm
 from . import viz
 from . import warp_tools
 from . import preprocessing
+from . import valtils
 
 NR_CLS_KEY = "non_rigid_registrar_cls"
 NR_PROCESSING_KW_KEY = "processer_kwargs"
@@ -34,6 +35,7 @@ NR_FIXED = "fixed"
 NR_TILE_FIXED_P_KEY = f"{NR_FIXED}_{NR_PROCESSING_CLASS_KEY}"
 NR_TILE_FIXED_P_INIT_KW_KEY = f"{NR_FIXED}_{NR_PROCESSING_INIT_KW_KEY}"
 NR_TILE_FIXED_P_KW_KEY = f"{NR_FIXED}_{NR_PROCESSING_KW_KEY}"
+
 
 # Abstract Classes #
 class NonRigidRegistrar(object):
@@ -1237,23 +1239,15 @@ class NonRigidTileRegistrar(object):
 
     def norm_img(self, img, stats, mask=None):
         normed_img = exposure.rescale_intensity(img, out_range=(0, 255)).astype(np.uint8)
-        normed_img = preprocessing.norm_img_stats(normed_img, stats, mask)
+        normed_img = preprocessing.norm_img_stats(img=normed_img, target_stats=stats, mask=mask)
         normed_img = exposure.rescale_intensity(normed_img, out_range=(0, 255)).astype(np.uint8)
 
         return normed_img
 
     def norm_tiles(self, moving_img, fixed_img, tile_mask):
         try:
-            # Try norming using these tile stats
-            if tile_mask is not None:
-                pos_px = np.where(tile_mask != 0)
-                tile_v = np.hstack([fixed_img[pos_px], moving_img[pos_px]])
-            else:
-                tile_v = np.hstack([fixed_img.reshape(-1), moving_img.reshape(-1)])
-
-            target_processing_stats = preprocessing.get_channel_stats(tile_v)
-
-            fixed_normed = self.norm_img(fixed_img, target_processing_stats, tile_mask)
+            _, target_processing_stats = preprocessing.collect_img_stats([fixed_img, moving_img])
+            fixed_normed = self.norm_img(img=fixed_img, stats=target_processing_stats, mask=tile_mask)
             moving_normed = self.norm_img(moving_img, target_processing_stats, tile_mask)
 
         except ValueError:
@@ -1372,7 +1366,7 @@ class NonRigidTileRegistrar(object):
 
         print("======== Registering tiles\n")
 
-        n_cpu = multiprocessing.cpu_count() - 1
+        n_cpu = valtils.get_ncpus_available() - 1
 
         lock = multiprocessing.Lock()
         args = [{"tile_idx":i, "lock":lock} for i in range(self.n_tiles)]
