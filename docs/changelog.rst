@@ -1,7 +1,7 @@
 Change Log
 **********
 
-Version 1.1.0
+Version 1.1.0 (June 24, 2024)
 -------------------------------------
 #. Rigid registration now performed after detecting the tissue and slicing it from the image. This allows higher resolution images to be used for rigid registration, improving accuracy. Implementing this enhancement involved making several changes to VALIS' defaults (see below). Please note that this behavior can be disabled by setting :code:`crop_for_rigid_reg=False` when initializing the :code:`Valis` object.
 #. A new masking method was developed to better detect the tissue and pickup less noise (:code:`preprocessing.create_tissue_mask_with_jc_dist`)
@@ -15,6 +15,7 @@ Version 1.1.0
 #. Improved saving of non-pyarmid images, related to Github issue `101 <https://github.com/MathOnco/valis/issues/101>`_
 #. Better compatibility with non-uint8 RGB images.
 #. Updated code to ensure merged images have channels in the same order as when sorted or specified.
+#. Dockerfile now compatible with Python 3.12
 
 Version 1.0.4 (February 2, 2024)
 -------------------------------------

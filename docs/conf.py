@@ -20,7 +20,7 @@ sys.setrecursionlimit(1500)
 
 # -- Project information -----------------------------------------------------
 project = 'valis'
-copyright = '2022-2023, Chandler Gatenbee'
+copyright = '2022-2024, Chandler Gatenbee'
 author = 'Chandler Gatenbee'
 
 # Get full version, including alpha/beta/rc tags
