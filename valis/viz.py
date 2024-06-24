@@ -8,7 +8,6 @@ from scipy.cluster.hierarchy import dendrogram
 from scipy.spatial import distance
 import numpy as np
 import pyvips
-# import numba as nb
 
 import cv2
 import platform

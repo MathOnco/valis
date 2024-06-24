@@ -247,8 +247,6 @@ def init_jvm(jar=None, mem_gb=10):
 
         else:
             scyjava.config.endpoints.extend(['ome:formats-gpl', 'ome:jxrlib-all'])
-            # scyjava.config.endpoints.append('ome:bio-formats_plugins')
-
             scyjava.start_jvm([f"-Xmx{mem_gb}G"])
 
         loci = jpype.JPackage("loci")
@@ -270,7 +268,6 @@ def kill_jvm():
     """Kill JVM for BioFormats
     """
     try:
-        # jpype.shutdownJVM()
         scyjava.shutdown_jvm()
         msg = "JVM has been killed. If this was due to an error, then a new Python session will need to be started"
         valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
@@ -341,7 +338,7 @@ def bf_to_numpy_dtype(bf_pixel_type, little_endian):
         scale = 255
 
     elif bf_pixel_type == FormatTools.UINT16:
-        #FormatTools.UINT16 = 3
+        # FormatTools.UINT16 = 3
         dtype = '<u2' if little_endian else '>u2'
         scale = 65535
 
@@ -483,7 +480,6 @@ def get_ome_obj(x):
         # Try to use ome-types
         if is_file:
             ome_fxn = ome_types.from_tiff
-        # elif x.startswith("<"):
         else:
             ome_fxn = ome_types.from_xml
 
@@ -683,8 +679,6 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     """ Make sure that provided xml and image match.
     If there is a mismatch (i.e. channel number), the values in the image take precedence
     """
-    # ome_obj = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
-    # ome_obj = ome_types.from_xml(xml)
     ome_obj = get_ome_obj(xml)
     if len(ome_obj.images) > 0:
         ome_img = ome_obj.images[series].pixels
@@ -714,7 +708,6 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     vips_bf_dtype = slide_tools.NUMPY_FORMAT_BF_DTYPE[str(np_dtype().dtype)].lower()
 
     if total_pages != vips_img.bands:
-            # msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are {vips_nc} channel(s) in the image"
             msg = (f"For {metadata.name}, the ome-xml states there should be {total_pages} pages, but there is/are {vips_img.bands} pages in the image",
                    f"Assuming that all pages are channels (not time points or Z-axes), so updating the metadata to have {total_pages} channels")
             metadata.n_channels = vips_nc
@@ -765,8 +758,6 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
     Use ome-types to extract metadata from xml.
     """
 
-    # ome_info = ome_types.from_xml(xml, parser=OME_TYPES_PARSER)
-    # ome_info = ome_types.from_xml(xml)
     ome_info = get_ome_obj(xml)
     ome_img = ome_info.images[series]
 
@@ -786,7 +777,7 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
             ome_img.pixels.type.value == 'uint8' and \
             len(ome_img.pixels.channels) == 1
     else:
-        #No channel info, so guess based on image shape and datatype
+        # No channel info, so guess based on image shape and datatype
         metadata.is_rgb = ome_img.pixels.type.value == 'uint8' and ome_img.pixels.size_c == 3
 
     if ome_img.pixels.physical_size_x is not None:
@@ -3331,7 +3322,6 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
     """
 
     slide_meta = reader.metadata
-    # img_h, img_w, nc = warp_tools.get_shape(img)
     img_h, img_w, _ = warp_tools.get_shape(img)
 
     nc = slide_meta.n_channels
@@ -3366,8 +3356,6 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
     if current_ome_xml_str is not None:
         try:
             elementTree.fromstring(current_ome_xml_str)
-            # og_ome = ome_types.from_xml(current_ome_xml_str, parser=OME_TYPES_PARSER)
-            # og_ome = ome_types.from_xml(current_ome_xml_str)
             og_ome = get_ome_obj(current_ome_xml_str)
         except elementTree.ParseError as e:
             traceback_msg = traceback.format_exc()
@@ -3568,13 +3556,9 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
     bf_dtype = vips2bf_dtype(img.format)
     if ome_xml is None:
         # Create minimal ome-xml
-        # xyzct = get_shape_xyzct((img.width, img.height), img.bands)
         ome_xml_obj = create_ome_xml(shape_xyzct=xyzct, bf_dtype=bf_dtype, is_rgb=is_rgb)
     else:
         # Verify that vips image and ome-xml match
-        # ome_xml_obj = ome_types.from_xml(ome_xml, parser=OME_TYPES_PARSER) # `parser` argument dropped after ome.types 0.4.0
-        # ome_xml_obj = ome_types.from_xml(ome_xml)
-
         ome_xml_obj = get_ome_obj(ome_xml)
         ome_img = ome_xml_obj.images[0].pixels
         total_pages = ome_img.size_c*ome_img.size_z*ome_img.size_t

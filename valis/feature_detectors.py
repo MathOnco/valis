@@ -446,7 +446,6 @@ class SuperPointFD(FeatureDD):
             }}
 
     def frame2tensor(self, img):
-        # float_img = exposure.rescale_intensity(img, out_range=np.float64)
         float_img = exposure.rescale_intensity(img, out_range=np.float32)
         tensor = torch.from_numpy(float_img).float()[None, None].to(self.device)
 

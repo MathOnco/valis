@@ -120,7 +120,7 @@ def numpy2vips(a, pyvips_interpretation=None):
 
         linear = a.reshape(width * height * bands)
         if linear.dtype.byteorder == ">":
-            #vips seems to expect the array to be little endian, but `a` is big endian
+            # vips seems to expect the array to be little endian, but `a` is big endian
             linear = linear.byteswap(inplace=False)
 
         vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,

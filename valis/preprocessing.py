@@ -183,89 +183,6 @@ class JCDist(ImageProcesser):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
 
-    # def jc_dist(self, cspace="IHLS", p=99, metric="euclidean"):
-    #     # metric="chebyshev"
-    #     # metric="euclidean"
-    #     # print(metric, "threshing")
-    #     # jc_cos = self.jc_dist(metric="mahalanobis")
-
-    #     if cspace.upper() == "IHLS":
-    #         hys = colour.models.RGB_to_IHLS(self.image) # Hue, luminance, saturation/colorfulness
-    #         j = hys[..., 1]
-    #         c = hys[..., 2]
-
-    #     else:
-    #         jch = rgb2jch(self.image, cspace=cspace)
-    #         j = jch[..., 0]
-    #         c = jch[..., 1]
-
-    #     j01 = exposure.rescale_intensity(j, out_range=(0, 1))
-    #     c01 = exposure.rescale_intensity(c, out_range=(0, 1))
-    #     jc01 = np.dstack([j01, c01]).reshape((-1, 2))
-
-    #     # plt.imshow(c01)
-    #     # plt.show()
-    #     # inv_jt, _ = filters.threshold_multiotsu(1-j01)
-    #     # bg_j = 1 - inv_jt
-
-    #     # bg_c, _ = filters.threshold_multiotsu(c01)
-
-    #     bg_j = np.percentile(j01, p)
-    #     bg_c = np.percentile(c01, 100-p)
-
-    #     jc_dist = spatial.distance.cdist(jc01, np.array([[bg_j, bg_c]]), metric=metric).reshape(self.image.shape[0:2])
-    #     # jc_dist *= c01
-    #     return jc_dist
-
-
-    # def create_mask(self):
-
-    #     jc_dist = self.jc_dist(metric="chebyshev")
-    #     jc_dist[np.isnan(jc_dist)] = np.nanmax(jc_dist)
-
-    #     jc_t, _ = filters.threshold_multiotsu(jc_dist)
-    #     jc_mask = 255*(jc_dist > jc_t).astype(np.uint8)
-    #     jc_dist = exposure.equalize_adapthist(exposure.rescale_intensity(jc_dist, out_range=(0, 1)))
-
-    #     img_edges = filters.scharr(jc_dist)
-
-    #     p_t = filters.threshold_otsu(img_edges)
-    #     edges_mask = 255*(img_edges > p_t).astype(np.uint8)
-
-    #     temp_mask = edges_mask.copy()
-    #     temp_mask[jc_mask==0] = 0
-    #     temp_mask = mask2contours(temp_mask, 3)
-
-    #     mask = clean_mask(mask=temp_mask, img=self.image)
-    #     final_mask = mask2covexhull(mask)
-
-
-    #     return final_mask
-
-
-    # def _create_mask(self):
-
-    #     jc_dist = self.jc_dist(metric="chebyshev")
-    #     jc_dist[np.isnan(jc_dist)] = np.nanmax(jc_dist)
-    #     jc_t, _ = filters.threshold_multiotsu(jc_dist)
-    #     jc_mask = 255*(jc_dist > jc_t).astype(np.uint8)
-    #     jc_mask = mask2contours(jc_mask, 3)
-
-    #     jc_dist = exposure.equalize_adapthist(exposure.rescale_intensity(jc_dist, out_range=(0, 1)))
-    #     img_edges = filters.scharr(jc_dist)
-
-    #     p_t = filters.threshold_otsu(img_edges)
-    #     edges_mask = 255*(img_edges > p_t).astype(np.uint8)
-
-    #     temp_mask = edges_mask.copy()
-    #     temp_mask[jc_mask==0] = 0
-    #     temp_mask = mask2contours(temp_mask, 3)
-
-    #     mask = clean_mask(mask=temp_mask, img=self.image, w_img=jc_dist, min_tortuosity=0.001)
-    #     final_mask = mask2covexhull(mask)
-
-    #     return final_mask
-
     def create_mask(self):
 
         _, mask = create_tissue_mask_with_jc_dist(self.image)
@@ -277,7 +194,6 @@ class JCDist(ImageProcesser):
         Calculate norm of the OD image
         """
 
-        # jc_dist = self.jc_dist(metric=metric, p=p)
         jcd = jc_dist(self.image, metric=metric, p=p)
         if adaptive_eq:
             jcd = exposure.equalize_adapthist(exposure.rescale_intensity(jcd, out_range=(0, 1)))
@@ -307,17 +223,12 @@ class OD(ImageProcesser):
         """
         Calculate norm of the OD image
         """
-        # p=95
         eps = np.finfo("float").eps
         img01 = self.image/255
         od = -np.log10(img01 + eps)
-        # od_norm = np.linalg.norm(od, axis=2)
-        # print("OD norm")
         od_norm = np.mean(od, axis=2)
-        # upper_p = 1
         upper_p = np.percentile(od_norm, p)
-        # lower_p = np.percentile(od_norm, 100-p)
-        lower_p = 0 #np.percentile(od_norm, 100-p)
+        lower_p = 0
         od_clipped = np.clip(od_norm, lower_p, upper_p)
 
         if adaptive_eq:
@@ -2013,7 +1924,7 @@ def find_dominant_colors(img, cspace="JzAzBz", min_colorfulness=0, px_thresh=0.0
         filtered_label_counts = []
         mean_jab = []
         for i, cent_xy in enumerate(xy_centroids):
-            dist_to_centroid = np.sqrt(np.sum((fg_jab[..., 1:3] - cent_xy)**2, axis=1)) #  (fg_jab[..., 1] - a)**2 + (fg_jab[..., 2] - b)**2
+            dist_to_centroid = np.sqrt(np.sum((fg_jab[..., 1:3] - cent_xy)**2, axis=1))
             in_range = np.where(dist_to_centroid < d_thresh)[0]
             if len(in_range) > 0:
                 centroid_jab = np.mean(fg_jab[in_range], axis=0)

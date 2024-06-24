@@ -16,11 +16,6 @@ ROI_MASK = "mask"
 ROI_MATCHES = "matches"
 
 DEFAULT_ROI = ROI_MASK
-# DEFAULT_FD = feature_detectors.SuperPointFD
-# DEFAULT_MATCHER = feature_matcher.SuperPointAndGlue
-
-# DEFAULT_BF_PROCESSOR = preprocessing.StainFlattener
-# DEFAULT_BF_PROCESSOR_KWARGS = {"adaptive_eq":False, "with_mask":False}
 
 DEFAULT_FD = feature_detectors.VggFD
 DEFAULT_MATCHER = feature_matcher.Matcher

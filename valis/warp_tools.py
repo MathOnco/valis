@@ -890,7 +890,6 @@ def vips2numpy(vi):
 
 
 def pad_img(img, padded_shape, interp_method="bicubic"):
-    # padding_T = get_padding_matrix(img.shape[0:2], padded_shape)
     padding_T = get_padding_matrix(get_shape(img)[0:2], padded_shape)
     padded_img = warp_img(img, padding_T, out_shape_rc=padded_shape, interp_method=interp_method)
 
@@ -1215,7 +1214,7 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            #Option to set backround color in mapim added in libvips 8.13
+            # Option to set backround color in mapim added in libvips 8.13
             nr_warped = img.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,
@@ -1656,7 +1655,7 @@ def decompose_affine_transformation(M):
 
 
 def get_rotate_around_center_M(img_shape, rotation_rad):
-    #Based on skimage warp.rotate, but can have scaling at end
+    # Based on skimage warp.rotate, but can have scaling at end
     rows, cols = img_shape[0:2]
 
     # rotation around center
@@ -2688,14 +2687,6 @@ def mask2xy(mask):
         [max_x, max_y],
         [min_x, max_y]
     ])
-
-
-    # bbox = np.array([
-    #     [min_x, min_y],
-    #     [max_x+1, min_y],
-    #     [max_x+1, max_y+1],
-    #     [min_x, max_y+1]
-    # ])
 
     return bbox
 

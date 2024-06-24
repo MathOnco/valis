@@ -404,16 +404,15 @@ class Slide(object):
 
         print(self, reader, reader.metadata.is_rgb, self.image.shape)
 
-
     def __repr__(self):
         repr_str = (f'<{self.__class__.__name__}, name = {self.name}>'
-                #    f', width={self.slide_dimensions_wh[0][0]}'
-                #    f', height={self.slide_dimensions_wh[0][1]}'
-                #    f', channels={self.reader.metadata.n_channels}'
-                #    f', levels={len(self.slide_dimensions_wh)}'
-                #    f', RGB={self.is_rgb}'
-                #    f', dtype={self.image.dtype}>'
-                   )
+                    f', width={self.slide_dimensions_wh[0][0]}'
+                    f', height={self.slide_dimensions_wh[0][1]}'
+                    f', channels={self.reader.metadata.n_channels}'
+                    f', levels={len(self.slide_dimensions_wh)}'
+                    f', RGB={self.is_rgb}'
+                    f', dtype={self.image.dtype}>'
+                    )
         return (repr_str)
 
 
@@ -659,7 +658,6 @@ class Slide(object):
             full_bk_dxdy = self.val_obj.pad_displacement(cropped_bk_dxdy,
                 self.val_obj._full_displacement_shape_rc,
                 self.val_obj._non_rigid_bbox)
-            # return full_bk_dxdy
 
         else:
             if np.any(self._bk_dxdy_np.shape[1:2] != self.val_obj._full_displacement_shape_rc):
@@ -696,8 +694,6 @@ class Slide(object):
                 self.val_obj._full_displacement_shape_rc,
                 self.val_obj._non_rigid_bbox)
 
-            # return full_fwd_dxdy
-
         else:
             if np.any(self._fwd_dxdy_np.shape[1:2] != self.val_obj._full_displacement_shape_rc):
                 full_fwd_dxdy = self.val_obj.pad_displacement(self._fwd_dxdy_np,
@@ -705,7 +701,7 @@ class Slide(object):
                     self.val_obj._non_rigid_bbox)
             else:
                 full_fwd_dxdy = self._fwd_dxdy_np
-                # return self._fwd_dxdy_np
+
         return full_fwd_dxdy
 
 
@@ -2126,9 +2122,16 @@ class Valis(object):
 
         self._empty_slides = {}
 
+    def __repr__(self):
+        repr_str = (f'<{self.__class__.__name__}, name = {self.name}>'
+                    f', size={self.size}>'
+                    )
+        return (repr_str)
+
     def _set_rigid_reg_kwargs(self, name, feature_detector, similarity_metric,
                               matcher, transformer, affine_optimizer,
-                              imgs_ordered, reference_img_f, check_for_reflections, qt_emitter):
+                              imgs_ordered, reference_img_f,
+                              check_for_reflections, qt_emitter):
 
         """Set rigid registration kwargs
         Keyword arguments will be passed to `serial_rigid.register_images`
@@ -2782,7 +2785,6 @@ class Valis(object):
                 if slide_obj.img_type == slide_tools.IHC_NAME:
                     thumbnail_img = self.create_thumbnail(slide_obj.image)
                 else:
-                    # thumbnail_img = self.create_thumbnail(processed_img)
                     thumbnail_img = self.create_thumbnail(slide_obj.pad_cropped_processed_img())
 
                 thumbnail_mask_outline = viz.draw_outline(thumbnail_img, thumbnail_mask)
@@ -2882,7 +2884,7 @@ class Valis(object):
         blending="weighted"
         blending="light"
         """
-        # from valis.viz import *
+
         cmap = viz.jzazbz_cmap()
         overlap_img = viz.create_overlap_img(img_list, cmap=cmap, blending=blending)
 
@@ -3365,7 +3367,6 @@ class Valis(object):
             # Processed image may have been denoised for rigid registration. Replace with unblurred image
             for img_obj in rigid_registrar.img_obj_list:
                 matching_slide = self.slide_dict[img_obj.name]
-                # reg_img = matching_slide.warp_img(matching_slide.processed_img, non_rigid=False, crop=False)
                 reg_img = warp_tools.warp_img(matching_slide.processed_img, M=img_obj.M, out_shape_rc=img_obj.registered_shape_rc)
                 img_obj.registered_img = reg_img
                 img_obj.image = matching_slide.processed_img
@@ -3998,7 +3999,7 @@ class Valis(object):
             temp_missing_mask = cv2.bitwise_xor(slide_obj.non_rigid_reg_mask, rigid_reg_mask)
             r_nr_intersection = cv2.bitwise_and(slide_obj.non_rigid_reg_mask, rigid_reg_mask)
             combined_mask = cv2.bitwise_or(r_nr_intersection, temp_missing_mask)
-            small_missing_mask = cv2.bitwise_xor(slide_obj.non_rigid_reg_mask, combined_mask) #cv2.bitwise_not(slide_obj.non_rigid_reg_mask, missing_mask)
+            small_missing_mask = cv2.bitwise_xor(slide_obj.non_rigid_reg_mask, combined_mask)
 
             inpaint_mask = cv2.bitwise_or(inv_tears, missing_mask)
             inpaint_mask[inpaint_mask != 0] = 255
@@ -4114,7 +4115,7 @@ class Valis(object):
             bk_for_crop_for_rigid_reg = {}
             fwd_for_crop_for_rigid_reg = {}
 
-            ref_src = (ref_slide.uncropped_processed_img_shape_rc/ref_slide.processed_img_shape_rc)#[::-1]
+            ref_src = (ref_slide.uncropped_processed_img_shape_rc/ref_slide.processed_img_shape_rc)
             rescaled_dxdy_shape_rc = np.ceil(np.array(ref_slide.reg_img_shape_rc)*ref_src).astype(int)
 
             bbox_x = np.inf
@@ -4169,7 +4170,6 @@ class Valis(object):
         overlap_mask, overlap_mask_bbox_xywh = self.get_crop_mask(self.crop)
         overlap_mask_bbox_xywh = overlap_mask_bbox_xywh.astype(int)
 
-        # thumbnail_s = np.min(self.thumbnail_size/np.array(non_rigid_registrar.non_rigid_obj_list[0].registered_img.shape))
         thumbnail_s = np.min(self.thumbnail_size/warp_tools.get_shape(non_rigid_registrar.non_rigid_obj_list[0].registered_img)[0:2])
         non_rigid_img_list = [warp_tools.rescale_img(nr_img_obj.registered_img, thumbnail_s) for nr_img_obj in non_rigid_registrar.non_rigid_obj_list]
         if isinstance(non_rigid_img_list[0], pyvips.Image):
@@ -4341,8 +4341,6 @@ class Valis(object):
 
             shape_list[i] = tuple(slide_obj.slide_shape_rc)
             processed_img_shape_list[i] = tuple(slide_obj.processed_img_shape_rc)
-            # unit_list[i] = slide_obj.units
-            # resolution_list[i] = slide_obj.resolution
             unit_list[i] = ref_slide.units
             resolution_list[i] = ref_slide.resolution
             from_list[i] = slide_name
@@ -4793,7 +4791,6 @@ class Valis(object):
             nr_obj = non_rigid_registrar.non_rigid_obj_dict[slide_obj.name]
             # Will be combining original and new dxdy as pyvips Images
             if not isinstance(slide_obj.bk_dxdy[0], pyvips.Image):
-            # if not isinstance(nr_obj.bk_dxdy[0], pyvips.Image):
                 vips_current_bk_dxdy = warp_tools.numpy2vips(np.dstack(slide_obj.bk_dxdy)).cast("float")
                 vips_current_fwd_dxdy = warp_tools.numpy2vips(np.dstack(slide_obj.fwd_dxdy)).cast("float")
             else:
@@ -4873,7 +4870,7 @@ class Valis(object):
         self._full_displacement_shape_rc = full_out_shape_rc
         for slide_obj in self.slide_dict.values():
             if not slide_obj.is_rgb:
-                img_to_warp = slide_obj.pad_cropped_processed_img() #slide_obj.processed_img
+                img_to_warp = slide_obj.pad_cropped_processed_img()
             else:
                 img_to_warp = slide_obj.image
 
