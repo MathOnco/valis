@@ -170,9 +170,6 @@ def isInside(x1, y1, x2, y2, x3, y3, x, y):
     # Calculate area of triangle PAB
     A3 = area(x1, y1, x2, y2, x, y)
 
-    # print(A, A1, A2, A3)
-    # print(A == (A1 + A2 + A3))
-
     # Check if sum of A1, A2 and A3
     # is same as A
     if (A == (A1 + A2 + A3)):

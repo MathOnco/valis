@@ -36,6 +36,7 @@ NR_TILE_FIXED_P_KEY = f"{NR_FIXED}_{NR_PROCESSING_CLASS_KEY}"
 NR_TILE_FIXED_P_INIT_KW_KEY = f"{NR_FIXED}_{NR_PROCESSING_INIT_KW_KEY}"
 NR_TILE_FIXED_P_KW_KEY = f"{NR_FIXED}_{NR_PROCESSING_KW_KEY}"
 
+
 # Abstract Classes #
 class NonRigidRegistrar(object):
     """Abstract class for non-rigid registration using displacement fields
