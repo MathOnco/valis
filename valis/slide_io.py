@@ -27,8 +27,6 @@ from tqdm import tqdm
 import scyjava
 from difflib import get_close_matches
 import traceback
-from PIL import Image
-from PIL.TiffTags import TAGS
 
 from colorama import Fore
 from . import valtils
@@ -86,8 +84,12 @@ ALL_OPENSLIDE_READABLE_FORMATS = [".svs", ".tif", ".vms", ".vmu", ".ndpi", ".scn
 
 # VIPS_READABLE_FORMATS = pyvips.get_suffixes()
 VIPS_READABLE_FORMATS = [*pyvips.get_suffixes(), *ALL_OPENSLIDE_READABLE_FORMATS, ".ome.tiff", ".ome.tif"]
-# VIPS_READABLE_FORMATS += [".ome.tiff", ".ome.tif", *ALL_OPENSLIDE_READABLE_FORMATS]
 """list: File extensions that libvips can read. See https://github.com/libvips/libvips
+"""
+
+
+VIPS_RGB_FORMATS = [x.lower() for x in dir(pyvips.enums.Interpretation) if re.search("rgb", x.lower()) is not None]
+"""list: List of libvips rgb formats
 """
 
 BF_READABLE_FORMATS = None
@@ -687,16 +689,23 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     if len(ome_obj.images) > 0:
         ome_img = ome_obj.images[series].pixels
         ome_nc = ome_img.size_c
+        ome_nt = ome_img.size_t
+        ome_nz = ome_img.size_z
         ome_size_x = ome_img.size_x
         ome_size_y = ome_img.size_y
         ome_dtype = ome_img.type.name.lower()
+
+        total_pages = ome_nc*ome_nt*ome_nz
     else:
         msg = f"ome-xml for {metadata.name} does not contain any metadata for any images"
         valtils.print_warning(msg)
         ome_nc = None
+        ome_nt = None
+        ome_nz = None
         ome_size_x = None
         ome_size_y = None
         ome_dtype = None
+        total_pages = vips_img.bands
 
     vips_nc = vips_img.bands
     vips_size_x = vips_img.width
@@ -704,11 +713,15 @@ def check_xml_img_match(xml, vips_img, metadata, series=0):
     np_dtype = slide_tools.VIPS_FORMAT_NUMPY_DTYPE[vips_img.format]
     vips_bf_dtype = slide_tools.NUMPY_FORMAT_BF_DTYPE[str(np_dtype().dtype)].lower()
 
-    if ome_nc != vips_nc:
-        msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are {vips_nc} channel(s) in the image"
-        metadata.n_channels = vips_nc
-        if ome_nc is not None :
-            valtils.print_warning(msg)
+    if total_pages != vips_img.bands:
+            # msg = f"For {metadata.name}, the ome-xml states there should be {ome_nc} channel(s), but there is/are {vips_nc} channel(s) in the image"
+            msg = (f"For {metadata.name}, the ome-xml states there should be {total_pages} pages, but there is/are {vips_img.bands} pages in the image",
+                   f"Assuming that all pages are channels (not time points or Z-axes), so updating the metadata to have {total_pages} channels")
+            metadata.n_channels = vips_nc
+            metadata.n_t = 1
+            metadata.n_z = 1
+            if ome_nc is not None :
+                valtils.print_warning(msg)
 
     if ome_size_x != vips_size_x:
         msg = f"For {metadata.name}, the ome-xml states the width should be {ome_size_x}, but the image has a width of {vips_size_x}"
@@ -829,7 +842,7 @@ def openslide_desc_2_omexml(vips_img):
     )
 
     # Should always be rgb, but checking anyway
-    is_rgb = vips_img.interpretation == "srgb"
+    is_rgb = vips_img.interpretation in VIPS_RGB_FORMATS
     if is_rgb:
         rgb_channel = ome_types.model.Channel(id='Channel:0:0', samples_per_pixel=3)
         new_img.pixels.channels = [rgb_channel]
@@ -1623,6 +1636,14 @@ class VipsSlideReader(SlideReader):
 
     def create_metadata(self):
 
+        vips_img = pyvips.Image.new_from_file(self.src_f)
+
+        if "image-description" in vips_img.get_fields():
+            is_image_J = re.search("imagej", vips_img.get("image-description").lower()) is not None
+            if is_image_J:
+                slide_meta = self._get_metadata_bf()
+                return slide_meta
+
         if self.use_openslide:
             server = OPENSLIDE_RDR
         else:
@@ -1630,16 +1651,15 @@ class VipsSlideReader(SlideReader):
 
         meta_name = f"{os.path.split(self.src_f)[1]}_Series(0)".strip("_")
         slide_meta = MetaData(meta_name, server)
-        vips_img = pyvips.Image.new_from_file(self.src_f)
 
         slide_meta.is_rgb = self._check_rgb(vips_img)
         slide_meta.n_channels = vips_img.bands
         if (slide_meta.is_rgb and vips_img.hasalpha() >= 1) or self.use_openslide:
-            # Will remove alpha channel after reading
+            # Will also remove alpha channel after reading
             slide_meta.n_channels = vips_img.bands - vips_img.hasalpha()
+            vips_img = vips_img[0:3]
 
         slide_meta.slide_dimensions = self._get_slide_dimensions(vips_img)
-
         img_xml = self._get_xml(vips_img)
         if img_xml is not None:
             try:
@@ -1656,23 +1676,26 @@ class VipsSlideReader(SlideReader):
         if slide_meta.is_rgb:
             slide_meta.channel_names = None
 
+        if self.is_ome:
+            toilet_roll = pyvips.Image.new_from_file(self.src_f, n=-1, subifd=-1)
+            page = pyvips.Image.new_from_file(self.src_f, n=1, subifd=-1, access='random')
+            n_pages = toilet_roll.height/page.height
+            if n_pages > 1:
+                slide_meta.n_channels = int(n_pages)
+
         return slide_meta
 
     def verify_xml(self):
-        vips_img = pyvips.Image.new_from_file(self.src_f)
-        img_xml = self._get_xml(vips_img)
+        img_xml = self.metadata.original_xml
         if img_xml is not None and not self.use_openslide:
             # Don't check openslide images, as metadata counts alpha channel
             try:
-                # ome_info = ome_types.from_xml(img_xml, parser=OME_TYPES_PARSER)
-                # ome_info = ome_types.from_xml(img_xml)
                 ome_info = get_ome_obj(img_xml)
                 assert len(ome_info.images) > 0
             except:
                 return None
-
             read_img = self.slide2vips(0)
-            self.metadata = check_xml_img_match(img_xml, read_img, self.metadata, series=self.series)
+            self.metadata = check_xml_img_match(xml=img_xml, vips_img=read_img, metadata=self.metadata, series=self.series)
 
     def _get_metadata_vips(self, slide_meta, vips_img):
         slide_meta.n_channels = vips_img.bands
@@ -1685,39 +1708,24 @@ class VipsSlideReader(SlideReader):
         slide_meta.original_xml = self._get_xml(vips_img)
         slide_meta.optimal_tile_wh = get_tile_wh(self, 0, warp_tools.get_shape(vips_img)[0:2][::-1])
 
-        # is_image_J = re.search("imagej", vips_img.get("image-description").lower()) is not None
-        # if is_image_J:
-
-            # image_j_desc = vips_img.get("image-description")
-            # desc_split = image_j_desc.split("\n")
-            # frame_desc = [x for x in desc_split if x.lower().startswith("frame")]
-            # if len(frame_desc) == 1:
-            #     nt = eval(frame_desc[0].split("=")[1])
-            #     spp_tag = [k for k, v in TAGS.items() if v == "SamplesPerPixel"]
-            #     with Image.open(self.src_f) as pil_img:
-            #         nc = pil_img.tag[spp_tag[0]][0]
-
-            #     slide_meta.n_t = nt
-            #     slide_meta.n_channels = nc
-                # In image J, frames are timepoints,
-
-
 
         return slide_meta
 
-    def _get_metadata_bf(self, slide_meta):
+    def _get_metadata_bf(self):
         with valtils.HiddenPrints():
             bf_reader = BioFormatsSlideReader(self.src_f)
 
-        slide_meta.channel_names = bf_reader.metadata.channel_names # None if RGB
-        # Need to update the n_channels based on bioformats metadata if toilet roll .ome.tiff
-        slide_meta.n_channels = bf_reader.metadata.n_channels
-        slide_meta.pixel_physical_size_xyu = bf_reader.metadata.pixel_physical_size_xyu
-        slide_meta.bf_pixel_type = bf_reader.metadata.bf_pixel_type
-        slide_meta.is_little_endian = bf_reader.metadata.is_little_endian
-        slide_meta.original_xml = bf_reader.metadata.original_xml
-        slide_meta.bf_datatype = bf_reader.metadata.bf_datatype
-        slide_meta.optimal_tile_wh = bf_reader.metadata.optimal_tile_wh
+        # slide_meta.channel_names = bf_reader.metadata.channel_names # None if RGB
+        # # Need to update the n_channels based on bioformats metadata if toilet roll .ome.tiff
+        # slide_meta.n_channels = bf_reader.metadata.n_channels
+        # slide_meta.pixel_physical_size_xyu = bf_reader.metadata.pixel_physical_size_xyu
+        # slide_meta.bf_pixel_type = bf_reader.metadata.bf_pixel_type
+        # slide_meta.is_little_endian = bf_reader.metadata.is_little_endian
+        # slide_meta.original_xml = bf_reader.metadata.original_xml
+        # slide_meta.bf_datatype = bf_reader.metadata.bf_datatype
+        # slide_meta.optimal_tile_wh = bf_reader.metadata.optimal_tile_wh
+
+        return bf_reader.metadata
 
     def _slide2vips_ome_one_series(self, level, *args, **kwargs):
         """Use pyvips to read an ome.tiff image that has only 1 series
@@ -1746,7 +1754,7 @@ class VipsSlideReader(SlideReader):
 
         toilet_roll = pyvips.Image.new_from_file(self.src_f, n=-1, subifd=level-1)
         page = pyvips.Image.new_from_file(self.src_f, n=1, subifd=level-1, access='random')
-        if page.interpretation == "srgb":
+        if page.interpretation in VIPS_RGB_FORMATS:
             vips_slide = page
         else:
             page_height = page.height
@@ -1758,7 +1766,7 @@ class VipsSlideReader(SlideReader):
                 vips_slide = vips_slide.copy(interpretation="b-w")
             else:
                 vips_slide = vips_slide.copy(interpretation="multiband")
-                self.metadata.n_channels = vips_slide.bands
+
 
         return vips_slide
 
@@ -1859,8 +1867,7 @@ class VipsSlideReader(SlideReader):
 
         """
 
-        livbips_rgb_formats = [x.lower() for x in dir(pyvips.enums.Interpretation) if re.search("rgb", x.lower()) is not None]
-        is_rgb = vips_img.interpretation in livbips_rgb_formats
+        is_rgb = vips_img.interpretation in VIPS_RGB_FORMATS
 
         return is_rgb
 
@@ -1915,7 +1922,8 @@ class VipsSlideReader(SlideReader):
                     if cname.text not in channel_names:
                         channel_names.append(cname.text)
 
-        if (channel_names is None or len(channel_names) == 0) and not vips_img.interpretation == "srgb":
+        is_vips_rgb = vips_img.interpretation in VIPS_RGB_FORMATS
+        if (channel_names is None or len(channel_names) == 0) and not is_vips_rgb:
             channel_names = get_default_channel_names(vips_img.bands,
                                                       src_f=self.src_f)
         return channel_names
@@ -2975,7 +2983,7 @@ def remove_control_chars(s):
     return control_char_removed
 
 
-def get_shape_xyzct(shape_wh, n_channels):
+def get_shape_xyzct(shape_wh, n_channels, nt=1, nz=1):
     """Get image shape in XYZCT format
 
     Parameters
@@ -2993,7 +3001,7 @@ def get_shape_xyzct(shape_wh, n_channels):
 
     """
 
-    xyzct = (*shape_wh, 1, n_channels, 1)
+    xyzct = (*shape_wh, nz, n_channels, nt)
     return xyzct
 
 
@@ -3323,8 +3331,11 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
     """
 
     slide_meta = reader.metadata
-    img_h, img_w, nc = warp_tools.get_shape(img)
-    new_xyzct = get_shape_xyzct((img_w, img_h), nc)
+    # img_h, img_w, nc = warp_tools.get_shape(img)
+    img_h, img_w, _ = warp_tools.get_shape(img)
+
+    nc = slide_meta.n_channels
+    new_xyzct = get_shape_xyzct((img_w, img_h), nc, nt=slide_meta.n_t, nz=slide_meta.n_z)
     current_ome_xml_str = slide_meta.original_xml
     is_rgb = slide_meta.is_rgb
     series = slide_meta.series
@@ -3371,7 +3382,7 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
                                   pixel_physical_size_xyu=pixel_physical_size_xyu,
                                   channel_names=updated_channel_names, colormap=colormap)
 
-    if og_valid_xml:
+    if og_valid_xml and og_ome is not None:
         new_ome = og_ome.copy()
         new_ome.images = temp_new_ome.images
     else:
@@ -3505,7 +3516,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
         to a pyvips.Image.
 
     ome_xml : str, optional
-        ome-xml string describing image's metadata. If None, it will be createdd
+        ome-xml string describing image's metadata. If None, it will be created
 
     tile_wh : int
         Tile shape used to save `img`. Used to create a square tile, so `tile_wh`
@@ -3550,20 +3561,27 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
 
     # Get ome-xml metadata #
     xyzct = get_shape_xyzct((img.width, img.height), img.bands)
-    is_rgb = img.interpretation == "srgb"
+
+    og_interpretation = img.interpretation
+    is_rgb = og_interpretation in VIPS_RGB_FORMATS
+
     bf_dtype = vips2bf_dtype(img.format)
     if ome_xml is None:
         # Create minimal ome-xml
+        # xyzct = get_shape_xyzct((img.width, img.height), img.bands)
         ome_xml_obj = create_ome_xml(shape_xyzct=xyzct, bf_dtype=bf_dtype, is_rgb=is_rgb)
     else:
         # Verify that vips image and ome-xml match
         # ome_xml_obj = ome_types.from_xml(ome_xml, parser=OME_TYPES_PARSER) # `parser` argument dropped after ome.types 0.4.0
         # ome_xml_obj = ome_types.from_xml(ome_xml)
+
         ome_xml_obj = get_ome_obj(ome_xml)
         ome_img = ome_xml_obj.images[0].pixels
+        total_pages = ome_img.size_c*ome_img.size_z*ome_img.size_t
+
         match_dict = {"same_x": ome_img.size_x == img.width,
                       "same_y": ome_img.size_y == img.height,
-                      "same_c": ome_img.size_c == img.bands,
+                      "total_pages": total_pages == img.bands,
                       "same_type": ome_img.type.name.lower() == bf_dtype
                       }
 
@@ -3579,7 +3597,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
     image_height = img.height
     image_bands = img.bands
     if is_rgb:
-        img = img.copy(interpretation="srgb")
+        img = img.copy(interpretation=og_interpretation)
     else:
         img = pyvips.Image.arrayjoin(img.bandsplit(), across=1)
         img = img.copy(interpretation="b-w")
@@ -3639,7 +3657,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
     print("")
 
     lossless = Q == 100
-    rgbjpeg = compression in ["jp2k", "jpeg"] and img.interpretation == "srgb"
+    rgbjpeg = compression in ["jp2k", "jpeg"] and img.interpretation in VIPS_RGB_FORMATS
     subifd = pyramid # a pyramid will still be created if subifd = True and pyramid = False
     img.tiffsave(dst_f, compression=compression, tile=tile,
                  tile_width=tile_wh, tile_height=tile_wh,
@@ -3732,4 +3750,4 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
     if tile_wh > MAX_TILE_SIZE:
         tile_wh = MAX_TILE_SIZE
 
-    save_ome_tiff(vips_img, dst_f, ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
+    save_ome_tiff(img=vips_img, dst_f=dst_f, ome_xml=ome_xml_str, tile_wh=tile_wh, compression=compression, Q=Q, pyramid=pyramid)
