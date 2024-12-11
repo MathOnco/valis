@@ -32,7 +32,7 @@ RUN apt-get update \
 		git-all \
 		cmake \
 		libjxr-dev \
-        openjdk-11-jre
+    openjdk-11-jre
 
 # libvips dependencies for libvips build
 # RUN pip3 install meson
@@ -52,8 +52,12 @@ RUN ~/.local/bin/pip3 install meson
 # RUN pip3 install meson
 
 RUN apt-get install --no-install-recommends -y \
+	libglib2.0-dev \
 	glib-2.0-dev \
+	libexpat1-dev \
 	libexpat-dev \
+	librsvg2-2 \
+	librsvg2-common \
 	librsvg2-dev \
 	libpng-dev \
 	libjpeg-turbo8-dev \
@@ -63,7 +67,7 @@ RUN apt-get install --no-install-recommends -y \
 	liblcms2-dev \
 	libheif-dev \
 	liborc-dev \
-    libgirepository1.0-dev \
+  libgirepository1.0-dev \
 	libopenslide-dev
 
 
