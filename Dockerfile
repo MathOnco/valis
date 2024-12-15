@@ -134,7 +134,8 @@ RUN  apt-get remove -y wget build-essential ninja-build && \
   rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
   rm -rf /usr/local/lib/python*
 
-
+RUN apt-get update
+RUN apt-get install -y librsvg2-dev
 
 
 
