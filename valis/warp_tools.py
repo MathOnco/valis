@@ -96,7 +96,7 @@ def get_alignment_indices(n_imgs, ref_img_idx=None):
 
     Indices go from bottom to center, then top to center. In each case,
     the alignments go from closest to the center, to next closet, etc...
-    The reference image is exclued from this list.
+    The reference image is excluded from this list.
     For example, if `ref_img_idx` is 2, then the order is
     [(1, 2), (0, 1), (3, 2), ...,  (`n_imgs`-1, `n_imgs` - 2)].
 

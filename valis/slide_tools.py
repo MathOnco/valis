@@ -276,7 +276,7 @@ def determine_if_staining_round(src_dir):
 
 
 def um_to_px(um, um_per_px):
-    """Conver mircon to pixel
+    """Convert mircon to pixel
     """
     return um * 1/um_per_px
 

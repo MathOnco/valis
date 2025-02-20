@@ -299,7 +299,7 @@ class SerialRigidRegistrar(object):
     Registration is conducted by first detecting features in all images.
     Features are then matched between images, which are then used to construct
     a distance matrix, D. D is then sorted such that the most similar images
-    are adjacent to one another. The rigid transformation matrics are then found to
+    are adjacent to one another. The rigid transformation matrices are then found to
     align each image with the previous image. Optionally, optimization can be
     performed to improve the alignments, although the "optimized" matrix will be
     discarded if it increases the distances between matched features.

@@ -272,7 +272,7 @@ def update_joint_H(binned_moving, binned_fixed, H, M, sample_pts, pos=0,
             img2_v = get_verts(binned_fixed, sxy[0], sxy[1], pos)
             abc2 = solve_abc(img2_v)
         else:
-            # ABC for fixed image's trianges are precomputed
+            # ABC for fixed image's triages are precomputed
             abc2 = precalcd_abc[i]
 
         x_lims = np.array([np.min(img1_v[:, 0]), np.max(img1_v[:, 0])])

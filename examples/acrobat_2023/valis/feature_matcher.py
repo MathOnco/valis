@@ -19,7 +19,7 @@ AMBIGUOUS_METRICS = set(metrics.pairwise._VALID_METRICS).intersection(
     Metrics found in both the valid metrics ang kernel methods in
     sklearn.metrics.pairwise. Issue is that metrics are distances,
     while kernels are similarities. Metrics in this set are assumed
-    to be distaces, unless the metric_type parameter in match_descriptors
+    to be distances, unless the metric_type parameter in match_descriptors
     is set to "similarity". """
 
 

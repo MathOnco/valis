@@ -1607,7 +1607,7 @@ class VipsSlideReader(SlideReader):
         Whether or not openslide can be used to read this slide.
 
     is_ome : bool
-        Whether ot not the side is an ome.tiff.
+        Whether or not the side is an ome.tiff.
 
     Notes
     -----
