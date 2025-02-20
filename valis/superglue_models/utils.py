@@ -376,7 +376,7 @@ def compute_epipolar_error(kpts0, kpts1, T_0to1, K0, K1):
 
 def angle_error_mat(R1, R2):
     cos = (np.trace(np.dot(R1.T, R2)) - 1) / 2
-    cos = np.clip(cos, -1., 1.)  # numercial errors can make it out of bounds
+    cos = np.clip(cos, -1., 1.)  # numerical errors can make it out of bounds
     return np.rad2deg(np.abs(np.arccos(cos)))
 
 

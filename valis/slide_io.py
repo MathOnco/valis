@@ -67,7 +67,7 @@ PIXEL_UNIT = "pixel"
 """str: Physical unit when the unit can't be found in the metadata"""
 
 MICRON_UNIT = u'\u00B5m'
-"""str: Phyiscal unit for micron/micrometers"""
+"""str: Physical unit for micron/micrometers"""
 
 ALL_OPENSLIDE_READABLE_FORMATS = [".svs", ".tif", ".vms", ".vmu", ".ndpi", ".scn", ".mrxs", ".tiff", ".svslide", ".bif"]
 """list: File extensions that OpenSlide can read"""
@@ -462,7 +462,7 @@ def check_to_use_openslide(src_f):
 def get_ome_obj(x):
     """Get ome_types.model.ome.OME object
 
-    Paramters
+    Parameters
     ---------
     x: str
         Either OME-XML or path to ome.tiff
@@ -1262,7 +1262,7 @@ class BioFormatsSlideReader(SlideReader):
             the region to be sliced.
 
         tile_wh : int, optional
-            Size of tiles used to contstruct `vips_slide`
+            Size of tiles used to construct `vips_slide`
 
         Returns
         -------
@@ -1607,7 +1607,7 @@ class VipsSlideReader(SlideReader):
         Whether or not openslide can be used to read this slide.
 
     is_ome : bool
-        Whether ot not the side is an ome.tiff.
+        Whether or not the side is an ome.tiff.
 
     Notes
     -----
@@ -2980,7 +2980,7 @@ def get_shape_xyzct(shape_wh, n_channels, nt=1, nz=1):
     Parameters
     ----------
     shape_wh : tuple of int
-        Width and heigth of image
+        Width and height of image
 
     n_channels : int
         Number of channels in the image
@@ -3004,7 +3004,7 @@ def create_channel(channel_id, name=None, color=None, samples_per_pixel=1):
     channel_id : int
         Channel number
 
-    name : str, optinal
+    name : str, optional
         Channel name
 
     color : tuple of int

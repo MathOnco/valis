@@ -45,7 +45,7 @@ def draw_outline(img, mask, clr=(100, 240, 39), thickness=2):
     clr : ndarray
         RGB (0-255) color of outline
 
-    thicknes : int
+    thickness : int
         Thickness of outline
 
     Returns

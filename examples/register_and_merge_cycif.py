@@ -33,7 +33,7 @@ The results directory contains several folders:
     These can be used to get a better sense of how the
     images were altered by non-rigid warping
 
-6. *processed* shows thumnails of the processed images.
+6. *processed* shows thumbnails of the processed images.
     This are thumbnails of the images that are actually
     used to perform the registration. The pre-processing
     and normalization methods should try to make these
@@ -41,7 +41,7 @@ The results directory contains several folders:
 
 
 After registraation is complete, one should view the
-results to determine if they aare acceptable.
+results to determine if they are acceptable.
 
 Since the slides are being merged, one may want to provide
 channel names. This can be accomplished by passing a
@@ -65,7 +65,7 @@ rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 stop = time.time()
 elapsed = stop - start
 
-print(f"regisration time is {elapsed/60} minutes")
+print(f"registration time is {elapsed/60} minutes")
 
 
 # Merge registered channels

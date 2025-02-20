@@ -331,7 +331,7 @@ class Gray(ImageProcesser):
 
 
 class HEDeconvolution(ImageProcesser):
-    """Normalize staining appearence of hematoxylin and eosin (H&E) stained image
+    """Normalize staining appearance of hematoxylin and eosin (H&E) stained image
     and get the H or E deconvolution image.
 
     Reference
@@ -389,7 +389,7 @@ def standardize_colorfulness(img, c=DEFAULT_COLOR_STD_C, h=0):
     """Give image constant colorfulness and hue
 
     Image is converted to cylindrical CAM-16UCS assigned a constant
-    hue and colorfulness, and then coverted back to RGB.
+    hue and colorfulness, and then converted back to RGB.
 
     Parameters
     ----------
@@ -493,7 +493,7 @@ def calc_background_color_dist(img, brightness_q=0.99, mask=None):
 
 
 def normalize_he(img: np.array, Io: int = 240, alpha: int = 1, beta: int = 0.15):
-    """ Normalize staining appearence of H&E stained images.
+    """ Normalize staining appearance of H&E stained images.
 
     Parameters
     ----------
@@ -719,7 +719,7 @@ def combine_masks(mask1, mask2, op="or"):
 def remove_small_obj_and_lines_by_dist(mask):
     """
     Will remove smaller objects and thin lines that
-    do not interesct with larger objects
+    do not intersect with larger objects
     """
 
     dist_transform = cv2.distanceTransform(mask, cv2.DIST_L2, 5)
@@ -795,7 +795,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
     cam_d, cam = calc_background_color_dist(img, brightness_q=brightness_q, mask=color_mask)
 
-    # Reduce intensity of thick horizontal and vertial lines, usually artifacts like edges, streaks, folds, etc...
+    # Reduce intensity of thick horizontal and vertical lines, usually artifacts like edges, streaks, folds, etc...
     vert_knl = np.ones((1, 5))
     no_v_lines = morphology.opening(cam_d, vert_knl)
 

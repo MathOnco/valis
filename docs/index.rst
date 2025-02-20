@@ -8,7 +8,7 @@ VALIS
 
 .. include:: README.rst
 
-Docmentation
+Documentation
 ============
 
 .. toctree::

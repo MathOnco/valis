@@ -42,7 +42,7 @@ Version 1.0.3 (January 25, 2024)
 #. Setting :code:`colormap=None` to the various save functions will not add any color channels, and so the slide viewer's default colormaps will be used.
 #. Updated :code:`slide_io.get_slide_reader` to give preference to reading images with libvips/openslide. Should be faster since image will not need to be constructed from tiles.
 #. JVM will only be initialized if bioformats is needed to read the image.
-#. Updated :code:`slide_io.VipsSlideReader` to use the ome-types pacakge to extract metadata, instead of Bio-formats. Should avoid having to launch JVM unless Bio-formats is really needed.
+#. Updated :code:`slide_io.VipsSlideReader` to use the ome-types package to extract metadata, instead of Bio-formats. Should avoid having to launch JVM unless Bio-formats is really needed.
 #. Added checks to ensure that channels in merged image are in the correct order when :code:`imgs_ordered=True`, addressing the comment `github issue 56 <https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877>`_ .
 #. Added tests for images with minimal ome-xml (i.e. no channel names, units, etc...)
 #. Removed usage of :code:`imghdr`, which is being deprecated
@@ -88,11 +88,11 @@ Version 1.0.0rc15 (May 10, 2023)
 Version 1.0.0rc14 (April 24, 2023)
 -------------------------------------
 #. Added :code:`max_ratio` as an argument for :code:`feature_matcher.match_desc_and_kp` (github issue 36).
-#. Added :code:`CziJpgxrReader` to read CZI images that have JPGXR compression but can't be opened with Bioformats. It's very limited and experimental (only tested with single scence RGB), but may be an issue specific to Apple silcon?
+#. Added :code:`CziJpgxrReader` to read CZI images that have JPGXR compression but can't be opened with Bioformats. It's very limited and experimental (only tested with single scene RGB), but may be an issue specific to Apple silcon?
 #. Supports scenario where images might be assigned the same name (e.g. same file names, but different directories).
 #. Support tiling for initial non-rigid registration, making it possible to perform non-rigid on much larger images
 #. Skips empty images (github issue 44).
-#. Can now specify an :code:`ImageProcesser` for each image by passing a dicitonary to the :code:`processor_dict` argrument of :code:`Valis.register`. Keys should be the filename of the image, and values a list, where the first element is the :code:`ImageProcesser` to use, and the second element is a dictionary of keyword argruments passed to :code:`ImageProcesser.process_image`. This should make it easier to register different image modalities.
+#. Can now specify an :code:`ImageProcesser` for each image by passing a dictionary to the :code:`processor_dict` argrument of :code:`Valis.register`. Keys should be the filename of the image, and values a list, where the first element is the :code:`ImageProcesser` to use, and the second element is a dictionary of keyword argruments passed to :code:`ImageProcesser.process_image`. This should make it easier to register different image modalities.
 #. Added an H&E color deconvolution :code:`ImageProcesser` using the method described in M. Macenko et al., ISBI 2009. Generously provided by Github user aelskens (Arthur Elskenson) (PR 42).
 #. Small improvements in :code:`valtils` functions, provided by Github user ajinkya-kulkarni (Ajinkya Kulkarni) (PR 46).
 #. Docker Images bundled with bioformats jar file, so does not require internet connection or Maven. Also now checks for bioformats jar in valis folder
@@ -109,7 +109,7 @@ Version 1.0.0rc13 (January 31, 2023)
 #. Fixed bug reported in `github issue 33 <https://github.com/MathOnco/valis/issues/33>`_
 #. Default is to not compose non-rigid transformations, reducing accumulation of unwanted distortions, especially in 3D.
 #. The :code:`scale_factor` parameter for :code:`feature_detectors.VggFD` is now set to 5.0, as per the OpenCV documentation
-#. Installlation now uses `poetry <https://python-poetry.org/>`_ via the pyproject.toml file. Includes a poetry.lock file, but it can be deleted before installation if so desired.
+#. Installation now uses `poetry <https://python-poetry.org/>`_ via the pyproject.toml file. Includes a poetry.lock file, but it can be deleted before installation if so desired.
 #. Removed bioformats_jar as a dependency
 #. Added a datasets page
 #. Moved examples to separate page
@@ -120,7 +120,7 @@ Version 1.0.0rc12 (November 7, 2022)
 #. Fixed bug where would get out of bounds errors when cropping with user provided transformations (github issue 14 https://github.com/MathOnco/valis/issues/14)
 #. Fixed bug where feature matches not drawn in correct location in :code:`src_img` in :code:`viz.draw_matches`.
 #. Can now check if refelcting/mirroring/flipping images improves alignment by setting :code:`check_for_reflections=True` when initializing the :code:`Valis` object. Addresses githib issue 22 (https://github.com/MathOnco/valis/issues/22)
-#. Channel colors now transfered to registered image (github issue 23 https://github.com/MathOnco/valis/issues/23). Also option to provide a colormap when saving the slides. This replaces the :code:`perceputally_uniform_channel_colors` argument
+#. Channel colors now transferred to registered image (github issue 23 https://github.com/MathOnco/valis/issues/23). Also option to provide a colormap when saving the slides. This replaces the :code:`perceputally_uniform_channel_colors` argument
 
 
 Version 1.0.0rc11 (August 26, 2022)
@@ -151,13 +151,13 @@ Version 1.0.0rc8 (July 1, 2022)
 
 Version 1.0.0rc7 (June 27, 2022)
 --------------------------------
-#. Can set size of image to be used for non-rigid registration, which may help improve aligment of micro-architectural structures. However this will increase the amount of time it takes to perform non-rigid registration, and will increase amount of memory used during registration, and the size of the pickled :code: `Valis` object. To change this value, set the :code:`max_non_rigid_registartion_dim_px` parameter when initializing the :code:`Valis` object.
-#. Can now do a second non-rigid registartion on higher resolution images, including the full resolution one. This can be done with the :code:`Valis.register_micro`. If the images are large, they will be sliced into tiles, and then each tile registered with one another. The deformation fields will be saved separately as .vips images within the data folder.
+#. Can set size of image to be used for non-rigid registration, which may help improve alignment of micro-architectural structures. However this will increase the amount of time it takes to perform non-rigid registration, and will increase amount of memory used during registration, and the size of the pickled :code: `Valis` object. To change this value, set the :code:`max_non_rigid_registartion_dim_px` parameter when initializing the :code:`Valis` object.
+#. Can now do a second non-rigid registration on higher resolution images, including the full resolution one. This can be done with the :code:`Valis.register_micro`. If the images are large, they will be sliced into tiles, and then each tile registered with one another. The deformation fields will be saved separately as .vips images within the data folder.
 #. Added :code:`registration.load_registrar` function to open a :code:`Valis` object. This should be used instead of `pickle.load`.
 #. Creating and applying tissue masks before registration. This improves image normalization, reduces the number of poor feature matches, and helps remove unwanted non-rigid deformations (especially around the image edges), all of which improve alignment accuracy. This step can be skipped by setting :code:`create_masks` to `False` when initializing the :code:`Valis` object.
 #. Now possible to directly non-rigidly align to the reference image specified by :code:`reference_img_f`. This can be done by setting :code:`align_to_reference` to `True` when initializing the :code:`Valis` object. The default is `False`, which means images will be aligned serially towards the reference image.  This option is also available with :code:`Valis.register_micro`, meaning that one could do a second alignment, but aligning all directly to a reference image.
 #. RANSAC filtered matches found for rigid registration undergo second round of filtering, this time using Tukey's method to remove matches whose distance after  being warped would be considered outliers.
-#. Now have option off whether or not to compose non-rigid transformations. This can be set specifying the :code:`compose_non_rigid` argument when initialzing the `Valis` object.
+#. Now have option off whether or not to compose non-rigid transformations. This can be set specifying the :code:`compose_non_rigid` argument when initializing the `Valis` object.
 #. Can provide rigid transformation matrices by passing in a dictionary to the :code:`do_rigid` parameter when initializing the :code:`Valis` object. Setting :code:`do_rigid` to `False` will completely skip the rigid registration step. See the documentation for initializing the `Valis` object for more details.
 #. Added examples of how to read slides and use custom transforms
 #. Benchmarked using ANHIR Grand Challenge dataset and posted results on leaderboard.
@@ -175,12 +175,12 @@ Version 1.0.0rc5 (April 5, 2022)
 ---------------------------------
 #. Can provide a reference image that the others will be aligned towards. To do this, when initializinig the Valis object, set the :code:`reference_img_f` argument to be the file name of the reference image. If not set by the user, the reference image will be set as the one at the center of the ordered image stack
 #. Both non-rigid and rigid now align *towards* a reference image, meaning that reference image will have neither rigid nor non-rigid transformations applied to it.
-#. Two cropping methods. First option is to crop seach registered slides to contain only the areas where all registered images overlap. The second option is to crop the registered slide to contain only the area that intersects with the reference image. It is also possible to not crop an image/slide.
+#. Two cropping methods. First option is to crop each registered slides to contain only the areas where all registered images overlap. The second option is to crop the registered slide to contain only the area that intersects with the reference image. It is also possible to not crop an image/slide.
 #. Images are now cropped during the warp, not after, and so is now faster and requires less memory. For example, on a 2018 MacBook Pro with a 2.6 GHz Intel Core i7 processor, it takes 2-3 minutes to warp and save a 41399 x 43479 RGB image.
 #. Warping of images and slides done using the same function, built around pyvips. Faster, more consistent, and should prevent excessive memory usage.
 #. Fixed bug that caused a crash when warping large ome.tiff images.
 #. Read slides and images using pyvips whenever possible.
 #. Background color now automatically set to be same as the brightest (IHC) or darkest (IF) pixel in the image. Because of this, the "bg_color" argument in the slide warping functions was removed.
 #. Reduced accumulation of unwanted non-rigid deformations
-#. Displacement fields drawn on top of non-rigid registered image to help determine where the deformations occured.
+#. Displacement fields drawn on top of non-rigid registered image to help determine where the deformations occurred.
 #. If a slide has multiple series, and a series is not specficed, the slide reader will read the series containing the largest image.

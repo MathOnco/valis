@@ -502,7 +502,7 @@ class Gray(ImageProcesser):
 
 
 class HEDeconvolution(ImageProcesser):
-    """Normalize staining appearence of hematoxylin and eosin (H&E) stained image
+    """Normalize staining appearance of hematoxylin and eosin (H&E) stained image
     and get the H or E deconvolution image.
 
     Reference
@@ -624,7 +624,7 @@ def standardize_colorfulness(img, c=DEFAULT_COLOR_STD_C, h=0):
     """Give image constant colorfulness and hue
 
     Image is converted to cylindrical CAM-16UCS assigned a constant
-    hue and colorfulness, and then coverted back to RGB.
+    hue and colorfulness, and then converted back to RGB.
 
     Parameters
     ----------
@@ -728,7 +728,7 @@ def calc_background_color_dist(img, brightness_q=0.99, mask=None, cspace="CAM16U
 
 
 def normalize_he(img: np.array, Io: int = 240, alpha: int = 1, beta: int = 0.15):
-    """ Normalize staining appearence of H&E stained images.
+    """ Normalize staining appearance of H&E stained images.
 
     Parameters
     ----------
@@ -1336,7 +1336,7 @@ def polygon_tortuosity(img, window_size=3):
 def remove_small_obj_and_lines_by_dist(mask):
     """
     Will remove smaller objects and thin lines that
-    do not interesct with larger objects
+    do not intersect with larger objects
     """
 
     dist_transform = cv2.distanceTransform(mask, cv2.DIST_L2, 5)
@@ -1412,7 +1412,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
     cam_d, cam = calc_background_color_dist(img, brightness_q=brightness_q, mask=color_mask)
 
-    # Reduce intensity of thick horizontal and vertial lines, usually artifacts like edges, streaks, folds, etc...
+    # Reduce intensity of thick horizontal and vertical lines, usually artifacts like edges, streaks, folds, etc...
     vert_knl = np.ones((1, 5))
     no_v_lines = morphology.opening(cam_d, vert_knl)
 
@@ -1433,7 +1433,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
 def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
     """
-    Cacluate distance between backround and each pixel
+    Calculate distance between background and each pixel
     using a luminosity and colofulness/saturation in a polar colorspace
 
     Parameters
@@ -1446,7 +1446,7 @@ def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
 
     p: int
         Percentile used to determine background values, i.e.
-        background pixels have a luminosity greather 99% of other
+        background pixels have a luminosity greater 99% of other
         pixels. Needs to be between 0-100
 
     metric: str
@@ -1455,7 +1455,7 @@ def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
     Returns
     -------
     jc_dist : np.ndarray
-        Color distance between backround and each pixel
+        Color distance between background and each pixel
 
     """
 
@@ -1611,7 +1611,7 @@ def separate_colors(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.00
         Colorspace to use to detect and separate colors using `separate_colors`
 
     min_colorfulness : str
-        Pixels with colorfulness/saturation less that this will be exluded.
+        Pixels with colorfulness/saturation less that this will be excluded.
         Calculated after binning colors.
 
     px_thresh: float
@@ -1804,7 +1804,7 @@ def find_dominant_colors(img, cspace="JzAzBz", min_colorfulness=0, px_thresh=0.0
         Colorspace to use to detect and separate colors using `separate_colors`
 
     min_colorfulness : str
-        Pixels with colorfulness/saturation less that this will be exluded.
+        Pixels with colorfulness/saturation less that this will be excluded.
         Calculated after binning colors.
 
     px_thresh: float

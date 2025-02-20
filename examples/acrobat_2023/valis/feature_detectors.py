@@ -3,7 +3,7 @@
 Bundles OpenCV feature detectors and descriptors into the FeatureDD class
 
 Also makes it easier to mix and match feature detectors and descriptors
-from different pacakges (e.g. skimage and OpenCV). See CensureVggFD for
+from different packages (e.g. skimage and OpenCV). See CensureVggFD for
 an example
 
 """
@@ -146,7 +146,7 @@ class FeatureDD(object):
         Returns
         -------
         kp : ndarry
-            (N, 2) array positions of keypoints in xy corrdinates for N
+            (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
         desc : ndarry
@@ -289,7 +289,7 @@ class SkCensureDetector(FeatureDetector):
 
         Uses keypoint info to create KeyPoint objects for OpenCV
 
-        Paramters
+        Parameters
         ---------
         image : ndarray
             image from keypoints will be detected

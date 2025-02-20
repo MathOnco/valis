@@ -225,7 +225,7 @@ def determine_if_staining_round(src_dir):
 
 
 def um_to_px(um, um_per_px):
-    """Conver mircon to pixel
+    """Convert mircon to pixel
     """
     return um * 1/um_per_px
 
@@ -272,7 +272,7 @@ def warp_slide(src_f, transformation_src_shape_rc, transformation_dst_shape_rc,
     interp_method : str, optional
 
     bbox_xywh : tuple
-        Bounding box to crop warped slide. Should be in refernce the
+        Bounding box to crop warped slide. Should be in reference the
         warped slide
 
     Returns

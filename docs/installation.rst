@@ -70,7 +70,7 @@ VALIS uses Bioformats to read many slide formats. Bioformats is written in Java,
 Install
 ~~~~~~~
 
-Once the above prerequisites have been satistifed, valis can be installed using pip, idealy within a virtual environment
+Once the above prerequisites have been satistifed, valis can be installed using pip, ideally within a virtual environment
 
 .. code-block:: bash
 
