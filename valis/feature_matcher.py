@@ -58,7 +58,7 @@ def convert_distance_to_similarity(d, n_features=64):
         Value to convert
 
     n_features: int
-        Number of features used to calcuate distance.
+        Number of features used to calculate distance.
         Only needed when calc == 0
     Returns
     -------
@@ -79,7 +79,7 @@ def convert_similarity_to_distance(s, n_features=64):
         Similarity to convert
 
     n_features: int
-        Number of features used to calcuate similarity.
+        Number of features used to calculate similarity.
         Only needed when calc == 0
 
     Returns
@@ -145,7 +145,7 @@ def filter_matches_gms(kp1_xy, kp2_xy, feature_d, img1_shape, img2_shape,
 
     Note that this function assumes the keypoints and distances have been
     sorted such that each keypoint in kp1_xy has the same index as the
-    matching keypoint in kp2_xy andd corresponding feautre distance in
+    matching keypoint in kp2_xy and corresponding feature distance in
     feature_d. For example, kp1_xy[0] should have the corresponding keypoint
     at kp2_xy[0] and the corresponding feature distance at feature_d[0].
 
@@ -397,7 +397,7 @@ def match_descriptors(descriptors1, descriptors2, metric=None,
 
     NOTE
     ----
-    Modified from scikit-image to use scikit-learn's distance and kernal methods.
+    Modified from scikit-image to use scikit-learn's distance and kernel methods.
     """
 
     if descriptors1.shape[1] != descriptors2.shape[1]:
@@ -477,7 +477,7 @@ def match_desc_and_kp(desc1, kp1_xy, desc2, kp2_xy, metric=None,
                       filtering_kwargs=None):
     """Match the descriptors of image 1 with those of image 2 and remove outliers.
 
-    Metric can be a string to use a distance in scipy.distnce.cdist(),
+    Metric can be a string to use a distance in scipy.distance.cdist(),
     or a custom distance function
 
     Parameters
@@ -739,7 +739,7 @@ class MatchInfo(object):
 
 
 class Matcher(object):
-    """Class that matchs the descriptors of image 1 with those of image 2
+    """Class that matches the descriptors of image 1 with those of image 2
 
     Outliers removed using RANSAC or GMS
 
@@ -848,13 +848,13 @@ class Matcher(object):
                      additional_filtering_kwargs=None, *args, **kwargs):
         """Match the descriptors of image 1 with those of image 2,
         Outliers removed using match_filter_method. Metric can be a string
-        to use a distance in scipy.distnce.cdist(), or a custom distance
-        function. Sets atttributes for Matcher object
+        to use a distance in scipy.distance.cdist(), or a custom distance
+        function. Sets attributes for Matcher object
 
         Parameters
         ----------
         desc1 : (N, P) array
-            Image 1s 2D array containinng N keypoints, each of which
+            Image 1s 2D array containing N keypoints, each of which
             has P features
 
         kp1_xy : (N, 2) array
@@ -862,7 +862,7 @@ class Matcher(object):
             N descriptors in desc1
 
         desc2 : (M, P) array
-            Image 2s 2D array containinng M keypoints, each of which has
+            Image 2s 2D array containing M keypoints, each of which has
             P features
 
         kp2_xy : (M, 2) array

@@ -52,7 +52,7 @@ PIXEL_UNIT = "px"
 """str: Physical unit when the unit can't be found in the metadata"""
 
 MICRON_UNIT = u'\u00B5m'
-"""str: Phyiscal unit for micron/micrometers"""
+"""str: Physical unit for micron/micrometers"""
 
 ALL_OPENSLIDE_READABLE_FORMATS = [".svs", ".tif", ".vms", ".vmu", ".ndpi", ".scn", ".mrxs", ".tiff", ".svslide", ".bif"]
 """list: File extensions that OpenSlide can read"""
@@ -737,7 +737,7 @@ class SlideReader(object):
 
             elif len(matching_channels) > 1:
                 all_matching_channels = ", ".join([f"'{self.metadata.channel_names[i]}'" for i in matching_channels])
-                msg = f"Fount multiple channels that match '{channel}' in {self.src_f}. These are: {all_matching_channels}. Using channel 0"
+                msg = f"Found multiple channels that match '{channel}' in {self.src_f}. These are: {all_matching_channels}. Using channel 0"
                 valtils.print_warning(msg)
                 matching_channel_idx = 0
 
@@ -927,7 +927,7 @@ class BioFormatsSlideReader(SlideReader):
             the region to be sliced.
 
         tile_wh : int, optional
-            Size of tiles used to contstruct `vips_slide`
+            Size of tiles used to construct `vips_slide`
 
         Returns
         -------
@@ -2329,7 +2329,7 @@ def get_slide_reader(src_f, series=None):
     can_only_use_openslide = f_extension in OPENSLIDE_ONLY
     if can_only_use_openslide and not can_use_openslide:
         msg = (f"file {os.path.split(src_f)[1]} can only be read by OpenSlide, "
-               f"which is required to open files with the follwing extensions: {', '.join(OPENSLIDE_ONLY)}. "
+               f"which is required to open files with the following extensions: {', '.join(OPENSLIDE_ONLY)}. "
                f"However, OpenSlide cannot be found. Unable to read this slide."
                )
 
@@ -2462,7 +2462,7 @@ def get_shape_xyzct(shape_wh, n_channels):
     Parameters
     ----------
     shape_wh : tuple of int
-        Width and heigth of image
+        Width and height of image
 
     n_channels : int
         Number of channels in the image
@@ -2486,7 +2486,7 @@ def create_channel(channel_id, name=None, color=None):
     channel_id : int
         Channel number
 
-    name : str, optinal
+    name : str, optional
         Channel name
 
     color : tuple of int
@@ -2816,7 +2816,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
         to a pyvips.Image.
 
     ome_xml : str, optional
-        ome-xml string describing image's metadata. If None, it will be createdd
+        ome-xml string describing image's metadata. If None, it will be created
 
     tile_wh : int
         Tile shape used to save `img`. Used to create a square tile, so `tile_wh`

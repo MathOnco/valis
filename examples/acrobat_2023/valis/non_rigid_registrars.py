@@ -90,7 +90,7 @@ class NonRigidRegistrar(object):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
@@ -128,9 +128,9 @@ class NonRigidRegistrar(object):
         return masked_moving, masked_fixed
 
     def calc(self, moving_img, fixed_img, mask, *args, **kwargs):
-        """Cacluate displacement fields
+        """Calculate displacement fields
 
-        Can record subclass specific atrributes here too
+        Can record subclass specific attributes here too
 
         Parameters
         ----------
@@ -388,7 +388,7 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
@@ -577,7 +577,7 @@ class NonRigidRegistrarGroupwise(NonRigidRegistrar):
 
         self.shape = img_list[0].shape
         for img in img_list:
-            assert img.shape == self.shape, print("Images have differernt shapes")
+            assert img.shape == self.shape, print("Images have different shapes")
 
         self.img_list = img_list
         self.size = len(img_list)
@@ -929,7 +929,7 @@ class OpticalFlowWarper(NonRigidRegistrar):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
         optical_flow_obj : object
@@ -1155,7 +1155,7 @@ class SimpleElastixGroupwiseWarper(NonRigidRegistrarGroupwise):
 
 
 class NonRigidTileRegistrar(object):
-    """Tile-wise non-rigid regisration
+    """Tile-wise non-rigid registration
 
     Slices moving and fixed images into tiles and then registers each tile.
     Probably best for very large images.
@@ -1197,7 +1197,7 @@ class NonRigidTileRegistrar(object):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used when initializing the `non_rigid_registrar_cls`
 
             In the case where simple ITK will be used, params should be
@@ -1354,7 +1354,7 @@ class NonRigidTileRegistrar(object):
             self.pbar.update(1)
 
     def calc(self, *args, **kwargs):
-        """Cacluate displacement fields
+        """Calculate displacement fields
         Each tile is registered and then stitched together
         """
 
@@ -1401,7 +1401,7 @@ class NonRigidTileRegistrar(object):
             preprocessing.ImageProcesser used to process the images
 
         processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `processing_cls`
+            Dictionary of keyword arguments to be passed to `processing_cls`
 
         target_stats : ndarray
             Target stats used to normalize each tile after being processed.

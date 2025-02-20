@@ -153,14 +153,14 @@ class MicroRigidRegistrar(object):
             Should return a single channel uint8 image.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
         if_processing_cls : ImageProcesser
             ImageProcesser to pre-process immunofluorescent images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         """
 

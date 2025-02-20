@@ -671,8 +671,8 @@ def mattes_mi(img1, img2, nbins=50,  mask=None):
         Number of histogram bins
 
     mask : ndarray, None
-        Mask with shape (N, M) that indiates where the metric
-        should be calulated. If None, the metric will be calculated
+        Mask with shape (N, M) that indicates where the metric
+        should be calculated. If None, the metric will be calculated
         for all NxM pixels.
 
     Returns
@@ -732,7 +732,7 @@ def order_points(pts_xy):
 
     ### https://math.stackexchange.com/questions/978642/how-to-sort-vertices-of-a-polygon-in-counter-clockwise-order
 
-    # warnings.warn("Outpout is now clockwise. May need update functions that call this")
+    # warnings.warn("Output is now clockwise. May need update functions that call this")
     # sort the points based on their x-coordinates
     xSorted = pts_xy[np.argsort(pts_xy[:, 0]), :]
     # grab the left-most and right-most points from the sorted
@@ -904,7 +904,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
              interp_method="bicubic"):
     """Warp an image using rigid and/or non-rigid transformations
 
-    Warp an image using the trasformations defined by `M` and the optional
+    Warp an image using the transformations defined by `M` and the optional
     displacement field, `bk_dxdy`. Transformations will be scaled so that
     they can be applied to the image.
 
@@ -1084,7 +1084,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            #Option to set backround color in mapim added in libvips 8.13
+            #Option to set background color in mapim added in libvips 8.13
             warped = affine_warped.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,
@@ -1111,9 +1111,9 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
 def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, transformation_dst_shape_rc=None, src_shape_rc=None, bk_dxdy=None, bg_color=None, interp_method="bicubic"):
     """Unwarp an image using rigid and/or non-rigid transformations
 
-    Unwarp an image using the trasformations defined by `M` and the optional
+    Unwarp an image using the transformations defined by `M` and the optional
     displacement field, `bk_dxdy`. This is accomplished by inverting `M` and
-    using the "foward" displacements in `fwd_dxdy`. If `fwd_dxdy` is not provided,
+    using the "forward" displacements in `fwd_dxdy`. If `fwd_dxdy` is not provided,
     `bk_dxdy` will be inverted. Transformations will be scaled so that they can be applied to the images
     with different sizes.
 
@@ -1214,7 +1214,7 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            # Option to set backround color in mapim added in libvips 8.13
+            # Option to set background color in mapim added in libvips 8.13
             nr_warped = img.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,
@@ -1274,7 +1274,7 @@ def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
 
     Warps `img` to registered coordinates using the "from" parameters, and then uses
     the inverse "to" parameters to warp that image to the "to" image's coordinate system.
-    Can be useful for transfering annotations from one image to another.
+    Can be useful for transferring annotations from one image to another.
 
     Note: If `img` is a labeled image, it is recommended to set `interp_method` to "nearest"
 
@@ -1669,7 +1669,7 @@ def get_rotate_around_center_M(img_shape, rotation_rad):
 
 def calc_d(pt1, pt2):
     """
-    Calculate euclidean disrances between each pair coresponding points in pt1 and pt2
+    Calculate euclidean disrances between each pair corresponding points in pt1 and pt2
 
     Parameters
     ----------
@@ -1682,7 +1682,7 @@ def calc_d(pt1, pt2):
     Returns
     -------
     d : [N]
-        distnace between correspoing points in pt1 and pt2
+        distance between correspoing points in pt1 and pt2
     """
 
     d = np.sqrt(np.sum((pt1 - pt2)**2, axis=1))
@@ -1821,7 +1821,7 @@ def warp_xy_rigid(xy, inv_matrix):
 
     Warp xy given an inverse transformation matrix found using one of scikit-image's transform objects
     Inverse matrix should have been found using tform(dst, src)
-    Adpated from skimage._geometric.ProjectiveTransform._apply_mat
+    Adapted from skimage._geometric.ProjectiveTransform._apply_mat
     Changed so that inverse matrix (found using dst -> src) automatically inverted to warp points forward (src -> dst)
     """
     xy = np.array(xy, copy=False, ndmin=2)
@@ -2420,7 +2420,7 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
 
 
 def clip_xy(xy, shape_rc):
-    """Clip xy coordintaes to be within image
+    """Clip xy coordinates to be within image
 
     """
     clipped_x =  np.clip(xy[:, 0], 0, shape_rc[1])
@@ -2432,7 +2432,7 @@ def clip_xy(xy, shape_rc):
 
 def _warp_shapely(geom, warp_fxn, warp_kwargs, shift_xy=None):
     """Warp a shapely geometry
-    Based on shapely.ops.trasform
+    Based on shapely.ops.transform
 
     """
     if "dst_shape_rc" in warp_kwargs:
@@ -2716,7 +2716,7 @@ def bbox2xy(xywh):
     Parameters
     -----------
     xywh: [4, ] array
-        (top left x-coordinate, top left y coordiante, width, height) of a bounding box
+        (top left x-coordinate, top left y coordinate, width, height) of a bounding box
 
     Returns
     -------
@@ -2814,7 +2814,7 @@ def measure_error(src_xy, dst_xy, shape, feature_similarity=None):
         Median relative Target Registration Error (rTRE) between images
 
     med_d : float
-        Median Euclidean distance between src_xy and dst_xy, optinally weighted by feature similarity
+        Median Euclidean distance between src_xy and dst_xy, optionally weighted by feature similarity
 
     """
     d = np.sqrt((src_xy[:, 0]-dst_xy[:, 0])**2 + (src_xy[:, 1]-dst_xy[:, 1])**2)
@@ -2981,7 +2981,7 @@ def get_overlapping_poly(mesh_poly_coords):
 #     method : str, optional
 #         "inpaint" will use inpainting to fill in areas idenetified
 #         as containing folds. "regularize" will unfold those regions
-#         using the mehod described in "Foldover-free maps in 50 lines of code"
+#         using the method described in "Foldover-free maps in 50 lines of code"
 #         Garanzha et al. 2021.
 
 #     n_grid_pts : int
@@ -3130,7 +3130,7 @@ def get_overlapping_poly(mesh_poly_coords):
 #         padded_dy = transform.warp(dxdy[1], self.padding_T, output_shape=padded_shape, preserve_range=True)
 
 #         self.padded_dxdy = np.array([padded_dx, padded_dy])
-#         # Flattend indices for each pixel in a quadrat
+#         # Flattened indices for each pixel in a quadrat
 #         quads = [[r*nc + c, r*nc + c + 1, (r+1)*nc + c + 1, (r+1)*nc + c] for r in range(nr-1) for c in range(nc-1)]
 #         self.quads = quads
 #         self.boundary = [None] * self.nverts

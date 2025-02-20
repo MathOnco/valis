@@ -3,7 +3,7 @@
 This example shows how to register the slides using higher resolution images.
 An initial rigid transform is found using low resolition images, but the
 `MicroRigidRegistrar` can be used to update that transform using feature matches
-found in higher resoltion images. This can be followed up by the high resolution
+found in higher resolution images. This can be followed up by the high resolution
 non-rigid registration (i.e. micro-registration).
 
 """
@@ -49,7 +49,7 @@ micro_reg, micro_error = registrar.register_micro(max_non_rigid_registration_dim
 
 stop = time.time()
 elapsed = stop - start
-print(f"regisration time is {elapsed/60} minutes")
+print(f"registration time is {elapsed/60} minutes")
 
 # We can also plot the high resolution matches using `Valis.draw_matches`:
 matches_dst_dir = os.path.join(registrar.dst_dir, "hi_rez_matches")

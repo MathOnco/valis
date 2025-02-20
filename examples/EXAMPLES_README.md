@@ -31,7 +31,7 @@ The `register_ihc.py` example registers the slides in `examples/example_datasets
     These can be used to get a better sense of how the
     images were altered by non-rigid warping
 
-6. *processed* shows thumnails of the processed images.
+6. *processed* shows thumbnails of the processed images.
     This are thumbnails of the images that are actually
     used to perform the registration. The pre-processing
     and normalization methods should try to make these

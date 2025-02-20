@@ -1,7 +1,7 @@
 """Optimize rigid alignment
 
 Contains functions related to optimization, as well as the AffineOptimizer
-class that performs the optimzation. This class can be subclassed to implement
+class that performs the optimization. This class can be subclassed to implement
 custom optimization methods.
 
 There are several subclasses, but AffineOptimizerMattesMI is the
@@ -222,7 +222,7 @@ def get_intersection(alpha1, alpha2, abc1, abc2):
 @nba.njit()
 def get_verts(img, x, y, pos=0):
     """
-    Get veritices of triangle and intenisty at each vertex
+    Get veritices of triangle and intensity at each vertex
     """
     if pos == 0:
         # Lower left
@@ -348,7 +348,7 @@ def build_P(A, B, r, mask):
 @nba.njit()
 def entropy(x):
     """
-    Caclulate Shannon's entropy for array x
+    Calculate Shannon's entropy for array x
 
     Parameters
     ----------
@@ -492,7 +492,7 @@ class AffineOptimizer(object):
         Type of transformation, "EuclideanTransform" or "SimilarityTransform"
 
     current_level : int
-        Current level of the Guassian pyramid that is being registered
+        Current level of the Gaussian pyramid that is being registered
 
     accepts_xy : bool
         Bool declaring whether or not the optimizer will use corresponding points to optimize the registration
@@ -523,7 +523,7 @@ class AffineOptimizer(object):
     Major overhauls are possible too. See AffineOptimizerMattesMI for an example on using SimpleITK's
     optimization methods inside of an AffineOptimizer subclass
 
-    If the optimizer uses corressponding points, then the class attribute
+    If the optimizer uses corresponding points, then the class attribute
     accepts_xy needs to be set to True. The default is False.
 
     """
@@ -995,7 +995,7 @@ class AffineOptimizerKNN(AffineOptimizer):
     def mutual_information(self, A, B):
 
         if self.HA_list[self.current_level] is None:
-            # Only need to caluclate once per level, becuase the fixed
+            # Only need to calculate once per level, because the fixed
             # image doesn't change
 
             self.HA_list[self.current_level] = self.shannon_entropy(A)

@@ -10,7 +10,7 @@ Slide registration
 .. image::  https://github.com/MathOnco/valis/raw/main/docs/_images/challenging_dataset_adincar33.png
 
 .. important::
-    One of the most important parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`, which determines the size of the image used to find the rigid registration parameters. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values may be needed so that the tissue is at a high enough resolution. To imporove alingment of the finer details in the images, larger images can be used in the non-rigid or micro-registration steps (set via the :code:`max_non_rigid_registration_dim_px` parameter).
+    One of the most important parameters used to initialize a Valis object is :code:`max_processed_image_dim_px`, which determines the size of the image used to find the rigid registration parameters. The default value is 850, but if registration fails or is poor, try adjusting that value. Generally speaking, values between 500-2000 work well. In cases where there is little empty space, around the tissue, smaller values may be better. However, if there is a large amount of empty space/slide (as in the images above), larger values may be needed so that the tissue is at a high enough resolution. To improve alignment of the finer details in the images, larger images can be used in the non-rigid or micro-registration steps (set via the :code:`max_non_rigid_registration_dim_px` parameter).
 
 
 .. important::
