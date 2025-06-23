@@ -21,6 +21,7 @@ from . import warp_tools
 from . import preprocessing
 from .superglue_models import superpoint
 
+
 DEFAULT_FEATURE_DETECTOR = cv2.BRISK_create()
 """The default OpenCV feature detector"""
 

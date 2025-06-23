@@ -34,6 +34,7 @@ from colorama import Fore
 from . import valtils
 from . import slide_tools
 from . import warp_tools
+from . import valtils
 
 
 pyvips.cache_set_max(0)
