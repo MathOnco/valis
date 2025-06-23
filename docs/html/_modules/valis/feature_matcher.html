@@ -1,179 +1,104 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>valis.feature_matcher &mdash; valis  &#34;1.0.0rc0&#34;
+  <title>valis.feature_matcher &mdash; valis &#34;1.2.0&#34;
  documentation</title>
-  
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=784e175d"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: black" >
-          
 
           
-            <a href="../../index.html">
           
-
-          
+          <a href="../../index.html">
             
-            <img src="../../_static/valis_logo_black_no_bg.png" class="logo" alt="Logo"/>
-          
+              <img src="https://github.com/MathOnco/valis/raw/main/docs/_images/valis_logo_black_no_bg.png" class="logo" alt="Logo"/>
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../registration.html">Registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../slide_io.html">Slide I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../preprocessing.html">Image pre-processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../feature_detectors.html">Feature detectors and descriptors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../feature_matcher.html">Feature matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../affine_optimizer.html">Affine optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../micro_rigid_registrar.html">Micro-rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../non_rigid_registrars.html">Non-rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../serial_rigid.html">Serial rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../serial_non_rigid.html">Serial non-rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../viz.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Change Log</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">valis</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-        
-      <li>valis.feature_matcher</li>
-    
-    
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">valis.feature_matcher</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for valis.feature_matcher</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Functions and classes to match and filter image features</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">kornia</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">pairwise_kernels</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nba</span>
-<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
-<span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="kn">import</span> <span class="n">pairwise_kernels</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">warp_tools</span><span class="p">,</span> <span class="n">valtils</span><span class="p">,</span> <span class="n">feature_detectors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.superglue_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">matching</span><span class="p">,</span> <span class="n">superglue</span><span class="p">,</span> <span class="n">superpoint</span>
 
 <span class="n">AMBIGUOUS_METRICS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">pairwise</span><span class="o">.</span><span class="n">_VALID_METRICS</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
     <span class="n">metrics</span><span class="o">.</span><span class="n">pairwise</span><span class="o">.</span><span class="n">PAIRWISE_KERNEL_FUNCTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -193,20 +118,34 @@
 <span class="sd">    Grid-based Motion Statistics will be used to remove poor matches&quot;&quot;&quot;</span>
 
 <span class="n">RANSAC_NAME</span> <span class="o">=</span> <span class="s2">&quot;RANSAC&quot;</span>
+<span class="n">USAC_MAGSAC_NAME</span> <span class="o">=</span> <span class="s2">&quot;USAC_MAGSAC&quot;</span>
+<span class="n">RANSAC_DICT</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">RANSAC_NAME</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RANSAC</span><span class="p">,</span>
+    <span class="n">USAC_MAGSAC_NAME</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">USAC_MAGSAC</span>
+<span class="p">}</span>
+<span class="n">DEFAULT_RANSAC_NAME</span> <span class="o">=</span> <span class="n">USAC_MAGSAC_NAME</span>
 <span class="sd">&quot;&quot;&quot;str: If filter_method parameter in match_desc_and_kp is set to this,</span>
 <span class="sd">RANSAC will be used to remove poor matches</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">DEFAULT_MATCH_FILTER</span> <span class="o">=</span> <span class="n">RANSAC_NAME</span>
+
+
+<span class="n">SUPERGLUE_FILTER_NAME</span> <span class="o">=</span> <span class="s2">&quot;superglue&quot;</span>
+<span class="sd">&quot;&quot;&quot;str: If filter_method parameter in match_desc_and_kp is set to this,</span>
+<span class="sd">only SuperGlue will be used to remove poor matches</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_MATCH_FILTER</span> <span class="o">=</span> <span class="n">USAC_MAGSAC_NAME</span>
 <span class="sd">&quot;&quot;&quot;str: The defulat filter_method value, either RANSAC_NAME or GMS_NAME&quot;&quot;&quot;</span>
 
 <span class="n">DEFAULT_RANSAC</span> <span class="o">=</span> <span class="mi">7</span>
 <span class="sd">&quot;&quot;&quot;int: Default RANSAC threshold&quot;&quot;&quot;</span>
 
+<span class="n">DEFAULT_FD</span> <span class="o">=</span> <span class="n">feature_detectors</span><span class="o">.</span><span class="n">VggFD</span>
+<span class="n">ROTATION_ESTIMATOR_FD</span> <span class="o">=</span> <span class="n">feature_detectors</span><span class="o">.</span><span class="n">VggFD</span>
 
-<span class="nd">@nba</span><span class="o">.</span><span class="n">njit</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">convert_distance_to_similarity</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_distance_to_similarity</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert distance to similarity</span>
 <span class="sd">    Based on https://scikit-learn.org/stable/modules/metrics.html</span>
 
@@ -226,9 +165,8 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">d</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n_features</span><span class="p">))</span>
 
 
-<span class="nd">@nba</span><span class="o">.</span><span class="n">njit</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">convert_similarity_to_distance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert similarity to distance</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_similarity_to_distance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert similarity to distance</span>
 
 <span class="sd">    Based on https://scikit-learn.org/stable/modules/metrics.html</span>
 
@@ -251,7 +189,7 @@
     <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="n">EPS</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n_features</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">filter_matches_ransac</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">ransac_val</span><span class="o">=</span><span class="n">DEFAULT_RANSAC</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_matches_ransac</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">ransac_val</span><span class="o">=</span><span class="n">DEFAULT_RANSAC</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">USAC_MAGSAC_NAME</span><span class="p">):</span>
     <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Remove poor matches using RANSAC</span>
 
 <span class="s2">    Parameters</span>
@@ -264,7 +202,10 @@
 
 <span class="s2">    ransac_val: int</span>
 <span class="s2">        RANSAC threshold, passed to cv2.findHomography as the</span>
-<span class="s2">        ransacReprojThreshold parameter. Default value is </span><span class="si">{</span><span class="n">DEFAULT_RANSAC</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">        ransacReprojThreshold parameter. Default value is </span><span class="si">{</span><span class="n">DEFAULT_RANSAC</span><span class="si">}</span>
+
+<span class="s2">    method : int</span>
+<span class="s2">        Method used to find inliers. Passed to `method` argument of `cv2.findHomography`.</span>
 
 <span class="s2">    Returns</span>
 <span class="s2">    -------</span>
@@ -278,17 +219,27 @@
 <span class="s2">        Indices of inliers</span>
 
 <span class="s2">    &quot;&quot;&quot;</span>
+    <span class="n">method_num</span> <span class="o">=</span> <span class="n">RANSAC_DICT</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
 
-    <span class="n">_</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findHomography</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RANSAC</span><span class="p">,</span> <span class="n">ransac_val</span><span class="p">)</span>
-    <span class="n">good_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">filtered_src_points</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
-    <span class="n">filtered_dst_points</span> <span class="o">=</span> <span class="n">kp2_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">if</span> <span class="n">kp1_xy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findHomography</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">method_num</span><span class="p">,</span> <span class="n">ransac_val</span><span class="p">)</span>
+        <span class="n">good_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">filtered_src_points</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">filtered_dst_points</span> <span class="o">=</span> <span class="n">kp2_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">traceback_msg</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Need at least 4 keypoints for RANSAC filtering, but only have </span><span class="si">{</span><span class="n">kp1_xy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">traceback_msg</span><span class="o">=</span><span class="n">traceback_msg</span><span class="p">)</span>
+        <span class="n">filtered_src_points</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">filtered_dst_points</span> <span class="o">=</span> <span class="n">kp2_xy</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">good_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
     <span class="k">return</span> <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span>
 
 
-<span class="k">def</span> <span class="nf">filter_matches_gms</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">feature_d</span><span class="p">,</span> <span class="n">img1_shape</span><span class="p">,</span> <span class="n">img2_shape</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_matches_gms</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">feature_d</span><span class="p">,</span> <span class="n">img1_shape</span><span class="p">,</span> <span class="n">img2_shape</span><span class="p">,</span>
                        <span class="n">scaling</span><span class="p">,</span> <span class="n">thresholdFactor</span><span class="o">=</span><span class="mf">6.0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Filter matches using GMS (Grid-based Motion Statistics) [1]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter matches using GMS (Grid-based Motion Statistics) [1]</span>
 
 <span class="sd">    This filtering method does best when there are a large number of features,</span>
 <span class="sd">    so the ORB detector is recommended</span>
@@ -359,12 +310,80 @@
         <span class="n">filtered_src_points</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
         <span class="n">filtered_dst_points</span> <span class="o">=</span> <span class="n">kp2_xy</span><span class="p">[</span><span class="n">good_idx</span><span class="p">,</span> <span class="p">:]</span>
 
-    <span class="k">return</span> <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">filtered_src_points</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">filtered_dst_points</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">good_idx</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="filter_matches"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.filter_matches">[docs]</a><span class="k">def</span> <span class="nf">filter_matches</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">DEFAULT_MATCH_FILTER</span><span class="p">,</span>
-                   <span class="n">filtering_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Use RANSAC or GMS to remove poor matches</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_matches_tukey</span><span class="p">(</span><span class="n">src_xy</span><span class="p">,</span> <span class="n">dst_xy</span><span class="p">,</span> <span class="n">tform</span><span class="o">=</span><span class="n">transform</span><span class="o">.</span><span class="n">SimilarityTransform</span><span class="p">()):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect and remove outliers using Tukey&#39;s method</span>
+<span class="sd">    Adapted from https://towardsdatascience.com/detecting-and-treating-outliers-in-python-part-1-4ece5098b755</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    src_xy : ndarray</span>
+<span class="sd">        (N, 2) array containing image 1s keypoint positions, in xy coordinates.</span>
+
+<span class="sd">    dst_xy : ndarray</span>
+<span class="sd">        (N, 2) array containing image 2s keypoint positions, in xy coordinates.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_src_points : (N, 2) array</span>
+<span class="sd">        Inlier keypoints from kp1_xy</span>
+
+<span class="sd">    filtered_dst_points : (N, 2) array</span>
+<span class="sd">        Inlier keypoints from kp1_xy</span>
+
+<span class="sd">    good_idx : (1, N) array</span>
+<span class="sd">        Indices of inliers</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tform</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">dst_xy</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">src_xy</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">tform</span><span class="o">.</span><span class="n">params</span>
+
+    <span class="n">warped_xy</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">src_xy</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">calc_d</span><span class="p">(</span><span class="n">warped_xy</span><span class="p">,</span>  <span class="n">dst_xy</span><span class="p">)</span>
+
+    <span class="n">q1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+    <span class="n">q3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">)</span>
+    <span class="n">iqr</span> <span class="o">=</span> <span class="n">q3</span><span class="o">-</span><span class="n">q1</span>
+    <span class="n">inner_fence</span> <span class="o">=</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">iqr</span>
+    <span class="n">outer_fence</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">iqr</span>
+
+    <span class="c1"># inner fence lower and upper end</span>
+    <span class="n">inner_fence_le</span> <span class="o">=</span> <span class="n">q1</span><span class="o">-</span><span class="n">inner_fence</span>
+    <span class="n">inner_fence_ue</span> <span class="o">=</span> <span class="n">q3</span><span class="o">+</span><span class="n">inner_fence</span>
+
+    <span class="c1"># outer fence lower and upper end</span>
+    <span class="n">outer_fence_le</span> <span class="o">=</span> <span class="n">q1</span><span class="o">-</span><span class="n">outer_fence</span>
+    <span class="n">outer_fence_ue</span> <span class="o">=</span> <span class="n">q3</span><span class="o">+</span><span class="n">outer_fence</span>
+
+    <span class="n">outliers_prob</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">outliers_poss</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">inliers_prob</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">inliers_poss</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="n">outer_fence_le</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">outer_fence_ue</span><span class="p">:</span>
+            <span class="n">outliers_prob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inliers_prob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="n">inner_fence_le</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">inner_fence_ue</span><span class="p">:</span>
+            <span class="n">outliers_poss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inliers_poss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="n">src_xy_inlier</span> <span class="o">=</span> <span class="n">src_xy</span><span class="p">[</span><span class="n">inliers_prob</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">dst_xy_inlier</span> <span class="o">=</span> <span class="n">dst_xy</span><span class="p">[</span><span class="n">inliers_prob</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="k">return</span> <span class="n">src_xy_inlier</span><span class="p">,</span> <span class="n">dst_xy_inlier</span><span class="p">,</span> <span class="n">inliers_prob</span>
+
+
+<div class="viewcode-block" id="filter_matches">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.filter_matches">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_matches</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">DEFAULT_MATCH_FILTER</span><span class="p">,</span>
+                   <span class="n">filtering_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use RANSAC or GMS to remove poor matches</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -405,18 +424,22 @@
     <span class="n">all_matching_args</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;kp1_xy&quot;</span><span class="p">:</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="s2">&quot;kp2_xy&quot;</span><span class="p">:</span> <span class="n">kp2_xy</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">GMS_NAME</span><span class="p">:</span>
         <span class="n">filter_fxn</span> <span class="o">=</span> <span class="n">filter_matches_gms</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">RANSAC_DICT</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">filter_fxn</span> <span class="o">=</span> <span class="n">filter_matches_ransac</span>
+        <span class="n">all_matching_args</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="p">})</span>
 
     <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span> <span class="o">=</span> <span class="n">filter_fxn</span><span class="p">(</span><span class="o">**</span><span class="n">all_matching_args</span><span class="p">)</span>
 
+    <span class="c1"># Do additional filtering to remove other outliers that may have been missed by RANSAC</span>
+    <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span> <span class="o">=</span> <span class="n">filter_matches_tukey</span><span class="p">(</span><span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">filtered_src_points</span><span class="p">,</span> <span class="n">filtered_dst_points</span><span class="p">,</span> <span class="n">good_idx</span></div>
 
 
-<span class="k">def</span> <span class="nf">match_descriptors</span><span class="p">(</span><span class="n">descriptors1</span><span class="p">,</span> <span class="n">descriptors2</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">match_descriptors</span><span class="p">(</span><span class="n">descriptors1</span><span class="p">,</span> <span class="n">descriptors2</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">metric_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_distance</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
                       <span class="n">cross_check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_ratio</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">metric_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Brute-force matching of descriptors</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Brute-force matching of descriptors</span>
 
 <span class="sd">    For each descriptor in the first set this matcher finds the closest</span>
 <span class="sd">    descriptor in the second set (and vice-versa in the case of enabled</span>
@@ -499,10 +522,10 @@
     <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">AMBIGUOUS_METRICS</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="s2">&quot;could be a distance in pairwise_distances() or similarity in pairwise_kernels().&quot;</span><span class="p">,</span>
               <span class="s2">&quot;Please set metric_type. Otherwise, metric is assumed to be a distance&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="ow">or</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">pairwise</span><span class="o">.</span><span class="n">_VALID_METRICS</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="ow">or</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">pairwise</span><span class="o">.</span><span class="n">_VALID_METRICS</span><span class="p">:</span>
 
         <span class="n">distances</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">pairwise_distances</span><span class="p">(</span><span class="n">descriptors1</span><span class="p">,</span> <span class="n">descriptors2</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> <span class="o">**</span><span class="n">metric_kwargs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="ow">and</span> <span class="n">metric_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="ow">and</span> <span class="n">metric_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;Metric passed as a function or class, but the metric type not provided&quot;</span><span class="p">,</span>
                           <span class="s2">&quot;Assuming the metric function returns a distance. If a similarity is actually returned&quot;</span><span class="p">,</span>
                           <span class="s2">&quot;set metric_type = &#39;similiarity&#39;. If metric is a distance, set metric_type = &#39;distance&#39;&quot;</span>
@@ -515,7 +538,7 @@
         <span class="n">similarities</span> <span class="o">=</span> <span class="n">pairwise_kernels</span><span class="p">(</span><span class="n">descriptors1</span><span class="p">,</span> <span class="n">descriptors2</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> <span class="o">**</span><span class="n">metric_kwargs</span><span class="p">)</span>
         <span class="n">distances</span> <span class="o">=</span> <span class="n">convert_similarity_to_distance</span><span class="p">(</span><span class="n">similarities</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="n">descriptors1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
         <span class="n">metric_name</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="vm">__name__</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">metric_name</span> <span class="o">=</span> <span class="n">metric</span>
@@ -552,11 +575,13 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">indices1</span><span class="p">,</span> <span class="n">indices2</span><span class="p">)),</span> <span class="n">distances</span><span class="p">[</span><span class="n">indices1</span><span class="p">,</span> <span class="n">indices2</span><span class="p">],</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_type</span>
 
 
-<div class="viewcode-block" id="match_desc_and_kp"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.match_desc_and_kp">[docs]</a><span class="k">def</span> <span class="nf">match_desc_and_kp</span><span class="p">(</span><span class="n">desc1</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc2</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">metric_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="match_desc_and_kp">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.match_desc_and_kp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">match_desc_and_kp</span><span class="p">(</span><span class="n">desc1</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc2</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">feature_detector_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">metric_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_ratio</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                       <span class="n">filter_method</span><span class="o">=</span><span class="n">DEFAULT_MATCH_FILTER</span><span class="p">,</span>
                       <span class="n">filtering_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Match the descriptors of image 1 with those of image 2 and remove outliers.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Match the descriptors of image 1 with those of image 2 and remove outliers.</span>
 
 <span class="sd">    Metric can be a string to use a distance in scipy.distnce.cdist(),</span>
 <span class="sd">    or a custom distance function</span>
@@ -577,6 +602,9 @@
 <span class="sd">        kp2_xy : (M, 2) array</span>
 <span class="sd">            (M, 2) array containing image 2&#39;s keypoint positions (xy)</span>
 
+<span class="sd">        feature_detector : str</span>
+<span class="sd">            Name of feature descriptor use to match images</span>
+
 <span class="sd">        metric: string, or callable</span>
 <span class="sd">            Metric to calculate distance between each pair of features</span>
 <span class="sd">            in desc1 and desc2. Can be a string to use as distance in</span>
@@ -585,6 +613,15 @@
 <span class="sd">        metric_kwargs : dict</span>
 <span class="sd">            Optionl keyword arguments to be passed into pairwise_distances()</span>
 <span class="sd">            or pairwise_kernels() from the sklearn.metrics.pairwise module</span>
+
+<span class="sd">        max_ratio : float, optional</span>
+<span class="sd">            Maximum ratio of distances between first and second closest descriptor</span>
+<span class="sd">            in the second set of descriptors. This threshold is useful to filter</span>
+<span class="sd">            ambiguous matches between the two descriptor sets. The choice of this</span>
+<span class="sd">            value depends on the statistics of the chosen descriptor, e.g.,</span>
+<span class="sd">            for SIFT descriptors a value of 0.8 is usually chosen, see</span>
+<span class="sd">            D.G. Lowe, &quot;Distinctive Image Features from Scale-Invariant Keypoints&quot;,</span>
+<span class="sd">            International Journal of Computer Vision, 2004.</span>
 
 <span class="sd">        filter_method: str</span>
 <span class="sd">            &quot;GMS&quot; will use uses the Grid-based Motion Statistics</span>
@@ -631,13 +668,14 @@
     <span class="k">if</span> <span class="n">filter_method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">GMS_NAME</span><span class="p">:</span>
         <span class="c1"># GMS is supposed to perform best with a large number of features #</span>
         <span class="n">cross_check</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">filter_method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">RANSAC_DICT</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">cross_check</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">matches</span><span class="p">,</span> <span class="n">match_distances</span><span class="p">,</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_type</span> <span class="o">=</span> \
         <span class="n">match_descriptors</span><span class="p">(</span><span class="n">desc1</span><span class="p">,</span> <span class="n">desc2</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
                           <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span>
                           <span class="n">metric_kwargs</span><span class="o">=</span><span class="n">metric_kwargs</span><span class="p">,</span>
+                          <span class="n">max_ratio</span><span class="o">=</span><span class="n">max_ratio</span><span class="p">,</span>
                           <span class="n">cross_check</span><span class="o">=</span><span class="n">cross_check</span><span class="p">)</span>
 
     <span class="n">desc1_match_idx</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
@@ -656,21 +694,21 @@
                              <span class="n">matched_desc2</span><span class="o">=</span><span class="n">matched_desc2</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">desc2_match_idx</span><span class="p">,</span>
                              <span class="n">match_distances</span><span class="o">=</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_unfiltered_distance</span><span class="p">,</span>
                              <span class="n">similarity</span><span class="o">=</span><span class="n">mean_unfiltered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">metric_name</span><span class="p">,</span>
-                             <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">)</span>
+                             <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span> <span class="n">feature_detector_name</span><span class="o">=</span><span class="n">feature_detector_name</span><span class="p">)</span>
 
     <span class="n">match_info21</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">matched_kp2_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">matched_desc2</span><span class="p">,</span>
                              <span class="n">matches12</span><span class="o">=</span><span class="n">desc2_match_idx</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
                              <span class="n">matched_desc2</span><span class="o">=</span><span class="n">matched_desc1</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">desc1_match_idx</span><span class="p">,</span>
                              <span class="n">match_distances</span><span class="o">=</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_unfiltered_distance</span><span class="p">,</span>
                              <span class="n">similarity</span><span class="o">=</span><span class="n">mean_unfiltered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">metric_name</span><span class="p">,</span>
-                             <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">)</span>
+                             <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span> <span class="n">feature_detector_name</span><span class="o">=</span><span class="n">feature_detector_name</span><span class="p">)</span>
 
     <span class="c1"># Filter matches #</span>
     <span class="n">all_filtering_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;kp1_xy&quot;</span><span class="p">:</span> <span class="n">matched_kp1_xy</span><span class="p">,</span> <span class="s2">&quot;kp2_xy&quot;</span><span class="p">:</span> <span class="n">matched_kp2_xy</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">filtering_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">filter_method</span> <span class="o">!=</span> <span class="n">RANSAC_NAME</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="ne">Warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;filtering_kwargs not provided for </span><span class="si">{</span><span class="n">filter_method</span><span class="si">}</span><span class="s2"> match filtering. Will use RANSAC instead&quot;</span><span class="p">))</span>
-            <span class="n">filter_method</span> <span class="o">=</span> <span class="n">RANSAC_NAME</span>
+        <span class="k">if</span> <span class="n">filter_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RANSAC_DICT</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="ne">Warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;filtering_kwargs not provided for </span><span class="si">{</span><span class="n">filter_method</span><span class="si">}</span><span class="s2"> match filtering. Will use </span><span class="si">{</span><span class="n">DEFAULT_RANSAC_NAME</span><span class="si">}</span><span class="s2"> instead&quot;</span><span class="p">))</span>
+            <span class="n">filter_method</span> <span class="o">=</span> <span class="n">DEFAULT_RANSAC_NAME</span>
             <span class="n">all_filtering_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;ransac_val&quot;</span><span class="p">:</span> <span class="n">DEFAULT_RANSAC</span><span class="p">})</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">all_filtering_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;ransac_val&quot;</span><span class="p">:</span> <span class="n">DEFAULT_RANSAC</span><span class="p">})</span>
@@ -716,32 +754,38 @@
                                       <span class="n">matched_desc2</span><span class="o">=</span><span class="n">filterd_matched_desc2</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">good_matches21</span><span class="p">,</span>
                                       <span class="n">match_distances</span><span class="o">=</span><span class="n">filterd_match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_filtered_distance</span><span class="p">,</span>
                                       <span class="n">similarity</span><span class="o">=</span><span class="n">mean_filtered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">metric_name</span><span class="p">,</span>
-                                      <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">)</span>
+                                      <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span> <span class="n">feature_detector_name</span><span class="o">=</span><span class="n">feature_detector_name</span><span class="p">)</span>
 
     <span class="n">filtered_match_info21</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">filtered_matched_kp2_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">filterd_matched_desc2</span><span class="p">,</span>
                                       <span class="n">matches12</span><span class="o">=</span><span class="n">good_matches21</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">filtered_matched_kp1_xy</span><span class="p">,</span>
                                       <span class="n">matched_desc2</span><span class="o">=</span><span class="n">filterd_matched_desc1</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">good_matches12</span><span class="p">,</span>
                                       <span class="n">match_distances</span><span class="o">=</span><span class="n">filterd_match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_filtered_distance</span><span class="p">,</span>
                                       <span class="n">similarity</span><span class="o">=</span><span class="n">mean_filtered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">metric_name</span><span class="p">,</span>
-                                      <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">)</span>
+                                      <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span> <span class="n">feature_detector_name</span><span class="o">=</span><span class="n">feature_detector_name</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">match_info12</span><span class="p">,</span> <span class="n">filtered_match_info12</span><span class="p">,</span> <span class="n">match_info21</span><span class="p">,</span> <span class="n">filtered_match_info21</span></div>
 
 
-<div class="viewcode-block" id="MatchInfo"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.MatchInfo">[docs]</a><span class="k">class</span> <span class="nc">MatchInfo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class that stores information related to matches. One per pair of images</span>
+
+<div class="viewcode-block" id="MatchInfo">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.MatchInfo">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatchInfo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class that stores information related to matches. One per pair of images</span>
 
 <span class="sd">    All attributes are all set as parameters during initialization</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MatchInfo.__init__"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.MatchInfo.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="MatchInfo.__init__">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.MatchInfo.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">matched_kp1_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="p">,</span> <span class="n">matches12</span><span class="p">,</span>
                  <span class="n">matched_kp2_xy</span><span class="p">,</span> <span class="n">matched_desc2</span><span class="p">,</span> <span class="n">matches21</span><span class="p">,</span>
                  <span class="n">match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">similarity</span><span class="p">,</span>
                  <span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_type</span><span class="p">,</span>
-                 <span class="n">img1_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">img2_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">img1_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">img2_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">feature_detector_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;Stores information about matches and features</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stores information about matches and features</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -779,13 +823,16 @@
 <span class="sd">            Name of metric</span>
 
 <span class="sd">        metric_type : str</span>
-<span class="sd">            &quot;distsnce&quot; or &quot;similarity&quot;</span>
+<span class="sd">            &quot;distance&quot; or &quot;similarity&quot;</span>
 
 <span class="sd">        img1_name : str</span>
 <span class="sd">            Name of the image that kp1 and desc1 belong to</span>
 
 <span class="sd">        img2_name : str</span>
 <span class="sd">            Name of the image that kp2 and desc2 belong to</span>
+
+<span class="sd">        feature_detector_name : str</span>
+<span class="sd">            Name of feature descriptor use to match images</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -802,15 +849,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="n">metric_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">=</span> <span class="n">metric_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">img1_name</span> <span class="o">=</span> <span class="n">img1_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">img2_name</span> <span class="o">=</span> <span class="n">img2_name</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img2_name</span> <span class="o">=</span> <span class="n">img2_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector_name</span> <span class="o">=</span> <span class="n">feature_detector_name</span></div>
 
-    <span class="k">def</span> <span class="nf">set_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img1_name</span><span class="p">,</span> <span class="n">img2_name</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img1_name</span><span class="p">,</span> <span class="n">img2_name</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">img1_name</span> <span class="o">=</span> <span class="n">img1_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">img2_name</span> <span class="o">=</span> <span class="n">img2_name</span></div>
 
 
-<div class="viewcode-block" id="Matcher"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.Matcher">[docs]</a><span class="k">class</span> <span class="nc">Matcher</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class that matchs the descriptors of image 1 with those of image 2</span>
+
+<div class="viewcode-block" id="Matcher">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.Matcher">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Matcher</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class that matchs the descriptors of image 1 with those of image 2</span>
 
 <span class="sd">    Outliers removed using RANSAC or GMS</span>
 
@@ -856,12 +908,20 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Matcher.__init__"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.Matcher.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="Matcher.__init__">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.Matcher.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_detector</span><span class="o">=</span><span class="n">DEFAULT_FD</span><span class="p">(),</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">match_filter_method</span><span class="o">=</span><span class="n">DEFAULT_MATCH_FILTER</span><span class="p">,</span> <span class="n">ransac_thresh</span><span class="o">=</span><span class="n">DEFAULT_RANSAC</span><span class="p">,</span>
                  <span class="n">gms_threshold</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">scaling</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+
+<span class="sd">        feature_detector : FeatureDD, optional</span>
+<span class="sd">            FeatureDD object detects and computes image features.</span>
+<span class="sd">            available feature_detectors are found in the `feature_detectors`</span>
+<span class="sd">            module. If a desired feature detector is not available,</span>
+<span class="sd">            one can be created by subclassing `feature_detectors.FeatureDD`.</span>
 
 <span class="sd">        metric: str, or callable</span>
 <span class="sd">            Metric to calculate distance between each pair of features in</span>
@@ -899,11 +959,14 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span> <span class="o">=</span> <span class="n">feature_detector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span> <span class="o">=</span> <span class="n">feature_detector</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
         <span class="k">if</span> <span class="n">metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="n">metric</span>
-            <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="kc">None</span>
@@ -913,17 +976,25 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">gms_threshold</span> <span class="o">=</span> <span class="n">gms_threshold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scaling</span> <span class="o">=</span> <span class="n">scaling</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric_kwargs</span> <span class="o">=</span> <span class="n">metric_kwargs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">=</span> <span class="n">match_filter_method</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">=</span> <span class="n">match_filter_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rotation_invariant</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Matcher.match_images"><a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.Matcher.match_images">[docs]</a>    <span class="k">def</span> <span class="nf">match_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc1</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc2</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span>
-                     <span class="n">additional_filtering_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Match the descriptors of image 1 with those of image 2,</span>
+
+<div class="viewcode-block" id="Matcher.match_images">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.Matcher.match_images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">match_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">desc1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">img2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">desc2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_filtering_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Match the descriptors of image 1 with those of image 2,</span>
 <span class="sd">        Outliers removed using match_filter_method. Metric can be a string</span>
 <span class="sd">        to use a distance in scipy.distnce.cdist(), or a custom distance</span>
 <span class="sd">        function. Sets atttributes for Matcher object</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        img1 : (N, M) array</span>
+<span class="sd">            Image to match to `img2`</span>
+
 <span class="sd">        desc1 : (N, P) array</span>
 <span class="sd">            Image 1s 2D array containinng N keypoints, each of which</span>
 <span class="sd">            has P features</span>
@@ -931,6 +1002,9 @@
 <span class="sd">        kp1_xy : (N, 2) array</span>
 <span class="sd">            Image 1s keypoint positions, in xy coordinates,  for each of the</span>
 <span class="sd">            N descriptors in desc1</span>
+
+<span class="sd">        img2 : (N, M) array</span>
+<span class="sd">            Image to match to `img1`</span>
 
 <span class="sd">        desc2 : (M, P) array</span>
 <span class="sd">            Image 2s 2D array containinng M keypoints, each of which has</span>
@@ -970,6 +1044,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="n">using_ransac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="ow">in</span> <span class="n">RANSAC_DICT</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">==</span> <span class="n">GMS_NAME</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">additional_filtering_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># At this point arguments need to include: img1_shape, img2_shape #</span>
@@ -982,73 +1058,633 @@
 <span class="s2">                              additional_filtering_kwargs.</span><span class="se">\</span>
 <span class="s2">                              Defaulting to RANSAC&quot;</span><span class="p">))</span>
 
-                <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">=</span> <span class="n">RANSAC_NAME</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">=</span> <span class="n">DEFAULT_RANSAC_NAME</span>
                 <span class="n">filtering_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ransac_val&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ransac</span><span class="p">}</span>
 
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">==</span> <span class="n">RANSAC_NAME</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">using_ransac</span><span class="p">:</span>
             <span class="n">filtering_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ransac_val&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ransac</span><span class="p">}</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="ne">Warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dont know </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span><span class="si">}</span><span class="s2">.</span><span class="se">\</span>
 <span class="s2">                Defaulting to RANSAC&quot;</span><span class="p">))</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">=</span> <span class="n">RANSAC_NAME</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">=</span> <span class="n">DEFAULT_RANSAC_NAME</span>
             <span class="n">filtering_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ransac_val&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ransac</span><span class="p">}</span>
 
+        <span class="k">if</span> <span class="n">desc1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">kp1_xy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">img1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">img1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">desc2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">kp2_xy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">img2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">desc2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">img2</span><span class="p">)</span>
+
         <span class="n">match_info12</span><span class="p">,</span> <span class="n">filtered_match_info12</span><span class="p">,</span> <span class="n">match_info21</span><span class="p">,</span> <span class="n">filtered_match_info21</span> <span class="o">=</span> \
-            <span class="n">match_desc_and_kp</span><span class="p">(</span><span class="n">desc1</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc2</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">,</span>
+            <span class="n">match_desc_and_kp</span><span class="p">(</span><span class="n">desc1</span><span class="o">=</span><span class="n">desc1</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="o">=</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc2</span><span class="o">=</span><span class="n">desc2</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="o">=</span><span class="n">kp2_xy</span><span class="p">,</span>
                               <span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">,</span>
                               <span class="n">metric_kwargs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_kwargs</span><span class="p">,</span>
                               <span class="n">filter_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span><span class="p">,</span>
-                              <span class="n">filtering_kwargs</span><span class="o">=</span><span class="n">filtering_kwargs</span><span class="p">)</span>
+                              <span class="n">filtering_kwargs</span><span class="o">=</span><span class="n">filtering_kwargs</span><span class="p">,</span>
+                              <span class="n">feature_detector_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="n">match_info12</span><span class="o">.</span><span class="n">metric_name</span>
 
-        <span class="k">return</span> <span class="n">match_info12</span><span class="p">,</span> <span class="n">filtered_match_info12</span><span class="p">,</span> <span class="n">match_info21</span><span class="p">,</span> <span class="n">filtered_match_info21</span></div></div>
+        <span class="k">return</span> <span class="n">match_info12</span><span class="p">,</span> <span class="n">filtered_match_info12</span><span class="p">,</span> <span class="n">match_info21</span><span class="p">,</span> <span class="n">filtered_match_info21</span></div>
+
+
+<div class="viewcode-block" id="Matcher.estimate_rotation">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.Matcher.estimate_rotation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate_rotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">moving_img</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed_img</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moving_kp_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed_kp_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">angle_estimator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use a rotation invariant feature descriptor to estimate angle to rotate moving_img to align with fixed_img.</span>
+<span class="sd">        Match Info should contain the matches where kp1 refers to the fixed image, and kp2 refers to the moving image</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">moving_kp_xy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">fixed_kp_xy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">fixed_img</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">moving_img</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">angle_estimator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">angle_estimator</span> <span class="o">=</span> <span class="n">ROTATION_ESTIMATOR_FD</span><span class="p">()</span>
+            <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc1</span> <span class="o">=</span> <span class="n">angle_estimator</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">fixed_img</span><span class="p">)</span>
+            <span class="n">kp2_xy</span><span class="p">,</span> <span class="n">desc2</span> <span class="o">=</span> <span class="n">angle_estimator</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">moving_img</span><span class="p">)</span>
+
+            <span class="n">_</span><span class="p">,</span> <span class="n">match_info</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">match_desc_and_kp</span><span class="p">(</span><span class="n">desc1</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc2</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="p">)</span>
+
+            <span class="n">fixed_kp_xy</span> <span class="o">=</span> <span class="n">match_info</span><span class="o">.</span><span class="n">matched_kp1_xy</span>
+            <span class="n">moving_kp_xy</span> <span class="o">=</span> <span class="n">match_info</span><span class="o">.</span><span class="n">matched_kp2_xy</span>
+
+        <span class="n">angle_estimator</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">SimilarityTransform</span><span class="p">()</span>
+        <span class="n">angle_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">fixed_kp_xy</span><span class="p">,</span> <span class="n">moving_kp_xy</span><span class="p">)</span> <span class="c1"># Estimates inverse transform, and want 2 to align to 1</span>
+        <span class="n">rot_deg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">angle_estimator</span><span class="o">.</span><span class="n">rotation</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rot_deg</span></div>
+</div>
+
+
+<div class="viewcode-block" id="SuperGlueMatcher">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.SuperGlueMatcher">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SuperGlueMatcher</span><span class="p">(</span><span class="n">Matcher</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use SuperGlue to match images (`match_images`)</span>
+
+<span class="sd">    Implementation adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py</span>
+
+<span class="sd">    References</span>
+<span class="sd">    -----------</span>
+<span class="sd">    Paul-Edouard Sarlin, Daniel DeTone, Tomasz Malisiewicz, and Andrew</span>
+<span class="sd">    Rabinovich. SuperGlue: Learning Feature Matching with Graph Neural</span>
+<span class="sd">    Networks. In CVPR, 2020. https://arxiv.org/abs/1911.11763</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SuperGlueMatcher.__init__">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.SuperGlueMatcher.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_detector</span><span class="o">=</span><span class="n">feature_detectors</span><span class="o">.</span><span class="n">SuperPointFD</span><span class="p">(),</span> <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;indoor&quot;</span><span class="p">,</span> <span class="n">keypoint_threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">nms_radius</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                 <span class="n">sinkhorn_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">match_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">force_cpu</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">match_filter_method</span><span class="o">=</span><span class="n">DEFAULT_MATCH_FILTER</span><span class="p">,</span> <span class="n">ransac_thresh</span><span class="o">=</span><span class="n">DEFAULT_RANSAC</span><span class="p">,</span>
+                 <span class="n">gms_threshold</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">scaling</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Use SuperGlue to match images (`match_images`)</span>
+
+<span class="sd">        Adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        weights : str</span>
+<span class="sd">            SuperGlue weights. Options= [&quot;indoor&quot;, &quot;outdoor&quot;]</span>
+
+<span class="sd">        keypoint_threshold : float</span>
+<span class="sd">            SuperPoint keypoint detector confidence threshold</span>
+
+<span class="sd">        nms_radius : int</span>
+<span class="sd">            SuperPoint Non Maximum Suppression (NMS) radius (must be positive)</span>
+
+<span class="sd">        sinkhorn_iterations : int</span>
+<span class="sd">            Number of Sinkhorn iterations performed by SuperGlue</span>
+
+<span class="sd">        match_threshold : float</span>
+<span class="sd">            SuperGlue match threshold</span>
+
+<span class="sd">        force_cpu : bool</span>
+<span class="sd">            Force pytorch to run in CPU mode</span>
+
+<span class="sd">        scaling: bool</span>
+<span class="sd">            Whether or not image scaling should be considered when</span>
+<span class="sd">            filter_method is &quot;GMS&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> <span class="n">metric_type</span><span class="o">=</span><span class="n">metric_type</span><span class="p">,</span> <span class="n">metric_kwargs</span><span class="o">=</span><span class="n">metric_kwargs</span><span class="p">,</span>
+                 <span class="n">match_filter_method</span><span class="o">=</span><span class="n">match_filter_method</span><span class="p">,</span> <span class="n">ransac_thresh</span><span class="o">=</span><span class="n">ransac_thresh</span><span class="p">,</span>
+                 <span class="n">gms_threshold</span><span class="o">=</span><span class="n">gms_threshold</span><span class="p">,</span> <span class="n">scaling</span><span class="o">=</span><span class="n">scaling</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span> <span class="o">=</span> <span class="n">feature_detector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span> <span class="o">=</span> <span class="n">feature_detector</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rotation_invariant</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_threshold</span> <span class="o">=</span> <span class="n">keypoint_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nms_radius</span> <span class="o">=</span> <span class="n">nms_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sinkhorn_iterations</span> <span class="o">=</span> <span class="n">sinkhorn_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">match_threshold</span> <span class="o">=</span> <span class="n">match_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span> <span class="o">=</span> <span class="s2">&quot;SuperPoint&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector_name</span> <span class="o">=</span> <span class="s2">&quot;SuperPoint&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matcher</span> <span class="o">=</span> <span class="s2">&quot;SuperGlue&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="s2">&quot;SuperGlue&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">=</span> <span class="s2">&quot;distance&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_cpu</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;superpoint&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;nms_radius&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nms_radius</span><span class="p">,</span>
+                <span class="s1">&#39;keypoint_threshold&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_threshold</span><span class="p">,</span>
+                <span class="s1">&#39;max_keypoints&#39;</span><span class="p">:</span> <span class="n">feature_detectors</span><span class="o">.</span><span class="n">MAX_FEATURES</span><span class="p">,</span>
+                <span class="s1">&#39;device&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;superglue&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;weights&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span>
+                <span class="s1">&#39;sinkhorn_iterations&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkhorn_iterations</span><span class="p">,</span>
+                <span class="s1">&#39;match_threshold&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_threshold</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sg_matcher</span> <span class="o">=</span> <span class="n">superglue</span><span class="o">.</span><span class="n">SuperGlue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;superglue&quot;</span><span class="p">])</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">frame2tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">img</span><span class="o">/</span><span class="mf">255.</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tensor</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_img</span><span class="p">,</span> <span class="n">kp_xy</span><span class="p">):</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">superpoint</span><span class="o">.</span><span class="n">SuperPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;superpoint&quot;</span><span class="p">])</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv1a</span><span class="p">(</span><span class="n">tensor_img</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv1b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv2a</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv2b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv3a</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv3b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv4a</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv4b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+        <span class="n">cPa</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">convPa</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">convPb</span><span class="p">(</span><span class="n">cPa</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="o">*</span><span class="mi">8</span><span class="p">,</span> <span class="n">w</span><span class="o">*</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">superpoint</span><span class="o">.</span><span class="n">simple_nms</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;nms_radius&#39;</span><span class="p">])</span>
+        <span class="n">kp</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">kp_xy</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">t</span><span class="p">())]</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">kp</span><span class="p">)]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">scores</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">prep_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">kp_xy</span><span class="p">,</span> <span class="n">desc</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        sp_kp = pred[&quot;keypoints&quot;] # Tensor with shape [1, n_kp, 2],  float32</span>
+<span class="sd">        sp_desc = pred[&quot;descriptors&quot;] # Tensor with shape [1, n_features, n_kp], float32</span>
+<span class="sd">        sp_scores = pred[&quot;scores&quot;] # Tensor with shape [1, n_kp], float32</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame2tensor</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_scores</span><span class="p">(</span><span class="n">tensor_img</span><span class="o">=</span><span class="n">inp</span><span class="p">,</span> <span class="n">kp_xy</span><span class="o">=</span><span class="n">kp_xy</span><span class="p">)</span>
+        <span class="n">kp_xy_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">kp_xy</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+        <span class="n">desc_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+        <span class="n">n_kp</span> <span class="o">=</span> <span class="n">kp_xy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="n">scores</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">kp_xy_inp</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">desc_inp</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
+        <span class="k">assert</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">kp_xy_inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">desc_inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_kp</span>
+
+        <span class="k">return</span> <span class="n">inp</span><span class="p">,</span> <span class="n">kp_xy_inp</span><span class="p">,</span> <span class="n">desc_inp</span><span class="p">,</span> <span class="n">scores</span>
+
+<div class="viewcode-block" id="SuperGlueMatcher.match_images">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.SuperGlueMatcher.match_images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">match_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">desc1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">img2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">desc2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_filtering_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rotation_deg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">img1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">desc1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">kp1_xy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">img1</span><span class="p">)</span>
+
+        <span class="n">inp1</span><span class="p">,</span> <span class="n">kp1_xy_inp</span><span class="p">,</span> <span class="n">desc1_inp</span><span class="p">,</span> <span class="n">scores1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prep_data</span><span class="p">(</span><span class="n">img</span><span class="o">=</span><span class="n">img1</span><span class="p">,</span> <span class="n">kp_xy</span><span class="o">=</span><span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">desc1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">img2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">desc2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">kp2_xy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rotation_deg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rotation_deg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_rotation</span><span class="p">(</span><span class="n">moving_img</span><span class="o">=</span><span class="n">img2</span><span class="p">,</span> <span class="n">fixed_img</span><span class="o">=</span><span class="n">img1</span><span class="p">)</span>
+
+            <span class="n">rotated_img</span><span class="p">,</span> <span class="n">rot_tform</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">img2</span><span class="p">,</span> <span class="n">rotation_deg</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">rotated_img</span> <span class="o">=</span> <span class="n">rotated_img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">r_kp2</span><span class="p">,</span> <span class="n">r_desc2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">rotated_img</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r_kp2</span> <span class="o">=</span> <span class="n">kp2_xy</span>
+            <span class="n">r_desc2</span> <span class="o">=</span> <span class="n">desc2</span>
+            <span class="n">rotated_img</span> <span class="o">=</span> <span class="n">img2</span>
+            <span class="n">rot_tform</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">SimilarityTransform</span><span class="p">()</span>
+
+        <span class="n">inp2</span><span class="p">,</span> <span class="n">kp2_xy_inp</span><span class="p">,</span> <span class="n">desc2_inp</span><span class="p">,</span> <span class="n">scores2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prep_data</span><span class="p">(</span><span class="n">img</span><span class="o">=</span><span class="n">rotated_img</span><span class="p">,</span> <span class="n">kp_xy</span><span class="o">=</span><span class="n">r_kp2</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">r_desc2</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;image0&quot;</span><span class="p">:</span> <span class="n">inp1</span><span class="p">,</span>
+                <span class="s2">&quot;descriptors0&quot;</span><span class="p">:</span> <span class="n">desc1_inp</span><span class="p">,</span>
+                <span class="s2">&quot;keypoints0&quot;</span><span class="p">:</span> <span class="n">kp1_xy_inp</span><span class="p">,</span>
+                <span class="s2">&quot;scores0&quot;</span><span class="p">:</span> <span class="n">scores1</span><span class="p">,</span>
+                <span class="s2">&quot;image1&quot;</span><span class="p">:</span> <span class="n">inp2</span><span class="p">,</span>
+                <span class="s2">&quot;descriptors1&quot;</span><span class="p">:</span> <span class="n">desc2_inp</span><span class="p">,</span>
+                <span class="s2">&quot;keypoints1&quot;</span><span class="p">:</span> <span class="n">kp2_xy_inp</span><span class="p">,</span>
+                <span class="s2">&quot;scores1&quot;</span><span class="p">:</span> <span class="n">scores2</span>
+                <span class="p">}</span>
+
+        <span class="n">sg_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_matcher</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">sg_pred</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sg_pred</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">sg_pred</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Keep the matching keypoints and descriptors</span>
+        <span class="n">matches</span><span class="p">,</span> <span class="n">conf</span> <span class="o">=</span> <span class="n">sg_pred</span><span class="p">[</span><span class="s1">&#39;matches0&#39;</span><span class="p">],</span> <span class="n">sg_pred</span><span class="p">[</span><span class="s1">&#39;matching_scores0&#39;</span><span class="p">]</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">matches</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">desc1_match_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">valid</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">desc2_match_idx</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+
+        <span class="n">matched_desc1</span> <span class="o">=</span> <span class="n">desc1</span><span class="p">[</span><span class="n">desc1_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">matched_kp1_xy</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="p">[</span><span class="n">desc1_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">rot_matched_kp2</span> <span class="o">=</span> <span class="n">r_kp2</span><span class="p">[</span><span class="n">desc2_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">matched_kp2_xy</span> <span class="o">=</span> <span class="n">rot_tform</span><span class="p">(</span><span class="n">rot_matched_kp2</span><span class="p">)</span>
+        <span class="n">matched_desc2</span> <span class="o">=</span> <span class="n">r_desc2</span><span class="p">[</span><span class="n">desc2_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+
+
+        <span class="n">match_distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">matched_desc1</span> <span class="o">-</span> <span class="n">matched_desc2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">match_distances</span> <span class="o">=</span> <span class="n">match_distances</span><span class="o">/</span><span class="n">match_distances</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+
+        <span class="n">mean_unfiltered_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">match_distances</span><span class="p">)</span>
+        <span class="n">mean_unfiltered_similarity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">convert_distance_to_similarity</span><span class="p">(</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="n">desc1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">match_info12</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">matched_kp1_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">matched_desc1</span><span class="p">,</span>
+                                <span class="n">matches12</span><span class="o">=</span><span class="n">desc1_match_idx</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">matched_kp2_xy</span><span class="p">,</span>
+                                <span class="n">matched_desc2</span><span class="o">=</span><span class="n">matched_desc2</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">desc2_match_idx</span><span class="p">,</span>
+                                <span class="n">match_distances</span><span class="o">=</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_unfiltered_distance</span><span class="p">,</span>
+                                <span class="n">similarity</span><span class="o">=</span><span class="n">mean_unfiltered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">,</span>
+                                <span class="n">feature_detector_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span><span class="p">)</span>
+
+        <span class="n">match_info21</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">matched_kp2_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">matched_desc2</span><span class="p">,</span>
+                                <span class="n">matches12</span><span class="o">=</span><span class="n">desc2_match_idx</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
+                                <span class="n">matched_desc2</span><span class="o">=</span><span class="n">matched_desc1</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">desc1_match_idx</span><span class="p">,</span>
+                                <span class="n">match_distances</span><span class="o">=</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_unfiltered_distance</span><span class="p">,</span>
+                                <span class="n">similarity</span><span class="o">=</span><span class="n">mean_unfiltered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">,</span>
+                                <span class="n">feature_detector_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span><span class="p">)</span>
+
+        <span class="c1"># # Remove outliers</span>
+        <span class="n">filtered_matched_kp1_xy</span><span class="p">,</span> <span class="n">filtered_matched_kp2_xy</span><span class="p">,</span> <span class="n">good_matches_idx</span> <span class="o">=</span> <span class="n">filter_matches_ransac</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
+                                                                                                   <span class="n">matched_kp2_xy</span><span class="p">,</span>
+                                                                                                   <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">good_matches_idx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">filterd_match_distances</span> <span class="o">=</span> <span class="n">match_distances</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">]</span>
+            <span class="n">filterd_matched_desc1</span> <span class="o">=</span> <span class="n">matched_desc1</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">filterd_matched_desc2</span> <span class="o">=</span> <span class="n">matched_desc2</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">,</span> <span class="p">:]</span>
+
+            <span class="n">good_matches12</span> <span class="o">=</span> <span class="n">desc1_match_idx</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">]</span>
+            <span class="n">good_matches21</span> <span class="o">=</span> <span class="n">desc2_match_idx</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">]</span>
+
+            <span class="n">mean_filtered_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">filterd_match_distances</span><span class="p">)</span>
+            <span class="n">mean_filtered_similarity</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">convert_distance_to_similarity</span><span class="p">(</span><span class="n">filterd_match_distances</span><span class="p">,</span>
+                                                    <span class="n">n_features</span><span class="o">=</span><span class="n">desc1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filterd_match_distances</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">filterd_matched_desc1</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">filterd_matched_desc2</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">good_matches12</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">good_matches21</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">mean_filtered_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="n">mean_filtered_similarity</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Record filtered matches</span>
+        <span class="n">filtered_match_info12</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">filtered_matched_kp1_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">filterd_matched_desc1</span><span class="p">,</span>
+                                        <span class="n">matches12</span><span class="o">=</span><span class="n">good_matches12</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">filtered_matched_kp2_xy</span><span class="p">,</span>
+                                        <span class="n">matched_desc2</span><span class="o">=</span><span class="n">filterd_matched_desc2</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">good_matches21</span><span class="p">,</span>
+                                        <span class="n">match_distances</span><span class="o">=</span><span class="n">filterd_match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_filtered_distance</span><span class="p">,</span>
+                                        <span class="n">similarity</span><span class="o">=</span><span class="n">mean_filtered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                        <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">,</span>
+                                        <span class="n">feature_detector_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span><span class="p">)</span>
+
+        <span class="n">filtered_match_info21</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">filtered_matched_kp2_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">filterd_matched_desc2</span><span class="p">,</span>
+                                        <span class="n">matches12</span><span class="o">=</span><span class="n">good_matches21</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">filtered_matched_kp1_xy</span><span class="p">,</span>
+                                        <span class="n">matched_desc2</span><span class="o">=</span><span class="n">filterd_matched_desc1</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">good_matches12</span><span class="p">,</span>
+                                        <span class="n">match_distances</span><span class="o">=</span><span class="n">filterd_match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_filtered_distance</span><span class="p">,</span>
+                                        <span class="n">similarity</span><span class="o">=</span><span class="n">mean_filtered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                        <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">,</span>
+                                        <span class="n">feature_detector_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">match_info12</span><span class="p">,</span> <span class="n">filtered_match_info12</span><span class="p">,</span> <span class="n">match_info21</span><span class="p">,</span> <span class="n">filtered_match_info21</span></div>
+</div>
+
+
+<div class="viewcode-block" id="LightGlueMatcher">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.LightGlueMatcher">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LightGlueMatcher</span><span class="p">(</span><span class="n">Matcher</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    LightGlue feautre matcher, implemented in Kornia</span>
+<span class="sd">    Intended for to be paired with features detected using one of Kornia&#39;s feature detectors (e.g. DISK, DeDoDe, etc...)</span>
+
+<span class="sd">    Citation</span>
+<span class="sd">    ---------</span>
+<span class="sd">    Philipp Lindenberger, Paul-Edouard Sarlin, and Marc Pollefeys.</span>
+<span class="sd">    Lightglue: local feature matching at light speed.</span>
+<span class="sd">    arXiv ePrint 2306.13643, 2023.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LightGlueMatcher.__init__">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.LightGlueMatcher.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_detector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">match_filter_method</span><span class="o">=</span><span class="n">DEFAULT_MATCH_FILTER</span><span class="p">,</span> <span class="n">ransac_thresh</span><span class="o">=</span><span class="n">DEFAULT_RANSAC</span><span class="p">,</span>
+                 <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span> <span class="o">=</span> <span class="n">match_filter_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ransac_thresh</span> <span class="o">=</span> <span class="n">ransac_thresh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">=</span> <span class="s2">&quot;distance&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rotation_invariant</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_feature_detector</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lg_matcher</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">feature_detector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span> <span class="o">=</span> <span class="n">feature_detector</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_fd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature_detector</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_fd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_detector</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">feature_detector</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">feature_detectors</span><span class="o">.</span><span class="n">KorniaFD</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using </span><span class="si">{</span><span class="n">feature_detector</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;May get unexpected results, as </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> expects the descriptors to be generated by &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;a subclass of </span><span class="si">{</span><span class="n">feature_detectors</span><span class="o">.</span><span class="n">KorniaFD</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_feature_detector</span> <span class="o">=</span> <span class="n">feature_detector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span> <span class="o">=</span> <span class="n">feature_detector</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="n">feature_detector</span><span class="o">.</span><span class="n">light_glue_feature_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lg_matcher</span> <span class="o">=</span> <span class="n">kornia</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">LightGlueMatcher</span><span class="p">(</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">light_glue_feature_name</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="n">feature_detector</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">fget</span><span class="o">=</span><span class="n">get_fd</span><span class="p">,</span>
+                                <span class="n">fset</span><span class="o">=</span><span class="n">set_fd</span><span class="p">,</span>
+                                <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Get and set feature detector. Setting creates a new LightGlueMatcher with associated weights&quot;</span><span class="p">)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate_rotation_brute_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc1</span><span class="p">,</span> <span class="n">kp1</span><span class="p">,</span> <span class="n">lafs1</span><span class="p">,</span> <span class="n">hw1</span><span class="p">,</span> <span class="n">moving_img</span><span class="p">,</span> <span class="n">n_angles</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use a rotation invarianet feature descriptor to estimate angle to rotate img2 to align with img1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">t_desc1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">desc1</span><span class="p">)</span>
+        <span class="n">angle_step</span> <span class="o">=</span> <span class="mi">360</span><span class="o">//</span><span class="n">n_angles</span>
+        <span class="n">rotations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">,</span> <span class="n">angle_step</span><span class="p">)</span>
+
+        <span class="n">best_kp1</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_kp2</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_tform</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">max_matches</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">min_mean_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">all_match_counts</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">rotations</span><span class="p">)</span>
+        <span class="n">all_mean_distances</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">rotations</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rotations</span><span class="p">):</span>
+            <span class="n">rotated</span><span class="p">,</span> <span class="n">tform</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">moving_img</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">rotated</span> <span class="o">=</span> <span class="n">rotated</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">r_kp2</span><span class="p">,</span> <span class="n">r_desc2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">rotated</span><span class="p">)</span>
+            <span class="n">r_hw2</span> <span class="o">=</span> <span class="n">rotated</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="n">t_kp2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">r_kp2</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">t_desc2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">r_desc2</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">inference_mode</span><span class="p">():</span>
+                <span class="n">lafs2</span> <span class="o">=</span> <span class="n">kornia</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">laf_from_center_scale_ori</span><span class="p">(</span><span class="n">t_kp2</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_kp2</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+                <span class="n">match_distances</span><span class="p">,</span> <span class="n">idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lg_matcher</span><span class="p">(</span><span class="n">t_desc1</span><span class="p">,</span> <span class="n">t_desc2</span><span class="p">,</span> <span class="n">lafs1</span><span class="p">,</span> <span class="n">lafs2</span><span class="p">,</span> <span class="n">hw1</span><span class="o">=</span><span class="n">hw1</span><span class="p">,</span> <span class="n">hw2</span><span class="o">=</span><span class="n">r_hw2</span><span class="p">)</span>
+
+            <span class="n">_kp1</span> <span class="o">=</span> <span class="n">kp1</span><span class="p">[</span><span class="n">idxs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
+            <span class="n">_kp2</span> <span class="o">=</span> <span class="n">r_kp2</span><span class="p">[</span><span class="n">idxs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">:]</span>
+            <span class="n">_kp1</span><span class="p">,</span> <span class="n">_kp2</span><span class="p">,</span> <span class="n">good_idx</span> <span class="o">=</span> <span class="n">filter_matches</span><span class="p">(</span><span class="n">_kp1</span><span class="p">,</span> <span class="n">_kp2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span><span class="p">,</span> <span class="n">filtering_kwargs</span><span class="o">=</span><span class="p">{})</span>
+            <span class="n">r_n_matches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">good_idx</span><span class="p">)</span>
+            <span class="n">all_match_counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">r_n_matches</span>
+            <span class="n">rot_min_mean_distances</span> <span class="o">=</span> <span class="n">match_distances</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">all_mean_distances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rot_min_mean_distances</span>
+
+            <span class="k">if</span> <span class="n">rot_min_mean_distances</span> <span class="o">&lt;</span> <span class="n">min_mean_distance</span><span class="p">:</span>
+                <span class="n">best_kp1</span> <span class="o">=</span> <span class="n">_kp1</span>
+                <span class="n">best_kp2</span> <span class="o">=</span> <span class="n">_kp2</span>
+                <span class="n">best_tform</span> <span class="o">=</span> <span class="n">tform</span>
+                <span class="n">max_matches</span> <span class="o">=</span> <span class="n">r_n_matches</span>
+                <span class="n">min_mean_distance</span> <span class="o">=</span> <span class="n">rot_min_mean_distances</span>
+
+        <span class="c1"># Estimate rotation</span>
+        <span class="n">angle_estimator</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">SimilarityTransform</span><span class="p">()</span>
+        <span class="n">kp2_in_og</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">warp_xy</span><span class="p">(</span><span class="n">best_kp2</span><span class="p">,</span> <span class="n">best_tform</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">angle_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">kp2_in_og</span><span class="p">,</span> <span class="n">best_kp1</span><span class="p">)</span>
+        <span class="n">rot_deg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">angle_estimator</span><span class="o">.</span><span class="n">rotation</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rot_deg</span>
+
+<div class="viewcode-block" id="LightGlueMatcher.match_images">
+<a class="viewcode-back" href="../../feature_matcher.html#valis.feature_matcher.LightGlueMatcher.match_images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">match_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img1</span><span class="p">,</span> <span class="n">img2</span><span class="p">,</span> <span class="n">desc1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp1_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">desc2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp2_xy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rotation_deg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">brute_force_angle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Match the descriptors of image 1 with those of image 2,</span>
+<span class="sd">        Outliers removed using match_filter_method. Metric can be a string</span>
+<span class="sd">        to use a distance in scipy.distnce.cdist(), or a custom distance</span>
+<span class="sd">        function. Sets atttributes for Matcher object</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        img1 : (N, P) array</span>
+<span class="sd">            Fixed image</span>
+
+<span class="sd">        img2 : (N, 2) array</span>
+<span class="sd">            Moving image</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        match_info12 : MatchInfo</span>
+<span class="sd">                Contains information regarding the matches between image 1</span>
+<span class="sd">                and image 2. These results haven&#39;t undergone filtering,</span>
+<span class="sd">                so contain many poor matches.</span>
+
+<span class="sd">        filtered_match_info12 : MatchInfo</span>
+<span class="sd">                Contains information regarding the matches between image 1</span>
+<span class="sd">                and image 2. These results have undergone</span>
+<span class="sd">                filtering, and so contain good matches</span>
+
+<span class="sd">        match_info21 : MatchInfo</span>
+<span class="sd">                Contains information regarding the matches between image 2</span>
+<span class="sd">                and image 1. These results haven&#39;t undergone filtering, so</span>
+<span class="sd">                contain many poor matches.</span>
+
+<span class="sd">        filtered_match_info21 : MatchInfo</span>
+<span class="sd">                Contains information regarding the matches between image 2</span>
+<span class="sd">                and image 1.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">hw1</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(</span><span class="n">img1</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">kp1_xy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">desc1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kp1_xy</span><span class="p">,</span> <span class="n">desc1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">img1</span><span class="p">)</span>
+
+        <span class="n">t_kp1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">kp1_xy</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">t_desc1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">desc1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">inference_mode</span><span class="p">():</span>
+            <span class="n">lafs1</span> <span class="o">=</span> <span class="n">kornia</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">laf_from_center_scale_ori</span><span class="p">(</span><span class="n">t_kp1</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_kp1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">kp2_xy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">desc2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rotation_deg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">brute_force_angle</span><span class="p">:</span>
+                    <span class="n">rotation_deg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_rotation_brute_force</span><span class="p">(</span><span class="n">desc1</span><span class="o">=</span><span class="n">desc1</span><span class="p">,</span>
+                                                            <span class="n">hw1</span><span class="o">=</span><span class="n">hw1</span><span class="p">,</span>
+                                                            <span class="n">kp1</span><span class="o">=</span><span class="n">kp1_xy</span><span class="p">,</span>
+                                                            <span class="n">lafs1</span><span class="o">=</span><span class="n">lafs1</span><span class="p">,</span>
+                                                            <span class="n">moving_img</span><span class="o">=</span><span class="n">img2</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rotation_deg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_rotation</span><span class="p">(</span><span class="n">moving_img</span><span class="o">=</span><span class="n">img2</span><span class="p">,</span> <span class="n">fixed_img</span><span class="o">=</span><span class="n">img1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rotation_deg</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">rotated_img</span><span class="p">,</span> <span class="n">rot_tform</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">img2</span><span class="p">,</span> <span class="n">rotation_deg</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">rotated_img</span> <span class="o">=</span> <span class="n">rotated_img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+            <span class="n">r_kp2</span><span class="p">,</span> <span class="n">r_desc2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">detect_and_compute</span><span class="p">(</span><span class="n">rotated_img</span><span class="p">)</span>
+            <span class="n">r_hw2</span> <span class="o">=</span> <span class="n">rotated_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assume that kp2 and desc2 have been detected on rotated image</span>
+            <span class="n">r_kp2</span> <span class="o">=</span> <span class="n">kp2_xy</span>
+            <span class="n">r_desc2</span> <span class="o">=</span> <span class="n">desc2</span>
+            <span class="n">rotated_img</span> <span class="o">=</span> <span class="n">img2</span>
+            <span class="n">rot_tform</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">SimilarityTransform</span><span class="p">()</span>
+            <span class="n">r_hw2</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(</span><span class="n">img2</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">t_kp2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">kp2_xy</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">t_desc2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">desc2</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">inference_mode</span><span class="p">():</span>
+            <span class="n">lafs2</span> <span class="o">=</span> <span class="n">kornia</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">laf_from_center_scale_ori</span><span class="p">(</span><span class="n">t_kp2</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_kp2</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+
+            <span class="n">match_distances</span><span class="p">,</span> <span class="n">idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lg_matcher</span><span class="p">(</span><span class="n">t_desc1</span><span class="p">,</span> <span class="n">t_desc2</span><span class="p">,</span> <span class="n">lafs1</span><span class="p">,</span> <span class="n">lafs2</span><span class="p">,</span> <span class="n">hw1</span><span class="o">=</span><span class="n">hw1</span><span class="p">,</span> <span class="n">hw2</span><span class="o">=</span><span class="n">r_hw2</span><span class="p">)</span>
+            <span class="n">match_distances</span> <span class="o">=</span> <span class="n">match_distances</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">idxs</span> <span class="o">=</span> <span class="n">idxs</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">desc1_match_idx</span> <span class="o">=</span> <span class="n">idxs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">matched_desc1</span> <span class="o">=</span> <span class="n">desc1</span><span class="p">[</span><span class="n">desc1_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">matched_kp1_xy</span> <span class="o">=</span> <span class="n">kp1_xy</span><span class="p">[</span><span class="n">desc1_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">desc2_match_idx</span> <span class="o">=</span> <span class="n">idxs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">rot_matched_kp2</span> <span class="o">=</span> <span class="n">r_kp2</span><span class="p">[</span><span class="n">desc2_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">matched_kp2_xy</span> <span class="o">=</span> <span class="n">rot_tform</span><span class="p">(</span><span class="n">rot_matched_kp2</span><span class="p">)</span>
+        <span class="n">matched_desc2</span> <span class="o">=</span> <span class="n">r_desc2</span><span class="p">[</span><span class="n">desc2_match_idx</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">mean_unfiltered_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">match_distances</span><span class="p">)</span>
+        <span class="n">mean_unfiltered_similarity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">convert_distance_to_similarity</span><span class="p">(</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="n">desc1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">match_info12</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">matched_kp1_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">matched_desc1</span><span class="p">,</span>
+                                <span class="n">matches12</span><span class="o">=</span><span class="n">desc1_match_idx</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">matched_kp2_xy</span><span class="p">,</span>
+                                <span class="n">matched_desc2</span><span class="o">=</span><span class="n">matched_desc2</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">desc2_match_idx</span><span class="p">,</span>
+                                <span class="n">match_distances</span><span class="o">=</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_unfiltered_distance</span><span class="p">,</span>
+                                <span class="n">similarity</span><span class="o">=</span><span class="n">mean_unfiltered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">,</span>
+                                <span class="n">feature_detector_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span><span class="p">)</span>
+
+        <span class="n">match_info21</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">matched_kp2_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">matched_desc2</span><span class="p">,</span>
+                                <span class="n">matches12</span><span class="o">=</span><span class="n">desc2_match_idx</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
+                                <span class="n">matched_desc2</span><span class="o">=</span><span class="n">matched_desc1</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">desc1_match_idx</span><span class="p">,</span>
+                                <span class="n">match_distances</span><span class="o">=</span><span class="n">match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_unfiltered_distance</span><span class="p">,</span>
+                                <span class="n">similarity</span><span class="o">=</span><span class="n">mean_unfiltered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">,</span>
+                                <span class="n">feature_detector_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span><span class="p">)</span>
+
+        <span class="c1"># # Remove outliers</span>
+        <span class="n">filtered_matched_kp1_xy</span><span class="p">,</span> <span class="n">filtered_matched_kp2_xy</span><span class="p">,</span> <span class="n">good_matches_idx</span> <span class="o">=</span> <span class="n">filter_matches_ransac</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="p">,</span>
+                                                                                                   <span class="n">matched_kp2_xy</span><span class="p">,</span>
+                                                                                                   <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">match_filter_method</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">good_matches_idx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">filterd_match_distances</span> <span class="o">=</span> <span class="n">match_distances</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">]</span>
+            <span class="n">filterd_matched_desc1</span> <span class="o">=</span> <span class="n">matched_desc1</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">filterd_matched_desc2</span> <span class="o">=</span> <span class="n">matched_desc2</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">,</span> <span class="p">:]</span>
+
+            <span class="n">good_matches12</span> <span class="o">=</span> <span class="n">desc1_match_idx</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">]</span>
+            <span class="n">good_matches21</span> <span class="o">=</span> <span class="n">desc2_match_idx</span><span class="p">[</span><span class="n">good_matches_idx</span><span class="p">]</span>
+
+            <span class="n">mean_filtered_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">filterd_match_distances</span><span class="p">)</span>
+            <span class="n">mean_filtered_similarity</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">convert_distance_to_similarity</span><span class="p">(</span><span class="n">filterd_match_distances</span><span class="p">,</span>
+                                                    <span class="n">n_features</span><span class="o">=</span><span class="n">desc1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filterd_match_distances</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">filterd_matched_desc1</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">filterd_matched_desc2</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">good_matches12</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">good_matches21</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">mean_filtered_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="n">mean_filtered_similarity</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Record filtered matches</span>
+        <span class="n">filtered_match_info12</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">filtered_matched_kp1_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">filterd_matched_desc1</span><span class="p">,</span>
+                                        <span class="n">matches12</span><span class="o">=</span><span class="n">good_matches12</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">filtered_matched_kp2_xy</span><span class="p">,</span>
+                                        <span class="n">matched_desc2</span><span class="o">=</span><span class="n">filterd_matched_desc2</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">good_matches21</span><span class="p">,</span>
+                                        <span class="n">match_distances</span><span class="o">=</span><span class="n">filterd_match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_filtered_distance</span><span class="p">,</span>
+                                        <span class="n">similarity</span><span class="o">=</span><span class="n">mean_filtered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                        <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">)</span>
+
+        <span class="n">filtered_match_info21</span> <span class="o">=</span> <span class="n">MatchInfo</span><span class="p">(</span><span class="n">matched_kp1_xy</span><span class="o">=</span><span class="n">filtered_matched_kp2_xy</span><span class="p">,</span> <span class="n">matched_desc1</span><span class="o">=</span><span class="n">filterd_matched_desc2</span><span class="p">,</span>
+                                        <span class="n">matches12</span><span class="o">=</span><span class="n">good_matches21</span><span class="p">,</span> <span class="n">matched_kp2_xy</span><span class="o">=</span><span class="n">filtered_matched_kp1_xy</span><span class="p">,</span>
+                                        <span class="n">matched_desc2</span><span class="o">=</span><span class="n">filterd_matched_desc1</span><span class="p">,</span> <span class="n">matches21</span><span class="o">=</span><span class="n">good_matches12</span><span class="p">,</span>
+                                        <span class="n">match_distances</span><span class="o">=</span><span class="n">filterd_match_distances</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">mean_filtered_distance</span><span class="p">,</span>
+                                        <span class="n">similarity</span><span class="o">=</span><span class="n">mean_filtered_similarity</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span>
+                                        <span class="n">metric_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">match_info12</span><span class="p">,</span> <span class="n">filtered_match_info12</span><span class="p">,</span> <span class="n">match_info21</span><span class="p">,</span> <span class="n">filtered_match_info21</span></div>
+</div>
+
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2022, Chandler Gatenbee.
-
-    </p>
+    <p>&#169; Copyright 2022-2025, Chandler Gatenbee.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

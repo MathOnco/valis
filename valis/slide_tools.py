@@ -2,18 +2,23 @@
 Methods to work with slides, after being opened using slide_io
 
 """
+import torch
+import kornia
 
 import os
-from skimage import util, transform, filters
 import pyvips
 import numpy as np
 import colour
+from matplotlib import colormaps
 import re
-import imghdr
+from PIL import Image
 from collections import Counter
+from . import valtils
+
 from . import warp_tools
 from . import slide_io
-from .import viz
+from . import viz
+from . import preprocessing
 
 IHC_NAME = "brightfield"
 IF_NAME = "fluorescence"
@@ -49,6 +54,7 @@ VIPS_FORMAT_NUMPY_DTYPE = {
     'dpcomplex': np.complex128,
 }
 
+
 NUMPY_FORMAT_BF_DTYPE = {'uint8': 'uint8',
                          'int8': 'int8',
                          'uint16': 'uint16',
@@ -58,62 +64,117 @@ NUMPY_FORMAT_BF_DTYPE = {'uint8': 'uint8',
                          'float32': 'float',
                          'float64': 'double'}
 
+# See slide_io.bf_to_numpy_dtype
+BF_DTYPE_PIXEL_TYPE = {'uint8':1,
+                       'int8': 0,
+                       'uint16': 3,
+                       'int16': 2,
+                       'uint32': 5,
+                       'int32': 4,
+                       'float': 6,
+                       'double': 7
+                       }
+
+CZI_FORMAT_NUMPY_DTYPE = {
+    "gray8": "uint8",
+    "gray16": "uint16",
+    "gray32": "uint32",
+    "gray32float": "float32",
+    "bgr24": "uint8",
+    "bgr48": "uint16",
+    "invalid": "uint8",
+}
+
+CZI_FORMAT_TO_BF_FORMAT = {k:NUMPY_FORMAT_BF_DTYPE[v] for k,v in CZI_FORMAT_NUMPY_DTYPE.items()}
+
+BF_FORMAT_NUMPY_DTYPE = {v:k for k, v in NUMPY_FORMAT_BF_DTYPE.items()}
+
 
 def vips2numpy(vi):
     """
     https://github.com/libvips/pyvips/blob/master/examples/pil-numpy-pyvips.py
 
     """
-
-    img = np.ndarray(buffer=vi.write_to_memory(),
-                     dtype=VIPS_FORMAT_NUMPY_DTYPE[vi.format],
-                     shape=[vi.height, vi.width, vi.bands])
-    if vi.bands == 1:
-        img = img[..., 0]
+    try:
+        img = vi.numpy()
+    except:
+        img = np.ndarray(buffer=vi.write_to_memory(),
+                        dtype=VIPS_FORMAT_NUMPY_DTYPE[vi.format],
+                        shape=[vi.height, vi.width, vi.bands])
+        if vi.bands == 1:
+            img = img[..., 0]
 
     return img
 
 
-def numpy2vips(a):
+def numpy2vips(a, pyvips_interpretation=None):
     """
 
     """
+    try:
+        vi = pyvips.Image.new_from_array(a)
 
-    if a.ndim > 2:
-        height, width, bands = a.shape
-    else:
-        height, width = a.shape
-        bands = 1
+    except Exception as e:
+        if a.ndim > 2:
+            height, width, bands = a.shape
+        else:
+            height, width = a.shape
+            bands = 1
 
-    linear = a.reshape(width * height * bands)
-    vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,
-                                      NUMPY_FORMAT_VIPS_DTYPE[str(a.dtype)])
+        linear = a.reshape(width * height * bands)
+        if linear.dtype.byteorder == ">":
+            # vips seems to expect the array to be little endian, but `a` is big endian
+            linear = linear.byteswap(inplace=False)
+
+        vi = pyvips.Image.new_from_memory(linear.data, width, height, bands,
+                                        NUMPY_FORMAT_VIPS_DTYPE[a.dtype.name])
+
+        if pyvips_interpretation is not None:
+            vi = vi.copy(interpretation=pyvips_interpretation)
+
     return vi
 
 
 def get_slide_extension(src_f):
-    """Get slide format
+    if src_f is None:
+        return None
 
-    Parameters
-    ----------
-    src_f : str
-        Path to slide
+    if len(src_f) == 0:
+        return None
 
-    Returns
-    -------
-    slide_format : str
-        Slide format.
+    src_f = str(src_f).lower()
+    possible_formats = [fmt for fmt in slide_io.ALL_READABLE_FORMATS if src_f.endswith(fmt.lower())]
 
-    """
+    if len(possible_formats) == 0:
+        msg = f"Do not recognize format of {src_f}"
+        valtils.print_warning(msg)
+        return None
 
-    f = os.path.split(src_f)[1]
-    if re.search(".ome.tif", f):
-        format_split = -2
+    elif len(possible_formats) == 1:
+        img_extension = possible_formats[0]
+
     else:
-        format_split = -1
-    slide_format = "." + ".".join(f.split(".")[format_split:])
+        match_lengths = [np.diff(re.search(fmt, src_f).span())[0] for fmt in possible_formats]
+        best_match_idx = np.argmax(match_lengths)
+        img_extension = possible_formats[best_match_idx]
 
-    return slide_format
+    if len(img_extension) == 0:
+        # img_extension can be ''
+        return None
+
+    return img_extension
+
+
+def get_level_idx(dims_wh, max_dim):
+    possible_levels = np.where(np.max(dims_wh, axis=1) <= max_dim)[0]
+    if len(possible_levels):
+        level = possible_levels[0]
+    else:
+        level = len(dims_wh) - 1
+
+    level = max(0, level)
+
+    return level
 
 
 def get_img_type(img_f):
@@ -132,24 +193,44 @@ def get_img_type(img_f):
 
     """
 
+    kind = None
     if os.path.isdir(img_f):
+        return kind
+
+    f_extension = get_slide_extension(str(img_f))
+
+    if f_extension is None:
         return None
 
-    f_extension = get_slide_extension(img_f)
-    what_img = imghdr.what(img_f)
+    if f_extension.lower() == '.ds_store':
+        return kind
+
+    is_ome_tiff = slide_io.check_is_ome(str(img_f))
+    is_czi = f_extension == ".czi"
+
+    can_use_pil = False
+    if not is_ome_tiff:
+        try:
+            with valtils.HiddenPrints():
+                pil_image = Image.open(str(img_f))
+            can_use_pil = True
+        except:
+            pass
+
+    can_use_vips = slide_io.check_to_use_vips(str(img_f))
+    if not is_ome_tiff and (can_use_pil or can_use_vips):
+        return TYPE_IMG_NAME
+
+    can_use_openslide = slide_io.check_to_use_openslide(str(img_f))
+    if can_use_openslide or is_ome_tiff or is_czi:
+        return TYPE_SLIDE_NAME
+
+    # Finally, see if Bioformats can read slide.
     if slide_io.BF_READABLE_FORMATS is None:
         slide_io.init_jvm()
-
     can_use_bf = f_extension in slide_io.BF_READABLE_FORMATS
-    can_use_openslide = slide_io.check_to_use_openslide(img_f)
-    is_tiff = f_extension == ".tiff" or f_extension == ".tif"
-    can_use_skimage = ".".join(f_extension.split(".")[1:]) == what_img and not is_tiff
-
-    kind = None
-    if can_use_skimage:
-        kind = TYPE_IMG_NAME
-    elif can_use_bf or can_use_openslide:
-        kind = TYPE_SLIDE_NAME
+    if can_use_bf:
+        return TYPE_SLIDE_NAME
 
     return kind
 
@@ -183,7 +264,8 @@ def determine_if_staining_round(src_dir):
         multifile_img = False
         master_img_f = None
     else:
-        f_list = [os.path.join(src_dir, f) for f in os.listdir(src_dir) if get_img_type(os.path.join(src_dir, f)) is not None]
+
+        f_list = [os.path.join(src_dir, f) for f in os.listdir(src_dir) if get_img_type(os.path.join(src_dir, f)) is not None and not f.startswith(".")]
         extensions = [get_slide_extension(f) for f in f_list]
         format_counts = Counter(extensions)
         format_count_values = list(format_counts.values())
@@ -206,7 +288,10 @@ def um_to_px(um, um_per_px):
     return um * 1/um_per_px
 
 
-def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc, M=None, dxdy=None, level=0, series=None, interp_method="bicubic", bg_color=None):
+def warp_slide(src_f, transformation_src_shape_rc, transformation_dst_shape_rc,
+               aligned_slide_shape_rc, M=None, dxdy=None,
+               level=0, series=None, interp_method="bicubic",
+               bbox_xywh=None, bg_color=None, reader=None):
     """ Warp a slide
 
     Warp slide according to `M` and/or `non_rigid_dxdy`
@@ -216,13 +301,12 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
     src_f : str
         Path to slide
 
-        out_shape_rc : (N, M)
-        Shape of the image with shape in_shape_rc after warping. This could be the shape of the
-        original image after applying M
+    transformation_src_shape_rc : (N, M)
+        Shape of the image used to find the transformations
 
-    aligned_img_shape_rc : (int, int)
-        Shape of image that was used to find the transformation. For example,
-        this could be the original image in which features were detected
+    transformation_dst_shape_rc : (int, int)
+        Shape of image with shape `in_shape_rc`, after being warped,
+        i.e. the shape of the registered image.
 
     aligned_slide_shape_rc : (int, int)
         Shape of the warped slide.
@@ -234,7 +318,8 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
         3x3 Affine transformation matrix to perform rigid warp
 
     dxdy : ndarray, optional
-        An array containing the x-axis (column) displacement, and y-axis (row) displacement applied after the rigid transformation
+        An array containing the x-axis (column) displacement,
+        and y-axis (row) displacement applied after the rigid transformation
 
     level : int, optional
         Pyramid level
@@ -244,9 +329,9 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
 
     interp_method : str, optional
 
-    bg_color : ndarray, background
-        RGB color to fill background with.
-
+    bbox_xywh : tuple
+        Bounding box to crop warped slide. Should be in refernce the
+        warped slide
 
     Returns
     -------
@@ -254,9 +339,10 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
         A warped copy of the slide specified by `src_f`
 
     """
+    if reader is None:
+        reader_cls = slide_io.get_slide_reader(src_f, series=series)
+        reader = reader_cls(src_f, series=series)
 
-    reader_cls = slide_io.get_slide_reader(src_f, series=series)
-    reader = reader_cls(src_f, series=series)
     if series is None:
         series = reader.series
 
@@ -264,43 +350,52 @@ def warp_slide(src_f, in_shape_rc, aligned_img_shape_rc, aligned_slide_shape_rc,
     if M is None and dxdy is None:
         return vips_slide
 
-    slide_shape_rc = np.array((vips_slide.height,  vips_slide.width))
-    slide_warp_map = warp_tools.get_warp_map(M=M, dxdy=dxdy, out_shape_rc=aligned_img_shape_rc, scaled_out_shape_rc = aligned_slide_shape_rc, in_shape_rc=in_shape_rc, scaled_in_shape_rc=slide_shape_rc, return_xy=True)
-
-    vips_new_x = numpy2vips(np.ascontiguousarray(slide_warp_map[0]))
-    vips_new_y = numpy2vips(np.ascontiguousarray(slide_warp_map[1]))
-
-    h, w = aligned_slide_shape_rc
-    scale_y, scale_x = np.array(aligned_slide_shape_rc)/np.array(aligned_img_shape_rc)
-    sim_tform = transform.SimilarityTransform(scale=(scale_x, scale_y))
-    S = sim_tform.params
-    interpolator = pyvips.Interpolate.new(interp_method)
-    scaled_new_x = vips_new_x.affine(S[0:2, 0:2].reshape(-1).tolist(), oarea=[0, 0, w, h], interpolate=interpolator)
-    scaled_new_y = vips_new_y.affine(S[0:2, 0:2].reshape(-1).tolist(), oarea=[0, 0, w, h], interpolate=interpolator)
-    warp_index = scaled_new_x.bandjoin(scaled_new_y)
-    vips_warped = vips_slide.mapim(warp_index, interpolate=interpolator)
-
-    if bg_color is not None:
-        if bg_color.lower() == BG_AUTO_FILL_STR:
-            small_img_level = len(reader.metadata.slide_dimensions) - 1
-            small_img = reader.slide2image(level=small_img_level, series=series)
-            small_img = util.img_as_ubyte(small_img)
-            with colour.utilities.suppress_warnings(colour_usage_warnings=True):
-                if 1 < small_img.max() <= 255 and np.issubdtype(small_img.dtype, np.integer):
-                    cam16 = colour.convert(small_img/255, 'sRGB', "CAM16UCS")
-                else:
-                    cam16 = colour.convert(small_img, 'sRGB', "CAM16UCS")
-
-            lum = cam16[..., 0]
-            _, lt = filters.threshold_multiotsu(lum[lum > 0])
-            thresholded_idx = np.where(lum > lt)
-            bg_color = np.round(np.mean(small_img[thresholded_idx], axis=0)).astype(np.int)
-            bg_color = np.clip(bg_color, 0, 255).tolist()
-            print("bg color is", bg_color)
-
-        vips_warped = (vips_warped == [0, 0, 0]).bandand().ifthenelse(bg_color, vips_warped)
+    vips_warped = warp_tools.warp_img(img=vips_slide, M=M, bk_dxdy=dxdy,
+                                      transformation_dst_shape_rc=transformation_dst_shape_rc,
+                                      out_shape_rc=aligned_slide_shape_rc,
+                                      transformation_src_shape_rc=transformation_src_shape_rc,
+                                      bbox_xywh=bbox_xywh,
+                                      bg_color=bg_color,
+                                      interp_method=interp_method)
 
     return vips_warped
+
+
+def get_matplotlib_channel_colors(n_colors, name="gist_rainbow", min_lum=0.5, min_c=0.2):
+    """Get channel colors using matplotlib colormaps
+
+    Parameters
+    ----------
+    n_colors : int
+        Number of colors needed.
+
+    name : str
+        Name of matplotlib colormap
+
+    min_lum : float
+        Minimum luminosity allowed
+
+    min_c : float
+        Minimum colorfulness allowed
+
+    Returns
+    --------
+    channel_colors : ndarray
+        RGB values for each of the `n_colors`
+
+    """
+    n = 200
+    if n_colors > n:
+        n = n_colors
+    all_colors = colormaps[name](np.linspace(0, 1, n))[..., 0:3]
+
+    # Only allow bright colors #
+    jch = preprocessing.rgb2jch(all_colors)
+    all_colors = all_colors[(jch[..., 0] >= min_lum) & (jch[..., 1] >= min_c)]
+    channel_colors = viz.get_n_colors(all_colors, n_colors)
+    channel_colors = (255*channel_colors).astype(np.uint8)
+
+    return channel_colors
 
 
 def turbo_channel_colors(n_colors):
@@ -356,7 +451,6 @@ def perceptually_uniform_channel_colors(n_colors):
 
     """
     cmap = viz.jzazbz_cmap()
-    # cmap = viz.cam16ucs_cmap()
     channel_colors = viz.get_n_colors(cmap, n_colors)
     channel_colors = (channel_colors*255).astype(np.uint8)
 

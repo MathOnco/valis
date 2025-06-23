@@ -1,6 +1,63 @@
+[[tool.pdm.source]]
+name = "torchcpu"
+url = "https://download.pytorch.org/whl/cpu"
+verify_ssl = true
+
+[[tool.pdm.source]]
+name = "PyPI"
+url = ""
+verify_ssl = false
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+authors = [
+    {name = "Chandler Gatenbee", email = "chandlergatenbee@gmail.com"},
 ]
-build-backend = "setuptools.build_meta"
+
+license = {text = "MIT"}
+requires-python = "<=3.13,>=3.9"
+dependencies = [
+    "beautifulsoup4<5.0.0,>=4.11.1",
+    "scyjava<2.0.0,>=1.8.1",
+    "colorama<1.0.0,>=0.4.6",
+    "colour-science>0.4.2",
+    "fastcluster<2.0.0,>=1.2.6",
+    "jpype1<2.0.0,>=1.4.1",
+    "matplotlib<4.0.0,>=3.6.3",
+    "numpy>1.23,<2.0.0",
+    "ome-types<1.0.0,>=0.3.2",
+    "opencv-contrib-python-headless==4.9.0.80",
+    "pandas>=1.5.2",
+    "pillow>=10.3.0",
+    "scikit-learn<2.0.0,>=1.2.0",
+    "scipy<2.0.0,>=1.10.0",
+    "shapely<3.0.0,>=2.0.0",
+    "tqdm<5.0.0,>=4.64.1",
+    "weightedstats<1.0.0,>=0.4.1",
+    "pqdm<1.0.0,>=0.2.0",
+    "markupsafe<3.0.0,>=2.0.0",
+    "aicspylibczi<4.0.0,>=3.1.2",
+    "setuptools<70.0.0,>=69.0.3",
+    "scikit-image<1.0.0,>=0.24.0",
+    "kornia<1.0.0,>=0.7.3",
+    "einops<1.0.0,>=0.8.0",
+    "torchvision<1.0.0,>=0.20.1",
+    "openpyxl<4.0.0,>=3.1.5",
+    "simpleitk<3.0.0,>=2.4.1",
+    "lxml>=5.4.0",
+    "pyvips>2.2.1",
+    "torch>=2.7.1",
+]
+name = "valis-wsi"
+version = "1.2.0"
+description = ""
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "sphinx>=7.4.7",
+    "sphinx-rtd-theme>=3.0.2",
+    "twine>=6.1.0",
+]

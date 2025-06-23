@@ -1,170 +1,88 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>valis.feature_detectors &mdash; valis  &#34;1.0.0rc0&#34;
+  <title>valis.feature_detectors &mdash; valis &#34;1.2.0&#34;
  documentation</title>
-  
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=784e175d"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: black" >
-          
 
           
-            <a href="../../index.html">
           
-
-          
+          <a href="../../index.html">
             
-            <img src="../../_static/valis_logo_black_no_bg.png" class="logo" alt="Logo"/>
-          
+              <img src="https://github.com/MathOnco/valis/raw/main/docs/_images/valis_logo_black_no_bg.png" class="logo" alt="Logo"/>
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../registration.html">Registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../slide_io.html">Slide I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../preprocessing.html">Image pre-processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../feature_detectors.html">Feature detectors and descriptors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../feature_matcher.html">Feature matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../affine_optimizer.html">Affine optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../micro_rigid_registrar.html">Micro-rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../non_rigid_registrars.html">Non-rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../serial_rigid.html">Serial rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../serial_non_rigid.html">Serial non-rigid registration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../viz.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Change Log</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">valis</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-        
-      <li>valis.feature_detectors</li>
-    
-    
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">valis.feature_detectors</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for valis.feature_detectors</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Functions and classes to detect and describe image features</span>
 
@@ -176,22 +94,33 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">exposure</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">valtils</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">kornia</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage</span><span class="w"> </span><span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">exposure</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage</span><span class="w"> </span><span class="kn">import</span> <span class="n">color</span> <span class="k">as</span> <span class="n">skcolor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">kornia.feature</span><span class="w"> </span><span class="kn">import</span> <span class="n">DISK</span><span class="p">,</span> <span class="n">DeDoDe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">valtils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">warp_tools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocessing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.superglue_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">superpoint</span>
 
 <span class="n">DEFAULT_FEATURE_DETECTOR</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">BRISK_create</span><span class="p">()</span>
 <span class="sd">&quot;&quot;&quot;The default OpenCV feature detector&quot;&quot;&quot;</span>
 
-<span class="n">MAX_FEATURES</span> <span class="o">=</span> <span class="mi">20000</span>
+<span class="n">MAX_FEATURES</span> <span class="o">=</span> <span class="mi">7500</span>
+
 <span class="sd">&quot;&quot;&quot;Maximum number of image features that will be recorded. If the number</span>
 <span class="sd">of features exceeds this value, the MAX_FEATURES features with the</span>
 <span class="sd">highest response will be returned.&quot;&quot;&quot;</span>
 
 
-<div class="viewcode-block" id="filter_features"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.filter_features">[docs]</a><span class="k">def</span> <span class="nf">filter_features</span><span class="p">(</span><span class="n">kp</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">n_keep</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get keypoints with highest response</span>
+<div class="viewcode-block" id="filter_features">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.filter_features">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_features</span><span class="p">(</span><span class="n">kp</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">n_keep</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get keypoints with highest response</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -217,8 +146,11 @@
     <span class="k">return</span> <span class="p">[</span><span class="n">kp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">keep_idx</span><span class="p">],</span> <span class="n">desc</span><span class="p">[</span><span class="n">keep_idx</span><span class="p">,</span> <span class="p">:]</span></div>
 
 
-<div class="viewcode-block" id="FeatureDD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.FeatureDD">[docs]</a><span class="k">class</span> <span class="nc">FeatureDD</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Abstract class for feature detection and description.</span>
+
+<div class="viewcode-block" id="FeatureDD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.FeatureDD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FeatureDD</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract class for feature detection and description.</span>
 
 <span class="sd">    User can create other feature detectors as subclasses, but each must</span>
 <span class="sd">    return keypoint positions in xy coordinates along with the descriptors</span>
@@ -249,8 +181,10 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="FeatureDD.__init__"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.FeatureDD.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="FeatureDD.__init__">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.FeatureDD.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_levels</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">            kp_detector : object</span>
@@ -263,6 +197,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span> <span class="o">=</span> <span class="n">kp_detector</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor</span> <span class="o">=</span> <span class="n">kp_descriptor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rgb</span> <span class="o">=</span> <span class="n">rgb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_levels</span> <span class="o">=</span> <span class="n">n_levels</span>
 
         <span class="k">if</span> <span class="n">kp_descriptor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">kp_detector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># User provides both a detector and descriptor #</span>
@@ -284,13 +220,15 @@
                 <span class="n">kp_descriptor</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">_img</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
             <span class="k">except</span><span class="p">:</span>
+                <span class="n">traceback_msg</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span><span class="si">}</span><span class="s2"> unable to both detect and compute features. Setting to </span><span class="si">{</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">valtils</span><span class="o">.</span><span class="n">print_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">traceback_msg</span><span class="o">=</span><span class="n">traceback_msg</span><span class="p">)</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span> <span class="o">=</span> <span class="n">DEFAULT_FEATURE_DETECTOR</span></div>
 
-<div class="viewcode-block" id="FeatureDD.detect_and_compute"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.FeatureDD.detect_and_compute">[docs]</a>    <span class="k">def</span> <span class="nf">detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Detect the features in the image</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect the features in the image</span>
 
 <span class="sd">        Detect the features in the image using the defined kp_detector, then</span>
 <span class="sd">        describe the features using the kp_descriptor. The user can override</span>
@@ -322,7 +260,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">detected_kp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">detect</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
             <span class="n">kp</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">detected_kp</span><span class="p">)</span>
-            <span class="nb">type</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="n">kp</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor</span><span class="o">.</span><span class="n">detectAndCompute</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
@@ -333,73 +270,126 @@
 
         <span class="n">kp_pos_xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kp</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span></div></div>
+        <span class="k">return</span> <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="n">all_kp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">all_desc</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">detect_img</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_levels</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;detecting features in level </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> with image shape </span><span class="si">{</span><span class="n">detect_img</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_and_compute</span><span class="p">(</span><span class="n">detect_img</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+            <span class="n">kp_pos_xy</span> <span class="o">*=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">**</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">all_kp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kp_pos_xy</span><span class="p">)</span>
+            <span class="n">all_desc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_levels</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">detect_img</span> <span class="o">=</span> <span class="n">warp_tools</span><span class="o">.</span><span class="n">rescale_img</span><span class="p">(</span><span class="n">detect_img</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+        <span class="n">all_kp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">all_kp</span><span class="p">)</span>
+        <span class="n">all_desc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">all_desc</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_kp</span><span class="p">,</span> <span class="n">all_desc</span></div>
+
 
 <span class="c1"># Thin wrappers around OpenCV detectors and descriptors #</span>
 
 
-<span class="k">class</span> <span class="nc">OrbFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses ORB for feature detection and description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">ORB_create</span><span class="p">(</span><span class="n">MAX_FEATURES</span><span class="p">)):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OrbFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses ORB for feature detection and description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">ORB_create</span><span class="p">(</span><span class="n">MAX_FEATURES</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="BriskFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.BriskFD">[docs]</a><span class="k">class</span> <span class="nc">BriskFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">BRISK_create</span><span class="p">()):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+<div class="viewcode-block" id="BriskFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.BriskFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BriskFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">BRISK_create</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="KazeFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.KazeFD">[docs]</a><span class="k">class</span> <span class="nc">KazeFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses KAZE for feature detection and description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">KAZE_create</span><span class="p">(</span><span class="n">extended</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KazeFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.KazeFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">KazeFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses KAZE for feature detection and description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">KAZE_create</span><span class="p">(</span><span class="n">extended</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AkazeFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.AkazeFD">[docs]</a><span class="k">class</span> <span class="nc">AkazeFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses AKAZE for feature detection and description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">AKAZE_create</span><span class="p">()):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AkazeFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.AkazeFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AkazeFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses AKAZE for feature detection and description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">AKAZE_create</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="DaisyFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.DaisyFD">[docs]</a><span class="k">class</span> <span class="nc">DaisyFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and DAISY for feature description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
-                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">DAISY_create</span><span class="p">()):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DaisyFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.DaisyFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DaisyFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and DAISY for feature description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
+                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">DAISY_create</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="LatchFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.LatchFD">[docs]</a><span class="k">class</span> <span class="nc">LatchFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and LATCH for feature description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
-                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">LATCH_create</span><span class="p">(</span><span class="n">rotationInvariance</span><span class="o">=</span><span class="kc">True</span><span class="p">)):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LatchFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.LatchFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LatchFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and LATCH for feature description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
+                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">LATCH_create</span><span class="p">(</span><span class="n">rotationInvariance</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BoostFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.BoostFD">[docs]</a><span class="k">class</span> <span class="nc">BoostFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and Boost for feature description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
-                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">BoostDesc_create</span><span class="p">()):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BoostFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.BoostFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BoostFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and Boost for feature description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
+                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">BoostDesc_create</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="VggFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.VggFD">[docs]</a><span class="k">class</span> <span class="nc">VggFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and VGG for feature description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
-                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">VGG_create</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mf">6.25</span><span class="p">)):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VggFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.VggFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VggFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses BRISK for feature detection and VGG for feature description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">kp_detector</span><span class="o">=</span><span class="n">DEFAULT_FEATURE_DETECTOR</span><span class="p">,</span>
+                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">VGG_create</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mf">5.0</span><span class="p">),</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="OrbVggFD"><a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.OrbVggFD">[docs]</a><span class="k">class</span> <span class="nc">OrbVggFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses ORB for feature detection and VGG for feature description&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">kp_detector</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">ORB_create</span><span class="p">(</span><span class="n">nfeatures</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">,</span> <span class="n">fastThreshold</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">VGG_create</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mf">6.25</span><span class="p">)):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrbVggFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.OrbVggFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OrbVggFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses ORB for feature detection and VGG for feature description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">kp_detector</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">ORB_create</span><span class="p">(</span><span class="n">nfeatures</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">,</span> <span class="n">fastThreshold</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">VGG_create</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mf">0.75</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SKOrbVggFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uses ORB for feature detection and VGG for feature description&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">kp_detector</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">ORB_create</span><span class="p">(</span><span class="n">nfeatures</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">,</span> <span class="n">fastThreshold</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">VGG_create</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mf">0.75</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="c1"># Example of a custom detector that uses the Censure feature detector</span>
 <span class="c1"># from scikit-image along with the KAZE descriptor (OpenCV)</span>
-<span class="k">class</span> <span class="nc">FeatureDetector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Abstract class that detects features in an image</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FeatureDetector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract class that detects features in an image</span>
 
 <span class="sd">    Features should be returned in a list of OpenCV cv2.KeyPoint objects.</span>
 <span class="sd">    Useful if wanting to use a non-OpenCV feature detector</span>
@@ -418,11 +408,11 @@
 <span class="sd">    Required methods are: detect</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">detector</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Use detector to detect features, and return keypoints as XY</span>
 
 <span class="sd">        Returns</span>
@@ -435,19 +425,20 @@
 
 
 <span class="c1"># Example of how to create a feature detector using OpenCV + skimage #</span>
-<span class="k">class</span> <span class="nc">SkCensureDetector</span><span class="p">(</span><span class="n">FeatureDetector</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A CENSURE feature detector from scikit image</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SkCensureDetector</span><span class="p">(</span><span class="n">FeatureDetector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A CENSURE feature detector from scikit image</span>
 
 <span class="sd">    This scikit-image feature detecotr can be used with an</span>
 <span class="sd">    OpenCV feature descriptor</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">detector</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">CENSURE</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">CENSURE</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Detect keypoints in image using CENSURE.</span>
 <span class="sd">        See https://scikit-image.org/docs/dev/api/skimage.feature.html#skimage.feature.CENSURE</span>
 
@@ -464,31 +455,39 @@
 <span class="sd">        kp : KeyPoints</span>
 <span class="sd">            List of OpenCV KeyPoint objects</span>
 
+
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">detect</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">detect</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">keypoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">keypoints</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">base_patch_size</span> <span class="o">=</span> <span class="mi">31</span>
+        <span class="n">kp_scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">scales</span>
+        <span class="n">unique_scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">kp_scales</span><span class="p">)</span>
+        <span class="n">scale_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">unique_scales</span><span class="p">))</span>
+        <span class="n">kp_ocatves</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">kp_scales</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">kp_scales</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">kp_scales</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="n">scale_diff</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_scales</span><span class="p">)))</span>
+        <span class="n">cv_kp</span> <span class="o">=</span> <span class="p">[</span><span class="n">cv2</span><span class="o">.</span><span class="n">KeyPoint</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">keypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                              <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">keypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                              <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">base_patch_size</span><span class="o">*</span><span class="n">kp_ocatves</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                              <span class="n">octave</span><span class="o">=</span><span class="n">kp_ocatves</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                          <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">keypoints</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="p">]</span>
+        <span class="k">return</span> <span class="n">cv_kp</span>
 
-        <span class="c1"># Skimage returns keypoints as row, col, but need to be returned as xy</span>
-        <span class="n">kp_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">keypoints</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-        <span class="c1"># Now create a list of OpenCV KeyPoint objects with these coordinates</span>
-        <span class="n">kp</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">KeyPoint_convert</span><span class="p">(</span><span class="n">kp_xy</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
 
-        <span class="k">return</span> <span class="n">kp</span>
-
-
-<span class="k">class</span> <span class="nc">CensureVggFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">SkCensureDetector</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;Octagon&quot;</span><span class="p">,</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CensureVggFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">SkCensureDetector</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;Octagon&quot;</span><span class="p">,</span>
                  <span class="n">max_scale</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">non_max_threshold</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
-                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">VGG_create</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mf">6.25</span><span class="p">)):</span>
+                 <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">xfeatures2d</span><span class="o">.</span><span class="n">VGG_create</span><span class="p">(</span><span class="n">scale_factor</span><span class="o">=</span><span class="mf">6.25</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
 
 
 <span class="c1"># Example of a custom detector and descriptor using scikit-image #</span>
-<span class="k">class</span> <span class="nc">SkDaisy</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dasiy_arg_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkDaisy</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dasiy_arg_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create FeatureDD that uses scikit-image&#39;s dense DASIY</span>
 <span class="sd">        https://scikit-image.org/docs/dev/auto_examples/features_detection/plot_daisy.html#sphx-glr-auto-examples-features-detection-plot-daisy-py</span>
 
@@ -510,7 +509,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
 
-    <span class="k">def</span> <span class="nf">detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">descs</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">daisy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">dasiy_arg_dict</span><span class="p">)</span>
 
         <span class="c1"># Keypoints in a regular grid, and each point has a feature array #</span>
@@ -533,49 +532,296 @@
         <span class="n">kp_xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">feature_x</span><span class="p">,</span> <span class="n">feature_y</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">kp_xy</span><span class="p">,</span> <span class="n">desc2d</span>
+
+
+<div class="viewcode-block" id="SuperPointFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.SuperPointFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SuperPointFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;SuperPoint `FeatureDD`</span>
+
+<span class="sd">    Use SuperPoint to detect and describe features (`detect_and_compute`)</span>
+<span class="sd">    Adapted from https://github.com/magicleap/SuperGluePretrainedNetwork/blob/master/match_pairs.py</span>
+
+<span class="sd">    References</span>
+<span class="sd">    -----------</span>
+<span class="sd">    Paul-Edouard Sarlin, Daniel DeTone, Tomasz Malisiewicz, and Andrew</span>
+<span class="sd">    Rabinovich. SuperGlue: Learning Feature Matching with Graph Neural</span>
+<span class="sd">    Networks. In CVPR, 2020. https://arxiv.org/abs/1911.11763</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keypoint_threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">nms_radius</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">force_cpu</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        keypoint_threshold : float</span>
+<span class="sd">            SuperPoint keypoint detector confidence threshold</span>
+
+<span class="sd">        nms_radius : int</span>
+<span class="sd">            SuperPoint Non Maximum Suppression (NMS) radius (must be positive)</span>
+
+<span class="sd">        force_cpu : bool</span>
+<span class="sd">            Force pytorch to run in CPU mode</span>
+
+<span class="sd">        kp_descriptor : optional, OpenCV feature descriptor</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">kp_detector</span><span class="o">=</span><span class="n">kp_detector</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">kp_descriptor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_threshold</span> <span class="o">=</span> <span class="n">keypoint_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nms_radius</span> <span class="o">=</span> <span class="n">nms_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_cpu</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+
+        <span class="k">if</span> <span class="n">kp_detector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector_name</span> <span class="o">=</span> <span class="s2">&quot;SuperPoint&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector_name</span> <span class="o">=</span> <span class="n">kp_detector</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="k">if</span> <span class="n">kp_descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span> <span class="o">=</span> <span class="s2">&quot;SuperPoint&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span> <span class="o">=</span> <span class="n">kp_descriptor</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;superpoint&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;nms_radius&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nms_radius</span><span class="p">,</span>
+                <span class="s1">&#39;keypoint_threshold&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_threshold</span><span class="p">,</span>
+                <span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="s1">&#39;max_keypoints&#39;</span><span class="p">:</span> <span class="n">MAX_FEATURES</span>
+            <span class="p">}}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">frame2tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="n">float_img</span> <span class="o">=</span> <span class="n">exposure</span><span class="o">.</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">out_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">float_img</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tensor</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_and_compute_sg</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span><span class="o">.</span><span class="n">detect</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">kp_pos_xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kp</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">kp_pos_xy</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">kp_pos_xy</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">superpoint</span><span class="o">.</span><span class="n">SuperPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;superpoint&quot;</span><span class="p">])</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv1a</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame2tensor</span><span class="p">(</span><span class="n">img</span><span class="p">)))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv1b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv2a</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv2b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv3a</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv3b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv4a</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">conv4b</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+            <span class="n">cDa</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">convDa</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">descriptors</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">convDb</span><span class="p">(</span><span class="n">cDa</span><span class="p">)</span>
+            <span class="n">descriptors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">descriptors</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">descriptors</span> <span class="o">=</span> <span class="p">[</span><span class="n">superpoint</span><span class="o">.</span><span class="n">sample_descriptors</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="mi">8</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">kp_pos_xy</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))],</span> <span class="n">descriptors</span><span class="p">)]</span>
+
+            <span class="n">descriptors</span> <span class="o">=</span> <span class="n">descriptors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kp</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">KeyPoint_convert</span><span class="p">(</span><span class="n">kp_pos_xy</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">kp</span><span class="p">,</span> <span class="n">descriptors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">kp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">descriptors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">MAX_FEATURES</span><span class="p">:</span>
+                <span class="n">kp</span><span class="p">,</span> <span class="n">descriptors</span> <span class="o">=</span> <span class="n">filter_features</span><span class="p">(</span><span class="n">kp</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">)</span>
+
+            <span class="n">kp_pos_xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">pt</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kp</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">descriptors</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect_and_compute_sg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame2tensor</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">superpoint_obj</span> <span class="o">=</span> <span class="n">superpoint</span><span class="o">.</span><span class="n">SuperPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;superpoint&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">superpoint_obj</span><span class="p">({</span><span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">inp</span><span class="p">})</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">pred</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="o">+</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pred</span><span class="o">.</span><span class="n">items</span><span class="p">()}}</span>
+        <span class="n">kp_pos_xy</span> <span class="o">=</span> <span class="n">pred</span><span class="p">[</span><span class="s1">&#39;keypoints&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">pred</span><span class="p">[</span><span class="s1">&#39;descriptors&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="k">return</span> <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_and_compute_sg</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kp_pos_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">kp_pos_xy</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span></div>
+
+
+
+<div class="viewcode-block" id="KorniaFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.KorniaFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">KorniaFD</span><span class="p">(</span><span class="n">FeatureDD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract class for feature detectors implemented in Kornia</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">num_features</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rgb</span> <span class="o">=</span> <span class="n">rgb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">=</span><span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_features</span><span class="o">=</span><span class="n">num_features</span></div>
+
+
+
+<div class="viewcode-block" id="DiskFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.DiskFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DiskFD</span><span class="p">(</span><span class="n">KorniaFD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DISK feature detector and descriptor, implemented in Kornia.</span>
+
+<span class="sd">    Citation</span>
+<span class="sd">    --------</span>
+<span class="sd">    Michał Tyszkiewicz, Pascal Fua, and Eduard Trulls.</span>
+<span class="sd">    Disk: learning local features with policy gradient.</span>
+<span class="sd">    Advances in Neural Information Processing Systems, 33:14254–14265, 2020.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DISK</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">DISK</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">,</span> <span class="n">quant_image</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">rgb</span><span class="o">=</span><span class="n">rgb</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="n">num_features</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disk</span> <span class="o">=</span> <span class="n">kp_detector</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span> <span class="o">=</span> <span class="n">kp_detector</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector_name</span> <span class="o">=</span> <span class="n">kp_descriptor</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">light_glue_feature_name</span> <span class="o">=</span> <span class="s2">&quot;disk&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quant_img</span> <span class="o">=</span> <span class="n">quant_image</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect the features in the image</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image : ndarray</span>
+<span class="sd">            Image in which the features will be detected. Can be</span>
+<span class="sd">            single channel or RGB</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        kp : ndarry</span>
+<span class="sd">            (N, 2) array positions of keypoints in xy corrdinates for N</span>
+<span class="sd">            keypoints</span>
+
+<span class="sd">        desc : ndarry</span>
+<span class="sd">            (N, M) array containing M features for each of the N keypoints</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tensor_img</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">img_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">inference_mode</span><span class="p">():</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">disk</span><span class="p">(</span><span class="n">tensor_img</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_features</span><span class="p">,</span> <span class="n">pad_if_not_divisible</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">kp_pos_xy</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">keypoints</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">descriptors</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span></div>
+
+
+
+<div class="viewcode-block" id="DeDoDeFD">
+<a class="viewcode-back" href="../../feature_detectors.html#valis.feature_detectors.DeDoDeFD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DeDoDeFD</span><span class="p">(</span><span class="n">KorniaFD</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DeDoDe feature detector and descriptor, implemented in Kornia.</span>
+
+<span class="sd">    Citation</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    Johan Edstedt, Georg Bökman, Mårten Wadenbäck, and Michael Felsberg.</span>
+<span class="sd">    DeDoDe: Detect, Don&#39;t Describe — Describe, Don&#39;t Detect for Local Feature Matching.</span>
+<span class="sd">    In 2024 International Conference on 3D Vision (3DV). 2024.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kp_detector</span><span class="o">=</span><span class="n">DeDoDe</span><span class="p">,</span> <span class="n">kp_descriptor</span><span class="o">=</span><span class="n">DeDoDe</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="n">MAX_FEATURES</span><span class="p">,</span> <span class="n">quant_image</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">rgb</span><span class="o">=</span><span class="n">rgb</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="n">num_features</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quant_image</span> <span class="o">=</span> <span class="n">quant_image</span>
+        <span class="n">amp_dtype</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span> <span class="k">if</span> <span class="n">device</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dedode</span> <span class="o">=</span> <span class="n">kp_detector</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">amp_dtype</span><span class="o">=</span><span class="n">amp_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_descriptor_name</span> <span class="o">=</span> <span class="n">kp_detector</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kp_detector_name</span> <span class="o">=</span> <span class="n">kp_descriptor</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">light_glue_feature_name</span> <span class="o">=</span> <span class="s2">&quot;dedodeg&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_and_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect the features in the image</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image : ndarray</span>
+<span class="sd">            Image in which the features will be detected. Can be</span>
+<span class="sd">            single channel or RGB</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        kp : ndarry</span>
+<span class="sd">            (N, 2) array positions of keypoints in xy corrdinates for N</span>
+<span class="sd">            keypoints</span>
+
+<span class="sd">        desc : ndarry</span>
+<span class="sd">            (N, M) array containing M features for each of the N keypoints</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tensor_img</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">img_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">inference_mode</span><span class="p">():</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dedode</span><span class="p">(</span><span class="n">tensor_img</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_features</span><span class="p">,</span> <span class="n">pad_if_not_divisible</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">kp_pos_xy</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">kp_pos_xy</span><span class="p">,</span> <span class="n">desc</span></div>
+
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2022, Chandler Gatenbee.
-
-    </p>
+    <p>&#169; Copyright 2022-2025, Chandler Gatenbee.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

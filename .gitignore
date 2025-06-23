@@ -129,6 +129,18 @@ ENV/
 env.bak/
 venv.bak/
 
+# VS code project settings
+.vscode/
+.vscode/**
+
+# VS code devcontainer settings
+.devcontainer/
+.devcontainer/**
+
+#PyCharm project settings
+.idea/
+.idea/**
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -154,3 +166,55 @@ dmypy.json
 cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
+examples/expected_results/registration/cycif/data/cycif_registrar.pickle
+examples/expected_results/registration/ihc/data/ihc_registrar.pickle
+examples/expected_results/registration/ihc/data/ihc_registrar.pickle
+examples/warp_associated_img/ihc/data/ihc_registrar.pickle
+examples/warp_associated_img/ihc/data/ihc_registrar.pickle
+
+tests/
+!tests/conftest.py
+!tests/test_examples.py
+
+.nox/
+
+docs/html/
+
+.DS_Store
+
+valis.zip
+
+Dockerfile_torch
+
+old_pyproject.toml
+
+Dockerfile_torch_alpine_fail
+
+_Dockerfile_old
+
+Dockerfile_torch_debian
+
+torch_pyproject.toml
+
+pip_poetry.lock
+
+pip_pyproject.toml
+
+docker_run_tests.sh
+
+docker_run_tests_by_line.sh
+
+git_poetry.lock
+
+git_pyproject.toml
+
+docker-volume-cp.sh
+docker_example_test/
+
+
+valis/comet_images.code-workspace
+<<<<<<< HEAD
+
+*.pyc
+=======
+>>>>>>> 1.2.0

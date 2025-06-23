@@ -1,4 +1,4 @@
-__version__ = "1.0.0rc0"
+__version__ = "1.2.0"
 
 from . import affine_optimizer
 from . import feature_detectors
@@ -13,6 +13,7 @@ from . import slide_tools
 from . import valtils
 from . import viz
 from . import warp_tools
+from . import micro_rigid_registrar
 
 __all__ = ["affine_optimizer",
            "feature_detectors",
@@ -26,5 +27,6 @@ __all__ = ["affine_optimizer",
            "slide_tools",
            "valtils",
            "viz",
-           "warp_tools"
+           "warp_tools",
+           "micro_rigid_registrar"
            ]
