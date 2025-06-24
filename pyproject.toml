@@ -24,7 +24,7 @@ dependencies = [
     "numpy>1.23,<2.0.0",
     "ome-types<1.0.0,>=0.3.2",
     "opencv-contrib-python-headless==4.9.0.80",
-    "pandas>=1.5.2",
+    "pandas>=2.0.0",
     "pillow>=10.3.0",
     "scikit-learn<2.0.0,>=1.2.0",
     "scipy<2.0.0,>=1.10.0",

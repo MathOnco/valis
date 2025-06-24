@@ -60,6 +60,7 @@ from skimage import transform
 import shutil
 import sys
 import os
+import pandas as pd
 
 from valis import registration, valtils, slide_io, micro_rigid_registrar
 from valis.feature_matcher import *
@@ -248,14 +249,16 @@ def test_register_cycif(max_error=3):
 
         expected_channel_order = list(chain.from_iterable([channel_name_dict[f] for f in img_list]))
         if drop_duplicates:
-            expected_channel_order = list(dict.fromkeys(expected_channel_order))
+            cnames_df = pd.DataFrame(expected_channel_order, columns=['cname'])
+            expected_channel_order = list(cnames_df.drop_duplicates(keep="first")['cname'])
 
         saved_ome_xml = ome_types.from_tiff(dst_f)
         saved_channel_names = [x.name for x in saved_ome_xml.images[0].pixels.channels]
 
         assert np.all(expected_channel_order == saved_channel_names), (f"Channels not saved in correct order.\n"
                                                                        f"Expected: {expected_channel_order}.\n"
-                                                                       f"Got:      {saved_channel_names}")
+                                                                       f"Got:      {saved_channel_names}"
+                                                                       f"Img list: {[os.path.split(x)[1] for x in img_list]}")
 
         assert True
 
