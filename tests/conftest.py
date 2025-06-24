@@ -1,5 +1,4 @@
 import sys
-# print(f"valis/tests/tmp{sys.version_info.major}{sys.version_info.minor}/micro_rigid")
 import platform
 print(platform.python_version())
 
