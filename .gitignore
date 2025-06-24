@@ -172,9 +172,6 @@ examples/expected_results/registration/ihc/data/ihc_registrar.pickle
 examples/warp_associated_img/ihc/data/ihc_registrar.pickle
 examples/warp_associated_img/ihc/data/ihc_registrar.pickle
 
-tests/
-!tests/conftest.py
-!tests/test_examples.py
 
 .nox/
 
@@ -213,8 +210,31 @@ docker_example_test/
 
 
 valis/comet_images.code-workspace
-<<<<<<< HEAD
 
 *.pyc
-=======
->>>>>>> 1.2.0
+
+tests/plot_difficult_cases_sweep.R
+
+tests/run_docker_tests.sh
+
+tests/run_test_local.py
+
+tests/skip_test_read_czi_jpgxr.py
+
+tests/skip_test_superpoint_and_glue.py
+
+tests/slice_slide.py
+
+tests/test_align_min_metadata.py
+
+tests/test_difficult_cases.py
+
+tests/test_micro_rigid.py
+
+tests/test_slide_readers.py
+
+tests/test_tiler.py
+
+tests/test_warp_assoc_imgs.py
+
+tests/test_warp_fxns.py
