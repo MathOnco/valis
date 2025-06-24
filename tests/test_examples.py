@@ -61,11 +61,8 @@ import shutil
 import sys
 import os
 
-import torch
-
 from valis import registration, valtils, slide_io, micro_rigid_registrar
 from valis.feature_matcher import *
-
 
 def check_for_no_transforms_in_ref(ref_slide, reference_img_fname):
     assert ref_slide.name == valtils.get_name(reference_img_fname), "Reference image is not the same as specified image"
@@ -256,7 +253,9 @@ def test_register_cycif(max_error=3):
         saved_ome_xml = ome_types.from_tiff(dst_f)
         saved_channel_names = [x.name for x in saved_ome_xml.images[0].pixels.channels]
 
-        assert np.all(expected_channel_order == saved_channel_names), "Channels not saved in correct order"
+        assert np.all(expected_channel_order == saved_channel_names), (f"Channels not saved in correct order.\n"
+                                                                       f"Expected: {expected_channel_order}.\n"
+                                                                       f"Got:      {saved_channel_names}")
 
         assert True
 
