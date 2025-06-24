@@ -1,9 +1,4 @@
 [[tool.pdm.source]]
-name = "torchcpu"
-url = "https://download.pytorch.org/whl/cpu"
-verify_ssl = true
-
-[[tool.pdm.source]]
 name = "PyPI"
 url = ""
 verify_ssl = false
