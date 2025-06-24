@@ -252,7 +252,7 @@ def test_register_cycif(max_error=3):
             cnames_df = pd.DataFrame(expected_channel_order, columns=['cname'])
             expected_channel_order = list(cnames_df.drop_duplicates(keep="first")['cname'])
 
-        saved_ome_xml = ome_types.from_tiff(dst_f)
+        saved_ome_xml = ome_types.from_xml(ome_xml)
         saved_channel_names = [x.name for x in saved_ome_xml.images[0].pixels.channels]
 
         assert np.all(expected_channel_order == saved_channel_names), (f"Channels not saved in correct order.\n"
