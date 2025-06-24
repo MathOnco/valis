@@ -108,20 +108,24 @@ def check_for_no_transforms_in_ref(ref_slide, reference_img_fname):
     ref_slide.crop = og_crop
 
 
+
 def get_dirs():
-    cwd = os.getcwd()
-    in_container = sys.platform == "linux" and os.getcwd() == cwd
-    if not in_container:
+    dst_parent_folder = f"{sys.platform}_{sys.version_info.major}{sys.version_info.minor}"
+    try:
+        current_file_path = os.path.abspath(__file__)
+        current_directory = os.path.dirname(current_file_path)
+        parent_dir = os.path.split(current_directory)[0]
+        results_dst_dir = os.path.join(current_directory, dst_parent_folder)
+        print("worked")
+
+    except:
+        cwd = os.getcwd()
         dir_split = cwd.split(os.sep)
         split_idx = [i for i in range(len(dir_split)) if dir_split[i] == "valis_project"][0]
-        parent_dir = os.sep.join(dir_split[:split_idx+1])
+        parent_dir = os.path.join(os.sep.join(dir_split[:split_idx+1]), "valis")
+        results_dst_dir = os.path.join(parent_dir, f"tests/{sys.version_info.major}{sys.version_info.minor}")
 
-        results_dst_dir = os.path.join(parent_dir, f"valis/tests/{sys.version_info.major}{sys.version_info.minor}")
-    else:
-        parent_dir = "/Users/gatenbcd/Dropbox/Documents/image_processing/valis_project"
-        results_dst_dir = os.path.join(parent_dir, f"valis/tests/docker")
-
-    return parent_dir, results_dst_dir, in_container
+    return parent_dir, results_dst_dir
 
 
 def cnames_from_filename(src_f):
@@ -134,9 +138,9 @@ def cnames_from_filename(src_f):
     return ["DAPI"] + f.split(" ")
 
 
-parent_dir, results_dst_dir, in_container = get_dirs()
+parent_dir, results_dst_dir = get_dirs()
 results_dst_dir = os.path.join(results_dst_dir, "examples")
-datasets_src_dir = os.path.join(parent_dir, "valis/examples/example_datasets/")
+datasets_src_dir = os.path.join(parent_dir, "examples/example_datasets/")
 
 
 def register_hi_rez(src_dir):
@@ -270,7 +274,7 @@ def test_register_hi_rez_cycif():
     register_hi_rez(src_dir=cycif_src_dir)
 
 
-if __name__ == "__main__" and in_container:
+if __name__ == "__main__":
     test_register_ihc()
     test_register_cycif()
     test_register_hi_rez_ihc()
