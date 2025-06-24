@@ -16,7 +16,6 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
         python-version:
           - "3.9"
@@ -31,11 +30,19 @@ jobs:
 
     steps:
      - uses: actions/checkout@v4
+
      - name: Install the latest version of uv and set the python version
        uses: astral-sh/setup-uv@v5
        with:
         python-version: ${{ matrix.python-version }}
+
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libvips
+
      - name: Install the project
        run: uv sync
+
      - name: Run tests
        run: uv run pytest
