@@ -22,7 +22,10 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-        os: [Ubuntu, Windows, macOS]
+        os:
+          - "Ubuntu"
+          - "Windows"
+          - "macOS"
 
     steps:
      - uses: actions/checkout@v4
