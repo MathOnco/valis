@@ -230,7 +230,7 @@ def test_register_cycif(max_error=3):
         if avg_error > max_error:
             assert False, f"error was {avg_error} but should be below {max_error}"
 
-        channel_name_dict = {f: cnames_from_filename(f) for f in img_list}
+        channel_name_dict = {str(f): cnames_from_filename(f) for f in img_list}
 
         dst_f = os.path.join(registrar.dst_dir, "registered_slides", f"{registrar.name}.ome.tiff")
         merged_img, channel_names, ome_xml = registrar.warp_and_merge_slides(dst_f,
@@ -247,7 +247,8 @@ def test_register_cycif(max_error=3):
 
         assert [slide_obj.stack_idx for slide_obj in registrar.slide_dict.values()] == list(range(registrar.size)), "Slides got sorted when `imgs_ordered=True`"
 
-        expected_channel_order = list(chain.from_iterable([channel_name_dict[f] for f in img_list]))
+        sorted_img_list = registrar.get_sorted_img_f_list() # Get images in the same order used for registration (may be different than order in directory)
+        expected_channel_order = list(chain.from_iterable([channel_name_dict[str(f)] for f in sorted_img_list]))
         if drop_duplicates:
             cnames_df = pd.DataFrame(expected_channel_order, columns=['cname'])
             expected_channel_order = list(cnames_df.drop_duplicates(keep="first")['cname'])
