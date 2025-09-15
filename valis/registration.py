@@ -922,6 +922,11 @@ class Slide(object):
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
 
+        reader: SlideReader, optional
+            SlideReader to be used to read the slide (file). If both src_f and
+            reader are None, use the slide object's reader. If src_f is not the same as the
+            slide object's, get new slide reader redirected to src_f. Can also be manually specified.
+
         """
         if src_f is None:
             src_f = self.src_f
@@ -987,7 +992,11 @@ class Slide(object):
             bg_color = None
 
         if reader is None:
-            reader = self.reader
+            if src_f == self.src_f:
+                reader = self.reader
+            else:
+                slide_reader_cls = slide_io.get_slide_reader(src_f)
+                reader = slide_reader_cls(src_f)
 
         warped_slide = slide_tools.warp_slide(src_f, M=self.M,
                                               transformation_src_shape_rc=self.processed_img_shape_rc,
