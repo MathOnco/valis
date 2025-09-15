@@ -2041,7 +2041,7 @@ class Valis(object):
             if valtils.get_name(reference_img_f) not in img_names:
                 if not imgs_ordered:
                     # Reference image not in img_list, but not ordered. So just append
-                    ref_img_src_dir = len(os.path.split(reference_img_f)[0])
+                    ref_img_src_dir = os.path.split(reference_img_f)[0]
                     if len(ref_img_src_dir) == 0:
                         # Only provided file name. Assuming it's located it src directory
                         reference_img_f = os.path.join(self.dst_dir, reference_img_f)
