@@ -21,17 +21,15 @@ import SimpleITK as sitk
 from colorama import Fore
 import os
 import re
-
+from packaging import version
 from copy import deepcopy
 from . import valtils
 
 pyvips.cache_set_max(0)
 
-
 def is_pyvips_22():
-    pvips_ver = pyvips.__version__.split(".")
-    pyvips_22 = eval(pvips_ver[0]) >= 2 and eval(pvips_ver[1]) >= 2
-    return pyvips_22
+    return version.parse(pyvips.__version__) >= version.parse("2.2.0")
+
 
 def get_ref_img_idx(img_f_list, ref_img_name=None):
     """Get index of reference image
