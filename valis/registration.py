@@ -4788,7 +4788,8 @@ class Valis(object):
         self.rigid_reg_kwargs[AFFINE_OPTIMIZER_KEY] = None
         self.rigid_reg_kwargs[MATCHER_KEY] = None
         self.rigid_reg_kwargs[MATCHER_FOR_SORTING_KEY] = None
-        self.non_rigid_reg_kwargs[NON_RIGID_REG_CLASS_KEY] = None
+        if hasattr(self, "non_rigid_reg_kwargs"):
+            self.non_rigid_reg_kwargs[NON_RIGID_REG_CLASS_KEY] = None
         self.non_rigid_registrar_cls = None
         self.rigid_registrar = None
         self.micro_rigid_registrar_cls = None
