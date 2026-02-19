@@ -1,26 +1,26 @@
 """Perform non-rigid registration
 """
-import torch
-import kornia
-from torchvision.models.optical_flow import raft_large, Raft_Large_Weights
-import torchvision.transforms as tv_transforms
 
+import inspect
+import multiprocessing
 import os
 import pathlib
-import cv2
-import numpy as np
-import SimpleITK as sitk
-from skimage import transform, color, filters, exposure, util
-from skimage import color as skcolor
-import pyvips
 from copy import deepcopy
-import multiprocessing
+
+import cv2
+import kornia
+import numpy as np
+import pyvips
+import SimpleITK as sitk
+import torch
+import torchvision.transforms as tv_transforms
 from pqdm.threads import pqdm
-import inspect
-from . import viz
-from . import warp_tools
-from . import preprocessing
-from . import valtils
+from skimage import color
+from skimage import color as skcolor
+from skimage import exposure, filters, transform, util
+from torchvision.models.optical_flow import Raft_Large_Weights, raft_large
+
+from . import preprocessing, valtils, viz, warp_tools
 
 NR_CLS_KEY = "non_rigid_registrar_cls"
 NR_PROCESSING_KW_KEY = "processer_kwargs"
