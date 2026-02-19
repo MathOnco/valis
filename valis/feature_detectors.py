@@ -8,19 +8,18 @@ an example
 
 """
 
-import torch
-import kornia
-import cv2
-from skimage import feature, exposure
-from skimage import color as skcolor
-import numpy as np
 import traceback
-from kornia.feature import DISK, DeDoDe
-from . import valtils
-from . import warp_tools
-from . import preprocessing
-from .superglue_models import superpoint
 
+import cv2
+import kornia
+import numpy as np
+import torch
+from kornia.feature import DISK, DeDoDe
+from skimage import color as skcolor
+from skimage import exposure, feature
+
+from . import preprocessing, valtils, warp_tools
+from .superglue_models import superpoint
 
 DEFAULT_FEATURE_DETECTOR = cv2.BRISK_create()
 """The default OpenCV feature detector"""
