@@ -2029,7 +2029,7 @@ class Valis(object):
             elif hasattr(img_list, "__iter__"):
                 self.original_img_list = list(img_list)
             else:
-                msg = (f"Cannot upack `img_list`, which is type {type(img_list).__name__}. "
+                msg = (f"Cannot unpack `img_list`, which is type {type(img_list).__name__}. "
                        "Please provide an iterable object (list, tuple, array, etc...) that has the location of the images")
                 valtils.print_warning(msg, rgb=Fore.RED)
         else:
