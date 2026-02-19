@@ -1,28 +1,28 @@
 import multiprocessing
-from scipy.optimize import fmin_l_bfgs_b
-from scipy import ndimage, spatial
-import shapely
-from shapely.ops import unary_union
-from shapely.strtree import STRtree
-from shapely.geometry import Polygon, MultiPolygon
-import matplotlib.pyplot as plt
-import numpy as np
-from pqdm.threads import pqdm
-from skimage import draw, restoration, transform, filters, morphology
-import tqdm
-import cv2
-from PIL import Image, ImageDraw
-import numpy as np
-import weightedstats
-import warnings
-import pyvips
-from scipy.interpolate import SmoothBivariateSpline, RectBivariateSpline
-import SimpleITK as sitk
-from colorama import Fore
 import os
 import re
-
+import warnings
 from copy import deepcopy
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import pyvips
+import shapely
+import SimpleITK as sitk
+import tqdm
+import weightedstats
+from colorama import Fore
+from PIL import Image, ImageDraw
+from pqdm.threads import pqdm
+from scipy import ndimage, spatial
+from scipy.interpolate import RectBivariateSpline, SmoothBivariateSpline
+from scipy.optimize import fmin_l_bfgs_b
+from shapely.geometry import MultiPolygon, Polygon
+from shapely.ops import unary_union
+from shapely.strtree import STRtree
+from skimage import draw, filters, morphology, restoration, transform
+
 from . import valtils
 
 pyvips.cache_set_max(0)
