@@ -1,19 +1,18 @@
-import torch
-import kornia
-
-import re
-import os
-import multiprocessing
-from colorama import init as color_init
-from colorama import Fore, Style
-import functools
-import pyvips
-import warnings
 import contextlib
-from collections import defaultdict
+import functools
+import multiprocessing
+import os
 import platform
+import re
 import subprocess
+import warnings
+from collections import defaultdict
 
+import kornia
+import pyvips
+import torch
+from colorama import Fore, Style
+from colorama import init as color_init
 
 color_init()
 
@@ -87,7 +86,9 @@ def check_m1_mac():
     return is_mac_m1
 
 
-from . import slide_tools # Put import here to avoid circular imports
+from . import slide_tools  # Put import here to avoid circular imports
+
+
 def get_name(f):
 
     fonly = os.path.split(f)[1]
