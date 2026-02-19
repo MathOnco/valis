@@ -1,20 +1,14 @@
-import torch
-import kornia
-
-import numpy as np
-from skimage import exposure, transform
 import multiprocessing
-from colorama import Fore
 from contextlib import suppress
 
-from . import feature_matcher
-from . import feature_detectors
-from . import preprocessing
-from . import warp_tools
-from . import valtils
-from . import viz
-
+import kornia
+import numpy as np
+import torch
+from colorama import Fore
 from pqdm.threads import pqdm
+from skimage import exposure, transform
+
+from . import feature_detectors, feature_matcher, preprocessing, valtils, viz, warp_tools
 
 ROI_MASK = "mask"
 ROI_MATCHES = "matches"
