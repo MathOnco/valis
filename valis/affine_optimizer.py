@@ -10,19 +10,18 @@ It's not recommended that the other subclasses be used, but they are kept
 to provide examples on how to subclass AffineOptimizer.
 """
 
-import torch
-import kornia
-
-from scipy import ndimage, optimize
-import numpy as np
-from skimage import transform, util
-import cv2
 import os
-import SimpleITK as sitk
-from scipy import interpolate
 import pathlib
-from . warp_tools import get_affine_transformation_params, \
-    get_corners_of_image, warp_xy
+
+import cv2
+import kornia
+import numpy as np
+import SimpleITK as sitk
+import torch
+from scipy import interpolate, ndimage, optimize
+from skimage import transform, util
+
+from .warp_tools import get_affine_transformation_params, get_corners_of_image, warp_xy
 
 # Cost functions #
 EPS = np.finfo("float").eps
@@ -961,8 +960,9 @@ class AffineOptimizerKNN(AffineOptimizer):
         to use sklearn's KNN, which is much faster
         """
 
-        from sklearn import neighbors
         from scipy.special import gamma, psi
+        from sklearn import neighbors
+
         # Get distance to kth nearest neighbor
         knn = neighbors.NearestNeighbors(n_neighbors=k)
         knn.fit(X.reshape(-1, 1))
