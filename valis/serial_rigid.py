@@ -1,36 +1,30 @@
 """Classes and functions to perform serial rigid registration of a set of images
 """
+import functools
+import os
+import pathlib
+import pickle
+import warnings
+from copy import deepcopy
+from time import time
 
-import torch
 import kornia
 import numpy as np
-import os
-import pickle
-from fastcluster import linkage
-from scipy.spatial.distance import squareform
-from scipy.cluster.hierarchy import optimal_leaf_ordering, leaves_list
-from skimage import transform, io
-from skimage.transform import EuclideanTransform
 import pandas as pd
-import warnings
-from tqdm import tqdm
-import pathlib
-from time import time
-from pqdm.threads import pqdm
-import functools
+import torch
 from colorama import Fore, Style
+from fastcluster import linkage
+from pqdm.threads import pqdm
 from scipy import stats
-from copy import deepcopy
+from scipy.cluster.hierarchy import leaves_list, optimal_leaf_ordering
+from scipy.spatial.distance import squareform
+from skimage import io, transform
+from skimage.transform import EuclideanTransform
+from tqdm import tqdm
 
-from . import valtils
-from . import preprocessing
-from . import warp_tools
-from . import slide_tools
+from . import feature_matcher, preprocessing, slide_tools, valtils, warp_tools
 from .feature_detectors import VggFD
-from .feature_matcher import Matcher, convert_distance_to_similarity, GMS_NAME
-from . import feature_matcher
-from . import valtils
-
+from .feature_matcher import GMS_NAME, Matcher, convert_distance_to_similarity
 
 DENOISE_MSG = "Denoising images"
 FEATURE_MSG = "Detecting features"
