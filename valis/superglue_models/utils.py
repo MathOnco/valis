@@ -42,12 +42,13 @@
 # --------------------------------------------------------------------*/
 # %BANNER_END%
 
-from pathlib import Path
 import time
 from collections import OrderedDict
+from pathlib import Path
 from threading import Thread
-import numpy as np
+
 import cv2
+import numpy as np
 import torch
 # import matplotlib.pyplot as plt
 # import matplotlib
