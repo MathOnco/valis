@@ -2,23 +2,19 @@
 Methods to work with slides, after being opened using slide_io
 
 """
-import torch
-import kornia
-
 import os
-import pyvips
-import numpy as np
-import colour
-from matplotlib import colormaps
 import re
-from PIL import Image
 from collections import Counter
-from . import valtils
 
-from . import warp_tools
-from . import slide_io
-from . import viz
-from . import preprocessing
+import colour
+import kornia
+import numpy as np
+import pyvips
+import torch
+from matplotlib import colormaps
+from PIL import Image
+
+from . import preprocessing, slide_io, valtils, viz, warp_tools
 
 IHC_NAME = "brightfield"
 IF_NAME = "fluorescence"
