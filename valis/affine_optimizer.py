@@ -10,19 +10,18 @@ It's not recommended that the other subclasses be used, but they are kept
 to provide examples on how to subclass AffineOptimizer.
 """
 
-import torch
-import kornia
-
-from scipy import ndimage, optimize
-import numpy as np
-from skimage import transform, util
-import cv2
 import os
-import SimpleITK as sitk
-from scipy import interpolate
 import pathlib
-from . warp_tools import get_affine_transformation_params, \
-    get_corners_of_image, warp_xy
+
+import cv2
+import kornia
+import numpy as np
+import SimpleITK as sitk
+import torch
+from scipy import interpolate, ndimage, optimize
+from skimage import transform, util
+
+from .warp_tools import get_affine_transformation_params, get_corners_of_image, warp_xy
 
 # Cost functions #
 EPS = np.finfo("float").eps
@@ -215,20 +214,26 @@ def get_intersection(alpha1, alpha2, abc1, abc2):
 
 def get_verts(img, x, y, pos=0):
     """
-    Get veritices of triangle and intenisty at each vertex
+    Get vertices of triangle and intensity at each vertex
     """
     if pos == 0:
         # Lower left
-        verts = np.array([[x, y, img[y, x]],  # BL
-                          [x + 1, y, img[y, x + 1]],  # BR
-                          [x, y + 1, img[y + 1, x]]  # TL
-                          ])
+        verts = np.array(
+            [
+                [x, y, img[y, x]],  # BL
+                [x + 1, y, img[y, x + 1]],  # BR
+                [x, y + 1, img[y + 1, x]],  # TL
+            ]
+        )
     if pos == 1:
         # Upper right
-        verts = np.array([[x, y+1, img[y+1, x]],  # BL
-                          [x + 1, y, img[y, x + 1]],  # BR
-                          [x+1, y + 1, img[y + 1, x + 1]]  # TL
-                          ])
+        verts = np.array(
+            [
+                [x, y+1, img[y+1, x]],  # BL
+                [x + 1, y, img[y, x + 1]],  # BR
+                [x+1, y + 1, img[y + 1, x + 1]],  # TL
+            ]
+        )
 
     return verts
 
@@ -961,8 +966,9 @@ class AffineOptimizerKNN(AffineOptimizer):
         to use sklearn's KNN, which is much faster
         """
 
-        from sklearn import neighbors
         from scipy.special import gamma, psi
+        from sklearn import neighbors
+
         # Get distance to kth nearest neighbor
         knn = neighbors.NearestNeighbors(n_neighbors=k)
         knn.fit(X.reshape(-1, 1))
@@ -981,9 +987,7 @@ class AffineOptimizerKNN(AffineOptimizer):
     def mutual_information(self, A, B):
 
         if self.HA_list[self.current_level] is None:
-            # Only need to caluclate once per level, becuase the fixed
-            # image doesn't change
-
+            # Only need to calculate once per level, because the fixed image doesn't change
             self.HA_list[self.current_level] = self.shannon_entropy(A)
 
         HA = self.HA_list[self.current_level]

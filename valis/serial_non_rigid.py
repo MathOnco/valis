@@ -1,28 +1,21 @@
 """Classes and functions to perform serial non-rigid registration of a set of images
 
 """
+import inspect
+import os
+import pathlib
+import pickle
+from time import time
 
-import torch
 import kornia
-
 import numpy as np
+import pandas as pd
+import pyvips
+import torch
 from skimage import io
 from tqdm import tqdm
-import os
-from time import time
-import pathlib
-import pandas as pd
-import pickle
-import pyvips
-import inspect
 
-from . import warp_tools
-from . import non_rigid_registrars
-from . import valtils
-from . import serial_rigid
-from . import viz
-from . import preprocessing
-from . import slide_tools
+from . import non_rigid_registrars, preprocessing, serial_rigid, slide_tools, valtils, viz, warp_tools
 
 IMG_LIST_KEY = "img_list"
 IMG_F_LIST_KEY = "img_f_list"

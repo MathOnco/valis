@@ -1,31 +1,26 @@
-"""
-Collection of pre-processing methods for aligning images
-"""
-import torch
-import kornia
+"""Collection of pre-processing methods for aligning images"""
 
+import colour
+import cv2
+import einops
+import kornia
+import matplotlib.pyplot as plt
+import numpy as np
+import pyvips
+import shapely
+import torch
+from scipy import ndimage, signal, spatial, stats
 from scipy.interpolate import Akima1DInterpolator
+from shapely import LineString, ops
+from skimage import color as skcolor
 from skimage import exposure, filters, measure, morphology, restoration, util
 from skimage.feature import peak_local_max
-from sklearn.cluster import estimate_bandwidth, MiniBatchKMeans, MeanShift
-import numpy as np
-import cv2
-from skimage import color as skcolor
-import pyvips
-import colour
-from scipy import ndimage
-from shapely import LineString
-from scipy import stats, spatial, signal
 from sklearn import cluster
+from sklearn.cluster import MeanShift, MiniBatchKMeans, estimate_bandwidth
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-import matplotlib.pyplot as plt
-import shapely
-from shapely import ops
-import einops
 
-from . import slide_io
-from . import warp_tools
+from . import slide_io, warp_tools
 
 # DEFAULT_COLOR_STD_C = 0.01 # jzazbz
 DEFAULT_COLOR_STD_C = 0.2 # cam16-ucs

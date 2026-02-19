@@ -40,9 +40,10 @@
 # --------------------------------------------------------------------*/
 # %BANNER_END%
 
+from pathlib import Path
+
 import torch
 from torch import nn
-from pathlib import Path
 
 def simple_nms(scores, nms_radius: int):
     """ Fast Non-maximum suppression to remove nearby points """

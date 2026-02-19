@@ -1,19 +1,19 @@
 """Various functions used to visualize registration results
 
 """
-import colour
-import matplotlib.pyplot as plt
-from skimage import draw, color, exposure, transform
-from scipy.cluster.hierarchy import dendrogram
-from scipy.spatial import distance
-import numpy as np
-import pyvips
-
-import cv2
 import platform
 
-from . import warp_tools
-from . import slide_io
+import colour
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import pyvips
+from scipy.cluster.hierarchy import dendrogram
+from scipy.spatial import distance
+from skimage import color, draw, exposure, transform
+
+from . import slide_io, warp_tools
+
 # JzAzBz #
 DXDY_CSPACE = "JzAzBz"
 DXDY_CRANGE = (0, 0.025)

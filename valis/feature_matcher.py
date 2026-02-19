@@ -1,17 +1,18 @@
 """Functions and classes to match and filter image features
 """
-import torch
+
+import traceback
+from copy import deepcopy
+
+import cv2
 import kornia
 import numpy as np
-import cv2
 import torch
-from copy import deepcopy
+from skimage import transform
 from sklearn import metrics
 from sklearn.metrics.pairwise import pairwise_kernels
-from skimage import transform
-import traceback
 
-from . import warp_tools, valtils, feature_detectors
+from . import feature_detectors, valtils, warp_tools
 from .superglue_models import matching, superglue, superpoint
 
 AMBIGUOUS_METRICS = set(metrics.pairwise._VALID_METRICS).intersection(

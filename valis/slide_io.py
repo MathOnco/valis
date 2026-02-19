@@ -1,41 +1,36 @@
 """Methods and classes to read and write slides in the .ome.tiff format
 
 """
-import torch
-import kornia
-
+import itertools
+import multiprocessing
 import os
-from skimage import io, transform
-import pyvips
-import numpy as np
-from PIL import Image
 import pathlib
 import re
-import multiprocessing
+import sys
+import time
+import traceback
+import unicodedata
+import xml.etree.ElementTree as elementTree
+from difflib import get_close_matches
+from statistics import mode
+
+import jpype
+import kornia
+import numpy as np
+import ome_types
+import pyvips
+import scyjava
+import torch
+from aicspylibczi import CziFile
+from bs4 import BeautifulSoup
+from colorama import Fore
+from PIL import Image
 from pqdm.threads import pqdm
 from scipy import stats
-from bs4 import BeautifulSoup
-from statistics import mode
-import time
-import sys
-import re
-import itertools
-import xml.etree.ElementTree as elementTree
-import unicodedata
-import ome_types
-import jpype
-from aicspylibczi import CziFile
+from skimage import io, transform
 from tqdm import tqdm
-import scyjava
-from difflib import get_close_matches
-import traceback
 
-from colorama import Fore
-from . import valtils
-from . import slide_tools
-from . import warp_tools
-from . import valtils
-
+from . import slide_tools, valtils, warp_tools
 
 pyvips.cache_set_max(0)
 

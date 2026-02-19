@@ -1,49 +1,38 @@
-"""
-Classes and functions to register a collection of images
-"""
-import logging
-logging.basicConfig(level=logging.WARNING)
+"""Classes and functions to register a collection of images"""
 
-import torch
-import kornia
-import einops
-
-import traceback
-import re
-import os
-import numpy as np
-import pathlib
-from skimage import transform, exposure, filters
-from skimage import color as skcolor
-from time import time
-import tqdm
-import pandas as pd
-import pickle
-import colour
-import pyvips
-from scipy import ndimage
-import shapely
-from copy import deepcopy
-from pprint import pformat
 import json
-from colorama import Fore
+import logging
+import os
+import pathlib
+import pickle
+import re
+import traceback
+from copy import deepcopy
 from itertools import chain
-import cv2
-import matplotlib.pyplot as plt
-from colorama import Fore
-import jpype
+from pprint import pformat
+from time import time
 
-from . import feature_matcher
-from . import serial_rigid
-from . import feature_detectors
-from . import non_rigid_registrars
-from . import valtils
-from . import preprocessing
-from . import slide_tools
-from . import slide_io
-from . import viz
-from . import warp_tools
-from . import serial_non_rigid
+import colour
+import cv2
+import einops
+import jpype
+import kornia
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pyvips
+import shapely
+import torch
+import tqdm
+from colorama import Fore
+from scipy import ndimage
+from skimage import color as skcolor
+from skimage import exposure, filters, transform
+
+from . import (feature_detectors, feature_matcher, non_rigid_registrars, preprocessing, serial_non_rigid, serial_rigid,
+               slide_io, slide_tools, valtils, viz, warp_tools)
+
+logging.basicConfig(level=logging.WARNING)
 
 pyvips.cache_set_max(0)
 
