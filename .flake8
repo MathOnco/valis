@@ -1,0 +1,21 @@
+[flake8]
+ignore =
+    # module level import not at top of file
+    E402,
+    # do not use bare except
+    E722,
+    # comparison to False should be 'if cond is False:' or 'if not cond:'
+    E712,
+    # line break before binary operator (this way, diffs are potentially cleaner)
+    W503,
+    # W504: line break occurred after a binary operator
+    W504,
+    # E722: Do not use bare except, specify exception instead
+    E722,
+enable-extensions = docstrings
+max-line-length = 120
+statistics = True
+show-source = True
+exclude =
+    .git,
+    __pycache__
