@@ -1071,7 +1071,7 @@ class SuperPointAndGlue(Matcher):
             sg_matching = matching.Matching(self.config).eval().to(self.device)
 
         sg_pred = sg_matching({'image0': inp1, 'image1': inp2})
-        sg_pred = {k: v[0].detach().numpy() for k, v in sg_pred.items()}
+        sg_pred = {k: v[0].detach().cpu().numpy() for k, v in sg_pred.items()}
 
         matches, conf = sg_pred['matches0'], sg_pred['matching_scores0']
 
@@ -1333,7 +1333,7 @@ class SuperGlueMatcher(Matcher):
 
         sg_pred = sg(data)
 
-        sg_pred = {k: v[0].detach().numpy() for k, v in sg_pred.items()}
+        sg_pred = {k: v[0].detach().cpu().numpy() for k, v in sg_pred.items()}
         sg_pred.update(data)
 
         # Keep the matching keypoints and descriptors

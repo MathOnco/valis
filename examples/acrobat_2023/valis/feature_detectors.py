@@ -471,7 +471,7 @@ class SuperPointFD(FeatureDD):
             descriptors = [superpoint.sample_descriptors(k[None], d[None], 8)[0]
                     for k, d in zip([torch.from_numpy(kp_pos_xy.astype(np.float32))], descriptors)]
 
-            descriptors = descriptors[0].detach().numpy().T
+            descriptors = descriptors[0].detach().cpu().numpy().T
         else:
             kp = cv2.KeyPoint_convert(kp_pos_xy.tolist())
             kp, descriptors = self.kp_descriptor.compute(img, kp)
@@ -487,8 +487,8 @@ class SuperPointFD(FeatureDD):
         superpoint_obj = superpoint.SuperPoint(self.config.get('superpoint', {}))
         pred = superpoint_obj({'image': inp})
         pred = {**pred, **{k+'0': v for k, v in pred.items()}}
-        kp_pos_xy = pred['keypoints'][0].detach().numpy()
-        desc = pred['descriptors'][0].detach().numpy().T
+        kp_pos_xy = pred['keypoints'][0].detach().cpu().numpy()
+        desc = pred['descriptors'][0].detach().cpu().numpy().T
 
         return kp_pos_xy, desc
 
