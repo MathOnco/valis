@@ -1972,7 +1972,7 @@ class Valis(object):
 
         max_non_rigid_registration_dim_px : int, optional
              Maximum width or height of images used for non-rigid registration.
-             Larger values may yeild more accurate results, at the expense of
+             Larger values may yield more accurate results, at the expense of
              speed and memory. There is also a practical limit, as the specified
              size may be too large to fit in memory.
 
