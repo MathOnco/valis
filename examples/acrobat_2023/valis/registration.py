@@ -1760,7 +1760,7 @@ class Valis(object):
             adjacent non-rigidly aligned image. This allows the transformations
             to accumulate, which may bring distant features together but could
             also  result  in un-wanted deformations, particularly around the edges.
-            If `False`, the image not warped before being aaligned to the adjacent
+            If `False`, the image not warped before being aligned to the adjacent
             non-rigidly aligned image. This can reduce unwanted deformations, but
             may not bring distant features together.
 
