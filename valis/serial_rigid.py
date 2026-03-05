@@ -349,7 +349,7 @@ class SerialRigidRegistrar(object):
     distance_metric_type : str
         Name of the type of metric used to determine the dis/similarity
         between each pair of images. Despite the name, it could be "similarity"
-        if the Matcher object compares image feautres using a similarity
+        if the Matcher object compares image features using a similarity
         metric. In that case, similarities are converted to distances.
 
     img_obj_list : list
