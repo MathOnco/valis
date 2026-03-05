@@ -495,7 +495,7 @@ class AffineOptimizer(object):
         Current level of the Guassian pyramid that is being registered
 
     accepts_xy : bool
-        Bool declaring whether or not the optimizer will use corresponding points to optimize the registration
+        Boolean indicating whether the optimizer uses corresponding points to optimize registration.
 
     Methods
     -------
