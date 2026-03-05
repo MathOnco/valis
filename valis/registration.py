@@ -4608,7 +4608,7 @@ class Valis(object):
         will contain thumbnails so that one can visualize the results: converted image
         thumbnails will be in "images/"; processed images in "processed/";
         rigidly aligned images in "rigid_registration/"; non-rigidly aligned images in "non_rigid_registration/";
-        non-rigid deformation field images (i.e. warped grids colored by the direction and magntidue)
+        non-rigid deformation field images (i.e. warped grids colored by the direction and magnitude)
         of the deformation) will be in ""deformation_fields/". The size of these thumbnails
         is determined by the `thumbnail_size` argument used to initialze this object.
 
