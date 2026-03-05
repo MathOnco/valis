@@ -158,7 +158,7 @@ class ZImage(object):
         Name of the image. Usually `img_f` but with the extension removed.
 
     desc : ndarray
-        (N, M) array of N desciptors for each keypoint, each of which has
+        (N, M) array of N descriptors for each keypoint, each of which has
         M features
 
     kp_pos_xy : ndarray
