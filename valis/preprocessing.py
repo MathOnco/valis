@@ -1340,7 +1340,7 @@ def polygon_tortuosity(img, window_size=3):
 def remove_small_obj_and_lines_by_dist(mask):
     """
     Will remove smaller objects and thin lines that
-    do not interesct with larger objects
+    do not intersect with larger objects
     """
 
     dist_transform = cv2.distanceTransform(mask, cv2.DIST_L2, 5)
