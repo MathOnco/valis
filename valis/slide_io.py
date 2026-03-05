@@ -432,7 +432,7 @@ def bf2vips_dtype(bf_dtype):
     return vips_format
 
 
-def check_czi_jpegxr(src_f):
+def check_czi_jpgxr(src_f):
     f_extension = slide_tools.get_slide_extension(src_f)
     if f_extension != ".czi":
         return False
@@ -2932,7 +2932,7 @@ def get_slide_reader(src_f, series=None):
         return VipsSlideReader
 
     if is_czi:
-        is_jpegxr = check_czi_jpegxr(src_f)
+        is_jpegxr = check_czi_jpgxr(src_f)
         is_m1_mac = valtils.check_m1_mac()
         if is_m1_mac and is_jpegxr:
             msg = "Will likely be errors using Bioformats to read a JPEGXR compressed CZI on this Apple M1 machine. Will use CziJpgxrReader instead."
