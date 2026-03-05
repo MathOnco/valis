@@ -30,7 +30,7 @@ class ImageProcesser(object):
 
     `ImageProcesser` must also have a `process_image` method, which is
     called during registration. As `ImageProcesser` has the image and
-    and its relevant information (filename, level, series) as attributes,
+    its relevant information (filename, level, series) as attributes,
     it should be able to access and modify the image as needed. However,
     one can also pass extra args and kwargs to `process_image`. As such,
     `process_image` will also need to accept args and kwargs.
