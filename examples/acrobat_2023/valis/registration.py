@@ -2787,7 +2787,7 @@ class Valis(object):
 
                 transformation_src_shape_rc: shape (row, col) of image used to find the rigid transformation. If
                     not provided, then it is assumed to be the shape of the level 0 slide
-                transformation_dst_shape_rc: shape of registered image. If not presesnt, but a reference was provided
+                transformation_dst_shape_rc: shape of registered image. If not present, but a reference was provided
                     and `transformation_src_shape_rc` was not provided, this is assumed to be the shape of the reference slide
 
             If None, then all rigid M will be the identity matrix
