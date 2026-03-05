@@ -336,7 +336,7 @@ def build_P(A, B, r, mask):
 
 def entropy(x):
     """
-    Caclulate Shannon's entropy for array x
+    Calculate Shannon's entropy for array x
 
     Parameters
     ----------

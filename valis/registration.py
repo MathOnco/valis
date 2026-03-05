@@ -3679,7 +3679,7 @@ class Valis(object):
             rigid_mask = slide_obj.warp_img(slide_obj.rigid_reg_mask, non_rigid=False, crop=False, interp_method="nearest")
             combo_mask[rigid_mask > 0] += 1
 
-            # Caclulate running average
+            # Calculate running average
             padded_processed = slide_obj.pad_cropped_processed_img()
             padded_processed[slide_obj.rigid_reg_mask == 0] = 0
             padded_processed[slide_obj.rigid_reg_mask > 0] = exposure.rescale_intensity(padded_processed[slide_obj.rigid_reg_mask > 0], out_range=(0, 255))
