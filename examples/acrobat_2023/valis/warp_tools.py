@@ -1076,7 +1076,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            #Option to set backround color in mapim added in libvips 8.13
+            #Option to set background color in mapim added in libvips 8.13
             warped = affine_warped.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,
@@ -1206,7 +1206,7 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            #Option to set backround color in mapim added in libvips 8.13
+            #Option to set background color in mapim added in libvips 8.13
             nr_warped = img.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,

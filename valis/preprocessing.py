@@ -1437,7 +1437,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
 def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
     """
-    Calculate distance between backround and each pixel
+    Calculate distance between background and each pixel
     using a luminosity and colofulness/saturation in a polar colorspace
 
     Parameters
@@ -1459,7 +1459,7 @@ def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
     Returns
     -------
     jc_dist : np.ndarray
-        Color distance between backround and each pixel
+        Color distance between background and each pixel
 
     """
 
@@ -1666,7 +1666,7 @@ def remove_regular_shapes(mask, irreg_thresh=0.05):
 
 
 def entropy_mask(img, cspace="Hunter LAB", irreg_thresh=0.0, rel_min_size=0.2):
-    # Detect and mask out backround (brightest and least colorful)
+    # Detect and mask out background (brightest and least colorful)
     mean_rgb, color_mask, filtered_label_counts, color_clusterer = find_dominant_colors(img, cspace=cspace, return_xy_clusterer=True)
     to_cluster_jab = rgb2jab(img, cspace=cspace)
     xy = to_cluster_jab[..., 1:].reshape((-1, 2))
