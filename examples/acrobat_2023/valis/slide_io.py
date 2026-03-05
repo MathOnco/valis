@@ -1816,7 +1816,7 @@ class FlattenedPyramidReader(VipsSlideReader):
         """Get Bio-Formats datatype from values in metadata.
 
         For example, BF metadata may have image datatype as
-        uint32, but in the image description, min/max/resppnse,
+        uint32, but in the image description, min/max/response,
         are floats. This will determine if the slide should be cast
         to a different dataatype to match values in metadata.
 
