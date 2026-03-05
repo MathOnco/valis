@@ -1559,11 +1559,11 @@ def clean_mask(mask, img=None, rel_min_size=0.001):
 
         if c0 == 0:
             tb = np.where(r.image_filled[:, 0])[0]
-            # Touchng left border
+            # Touching left border
             r_filled_img[min(tb):max(tb), 0] = 255
 
         if c1 == mask.shape[1]:
-            # Touchng right border
+            # Touching right border
             tb = np.where(r.image_filled[:, -1])[0]
             r_filled_img[min(tb):max(tb), -1] = 255
 
