@@ -1450,7 +1450,7 @@ def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
 
     p: int
         Percentile used to determine background values, i.e.
-        background pixels have a luminosity greather 99% of other
+        background pixels have a luminosity greater 99% of other
         pixels. Needs to be between 0-100
 
     metric: str
