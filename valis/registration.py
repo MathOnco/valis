@@ -4397,7 +4397,7 @@ class Valis(object):
             `summary_df` contains various information about the registration.
 
             The "from" column is the name of the image, while the "to" column
-            name of the image it was aligned to. "from" is analagous to "moving"
+            name of the image it was aligned to. "from" is analogous to "moving"
             or "current", while "to" is analgous to "fixed" or "previous".
 
             Columns begining with "original" refer to error measurements of the
@@ -4675,7 +4675,7 @@ class Valis(object):
             `summary_df` contains various information about the registration.
 
             The "from" column is the name of the image, while the "to" column
-            name of the image it was aligned to. "from" is analagous to "moving"
+            name of the image it was aligned to. "from" is analogous to "moving"
             or "current", while "to" is analgous to "fixed" or "previous".
 
             Columns begining with "original" refer to error measurements of the
