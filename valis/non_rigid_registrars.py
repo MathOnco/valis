@@ -979,7 +979,7 @@ class OpticalFlowWarper(NonRigidRegistrar):
             Folded regions will then be removed using inpainting.
 
             If "regularize", folded regions will be detected and
-            regularized using the method fescribed in
+            regularized using the method described in
             "Foldover-free maps in 50 lines of code" Garanzha et al. 2021.
 
             If "None" then no smoothing will be applied.
