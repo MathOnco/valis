@@ -478,7 +478,7 @@ class AffineOptimizer(object):
         Type of transformation, "EuclideanTransform" or "SimilarityTransform"
 
     current_level : int
-        Current level of the Guassian pyramid that is being registered
+        Current level of the Gaussian pyramid that is being registered
 
     accepts_xy : bool
         Boolean indicating whether the optimizer uses corresponding points to optimize registration.
