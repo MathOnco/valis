@@ -547,7 +547,7 @@ class SerialNonRigidRegistrar(object):
 
     non_rigid_obj_dict : dict
         Dictionary, where each key is the name of a NonRigidZImage, and
-        the value is the assocatiated NonRigidZImage
+        the value is the associated NonRigidZImage
 
     non_rigid_reg_params: dictionary
         Dictionary containing parameters {name: value} to be used to initialize
