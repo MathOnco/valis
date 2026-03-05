@@ -402,7 +402,7 @@ class Slide(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -430,7 +430,7 @@ class Slide(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 

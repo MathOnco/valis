@@ -631,7 +631,7 @@ class SlideReader(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -652,7 +652,7 @@ class SlideReader(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -922,7 +922,7 @@ class BioFormatsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -983,7 +983,7 @@ class BioFormatsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1354,7 +1354,7 @@ class VipsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1393,7 +1393,7 @@ class VipsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1440,7 +1440,7 @@ class VipsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1713,7 +1713,7 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1956,7 +1956,7 @@ class CziJpgxrReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1985,7 +1985,7 @@ class CziJpgxrReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -2969,7 +2969,7 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
 
     xywh : tuple of int, optional
         The region of the slide to be converted. If None,
-        then the entire slide will be converted. Otherwise
+        then the entire slide will be converted. Otherwise,
         xywh is the (top left x, top left y, width, height) of
         the region to be sliced.
 
