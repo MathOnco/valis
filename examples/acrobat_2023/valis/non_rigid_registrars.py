@@ -1397,8 +1397,8 @@ class NonRigidTileRegistrar(object):
             Uninstantiated NonRigidRegistrar class that will be used
             to calculate the deformation fields between images.
 
-        processing_cls : preprocessing.ImageProcesser, optional
-            preprocessing.ImageProcesser used to process the images
+        processing_cls : preprocessing.ImageProcessor, optional
+            preprocessing.ImageProcessor used to process the images
 
         processing_kwargs : dict
             Dictionary of keyword arguments to be passed to `processing_cls`

@@ -1935,7 +1935,7 @@ class Valis(object):
         crop_for_rigid_reg : bool, optional
             Whether or not to crop the images used for rigid registration. If `True`,
             then higher resolution images may be used for rigid registration, as valis
-            will "zoom" in to the area around the mask created by `ImageProcesser.create_mask()`,
+            will "zoom" in to the area around the mask created by `ImageProcessor.create_mask()`,
             and slice out that region and resize it to have a maximum dimension the same
             as `max_processed_image_dim_px`. If `False`, the full image will be used, although
             the tissue may be at a lower resolution.
@@ -2688,15 +2688,15 @@ class Valis(object):
 
         Parameters
         ----------
-        brightfield_processing_cls : ImageProcesser
-            ImageProcesser to pre-process brightfield images to make them look as similar as possible.
+        brightfield_processing_cls : ImageProcessor
+            ImageProcessor to pre-process brightfield images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         brightfield_processing_kwargs : dict
             Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
-        if_processing_cls : ImageProcesser
-            ImageProcesser to pre-process immunofluorescence images to make them look as similar as possible.
+        if_processing_cls : ImageProcessor
+            ImageProcessor to pre-process immunofluorescence images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         if_processing_kwargs : dict
@@ -2705,7 +2705,7 @@ class Valis(object):
         processor_dict : dict
             Each key should be the filename of the image, and the value either a subclassed
             preprocessing.ImageProcessor, or a list, where the 1st element is the processor,
-            and the second element a dictionary of keyword arguments passed to ImageProcesser.process_img.
+            and the second element a dictionary of keyword arguments passed to ImageProcessor.process_img.
             If `None`, then this function will assign a processor to each image.
 
         Returns
@@ -2713,7 +2713,7 @@ class Valis(object):
         named_processing_dict : Dict
             Each key is the name of the slide, and the value is a list, where
             the 1st element is the processor, and the second element a dictionary
-            of keyword arguments passed to ImageProcesser.process_img
+            of keyword arguments passed to ImageProcessor.process_img
 
         """
 
@@ -4626,15 +4626,15 @@ class Valis(object):
 
         Parameters
         ----------
-        brightfield_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process brightfield images to make
+        brightfield_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process brightfield images to make
             them look as similar as possible.
 
         brightfield_processing_kwargs : dict
             Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
-        if_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process immunofluorescence images
+        if_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process immunofluorescence images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict
@@ -4810,15 +4810,15 @@ class Valis(object):
 
         Parameters
         ----------
-        brightfield_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process brightfield images to make
+        brightfield_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process brightfield images to make
             them look as similar as possible.
 
         brightfield_processing_kwargs : dict
             Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
-        if_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process immunofluorescence images
+        if_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process immunofluorescence images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict

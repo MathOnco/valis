@@ -18,18 +18,18 @@ from . import warp_tools
 DEFAULT_COLOR_STD_C = 0.2 # cam16-ucs
 
 
-class ImageProcesser(object):
+class ImageProcessor(object):
     """Process images for registration
 
-    `ImageProcesser` sub-classes processes images to single channel
+    `ImageProcessor` sub-classes processes images to single channel
     images which are then used in image registration.
 
-    Each `ImageProcesser` is initialized with an image, the path to the
+    Each `ImageProcessor` is initialized with an image, the path to the
     image, the pyramid level, and the series number. These values will
     be set during the registration process.
 
-    `ImageProcesser` must also have a `process_image` method, which is
-    called during registration. As `ImageProcesser` has the image and
+    `ImageProcessor` must also have a `process_image` method, which is
+    called during registration. As `ImageProcessor` has the image and
     its relevant information (filename, level, series) as attributes,
     it should be able to access and modify the image as needed. However,
     one can also pass extra args and kwargs to `process_image`. As such,
@@ -91,7 +91,7 @@ class ImageProcesser(object):
         """
 
 
-class ChannelGetter(ImageProcesser):
+class ChannelGetter(ImageProcessor):
     """Select channel from image
 
     """
@@ -127,7 +127,7 @@ class ChannelGetter(ImageProcesser):
         return chnl
 
 
-class ColorfulStandardizer(ImageProcesser):
+class ColorfulStandardizer(ImageProcessor):
     """Standardize the colorfulness of the image
 
     """
@@ -156,7 +156,7 @@ class ColorfulStandardizer(ImageProcesser):
         return processed_img
 
 
-class Luminosity(ImageProcesser):
+class Luminosity(ImageProcessor):
     """Get luminosity of an RGB image
 
     """
@@ -179,7 +179,7 @@ class Luminosity(ImageProcesser):
         return processed_img
 
 
-class BgColorDistance(ImageProcesser):
+class BgColorDistance(ImageProcessor):
     """Calculate distance between each pixel and the background color
 
     """
@@ -202,7 +202,7 @@ class BgColorDistance(ImageProcesser):
 
         return processed_img
 
-class StainFlattener(ImageProcesser):
+class StainFlattener(ImageProcessor):
     def __init__(self, image, src_f, level, series, *args, **kwargs):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
@@ -308,7 +308,7 @@ class StainFlattener(ImageProcesser):
         return processed_img
 
 
-class Gray(ImageProcesser):
+class Gray(ImageProcessor):
     """Get luminosity of an RGB image
 
     """
@@ -330,7 +330,7 @@ class Gray(ImageProcesser):
         return processed_img
 
 
-class HEDeconvolution(ImageProcesser):
+class HEDeconvolution(ImageProcessor):
     """Normalize staining appearance of hematoxylin and eosin (H&E) stained image
     and get the H or E deconvolution image.
 
