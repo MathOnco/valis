@@ -1823,8 +1823,8 @@ class Valis(object):
             transformation matrix that will warp each image to the target
             image. Default is SimilarityTransform
 
-        affine_optimizer_cls : AffineOptimzer class, optional
-            Uninstantiated AffineOptimzer that will minimize a
+        affine_optimizer_cls : AffineOptimizer class, optional
+            Uninstantiated AffineOptimizer that will minimize a
             cost function to find the optimal affine transformations.
             If a desired affine optimization is not available,
             one can be created by subclassing `affine_optimizer.AffineOptimizer`.

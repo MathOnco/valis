@@ -1106,7 +1106,7 @@ class SerialRigidRegistrar(object):
 
         Parameters
         -----------
-        affine_optimizer : AffineOptimzer
+        affine_optimizer : AffineOptimizer
             Object that will minimize a cost function to find the optimal
             affine transformations
 
@@ -1451,7 +1451,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         Transformer used to find transformation matrix that will warp each
         image to the target image.
 
-    affine_optimizer : AffineOptimzer object
+    affine_optimizer : AffineOptimizer object
             Object that will minimize a cost function to find the
             optimal affine transoformations
 
