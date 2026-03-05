@@ -1860,7 +1860,7 @@ class Valis(object):
             this step is skipped.
 
         micro_rigid_registrar_params : dictionary
-            Dictionary of keyword arguments used intialize the `MicroRigidRegistrar`
+            Dictionary of keyword arguments used initialize the `MicroRigidRegistrar`
 
         qt_emitter : PySide2.QtCore.Signal, optional
             Used to emit signals that update the GUI's progress bars
