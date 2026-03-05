@@ -669,7 +669,7 @@ class SerialRigidRegistrar(object):
             ----------
             nf_kp_idx : ndarray
                 Indices of already matched keypoints that were found after
-                neighbonr filtering
+                neighbor filtering
         """
 
         neighbor_match_info12 = current_img_obj.match_dict[neighbor_obj]
