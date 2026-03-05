@@ -57,7 +57,7 @@ class MicroRigidRegistrar(object):
         Matcher object that will be used to match image features
 
     scale : float
-        Degree of downsampling to use for the reigistration, based on the
+        Degree of downsampling to use for the registration, based on the
         registered WSI shape (i.e. Slide.aligned_slide_shape_rc)
 
     tile_wh : int
@@ -102,7 +102,7 @@ class MicroRigidRegistrar(object):
             If `None`, a default processor will be assigned to each image based on its modality.
 
         scale : float
-            Degree of downsampling to use for the reigistration, based on the
+            Degree of downsampling to use for the registration, based on the
             registered WSI shape (i.e. Slide.aligned_slide_shape_rc)
 
         tile_wh : int
