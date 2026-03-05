@@ -2573,7 +2573,7 @@ class CziJpgxrReader(SlideReader):
         return np_img
 
     def create_metadata(self):
-        """ Create and fill in a MetaData object
+        """Create and fill in a MetaData object
 
         Returns
         -------
