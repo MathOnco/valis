@@ -2114,8 +2114,8 @@ class CziJpgxrReader(SlideReader):
 
         czi_reader = CziFile(self.src_f)
         scene_bbox = czi_reader.get_all_scene_bounding_boxes()[scene]
-        scence_l0_wh = np.array([scene_bbox.w, scene_bbox.h])
-        slide_dimensions = np.round(scence_l0_wh*zoom_levels[..., np.newaxis]).astype(int)
+        scene_l0_wh = np.array([scene_bbox.w, scene_bbox.h])
+        slide_dimensions = np.round(scene_l0_wh*zoom_levels[..., np.newaxis]).astype(int)
 
         return slide_dimensions
 
