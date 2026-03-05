@@ -4376,12 +4376,12 @@ class Valis(object):
             if draw_img.ndim == 2:
                 draw_img = np.dstack([draw_img] * 3)
 
-            thumbanil_deform_grid = viz.draw_displacement_vector_field(dxdy=[-thumbnail_bk_dxdy[..., 0], -thumbnail_bk_dxdy[..., 1]],
+            thumbnail_deform_grid = viz.draw_displacement_vector_field(dxdy=[-thumbnail_bk_dxdy[..., 0], -thumbnail_bk_dxdy[..., 1]],
                                                                                 img=draw_img,
                                                                                 spacing=10)
 
             deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
-            warp_tools.save_img(deform_img_f, thumbanil_deform_grid, thumbnail_size=self.thumbnail_size)
+            warp_tools.save_img(deform_img_f, thumbnail_deform_grid, thumbnail_size=self.thumbnail_size)
 
         return non_rigid_registrar
 
