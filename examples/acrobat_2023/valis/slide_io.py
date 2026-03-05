@@ -2728,7 +2728,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
         which can be done using `warp_tools.get_inverse_field`
 
     level : int, optional
-        Pyramid level to warp an save
+        Pyramid level to warp and save
 
     series : int, optional
         Series number of image
