@@ -153,7 +153,7 @@ class ZImage(object):
 
     unfiltered_match_dict : dict
         Dictionary of image matches. Key= img_obj this ZImage is being
-        compared to, value= MatchInfo containing inoformation about the
+        compared to, value= MatchInfo containing information about the
         comparison, such as the position of matches, features for each match,
         number of matches, etc... The MatchInfo objects in this dictionary
         contain info for all matches that were cross-checked.
