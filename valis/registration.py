@@ -5109,7 +5109,6 @@ class Valis(object):
                              colormap=slide_io.CMAP_AUTO,
                              interp_method="bicubic",
                              tile_wh=None, compression=DEFAULT_COMPRESSION, Q=100, pyramid=True):
-
         f"""Warp and save all slides
 
         Each slide will be saved as an ome.tiff. The extension of each file will
