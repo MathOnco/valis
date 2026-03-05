@@ -86,8 +86,8 @@ def order_Dmat(D):
 
     Leaf sorting is accomplished using optimal leaf ordering (Bar-Joseph 2001)
 
-    Parmaters
-    ---------
+    Parameters
+    ----------
     D: ndarray
         (N, N) Symmetric distance matrix for N samples
 
