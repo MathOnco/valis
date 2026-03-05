@@ -136,7 +136,7 @@ loci = None
 OME_TYPES_PARSER = "lxml"
 
 """
-NOTE: Commented out block is how to use boformats with javabrdige.
+NOTE: Commented out block is how to use bioformats with javabrdige.
 However, on conda, javabridge isn't available for python 3.9.
 If using, remember to put bftools/bioformats_package.jar in the
 source directory.
