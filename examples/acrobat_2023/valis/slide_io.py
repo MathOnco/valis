@@ -2261,7 +2261,7 @@ class ImageReader(SlideReader):
         return img
 
     def _get_slide_dimensions(self, pil_img, *args, **kwargs):
-        """
+        """Get slide dimensions
         """
         img_dims = np.array([[pil_img.width, pil_img.height]])
 

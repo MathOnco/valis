@@ -1084,7 +1084,7 @@ class AffineOptimizerOffGrid(AffineOptimizer):
         return self.cost_fxn(fixed_intensities, moving_intensities, self.pyramid_mask[self.current_level])
 
     def cost_fxn(self, fixed_intensities, transformed_intensities, mask):
-        """
+        """Cost function
         """
         results, _, _ = np.histogram2d(fixed_intensities, transformed_intensities, bins=self.nbins)
         n = np.sum(results)
