@@ -365,7 +365,7 @@ class SerialRigidRegistrar(object):
 
     unsorted_distance_mat : ndarray
         Distance matrix with shape (N, N), where each element is the
-        disimilariy betweewn each pair of the N images. The order of
+        disimilariy between each pair of the N images. The order of
         rows and columns reflects the order in which the images were read.
         This matrix is used to order the images the Z-stack.
 
