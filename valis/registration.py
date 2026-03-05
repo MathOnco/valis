@@ -1863,7 +1863,7 @@ class Valis(object):
         non_rigid_registrar_cls : NonRigidRegistrar, optional
             Uninstantiated NonRigidRegistrar class that will be used to
             calculate the deformation fields between images. See
-            the `non_rigid_registrars` module for a desciption of available
+            the `non_rigid_registrars` module for a description of available
             methods. If a desired non-rigid registration method is not available,
             one can be implemented by subclassing.NonRigidRegistrar.
             If None, then only rigid registration will be performed
@@ -4844,7 +4844,7 @@ class Valis(object):
         non_rigid_registrar_cls : NonRigidRegistrar, optional
             Uninstantiated NonRigidRegistrar class that will be used to
             calculate the deformation fields between images. See
-            the `non_rigid_registrars` module for a desciption of available
+            the `non_rigid_registrars` module for a description of available
             methods. If a desired non-rigid registration method is not available,
             one can be implemented by subclassing.NonRigidRegistrar.
 
