@@ -1,7 +1,7 @@
 """Optimize rigid alignment
 
 Contains functions related to optimization, as well as the AffineOptimizer
-class that performs the optimzation. This class can be subclassed to implement
+class that performs the optimization. This class can be subclassed to implement
 custom optimization methods.
 
 There are several subclasses, but AffineOptimizerMattesMI is the
