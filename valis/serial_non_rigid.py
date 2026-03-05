@@ -1013,7 +1013,7 @@ class SerialNonRigidRegistrar(object):
         Returns
         -------
         summary_df: Dataframe
-            Pandas dataframe containin the registration error of the
+            Pandas dataframe containing the registration error of the
             alignment between each image and the previous one in the stack.
 
         """
