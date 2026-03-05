@@ -3020,7 +3020,7 @@ def get_shape_xyzct(shape_wh, n_channels, nt=1, nz=1):
     Parameters
     ----------
     shape_wh : tuple of int
-        Width and heigth of image
+        Width and height of image
 
     n_channels : int
         Number of channels in the image
