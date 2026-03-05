@@ -2246,7 +2246,7 @@ class Valis(object):
         """Convert slides to images and create dictionary of Slides.
 
         series : int, optional
-            Slide series to be read. If None, the series with largest image will be read
+            Slide series to be read. If None, the series with the largest image will be read
 
         reader_cls : SlideReader, optional
             Uninstantiated SlideReader class that will convert

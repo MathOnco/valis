@@ -1210,7 +1210,7 @@ class BioFormatsSlideReader(SlideReader):
             series = np.argmax(img_areas)
             if len(img_areas) > 1:
                 msg = (f"No series provided. "
-                       f"Selecting series with largest image, "
+                       f"Selecting series with the largest image, "
                        f"which is series {series}")
 
                 valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
@@ -2445,7 +2445,7 @@ class CziJpgxrReader(SlideReader):
             series = np.argmax(img_areas)
             if len(img_areas) > 1:
                 msg = (f"No series provided. "
-                       f"Selecting series with largest image, "
+                       f"Selecting series with the largest image, "
                        f"which is series {series}")
 
                 valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
