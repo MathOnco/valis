@@ -627,7 +627,7 @@ class SerialRigidRegistrar(object):
             Parameters
             ----------
             nf_kp_idx : ndarray
-                Indicies of already matched keypoints that were found after
+                Indices of already matched keypoints that were found after
                 neighbonr filtering
         """
 
