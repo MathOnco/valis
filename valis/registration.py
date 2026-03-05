@@ -3510,7 +3510,7 @@ class Valis(object):
         micro_rigid_registrar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
         micro_rigid_registrar.register()
 
-        # Not all pairs will have keept high resolution M, so re-estimate M based on final matches
+        # Not all pairs will have kept high resolution M, so re-estimate M based on final matches
         slide_idx, slide_names = list(zip(*[[slide_obj.stack_idx, slide_obj.name] for slide_obj in self.slide_dict.values()]))
         slide_order = np.argsort(slide_idx) # sorts ascending
         slide_list = [self.slide_dict[slide_names[i]] for i in slide_order]
