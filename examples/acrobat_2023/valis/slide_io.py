@@ -2310,7 +2310,7 @@ def get_slide_reader(src_f, series=None):
     Returns
     -------
     reader: SlideReader
-        SlideReader class that can read the slide and and convert them to
+        SlideReader class that can read the slide and convert them to
         images or pyvips.Images at the specified level and series. They
         also contain a `MetaData` object that contains information about
         the slide, like dimensions at each level, physical units, etc...

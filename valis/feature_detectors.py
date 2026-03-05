@@ -49,7 +49,7 @@ def filter_features(kp, desc, n_keep=MAX_FEATURES):
 
     Returns
     -------
-    Keypoints and and corresponding descriptors that the n_keep highest
+    Keypoints and corresponding descriptors that the n_keep highest
     responses.
 
     """
