@@ -1025,7 +1025,7 @@ class Slide(object):
             the points should be warped. Default is 0.
 
         pt_level: int, tuple, optional
-            Pyramid level from which the points origingated. For example, if
+            Pyramid level from which the points originated. For example, if
             `xy` are from the centroids of cell segmentation performed on the
             full resolution image, this should be 0. Alternatively, the value can
             be a tuple of the image's shape (row, col) from which the points came.
@@ -1201,7 +1201,7 @@ class Slide(object):
             the points should be warped. Default is 0.
 
         pt_level: int, tuple, optional
-            Pyramid level from which the points origingated. For example, if
+            Pyramid level from which the points originated. For example, if
             `xy` are from the centroids of cell segmentation performed on the
             full resolution image, this should be 0. Alternatively, the value can
             be a tuple of the image's shape (row, col) from which the points came.
