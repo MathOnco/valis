@@ -154,11 +154,11 @@ class FeatureDD(object):
 
         Returns
         -------
-        kp : ndarry
+        kp : np.ndarray
             (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
-        desc : ndarry
+        desc : np.ndarray
             (N, M) array containing M features for each of the N keypoints
 
         """
@@ -593,11 +593,11 @@ class DiskFD(KorniaFD):
 
         Returns
         -------
-        kp : ndarry
+        kp : np.ndarray
             (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
-        desc : ndarry
+        desc : np.ndarray
             (N, M) array containing M features for each of the N keypoints
 
         """
@@ -648,11 +648,11 @@ class DeDoDeFD(KorniaFD):
 
         Returns
         -------
-        kp : ndarry
+        kp : np.ndarray
             (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
-        desc : ndarry
+        desc : np.ndarray
             (N, M) array containing M features for each of the N keypoints
 
         """

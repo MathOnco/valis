@@ -1537,7 +1537,7 @@ def get_warp_map(M=None, dxdy=None, transformation_dst_shape_rc=None,
 
     Returns
     -------
-    coord_map : ndarry
+    coord_map : np.ndarray
         A 2band numpy array that has location of each pixel in
         `src_shape_rc` the warped image (with shape `dst_shape_rc`)
 

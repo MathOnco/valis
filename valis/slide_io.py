@@ -3339,7 +3339,7 @@ def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CM
 
     Parameters
     -------
-    img : ndarry or pyvips.Image
+    img : np.ndarray or pyvips.Image
         Image for which xml will be generated. Used to determine shape and datatype.
 
     reader : SlideReader
