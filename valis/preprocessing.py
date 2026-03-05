@@ -506,7 +506,7 @@ class Gray(ImageProcesser):
 
 
 class HEDeconvolution(ImageProcesser):
-    """Normalize staining appearence of hematoxylin and eosin (H&E) stained image
+    """Normalize staining appearance of hematoxylin and eosin (H&E) stained image
     and get the H or E deconvolution image.
 
     Reference
@@ -732,7 +732,7 @@ def calc_background_color_dist(img, brightness_q=0.99, mask=None, cspace="CAM16U
 
 
 def normalize_he(img: np.array, Io: int = 240, alpha: int = 1, beta: int = 0.15):
-    """ Normalize staining appearence of H&E stained images.
+    """ Normalize staining appearance of H&E stained images.
 
     Parameters
     ----------
