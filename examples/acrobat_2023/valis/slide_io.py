@@ -2824,7 +2824,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=1024, compression="lzw"):
 
     compression : str
         Compression method used to save ome.tiff . Default is lzw, but can also
-        be jpeg or jp2k. See pyips for more details.
+        be jpeg or jp2k. See pyvips for more details.
 
     """
 
@@ -2984,7 +2984,7 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
 
     compression : str
         Compression method used to save ome.tiff . Default is lzw, but can also
-        be jpeg or jp2k. See pyips for more details.
+        be jpeg or jp2k. See pyvips for more details.
 
     """
 

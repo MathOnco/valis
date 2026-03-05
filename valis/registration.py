@@ -1057,7 +1057,7 @@ class Slide(object):
             Tile width and height used to save image
 
         compression : str
-            Compression method used to save ome.tiff. See pyips for more details.
+            Compression method used to save ome.tiff. See pyvips for more details.
 
         Q : int
             Q factor for lossy compression
@@ -5147,7 +5147,7 @@ class Valis(object):
             Tile width and height used to save image
 
         compression : str, optional
-            Compression method used to save ome.tiff. See pyips for more details.
+            Compression method used to save ome.tiff. See pyvips for more details.
 
         Q : int
             Q factor for lossy compression
@@ -5258,7 +5258,7 @@ class Valis(object):
 
         compression : str
             Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            be jpeg or jp2k. See pyvips for more details.
 
         Q : int
             Q factor for lossy compression

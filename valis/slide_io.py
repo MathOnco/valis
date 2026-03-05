@@ -3551,7 +3551,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
         is both the width and height.
 
     compression : str
-        Compression method used to save ome.tiff . See pyips for more details.
+        Compression method used to save ome.tiff . See pyvips for more details.
 
     Q : int
         Q factor for lossy compression
@@ -3738,7 +3738,7 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
         so `tile_wh` is both the width and height.
 
     compression : str
-        Compression method used to save ome.tiff. See pyips for more details.
+        Compression method used to save ome.tiff. See pyvips for more details.
 
     Q : int
         Q factor for lossy compression

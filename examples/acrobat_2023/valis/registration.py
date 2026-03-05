@@ -954,7 +954,7 @@ class Slide(object):
 
         compression : str
             Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            be jpeg or jp2k. See pyvips for more details.
 
         """
 
@@ -4437,7 +4437,7 @@ class Valis(object):
 
         compression : str, optional
             Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            be jpeg or jp2k. See pyvips for more details.
 
         """
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
@@ -4519,7 +4519,7 @@ class Valis(object):
 
         compression : str
             Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            be jpeg or jp2k. See pyvips for more details.
 
         Returns
         -------
