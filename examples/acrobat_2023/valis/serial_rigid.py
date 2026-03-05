@@ -306,7 +306,7 @@ class SerialRigidRegistrar(object):
         contains methods for this, but the user may want/need to use other
         methods.
 
-    aleady_sorted: bool, optional
+    already_sorted: bool, optional
         Whether or not the order of images already known. If True, the file
         names should start with ascending numbers, with the first image file
         having the smallest number, and the last image file having the largest
@@ -425,7 +425,7 @@ class SerialRigidRegistrar(object):
 
         """
         self.img_dir = img_dir
-        self.aleady_sorted = imgs_ordered
+        self.already_sorted = imgs_ordered
         self.name = name
         self.img_file_list = get_image_files(img_dir, imgs_ordered=imgs_ordered)
         self.size = len(self.img_file_list)
@@ -1538,7 +1538,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]
 
     print("\n======== Matching images\n")
-    if registrar.aleady_sorted:
+    if registrar.already_sorted:
         registrar.match_sorted_imgs(matcher, keep_unfiltered=False,
                                     qt_emitter=qt_emitter)
 

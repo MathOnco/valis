@@ -3247,7 +3247,7 @@ class Valis(object):
 
 
         # print("\n======== Matching images\n")
-        if rigid_registrar.aleady_sorted:
+        if rigid_registrar.already_sorted:
             rigid_registrar.match_sorted_imgs(matcher_for_sorting, keep_unfiltered=False, valis_obj=self)
 
             for i, img_obj in enumerate(rigid_registrar.img_obj_list):
