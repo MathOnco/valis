@@ -995,7 +995,7 @@ class AffineOptimizerKNN(AffineOptimizer):
     def mutual_information(self, A, B):
 
         if self.HA_list[self.current_level] is None:
-            # Only need to caluclate once per level, because the fixed
+            # Only need to calculate once per level, because the fixed
             # image doesn't change
 
             self.HA_list[self.current_level] = self.shannon_entropy(A)
