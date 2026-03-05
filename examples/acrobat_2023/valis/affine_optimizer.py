@@ -523,7 +523,7 @@ class AffineOptimizer(object):
     Major overhauls are possible too. See AffineOptimizerMattesMI for an example on using SimpleITK's
     optimization methods inside an AffineOptimizer subclass
 
-    If the optimizer uses corressponding points, then the class attribute
+    If the optimizer uses corresponding points, then the class attribute
     accepts_xy needs to be set to True. The default is False.
 
     """
