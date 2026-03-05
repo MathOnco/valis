@@ -691,12 +691,12 @@ class SerialRigidRegistrar(object):
         updated_prev_match_info12 : MatchInfo
             If improved is True, then `updated_prev_match_info12` includes only
             features, descriptors that were found in both neighbors. Otherwise,
-            all of the original features will be maintained
+            all the original features will be maintained
 
         updated_next_match_info12 : MatchInfo
             If improved is True, then `updated_next_match_info12` includes only
             features, descriptors that were found in both neighbors. Otherwise,
-            all of the original features will be maintained
+            all the original features will be maintained
 
         """
 

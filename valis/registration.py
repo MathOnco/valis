@@ -3047,7 +3047,7 @@ class Valis(object):
         return mask, mask_bbox_xywh
 
     def get_null_overlap_mask(self):
-        """Create mask that covers all of the image.
+        """Create mask that covers all the images.
         Not really a mask
 
 

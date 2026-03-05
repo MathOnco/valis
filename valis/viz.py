@@ -717,7 +717,7 @@ def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, 
         the others, making it easier to compare marker expression levels.
 
         "channel" will first scale the intensity of each channel, and then
-        blend all of the channels together. This will allow one to see the
+        blend all the channels together. This will allow one to see the
         relative expression of each marker, but won't allow one to directly
         compare the expression of markers across channels.
 

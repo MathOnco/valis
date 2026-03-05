@@ -169,7 +169,7 @@ def get_imgs_from_dict(img_dict):
         "name_list" : list of image names. If not provided, will come from file names
         "mask_list" list of masks for each image
 
-    All of the above are optional, except `img_list`.
+    All the above are optional, except `img_list`.
 
     Returns
     -------

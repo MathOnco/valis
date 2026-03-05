@@ -2729,7 +2729,7 @@ class Valis(object):
 
 
     def get_null_overlap_mask(self, rigid_registrar):
-        """Create mask that covers all of the image.
+        """Create mask that covers all the images.
         Not really a mask
 
 

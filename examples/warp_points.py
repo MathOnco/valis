@@ -15,7 +15,7 @@ However, here the original coordinaates are in microns, and so need to be
 converted pixel units.
 
 4. The Slide object can now be used to warp the coordinates.
-This yields the ROI coordinates in all of the registered slides.
+This yields the ROI coordinates in all the registered slides.
 
 5. Warp and slice the ROI from each slide using the Slide's pyvips.Image
 extract_area method.
