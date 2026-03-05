@@ -42,7 +42,7 @@ The results directory contains several folders:
 
 After registraation is complete, one should view the
 results to determine if they aare acceptable. If they
-are, then one can warp and save all of the slides.
+are, then one can warp and save all the slides.
 
 """
 

@@ -1814,7 +1814,7 @@ class Valis(object):
         resolution_xyu: tuple, optional
             Physical size per pixel and the unit. If None (the default), these
             values will be determined for each slide using the slides' metadata.
-            If provided, this physical pixel sizes will be used for all of the slides.
+            If provided, this physical pixel sizes will be used for all the slides.
             This option is available in case one cannot easily access to the original
             slides, but does have the information on pixel's physical units.
 

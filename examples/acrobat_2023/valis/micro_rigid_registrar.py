@@ -34,7 +34,7 @@ class MicroRigidRegistrar(object):
     Attributes
     ----------
     val_obj : Valis
-        The "parent" object that registers all of the slides.
+        The "parent" object that registers all the slides.
 
     feature_detector_cls : FeatureDD, optional
         Uninstantiated FeatureDD object that detects and computes
@@ -74,7 +74,7 @@ class MicroRigidRegistrar(object):
         Parameters
         ----------
         val_obj : Valis
-            The "parent" object that registers all of the slides.
+            The "parent" object that registers all the slides.
 
         feature_detector_cls : FeatureDD, optional
             Uninstantiated FeatureDD object that detects and computes
