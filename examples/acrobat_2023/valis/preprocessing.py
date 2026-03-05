@@ -389,7 +389,7 @@ def standardize_colorfulness(img, c=DEFAULT_COLOR_STD_C, h=0):
     """Give image constant colorfulness and hue
 
     Image is converted to cylindrical CAM-16UCS assigned a constant
-    hue and colorfulness, and then coverted back to RGB.
+    hue and colorfulness, and then converted back to RGB.
 
     Parameters
     ----------
