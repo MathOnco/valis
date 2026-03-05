@@ -1712,7 +1712,7 @@ def separate_colors(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.00
         Colorspace to use to detect and separate colors using `separate_colors`
 
     min_colorfulness : str
-        Pixels with colorfulness/saturation less that this will be exluded.
+        Pixels with colorfulness/saturation less that this will be excluded.
         Calculated after binning colors.
 
     px_thresh: float
@@ -1905,7 +1905,7 @@ def find_dominant_colors(img, cspace="JzAzBz", min_colorfulness=0, px_thresh=0.0
         Colorspace to use to detect and separate colors using `separate_colors`
 
     min_colorfulness : str
-        Pixels with colorfulness/saturation less that this will be exluded.
+        Pixels with colorfulness/saturation less that this will be excluded.
         Calculated after binning colors.
 
     px_thresh: float
