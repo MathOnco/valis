@@ -1424,7 +1424,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
     no_h_lines = morphology.opening(cam_d, horiz_knl)
     cam_d_no_lines = np.dstack([no_v_lines, no_h_lines]).min(axis=2)
 
-    # Foreground is where color is different than backaground color
+    # Foreground is where color is different than background color
     cam_d_t, _ = filters.threshold_multiotsu(cam_d_no_lines[grey_mask == 0])
     tissue_mask = np.zeros(cam_d_no_lines.shape, dtype=np.uint8)
     tissue_mask[cam_d_no_lines >= cam_d_t] = 255
