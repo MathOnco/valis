@@ -1047,7 +1047,7 @@ class SerialRigidRegistrar(object):
         ----------
         metric: str
             Name of metric to use. If 'distance' that the distances and
-            similiarities calculated during feature matching will be used.
+            similarities calculated during feature matching will be used.
             If 'n_matches', then the number of matches will be used for
             similariy, and 1/n_matches for distance.
 
