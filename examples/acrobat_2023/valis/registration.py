@@ -3735,7 +3735,7 @@ class Valis(object):
             the case of errors based on feature distances (i.e. those ending in "D"),
             the mean is weighted by the number of feature matches between "from" and "to".
 
-            Columns endining in "D" indicate the median distance between matched
+            Columns ending in "D" indicate the median distance between matched
             features in "from" and "to".
 
             Columns ending in "rTRE" indicate the target registration error between
@@ -4008,7 +4008,7 @@ class Valis(object):
             the case of errors based on feature distances (i.e. those ending in "D"),
             the mean is weighted by the number of feature matches between "from" and "to".
 
-            Columns endining in "D" indicate the median distance between matched
+            Columns ending in "D" indicate the median distance between matched
             features in "from" and "to".
 
             Columns ending in "TRE" indicate the target registration error between
