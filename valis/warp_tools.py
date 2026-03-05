@@ -2876,7 +2876,7 @@ def get_xy_inside_mask(xy, mask):
     Returns
     -------
     keep_idx : ndarray
-        Indices of `xy` that are inside of `mask`
+        Indices of `xy` that are inside `mask`
     """
 
     mask_cnt, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)

@@ -507,7 +507,7 @@ class AffineOptimizer(object):
     to have a new cost_fxn method. See AffineOptimizerDisplacement for an example implementing a new cost function
 
     Major overhauls are possible too. See AffineOptimizerMattesMI for an example on using SimpleITK's
-    optimization methods inside of an AffineOptimizer subclass
+    optimization methods inside an AffineOptimizer subclass
 
     If the optimizer uses corressponding points, then the class attribute
     accepts_xy needs to be set to True. The default is False.
