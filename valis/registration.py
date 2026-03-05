@@ -2443,7 +2443,7 @@ class Valis(object):
 
                 for j, p in enumerate(dup_paths):
                     new_name = f"{names_dict[p]}_{str(j).zfill(z)}"
-                    msg = f"Renmaing {p} to {new_name} in Valis.slide_dict)"
+                    msg = f"Renaming {p} to {new_name} in Valis.slide_dict)"
                     valtils.print_warning(msg)
                     names_dict[p] = new_name
 
