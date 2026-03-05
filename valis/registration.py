@@ -4806,7 +4806,7 @@ class Valis(object):
                  reference_img_f=None, align_to_reference=False, mask=None, tile_wh=DEFAULT_NR_TILE_WH):
         """Improve alingment of microfeatures by performing second non-rigid registration on larger images
 
-        Caclculates additional non-rigid deformations using a larger image
+        Calculates additional non-rigid deformations using a larger image
 
         Parameters
         ----------
