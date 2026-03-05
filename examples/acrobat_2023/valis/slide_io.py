@@ -52,7 +52,7 @@ PIXEL_UNIT = "px"
 """str: Physical unit when the unit can't be found in the metadata"""
 
 MICRON_UNIT = u'\u00B5m'
-"""str: Phyiscal unit for micron/micrometers"""
+"""str: Physical unit for micron/micrometers"""
 
 ALL_OPENSLIDE_READABLE_FORMATS = [".svs", ".tif", ".vms", ".vmu", ".ndpi", ".scn", ".mrxs", ".tiff", ".svslide", ".bif"]
 """list: File extensions that OpenSlide can read"""
