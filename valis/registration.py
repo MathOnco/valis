@@ -183,7 +183,7 @@ class Slide(object):
 
     `Slide` is a class that stores registration parameters
     and other metadata about a slide. Once registration has been
-    completed, `Slide` is also able warp the slide and/or points
+    completed, `Slide` is also able to warp the slide and/or points
     using the same registration parameters. Warped slides can be saved
     as ome.tiff images with valid ome-xml.
 
