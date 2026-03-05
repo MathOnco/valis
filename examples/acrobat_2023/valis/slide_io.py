@@ -2486,7 +2486,7 @@ def create_channel(channel_id, name=None, color=None):
     channel_id : int
         Channel number
 
-    name : str, optinal
+    name : str, optional
         Channel name
 
     color : tuple of int

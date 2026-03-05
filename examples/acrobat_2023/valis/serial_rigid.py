@@ -34,7 +34,7 @@ def get_image_files(img_dir, imgs_ordered=False):
     img_dir : str
         Path to directory containing the images.
 
-    imgs_ordered: bool, optinal
+    imgs_ordered: bool, optional
         Whether or not the order of images already known. If True, the file
         names should start with ascending numbers, with the first image file
         having the smallest number, and the last image file having the largest
