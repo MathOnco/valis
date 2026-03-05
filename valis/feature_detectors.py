@@ -155,7 +155,7 @@ class FeatureDD(object):
         Returns
         -------
         kp : ndarry
-            (N, 2) array positions of keypoints in xy corrdinates for N
+            (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
         desc : ndarry
@@ -594,7 +594,7 @@ class DiskFD(KorniaFD):
         Returns
         -------
         kp : ndarry
-            (N, 2) array positions of keypoints in xy corrdinates for N
+            (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
         desc : ndarry
@@ -649,7 +649,7 @@ class DeDoDeFD(KorniaFD):
         Returns
         -------
         kp : ndarry
-            (N, 2) array positions of keypoints in xy corrdinates for N
+            (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
         desc : ndarry
