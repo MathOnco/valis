@@ -1161,7 +1161,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
     Returns
     -------
     nr_reg : SerialNonRigidRegistrar
-        SerialNonRigidRegistrar that has registeredt the images in `src`
+        SerialNonRigidRegistrar that has registered the images in `src`
     """
 
     tic = time()
