@@ -2798,7 +2798,7 @@ def measure_error(src_xy, dst_xy, shape, feature_similarity=None):
         Median relative Target Registration Error (rTRE) between images
 
     med_d : float
-        Median Euclidean distance between src_xy and dst_xy, optinally weighted by feature similarity
+        Median Euclidean distance between src_xy and dst_xy, optionally weighted by feature similarity
 
     """
     d = np.sqrt((src_xy[:, 0]-dst_xy[:, 0])**2 + (src_xy[:, 1]-dst_xy[:, 1])**2)
