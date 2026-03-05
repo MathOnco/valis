@@ -4910,7 +4910,7 @@ class Valis(object):
         if using_tiler:
             # Have determined that these images will be too big
             msg = (f"Registration would more than {TILER_THRESH_GB} GB if all images opened in memory. "
-                    f"Will use NonRigidTileRegistrar to register cooresponding tiles to reduce memory consumption, "
+                    f"Will use NonRigidTileRegistrar to register corresponding tiles to reduce memory consumption, "
                     f"but this method is experimental")
 
             valtils.print_warning(msg)
