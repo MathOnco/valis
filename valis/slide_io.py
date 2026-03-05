@@ -482,8 +482,8 @@ def check_to_use_openslide(src_f):
 def get_ome_obj(x):
     """Get ome_types.model.ome.OME object
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     x: str
         Either OME-XML or path to ome.tiff
 

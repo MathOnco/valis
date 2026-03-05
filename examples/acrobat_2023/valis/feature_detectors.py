@@ -289,8 +289,8 @@ class SkCensureDetector(FeatureDetector):
 
         Uses keypoint info to create KeyPoint objects for OpenCV
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         image : ndarray
             image from keypoints will be detected
 
