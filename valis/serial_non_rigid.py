@@ -1105,7 +1105,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         converted to strings.
 
     dst_dir : str, optional
-        Top directory where aliged images should be save. SerialNonRigidRegistrar will
+        Top directory where aligned images should be save. SerialNonRigidRegistrar will
         be in this folder, and aligned images in the "registered_images"
         sub-directory. If None, the images will not be written to file
 

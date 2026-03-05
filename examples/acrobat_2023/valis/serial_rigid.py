@@ -1434,7 +1434,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         to be registered. These images need to be single channel, uint8 images
 
     dst_dir : str, optional
-        Top directory where aliged images should be save. SerialRigidRegistrar will
+        Top directory where aligned images should be save. SerialRigidRegistrar will
         be in this folder, and aligned images in the "registered_images"
         sub-directory. If None, the images will not be written to file
 
