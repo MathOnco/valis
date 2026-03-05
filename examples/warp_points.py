@@ -11,7 +11,7 @@ slides.
 from which the ROI coordinates originated.
 
 3. Warping of points assumes the coordinates are in pixel units.
-However, here the original coordinaates are in microns, and so need to be
+However, here the original coordinates are in microns, and so need to be
 converted pixel units.
 
 4. The Slide object can now be used to warp the coordinates.
