@@ -2696,7 +2696,7 @@ class Valis(object):
             Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
         if_processing_cls : ImageProcesser
-            ImageProcesser to pre-process immunofluorescent images to make them look as similar as possible.
+            ImageProcesser to pre-process immunofluorescence images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         if_processing_kwargs : dict
@@ -4634,7 +4634,7 @@ class Valis(object):
             Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
         if_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process immunofluorescent images
+            preprocessing.ImageProcesser used to pre-process immunofluorescence images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict
@@ -4818,7 +4818,7 @@ class Valis(object):
             Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
         if_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process immunofluorescent images
+            preprocessing.ImageProcesser used to pre-process immunofluorescence images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict
