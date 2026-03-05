@@ -1038,7 +1038,7 @@ class SerialRigidRegistrar(object):
 
             ref_x, ref_y = best_reflect_M[[0, 1], [0, 1]] < 0
             if ref_x or ref_y:
-                msg = f'detected relfections between {img_obj.name} and {prev_img_obj.name} along the'
+                msg = f'detected reflections between {img_obj.name} and {prev_img_obj.name} along the'
                 if ref_x and ref_y:
                     msg = f'{msg} x and y axes'
                 elif ref_x:
