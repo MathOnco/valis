@@ -1486,7 +1486,7 @@ class VipsSlideReader(SlideReader):
         Returns
         -------
         channel_names : list
-            List of channel naames.
+            List of channel names.
 
         """
 
