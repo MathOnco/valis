@@ -379,7 +379,7 @@ class NonRigidZImage(object):
             Passed to the non_rigid_reg_class' init() method.
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         mask : ndarray, optional

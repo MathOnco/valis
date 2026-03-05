@@ -110,7 +110,7 @@ class NonRigidRegistrar(object):
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -407,7 +407,7 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         moving_xy : ndarray, optional
@@ -1311,7 +1311,7 @@ class NonRigidTileRegistrar(object):
             Will get used when initializing the `non_rigid_registrar_cls`
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         tile_wh : int
