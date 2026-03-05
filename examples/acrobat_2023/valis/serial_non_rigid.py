@@ -604,7 +604,7 @@ class SerialNonRigidRegistrar(object):
             #. Rigid registered xy in moving/current/from image
             #. Rigid registered xy in fixed/next/to image
 
-            To deterime which pairs of images will be aligned, use
+            To determine which pairs of images will be aligned, use
             `get_alignment_indices`. Can use `get_imgs_from_dir`
             to see the order inwhich the images will be read, which will correspond
             to the indices retuned by `get_alignment_indices`.
@@ -1090,7 +1090,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         #. Rigid registered xy in moving/current/from image
         #. Rigid registered xy in fixed/next/to image
 
-        To deterime which pairs of images will be aligned, use
+        To determine which pairs of images will be aligned, use
         `warp_tools.get_alignment_indices`. Can use `get_imgs_from_dir`
         to see the order inwhich the images will be read, which will correspond
         to the indices retuned by `warp_tools.get_alignment_indices`.
