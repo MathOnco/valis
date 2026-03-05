@@ -665,11 +665,12 @@ class SerialRigidRegistrar(object):
 
     def get_common_desc(self, current_img_obj, neighbor_obj, nf_kp_idx):
         """Get descriptors that correspond to filtered neighbor points
-            Parameters
-            ----------
-            nf_kp_idx : ndarray
-                Indices of already matched keypoints that were found after
-                neighbor filtering
+
+        Parameters
+        ----------
+        nf_kp_idx : ndarray
+            Indices of already matched keypoints that were found after
+            neighbor filtering
         """
 
         neighbor_match_info12 = current_img_obj.match_dict[neighbor_obj]

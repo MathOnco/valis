@@ -567,7 +567,7 @@ class AffineOptimizer(object):
             Image moving is warped to align to
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix
@@ -628,7 +628,7 @@ class AffineOptimizer(object):
             Image moving is warped to align with
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix
@@ -813,7 +813,7 @@ class AffineOptimizerMattesMI(AffineOptimizer):
             Image moving is warped to align to
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix
@@ -880,7 +880,7 @@ class AffineOptimizerMattesMI(AffineOptimizer):
             Image moving is warped to align with
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix

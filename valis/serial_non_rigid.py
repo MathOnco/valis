@@ -384,7 +384,7 @@ class NonRigidZImage(object):
 
         mask : ndarray, optional
             2D array with shape (P,Q) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         """

@@ -46,7 +46,7 @@ class NonRigidRegistrar(object):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple
@@ -142,7 +142,7 @@ class NonRigidRegistrar(object):
 
         mask : ndarray
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         Returns
@@ -188,7 +188,7 @@ class NonRigidRegistrar(object):
 
         mask : ndarray
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         **kwargs : dict, optional
@@ -337,7 +337,7 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple
@@ -427,7 +427,7 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
 
         mask : ndarray
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         moving_xy : ndarray, optional
@@ -497,7 +497,7 @@ class NonRigidRegistrarGroupwise(NonRigidRegistrar):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple of int
@@ -789,7 +789,7 @@ class SimpleElastixWarper(NonRigidRegistrarXY):
 
         mask : ndarray, optional
             2D array with shape (N,M) where non-zero pixel values are
-            foreground, and 0 is background, which is ignnored during
+            foreground, and 0 is background, which is ignored during
             registration. If None, then all non-zero pixels in images
             will be used to create the mask.
 
@@ -1032,7 +1032,7 @@ class SimpleElastixGroupwiseWarper(NonRigidRegistrarGroupwise):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple of int
@@ -1170,7 +1170,7 @@ class NonRigidTileRegistrar(object):
 
     mask : pyvips.Image
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple
@@ -1390,7 +1390,7 @@ class NonRigidTileRegistrar(object):
 
         mask : ndarray, pyvips.Image
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         non_rigid_registrar_cls : NonRigidRegistrar, optional
