@@ -211,7 +211,7 @@ def test_register_cycif(max_error=3):
         * Make sure error is below threshold
         * Checks channel names of merged image are in the correct order (https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877)
         * Check jpeg2000 compression
-        * Check that reference slide is unwarped
+        * Check that reference slide is un-warped
 
 
     """

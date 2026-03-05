@@ -222,7 +222,7 @@ class NonRigidZImage(object):
     ----------
 
     image : ndarray
-        Original, unwarped image with shape (P, Q)
+        Original, un-warped image with shape (P, Q)
 
     name : str
         Name of image.
@@ -260,7 +260,7 @@ class NonRigidZImage(object):
         ----------
 
         image : ndarray
-            Original, unwarped image with shape (P, Q)
+            Original, un-warped image with shape (P, Q)
 
         name : str
             Name of image.

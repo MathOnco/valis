@@ -473,7 +473,7 @@ class SerialRigidRegistrar(object):
             msg = (f"The reference was specified as {og_ref_name} ",
                    f"but `align_to_reference` is `False`, and so images will be aligned serially *towards* the reference image. ",
                    f"If you would like all images to be *directly* aligned to {og_ref_name}, "
-                   f"then set `align_to_reference` to `True`. Note that in both cases, {og_ref_name} will remain unwarped.")
+                   f"then set `align_to_reference` to `True`. Note that in both cases, {og_ref_name} will remain un-warped.")
             valtils.print_warning(msg)
 
     def generate_img_obj_list(self, feature_detector, valis_obj=None, qt_emitter=None):

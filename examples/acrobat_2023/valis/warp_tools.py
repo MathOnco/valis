@@ -1288,7 +1288,7 @@ def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
         this shape should be the same for both images.
 
     from_src_shape_rc : optional, (int, int)
-        Shape of the unwarped image from which the points originated. For example,
+        Shape of the un-warped image from which the points originated. For example,
         this could be a larger/smaller version of the "from" image that was
         used for feature detection.
 
@@ -1310,7 +1310,7 @@ def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
         For example, this could be the original image in which features were detected
 
     to_src_shape_rc : optional, (int, int)
-        Shape of the unwarped "to" image to which the points will be warped. For example,
+        Shape of the un-warped "to" image to which the points will be warped. For example,
         this could be a larger/smaller version of the "to" image that was
         used for feature detection.
 
@@ -2313,8 +2313,8 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
                    to_dst_shape_rc=None, to_bk_dxdy=None, to_fwd_dxdy=None):
     """Warp points in one image to their position in another unregistered image
 
-    Takes a set of points found in the unwarped "from" image, and warps them to their
-    position in the unwarped "to" image.
+    Takes a set of points found in the un-warped "from" image, and warps them to their
+    position in the un-warped "to" image.
 
     Parameters
     ----------
@@ -2334,7 +2334,7 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
         this shape should be the same for both images.
 
     from_src_shape_rc : optional, (int, int)
-        Shape of the unwarped image from which the points originated. For example,
+        Shape of the un-warped image from which the points originated. For example,
         this could be a larger/smaller version of the "from" image that was
         used for feature detection.
 
@@ -2356,7 +2356,7 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
         For example, this could be the original image in which features were detected
 
     to_src_shape_rc : optional, (int, int)
-        Shape of the unwarped "to" image to which the points will be warped. For example,
+        Shape of the un-warped "to" image to which the points will be warped. For example,
         this could be a larger/smaller version of the "to" image that was
         used for feature detection.
 
@@ -2373,7 +2373,7 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
     Returns
     -------
     xy_in_to : ndarray
-        position of `xy` in the unwarped "to" image
+        position of `xy` in the un-warped "to" image
 
     """
 

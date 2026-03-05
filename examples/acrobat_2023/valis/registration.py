@@ -525,7 +525,7 @@ class Slide(object):
 
         out_shape_rc : tuple of int, optional
             If crop is "reference", this should be the shape of scaled reference image, such
-            as the unwarped slide that corresponds to the unwarped processed reference image.
+            as the un-warped slide that corresponds to the un-warped processed reference image.
 
             If crop is "overlap", this should be the shape of the registered slides.
 
@@ -756,7 +756,7 @@ class Slide(object):
     def warp_img_from_to(self, img, to_slide_obj,
                         dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
 
-        """Warp an image from this slide onto another unwarped slide
+        """Warp an image from this slide onto another un-warped slide
 
         Note that if `img` is a labeled image then it is recommended to set `interp_method` to "nearest"
 
@@ -768,7 +768,7 @@ class Slide(object):
         to_slide_obj : Slide
             Slide to which the points will be warped. I.e. `xy`
             will be warped from this Slide to their position in
-            the unwarped slide associated with `to_slide_obj`.
+            the un-warped slide associated with `to_slide_obj`.
 
         dst_slide_level: int, tuple, optional
             Pyramid level of the slide/image that `img` will be warped on to
@@ -1102,10 +1102,10 @@ class Slide(object):
     def warp_xy_from_to(self, xy, to_slide_obj, src_slide_level=0, src_pt_level=0,
                         dst_slide_level=0, non_rigid=True):
 
-        """Warp points from this slide to another unwarped slide
+        """Warp points from this slide to another un-warped slide
 
-        Takes a set of points found in this unwarped slide, and warps them to
-        their position in the unwarped "to" slide.
+        Takes a set of points found in this un-warped slide, and warps them to
+        their position in the un-warped "to" slide.
 
         Parameters
         ----------
@@ -1115,12 +1115,12 @@ class Slide(object):
         to_slide_obj : Slide
             Slide to which the points will be warped. I.e. `xy`
             will be warped from this Slide to their position in
-            the unwarped slide associated with `to_slide_obj`.
+            the un-warped slide associated with `to_slide_obj`.
 
         src_pt_level: int, tuple, optional
             Pyramid level of the slide/image in which `xy` originated.
             For example, if `xy` are from the centroids of cell segmentation
-            performed on the unwarped full resolution image, this should be 0.
+            performed on the un-warped full resolution image, this should be 0.
             Alternatively, the value can be a tuple of the image's shape (row, col)
             from which the points came. For example, if `xy` are  bounding
             box coordinates from an analysis on a lower resolution image,
@@ -1291,10 +1291,10 @@ class Slide(object):
 
     def warp_geojson_from_to(self, geojson_f, to_slide_obj, src_slide_level=0, src_pt_level=0,
                             dst_slide_level=0, non_rigid=True):
-        """Warp geoms in geojson file from annotation slide to another unwarped slide
+        """Warp geoms in geojson file from annotation slide to another un-warped slide
 
         Takes a set of geometries found in this annotation slide, and warps them to
-        their position in the unwarped "to" slide.
+        their position in the un-warped "to" slide.
 
         Parameters
         ----------
@@ -1305,12 +1305,12 @@ class Slide(object):
         to_slide_obj : Slide
             Slide to which the points will be warped. I.e. `xy`
             will be warped from this Slide to their position in
-            the unwarped slide associated with `to_slide_obj`.
+            the un-warped slide associated with `to_slide_obj`.
 
         src_pt_level: int, tuple, optional
             Pyramid level of the slide/image in which `xy` originated.
             For example, if `xy` are from the centroids of cell segmentation
-            performed on the unwarped full resolution image, this should be 0.
+            performed on the un-warped full resolution image, this should be 0.
             Alternatively, the value can be a tuple of the image's shape (row, col)
             from which the points came. For example, if `xy` are  bounding
             box coordinates from an analysis on a lower resolution image,
@@ -2120,7 +2120,7 @@ class Valis(object):
         * Save the warped slide as an ome.tiff (Slide.warp_and_save_slide)
         * Warp an image of the slide (Slide.warp_img)
         * Warp points (Slide.warp_xy)
-        * Warp points in one slide to their position in another unwarped slide (Slide.warp_xy_from_to)
+        * Warp points in one slide to their position in another un-warped slide (Slide.warp_xy_from_to)
         * Access slide ome-xml (Slide.original_xml)
 
         See Slide for more details.
