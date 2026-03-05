@@ -2525,7 +2525,7 @@ def create_channel(channel_id, name=None, color=None):
 
 @valtils.deprecated_args(perceputally_uniform_channel_colors="colormap")
 def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
-    """Create new ome-xmml object
+    """Create new ome-xml object
 
     Parameters
     -------

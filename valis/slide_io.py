@@ -3198,7 +3198,7 @@ def check_channel_names(channel_names, is_rgb, nc, src_f=None):
 
 
 def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, colormap=CMAP_AUTO):
-    """Create new ome-xmml object
+    """Create new ome-xml object
 
     Parameters
     -------
