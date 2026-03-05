@@ -1467,7 +1467,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         If None, the index of the middle image will be the reference.
 
     check_for_reflections : bool, optional
-        Determine if alignments are improved by relfecting/mirroring/flipping
+        Determine if alignments are improved by reflecting/mirroring/flipping
         images. Optional because it requires re-detecting features in each version
         of the images and then re-matching features, and so can be time-consuming and
         not always necessary.
