@@ -4398,7 +4398,7 @@ class Valis(object):
 
             The "from" column is the name of the image, while the "to" column
             name of the image it was aligned to. "from" is analogous to "moving"
-            or "current", while "to" is analgous to "fixed" or "previous".
+            or "current", while "to" is analogous to "fixed" or "previous".
 
             Columns begining with "original" refer to error measurements of the
             unregistered images. Those beginning with "rigid" or "non_rigid" refer
@@ -4676,7 +4676,7 @@ class Valis(object):
 
             The "from" column is the name of the image, while the "to" column
             name of the image it was aligned to. "from" is analogous to "moving"
-            or "current", while "to" is analgous to "fixed" or "previous".
+            or "current", while "to" is analogous to "fixed" or "previous".
 
             Columns begining with "original" refer to error measurements of the
             unregistered images. Those beginning with "rigid" or "non_rigid" refer
