@@ -4852,7 +4852,7 @@ class Valis(object):
             Dictionary containing key, value pairs to be used to initialize
             `non_rigid_registrar_cls`.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings. See the NonRigidRegistrar classes in
             `non_rigid_registrars` for the available non-rigid registration
             methods and arguments.

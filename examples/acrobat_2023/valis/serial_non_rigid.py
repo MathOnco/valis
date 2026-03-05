@@ -553,7 +553,7 @@ class SerialNonRigidRegistrar(object):
         Dictionary containing parameters {name: value} to be used to initialize
         the NonRigidRegistrar.
         In the case where simple ITK is used by the, params should be
-        a SimpleITK.ParameterMap. Note that numeric values nedd to be
+        a SimpleITK.ParameterMap. Note that numeric values need to be
         converted to strings.
 
     mask :  ndarray
@@ -832,7 +832,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -882,7 +882,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -916,7 +916,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -950,7 +950,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
         img_params : dict, optional
             Dictionary of parameters to be used for each particular image.
@@ -1069,7 +1069,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         Dictionary containing parameters {name: value} to be used to initialize
         the NonRigidRegistrar.
         In the case where simple ITK is used by the, params should be
-        a SimpleITK.ParameterMap. Note that numeric values nedd to be
+        a SimpleITK.ParameterMap. Note that numeric values need to be
         converted to strings.
 
     dst_dir : str, optional
