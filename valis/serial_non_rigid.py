@@ -960,7 +960,7 @@ class SerialNonRigidRegistrar(object):
 
         Images will be registered serially if `non_rigid_reg_class` is a
         subclass of NonRigidRegistrarGroupwise, then groupwise registration
-        will be conductedd. If `non_rigid_reg_class` is a subclass of
+        will be conducted. If `non_rigid_reg_class` is a subclass of
         NonRigidRegistrar then images will be aligned serially.
 
         Parameters
