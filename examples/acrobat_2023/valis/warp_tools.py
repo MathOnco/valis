@@ -676,7 +676,7 @@ def mattes_mi(img1, img2, nbins=50,  mask=None):
     Returns
     -------
     mmi : float
-        Mattes mutation inormation
+        Mattes mutation information
 
     """
 

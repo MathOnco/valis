@@ -2394,7 +2394,7 @@ class Valis(object):
         return overlap_img
 
     def measure_original_mmi(self, img1, img2):
-        """Measure Mattes mutation inormation between 2 unregistered images.
+        """Measure Mattes mutation information between 2 unregistered images.
         """
 
         dst_rc = np.max([img1.shape, img2.shape], axis=1)
