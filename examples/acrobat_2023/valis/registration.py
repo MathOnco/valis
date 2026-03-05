@@ -1514,7 +1514,7 @@ class Valis(object):
         SerialRigidRegistrar object that performs the rigid registration.
 
     rigid_reg_kwargs : dict
-        Dictionary of keyward arguments passed to
+        Dictionary of keyword arguments passed to
         `serial_rigid.register_images`.
 
     feature_descriptor_str : str
@@ -1537,7 +1537,7 @@ class Valis(object):
         non-rigid registration.
 
     non_rigid_reg_kwargs : dict
-        Dictionary of keyward arguments passed to
+        Dictionary of keyword arguments passed to
         `serial_non_rigid.register_images`.
 
     non_rigid_registrar_cls : NonRigidRegistrar
@@ -2425,14 +2425,14 @@ class Valis(object):
             Should return a single channel uint8 image.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
         if_processing_cls : ImageProcesser
             ImageProcesser to pre-process immunofluorescent images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         processor_dict : dict
             Each key should be the filename of the image, and the value either a subclassed
@@ -3959,14 +3959,14 @@ class Valis(object):
             them look as similar as possible.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
         if_processing_cls : preprocessing.ImageProcesser
             preprocessing.ImageProcesser used to pre-process immunofluorescent images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         processor_dict : dict
             Each key should be the filename of the image, and the value either a subclassed
@@ -4134,14 +4134,14 @@ class Valis(object):
             them look as similar as possible.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
         if_processing_cls : preprocessing.ImageProcesser
             preprocessing.ImageProcesser used to pre-process immunofluorescent images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         max_non_rigid_registration_dim_px : int, optional
              Maximum width or height of images used for non-rigid registration.

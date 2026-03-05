@@ -1401,7 +1401,7 @@ class NonRigidTileRegistrar(object):
             preprocessing.ImageProcesser used to process the images
 
         processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `processing_cls`
+            Dictionary of keyword arguments to be passed to `processing_cls`
 
         target_stats : ndarray
             Target stats used to normalize each tile after being processed.
