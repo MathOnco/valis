@@ -257,7 +257,7 @@ class ColorDeconvolver(ImageProcesser):
 
     def process_image(self, cspace="JzAzBz", method="similarity", adaptive_eq=False, return_unmixed=False, *args, **kwargs):
         """
-        Process image by enhance stained pixels and subtracting backroung pixels
+        Process image by enhance stained pixels and subtracting background pixels
 
         Parameters
         ----------
