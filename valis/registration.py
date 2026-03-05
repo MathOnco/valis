@@ -1929,7 +1929,7 @@ class Valis(object):
             mask too much if there is a lot of variation in the image.
 
         denoise_rigid : bool, optional
-            Whether or not to denoise processed images before rigid registion.
+            Whether or not to denoise processed images before rigid registration.
             Note that un-denoised images are used in the non-rigid registration
 
         crop_for_rigid_reg : bool, optional
