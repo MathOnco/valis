@@ -2527,7 +2527,7 @@ class Valis(object):
         reader_dict: dict, optional
             Dictionary specifying which readers to use for individual images.
             The keys, value pairs are image filename and instantiated `slide_io.SlideReader`
-            to use to read that file. Valis will try to find an appropritate reader
+            to use to read that file. Valis will try to find an appropriate reader
             for any omitted files, or will use `reader_cls` as the default.
 
         """
@@ -4658,7 +4658,7 @@ class Valis(object):
         reader_dict: dict, optional
             Dictionary specifying which readers to use for individual images. The
             keys should be the image's filename, and the values the instantiated slide_io.SlideReader
-            to use to read that file. Valis will try to find an appropritate reader
+            to use to read that file. Valis will try to find an appropriate reader
             for any omitted files, or will use `reader_cls` as the default.
 
         Returns
