@@ -1775,7 +1775,7 @@ class Valis(object):
             registration will be skipped.
 
             If `do_rigid` is a dictionary, it should contain inverse transformation
-            matrices to rigidly align images to the specificed by `reference_img_f`.
+            matrices to rigidly align images to the specified by `reference_img_f`.
             M will be estimated for images that are not in the dictionary.
             Each key is the filename of the image associated with the transformation matrix,
             and value is a dictionary containing the following values:
