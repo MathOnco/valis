@@ -4604,7 +4604,7 @@ class Valis(object):
         then conduct rigid registration. Non-rigid registration will then be performed if the
         `non_rigid_registrar_cls` argument used to initialize the Valis object was not None.
 
-        In addition to the objects returned, the desination directory (i.e. `dst_dir`)
+        In addition to the objects returned, the destination directory (i.e. `dst_dir`)
         will contain thumbnails so that one can visualize the results: converted image
         thumbnails will be in "images/"; processed images in "processed/";
         rigidly aligned images in "rigid_registration/"; non-rigidly aligned images in "non_rigid_registration/";
