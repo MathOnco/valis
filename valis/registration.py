@@ -93,7 +93,7 @@ MATCHER_FOR_SORTING_KEY = "matcher_for_sorting"
 NAME_KEY = "name"
 IMAGES_ORDERD_KEY = "imgs_ordered"
 REF_IMG_KEY = "reference_img_f"
-QT_EMMITER_KEY = "qt_emitter"
+QT_EMITTER_KEY = "qt_emitter"
 TFORM_SRC_SHAPE_KEY = "transformation_src_shape_rc"
 TFORM_DST_SHAPE_KEY = "transformation_dst_shape_rc"
 TFORM_MAT_KEY = "M"
@@ -2211,7 +2211,7 @@ class Valis(object):
                                  REF_IMG_KEY: reference_img_f,
                                  IMAGES_ORDERD_KEY: imgs_ordered,
                                  CHECK_REFLECT_KEY: check_for_reflections,
-                                 QT_EMMITER_KEY: qt_emitter
+                                 QT_EMITTER_KEY: qt_emitter
                                  }
 
         # Save methods as strings since some objects cannot be pickled #
@@ -2246,7 +2246,7 @@ class Valis(object):
                                      NON_RIGID_REG_CLASS_KEY: nr,
                                      NON_RIGID_REG_PARAMS_KEY: non_rigid_reg_params,
                                      REF_IMG_KEY: reference_img_f,
-                                     QT_EMMITER_KEY: qt_emitter,
+                                     QT_EMITTER_KEY: qt_emitter,
                                      NON_RIGID_COMPOSE_KEY: compose_non_rigid
                                      }
 
