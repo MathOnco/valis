@@ -11,11 +11,11 @@ slides.
 from which the ROI coordinates originated.
 
 3. Warping of points assumes the coordinates are in pixel units.
-However, here the original coordinaates are in microns, and so need to be
+However, here the original coordinates are in microns, and so need to be
 converted pixel units.
 
 4. The Slide object can now be used to warp the coordinates.
-This yields the ROI coordinates in all of the registered slides.
+This yields the ROI coordinates in all the registered slides.
 
 5. Warp and slice the ROI from each slide using the Slide's pyvips.Image
 extract_area method.
@@ -70,7 +70,7 @@ bbox_xywh_in_registered_img = np.round(bbox_xywh_in_registered_img).astype(int)
 dst_dir = "./expected_results/roi"
 pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
 
-# Warp each slide and slice the ROI from it using each pyips.Image's "extract_area" method.
+# Warp each slide and slice the ROI from it using each pyvips.Image's "extract_area" method.
 fig, axes = plt.subplots(2, 3, figsize=(12, 8), sharex=True, sharey=True)
 ax = axes.ravel()
 for i, slide in enumerate(registrar.slide_dict.values()):

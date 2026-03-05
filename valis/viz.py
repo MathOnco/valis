@@ -710,21 +710,21 @@ def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, 
         in areas where they are expressed in isolation, but can also make
         it appear more marker is expressed than there really is.
 
-    normalize_by : str, optionaal
+    normalize_by : str, optional
         "image" will produce an image where all values are scaled between
         0 and the highest intensity in the composite image. This will produce
         an image where one can see the expression of each marker relative to
         the others, making it easier to compare marker expression levels.
 
         "channel" will first scale the intensity of each channel, and then
-        blend all of the channels together. This will allow one to see the
+        blend all the channels together. This will allow one to see the
         relative expression of each marker, but won't allow one to directly
         compare the expression of markers across channels.
 
     cspace : str
         Colorspace in which `marker_colors` will be blended.
         JzAzBz, Hunter Lab, and sRGB all work well. But, see
-        colour.COLOURSPACE_MODELS for other possible colorspaces
+        colour.COLOURSPACE_MODELS for other possible colorspace
 
     Returns
     -------

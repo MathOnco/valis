@@ -33,7 +33,7 @@ highest response will be returned."""
 
 
 def filter_features(kp, desc, n_keep=MAX_FEATURES):
-    """Get keypoints with highest response
+    """Get keypoints with the highest response
 
     Parameters
     ----------
@@ -49,7 +49,7 @@ def filter_features(kp, desc, n_keep=MAX_FEATURES):
 
     Returns
     -------
-    Keypoints and and corresponding descriptors that the the n_keep highest
+    Keypoints and corresponding descriptors that the n_keep highest
     responses.
 
     """
@@ -154,11 +154,11 @@ class FeatureDD(object):
 
         Returns
         -------
-        kp : ndarry
-            (N, 2) array positions of keypoints in xy corrdinates for N
+        kp : np.ndarray
+            (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
-        desc : ndarry
+        desc : np.ndarray
             (N, M) array containing M features for each of the N keypoints
 
         """
@@ -326,8 +326,8 @@ class SkCensureDetector(FeatureDetector):
 
         Uses keypoint info to create KeyPoint objects for OpenCV
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         image : ndarray
             image from keypoints will be detected
 
@@ -593,11 +593,11 @@ class DiskFD(KorniaFD):
 
         Returns
         -------
-        kp : ndarry
-            (N, 2) array positions of keypoints in xy corrdinates for N
+        kp : np.ndarray
+            (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
-        desc : ndarry
+        desc : np.ndarray
             (N, M) array containing M features for each of the N keypoints
 
         """
@@ -648,11 +648,11 @@ class DeDoDeFD(KorniaFD):
 
         Returns
         -------
-        kp : ndarry
-            (N, 2) array positions of keypoints in xy corrdinates for N
+        kp : np.ndarray
+            (N, 2) array positions of keypoints in xy coordinates for N
             keypoints
 
-        desc : ndarry
+        desc : np.ndarray
             (N, M) array containing M features for each of the N keypoints
 
         """

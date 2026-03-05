@@ -11,7 +11,7 @@ The results directory contains several folders:
     dimensions, physical units, etc...
 
     * a pickled version of the registrar. This can be reloaded
-    (unpickled) and used later. For example, one could perform
+    (un-pickled) and used later. For example, one could perform
     the registration locally, but then use the pickled object
     to warp and save the slides on an HPC. Or, one could perform
     the registration and use the registrar later to warp
@@ -42,7 +42,7 @@ The results directory contains several folders:
 
 After registraation is complete, one should view the
 results to determine if they aare acceptable. If they
-are, then one can warp and save all of the slides.
+are, then one can warp and save all the slides.
 """
 
 
@@ -211,7 +211,7 @@ def test_register_cycif(max_error=3):
         * Make sure error is below threshold
         * Checks channel names of merged image are in the correct order (https://github.com/MathOnco/valis/issues/56#issuecomment-1821050877)
         * Check jpeg2000 compression
-        * Check that reference slide is unwarped
+        * Check that reference slide is un-warped
 
 
     """

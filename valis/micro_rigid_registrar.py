@@ -27,8 +27,8 @@ DEFAULT_MATCHER = feature_matcher.LightGlueMatcher(DEFAULT_FD())
 DEFAULT_BF_PROCESSOR = preprocessing.OD
 DEFAULT_BF_PROCESSOR_KWARGS = {}
 
-DEFAULT_FLOURESCENCE_CLASS = preprocessing.ChannelGetter
-DEFAULT_FLOURESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
+DEFAULT_FLUORESCENCE_CLASS = preprocessing.ChannelGetter
+DEFAULT_FLUORESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
 
 class MicroRigidRegistrar(object):
     """Refine rigid registration using higher resolution images
@@ -44,7 +44,7 @@ class MicroRigidRegistrar(object):
     Attributes
     ----------
     val_obj : Valis
-        The "parent" object that registers all of the slides.
+        The "parent" object that registers all the slides.
 
     feature_detector_cls : FeatureDD, optional
         Uninstantiated FeatureDD object that detects and computes
@@ -57,7 +57,7 @@ class MicroRigidRegistrar(object):
         Matcher object that will be used to match image features
 
     scale : float
-        Degree of downsampling to use for the reigistration, based on the
+        Degree of downsampling to use for the registration, based on the
         registered WSI shape (i.e. Slide.aligned_slide_shape_rc)
 
     tile_wh : int
@@ -83,7 +83,7 @@ class MicroRigidRegistrar(object):
         Parameters
         ----------
         val_obj : Valis
-            The "parent" object that registers all of the slides.
+            The "parent" object that registers all the slides.
 
         feature_detector_cls : FeatureDD, optional
             Uninstantiated FeatureDD object that detects and computes
@@ -102,7 +102,7 @@ class MicroRigidRegistrar(object):
             If `None`, a default processor will be assigned to each image based on its modality.
 
         scale : float
-            Degree of downsampling to use for the reigistration, based on the
+            Degree of downsampling to use for the registration, based on the
             registered WSI shape (i.e. Slide.aligned_slide_shape_rc)
 
         tile_wh : int
@@ -164,24 +164,24 @@ class MicroRigidRegistrar(object):
 
     def register(self,
                  brightfield_processing_cls=DEFAULT_BF_PROCESSOR, brightfield_processing_kwargs=DEFAULT_BF_PROCESSOR_KWARGS,
-                 if_processing_cls=DEFAULT_FLOURESCENCE_CLASS, if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS):
+                 if_processing_cls=DEFAULT_FLUORESCENCE_CLASS, if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS):
         """
 
         Parameters
         ----------
-        brightfield_processing_cls : ImageProcesser
-            ImageProcesser to pre-process brightfield images to make them look as similar as possible.
+        brightfield_processing_cls : ImageProcessor
+            ImageProcessor to pre-process brightfield images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
-        if_processing_cls : ImageProcesser
-            ImageProcesser to pre-process immunofluorescent images to make them look as similar as possible.
+        if_processing_cls : ImageProcessor
+            ImageProcessor to pre-process immunofluorescence images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         """
 

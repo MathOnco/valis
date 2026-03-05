@@ -252,7 +252,7 @@ if __name__ == "__main__":
     # Perform microregistration within the bounding box of the H&E+ tissue
     micro_reg_mask = create_reg_mask(registrar)
 
-    micro_reg, micro_error = registrar.register_micro(max_non_rigid_registartion_dim_px=micro_reg_size,
+    micro_reg, micro_error = registrar.register_micro(max_non_rigid_registration_dim_px=micro_reg_size,
                                 reference_img_f=he_img_f,
                                 align_to_reference=True,
                                 mask=micro_reg_mask,

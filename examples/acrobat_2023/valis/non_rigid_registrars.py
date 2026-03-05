@@ -46,7 +46,7 @@ class NonRigidRegistrar(object):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple
@@ -90,11 +90,11 @@ class NonRigidRegistrar(object):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -128,9 +128,9 @@ class NonRigidRegistrar(object):
         return masked_moving, masked_fixed
 
     def calc(self, moving_img, fixed_img, mask, *args, **kwargs):
-        """Cacluate displacement fields
+        """Calculate displacement fields
 
-        Can record subclass specific atrributes here too
+        Can record subclass specific attributes here too
 
         Parameters
         ----------
@@ -142,7 +142,7 @@ class NonRigidRegistrar(object):
 
         mask : ndarray
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         Returns
@@ -188,7 +188,7 @@ class NonRigidRegistrar(object):
 
         mask : ndarray
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         **kwargs : dict, optional
@@ -337,7 +337,7 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple
@@ -388,11 +388,11 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         moving_xy : ndarray, optional
@@ -427,7 +427,7 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
 
         mask : ndarray
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         moving_xy : ndarray, optional
@@ -497,7 +497,7 @@ class NonRigidRegistrarGroupwise(NonRigidRegistrar):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple of int
@@ -789,7 +789,7 @@ class SimpleElastixWarper(NonRigidRegistrarXY):
 
         mask : ndarray, optional
             2D array with shape (N,M) where non-zero pixel values are
-            foreground, and 0 is background, which is ignnored during
+            foreground, and 0 is background, which is ignored during
             registration. If None, then all non-zero pixels in images
             will be used to create the mask.
 
@@ -929,7 +929,7 @@ class OpticalFlowWarper(NonRigidRegistrar):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
         optical_flow_obj : object
@@ -964,7 +964,7 @@ class OpticalFlowWarper(NonRigidRegistrar):
             Folded regions will then be removed using inpainting.
 
             If "regularize", folded regions will be detected and
-            regularized using the method fescribed in
+            regularized using the method described in
             "Foldover-free maps in 50 lines of code" Garanzha et al. 2021.
 
             If "None" then no smoothing will be applied.
@@ -1032,7 +1032,7 @@ class SimpleElastixGroupwiseWarper(NonRigidRegistrarGroupwise):
 
     mask : ndarray
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple of int
@@ -1170,7 +1170,7 @@ class NonRigidTileRegistrar(object):
 
     mask : pyvips.Image
         2D array with shape (N,M) where non-zero pixel values are foreground,
-        and 0 is background, which is ignnored during registration. If None,
+        and 0 is background, which is ignored during registration. If None,
         then all non-zero pixels in images will be used to create the mask.
 
     shape : tuple
@@ -1197,11 +1197,11 @@ class NonRigidTileRegistrar(object):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used when initializing the `non_rigid_registrar_cls`
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         tile_wh : int
@@ -1354,7 +1354,7 @@ class NonRigidTileRegistrar(object):
             self.pbar.update(1)
 
     def calc(self, *args, **kwargs):
-        """Cacluate displacement fields
+        """Calculate displacement fields
         Each tile is registered and then stitched together
         """
 
@@ -1390,18 +1390,18 @@ class NonRigidTileRegistrar(object):
 
         mask : ndarray, pyvips.Image
             2D array with shape (N,M) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         non_rigid_registrar_cls : NonRigidRegistrar, optional
             Uninstantiated NonRigidRegistrar class that will be used
             to calculate the deformation fields between images.
 
-        processing_cls : preprocessing.ImageProcesser, optional
-            preprocessing.ImageProcesser used to process the images
+        processing_cls : preprocessing.ImageProcessor, optional
+            preprocessing.ImageProcessor used to process the images
 
         processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `processing_cls`
+            Dictionary of keyword arguments to be passed to `processing_cls`
 
         target_stats : ndarray
             Target stats used to normalize each tile after being processed.

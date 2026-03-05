@@ -68,7 +68,7 @@ PIXEL_UNIT = "pixel"
 """str: Physical unit when the unit can't be found in the metadata"""
 
 MICRON_UNIT = u'\u00B5m'
-"""str: Phyiscal unit for micron/micrometers"""
+"""str: Physical unit for micron/micrometers"""
 
 ALL_OPENSLIDE_READABLE_FORMATS = [".svs", ".tif", ".vms", ".vmu", ".ndpi", ".scn", ".mrxs", ".tiff", ".svslide", ".bif"]
 """list: File extensions that OpenSlide can read"""
@@ -122,21 +122,21 @@ BF_UNIT = None
    Created after initializing JVM."""
 
 BF_MICROMETER = None
-"""Bioformats Unit mircometer object.
+"""Bioformats Unit micrometer object.
    Created after initializing JVM."""
 
 ome = None
-"""Bioformats ome from bioforamts_jar.
+"""Bioformats ome from bioformats_jar.
    Created after initializing JVM."""
 
 loci = None
-"""Bioformats loci from bioforamts_jar.
+"""Bioformats loci from bioformats_jar.
    Created after initializing JVM."""
 
 OME_TYPES_PARSER = "lxml"
 
 """
-NOTE: Commented out block is how to use boformats with javabrdige.
+NOTE: Commented out block is how to use bioformats with javabrdige.
 However, on conda, javabridge isn't available for python 3.9.
 If using, remember to put bftools/bioformats_package.jar in the
 source directory.
@@ -432,7 +432,7 @@ def bf2vips_dtype(bf_dtype):
     return vips_format
 
 
-def check_czi_jpegxr(src_f):
+def check_czi_jpgxr(src_f):
     f_extension = slide_tools.get_slide_extension(src_f)
     if f_extension != ".czi":
         return False
@@ -482,8 +482,8 @@ def check_to_use_openslide(src_f):
 def get_ome_obj(x):
     """Get ome_types.model.ome.OME object
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     x: str
         Either OME-XML or path to ome.tiff
 
@@ -597,7 +597,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
 
     Returns
     -------
-    is_flattended_pyramid : bool
+    is_flattened_pyramid : bool
         Whether  or not the slide is a flattened pyramid
 
     can_use_bf : bool
@@ -618,7 +618,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
     vips_img = pyvips.Image.new_from_file(src_f)
     vips_fields = vips_img.get_fields()
 
-    is_flattended_pyramid = False
+    is_flattened_pyramid = False
     can_use_bf = False
 
     if 'n-pages' in vips_fields:
@@ -661,9 +661,9 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
         unique_areas, _ = np.unique(all_areas, return_index=True)
         n_zero_diff = len(np.where(area_diff == 0)[0])
         if most_common_channel_count == 1 and n_zero_diff >= len(unique_areas):
-            is_flattended_pyramid = True
+            is_flattened_pyramid = True
 
-        if is_flattended_pyramid:
+        if is_flattened_pyramid:
             nchannels_per_each_level = np.diff(level_starts)
             last_level_channel_count = np.sum(all_n_channels[level_starts[-1]:])
             nchannels_per_each_level = np.hstack([nchannels_per_each_level,
@@ -682,7 +682,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
             n_channels = most_common_channel_count
 
     else:
-        return is_flattended_pyramid, can_use_bf, None, None, None
+        return is_flattened_pyramid, can_use_bf, None, None, None
     # Now check if Bioformats reads it similarly #
     if check_with_bf:
         with valtils.HiddenPrints():
@@ -691,7 +691,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
         bf_channels = bf_reader.metadata.n_channels
         can_use_bf = bf_levels >= len(slide_dimensions) and bf_channels == n_channels
 
-    return is_flattended_pyramid, can_use_bf, slide_dimensions, levels_start_idx, n_channels
+    return is_flattened_pyramid, can_use_bf, slide_dimensions, levels_start_idx, n_channels
 
 
 def check_xml_img_match(xml, vips_img, metadata, series=0):
@@ -822,7 +822,7 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
 
 
 def openslide_desc_2_omexml(vips_img):
-    """Get basic metatad using openslide and convert to ome-xml
+    """Get basic metadata using openslide and convert to ome-xml
 
     """
     assert "openslide.vendor" in vips_img.get_fields(), "image does not appear to be openslide metadata"
@@ -982,7 +982,7 @@ class SlideReader(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1003,7 +1003,7 @@ class SlideReader(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1187,7 +1187,7 @@ class BioFormatsSlideReader(SlideReader):
             Path to slide
 
         series : int
-            The series to be read. If `series` is None, the the `series`
+            The series to be read. If `series` is None, the `series`
             will be set to the series associated with the largest image.
 
         """
@@ -1210,7 +1210,7 @@ class BioFormatsSlideReader(SlideReader):
             series = np.argmax(img_areas)
             if len(img_areas) > 1:
                 msg = (f"No series provided. "
-                       f"Selecting series with largest image, "
+                       f"Selecting series with the largest image, "
                        f"which is series {series}")
 
                 valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
@@ -1275,12 +1275,12 @@ class BioFormatsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
         tile_wh : int, optional
-            Size of tiles used to contstruct `vips_slide`
+            Size of tiles used to construct `vips_slide`
 
         Returns
         -------
@@ -1340,7 +1340,7 @@ class BioFormatsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1537,7 +1537,7 @@ class BioFormatsSlideReader(SlideReader):
 
         Notes
         -----
-        Using javabridge and python-bioformmats, this can be accessed as follows
+        Using javabridge and python-bioformats, this can be accessed as follows
         `
         bf_slide = bioformats.ImageReader(slide_f)
         bf_img_reader = javabridge.JWrapper(bf_slide.rdr.o)
@@ -1747,7 +1747,7 @@ class VipsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1785,7 +1785,7 @@ class VipsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1836,7 +1836,7 @@ class VipsSlideReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -1905,7 +1905,7 @@ class VipsSlideReader(SlideReader):
         Returns
         -------
         channel_names : list
-            List of channel naames.
+            List of channel names.
 
         """
 
@@ -2123,11 +2123,11 @@ class FlattenedPyramidReader(VipsSlideReader):
 
 
     def create_metadata(self):
-        is_flattended_pyramid, bf_reads_flat, slide_dimensions,\
+        is_flattened_pyramid, bf_reads_flat, slide_dimensions,\
         levels_start_idx, n_channels = \
             check_flattened_pyramid_tiff(self.src_f)
 
-        assert is_flattended_pyramid and not bf_reads_flat, "Trying to use FlattenedPyramidReader but slide is not a flattened pyramid"
+        assert is_flattened_pyramid and not bf_reads_flat, "Trying to use FlattenedPyramidReader but slide is not a flattened pyramid"
 
         meta_name = f"{os.path.split(self.src_f)[1]}_Series(0)".strip("_")
         server = VIPS_RDR
@@ -2175,7 +2175,7 @@ class FlattenedPyramidReader(VipsSlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -2237,7 +2237,7 @@ class FlattenedPyramidReader(VipsSlideReader):
         except pyvips.error.Error as e:
             # Big hack for when get the error "tiff2vips: out of order read" even with random access
             out_shape_wh = self.metadata.slide_dimensions[level]
-            msg1 = f"pyvips.error.Error: {e} when converting pvips.Image to numpy array"
+            msg1 = f"pyvips.error.Error: {e} when converting pyvips.Image to numpy array"
             msg2 = f"Will try to resize level 0 to have shape {out_shape_wh} and convert"
             valtils.print_warning(msg1)
             valtils.print_warning(msg2, None)
@@ -2264,7 +2264,7 @@ class FlattenedPyramidReader(VipsSlideReader):
         Returns
         -------
         channel_names : list
-            List of channel naames.
+            List of channel names.
 
         """
 
@@ -2325,9 +2325,9 @@ class FlattenedPyramidReader(VipsSlideReader):
         """Get Bio-Formats datatype from values in metadata.
 
         For example, BF metadata may have image datatype as
-        uint32, but in the image descriiption, min/max/resppnse,
+        uint32, but in the image description, min/max/response,
         are floats. This will determine if the slide should be cast
-        to a different dataatype to match values in metadata.
+        to a different datatype to match values in metadata.
 
         """
         smallest_level = len(self.metadata.slide_dimensions) - 1
@@ -2414,7 +2414,7 @@ class CziJpgxrReader(SlideReader):
             Path to slide
 
         series : int
-            The series to be read. If `series` is None, the the `series`
+            The series to be read. If `series` is None, the `series`
             will be set to the series associated with the largest image.
 
         """
@@ -2445,7 +2445,7 @@ class CziJpgxrReader(SlideReader):
             series = np.argmax(img_areas)
             if len(img_areas) > 1:
                 msg = (f"No series provided. "
-                       f"Selecting series with largest image, "
+                       f"Selecting series with the largest image, "
                        f"which is series {series}")
 
                 valtils.print_warning(msg, warning_type=None, rgb=valtils.Fore.GREEN)
@@ -2465,7 +2465,7 @@ class CziJpgxrReader(SlideReader):
                       doc="Slide scene")
 
     def _read_whole_img(self, level=0, xywh=None, *args, **kwargs):
-        """
+        """Read whole image
 
         Return
         ------
@@ -2553,7 +2553,7 @@ class CziJpgxrReader(SlideReader):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -2573,7 +2573,7 @@ class CziJpgxrReader(SlideReader):
         return np_img
 
     def create_metadata(self):
-        """ Create and fill in a MetaData object
+        """Create and fill in a MetaData object
 
         Returns
         -------
@@ -2731,8 +2731,8 @@ class CziJpgxrReader(SlideReader):
 
         czi_reader = CziFile(self.src_f)
         scene_bbox = czi_reader.get_all_scene_bounding_boxes()[scene]
-        scence_l0_wh = np.array([scene_bbox.w, scene_bbox.h])
-        slide_dimensions = np.round(scence_l0_wh*zoom_levels[..., np.newaxis]).astype(int)
+        scene_l0_wh = np.array([scene_bbox.w, scene_bbox.h])
+        slide_dimensions = np.round(scene_l0_wh*zoom_levels[..., np.newaxis]).astype(int)
 
         return slide_dimensions
 
@@ -2844,7 +2844,7 @@ class ImageReader(SlideReader):
         return img
 
     def _get_slide_dimensions(self, pil_img, *args, **kwargs):
-        """
+        """Get slide dimensions
         """
         img_dims = np.array([[pil_img.width, pil_img.height]])
 
@@ -2883,7 +2883,7 @@ def get_slide_reader(src_f, series=None):
         Path to slide
 
     series : int, optional
-        The series to be read. If `series` is None, the the `series`
+        The series to be read. If `series` is None, the `series`
         will be set to the series associated with the largest image.
         In cases where there is only 1 image in the file, `series`
         will be 0.
@@ -2891,7 +2891,7 @@ def get_slide_reader(src_f, series=None):
     Returns
     -------
     reader: SlideReader
-        SlideReader class that can read the slide and and convert them to
+        SlideReader class that can read the slide and convert them to
         images or pyvips.Images at the specified level and series. They
         also contain a `MetaData` object that contains information about
         the slide, like dimensions at each level, physical units, etc...
@@ -2932,7 +2932,7 @@ def get_slide_reader(src_f, series=None):
         return VipsSlideReader
 
     if is_czi:
-        is_jpegxr = check_czi_jpegxr(src_f)
+        is_jpegxr = check_czi_jpgxr(src_f)
         is_m1_mac = valtils.check_m1_mac()
         if is_m1_mac and is_jpegxr:
             msg = "Will likely be errors using Bioformats to read a JPEGXR compressed CZI on this Apple M1 machine. Will use CziJpgxrReader instead."
@@ -3020,7 +3020,7 @@ def get_shape_xyzct(shape_wh, n_channels, nt=1, nz=1):
     Parameters
     ----------
     shape_wh : tuple of int
-        Width and heigth of image
+        Width and height of image
 
     n_channels : int
         Number of channels in the image
@@ -3044,7 +3044,7 @@ def create_channel(channel_id, name=None, color=None, samples_per_pixel=1):
     channel_id : int
         Channel number
 
-    name : str, optinal
+    name : str, optional
         Channel name
 
     color : tuple of int
@@ -3198,7 +3198,7 @@ def check_channel_names(channel_names, is_rgb, nc, src_f=None):
 
 
 def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, channel_names=None, colormap=CMAP_AUTO):
-    """Create new ome-xmml object
+    """Create new ome-xml object
 
     Parameters
     -------
@@ -3312,7 +3312,7 @@ def get_tile_wh(reader, level, out_shape_wh, default_wh=512):
             tile_wh = 16
 
     if np.any(np.array(out_shape_wh[0:2]) < tile_wh):
-        # Tile is too big for the image. Get niggest tile size that fit in image
+        # Tile is too big for the image. Get the biggest tile size that fits in the image.
         if tile_wh < default_wh:
             min_wh = 16
         else:
@@ -3333,13 +3333,13 @@ def get_tile_wh(reader, level, out_shape_wh, default_wh=512):
 def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CMAP_AUTO, pixel_physical_size_xyu=None):
     """Update dimensions ome-xml metadata
 
-    Used to create a new ome-xmlthat reflects changes in an image, such as its shape
+    Used to create a new ome-xml that reflects changes in an image, such as its shape
 
     If `current_ome_xml_str` is invalid or None, a new ome-xml will be created
 
     Parameters
     -------
-    img : ndarry or pyvips.Image
+    img : np.ndarray or pyvips.Image
         Image for which xml will be generated. Used to determine shape and datatype.
 
     reader : SlideReader
@@ -3461,7 +3461,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
         which can be done using `warp_tools.get_inverse_field`
 
     level : int, optional
-        Pyramid level to warp an save
+        Pyramid level to warp and save
 
     series : int, optional
         Series number of image
@@ -3492,7 +3492,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
         Q factor for lossy compression
 
     pyramid : bool
-        Whether or not to save an image pyramid.
+        Whether to save an image pyramid.
 
     reader: SlideReader, optional
         Instantiated SlideReader to use to read image. If `None`,
@@ -3551,13 +3551,13 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
         is both the width and height.
 
     compression : str
-        Compression method used to save ome.tiff . See pyips for more details.
+        Compression method used to save ome.tiff . See pyvips for more details.
 
     Q : int
         Q factor for lossy compression
 
     pyramid : bool
-        Whether or not to save an image pyramid.
+        Whether to save an image pyramid.
 
     """
     compression = compression.lower()
@@ -3724,7 +3724,7 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
 
     xywh : tuple of int, optional
         The region of the slide to be converted. If None,
-        then the entire slide will be converted. Otherwise
+        then the entire slide will be converted. Otherwise,
         xywh is the (top left x, top left y, width, height) of
         the region to be sliced.
 
@@ -3738,13 +3738,13 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
         so `tile_wh` is both the width and height.
 
     compression : str
-        Compression method used to save ome.tiff. See pyips for more details.
+        Compression method used to save ome.tiff. See pyvips for more details.
 
     Q : int
         Q factor for lossy compression
 
     pyramid : bool
-        Whether or not to save an image pyramid.
+        Whether to save an image pyramid.
 
     """
 

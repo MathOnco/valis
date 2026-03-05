@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('-PATH_OUTPUT_DIR', type=str, help='csv containing image pairs and landmarks')
     parser.add_argument('-row_idx', type=int, help='name/row of sample')
     parser.add_argument('-micro_reg_fraction', type=str, help='Size of images used for 2nd registation')
-    parser.add_argument('-use_masks', type=str, help='Whether or not to use masks for registration')
+    parser.add_argument('-use_masks', type=str, help='Whether to use masks for registration')
 
     args = vars(parser.parse_args())
 

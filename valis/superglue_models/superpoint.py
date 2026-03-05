@@ -184,7 +184,7 @@ class SuperPoint(nn.Module):
             remove_borders(k, s, self.config['remove_borders'], h*8, w*8)
             for k, s in zip(keypoints, scores)]))
 
-        # Keep the k keypoints with highest score
+        # Keep the k keypoints with the highest score
         if self.config['max_keypoints'] >= 0:
             keypoints, scores = list(zip(*[
                 top_k_keypoints(k, s, self.config['max_keypoints'])

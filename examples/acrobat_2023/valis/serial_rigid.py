@@ -34,7 +34,7 @@ def get_image_files(img_dir, imgs_ordered=False):
     img_dir : str
         Path to directory containing the images.
 
-    imgs_ordered: bool, optinal
+    imgs_ordered: bool, optional
         Whether or not the order of images already known. If True, the file
         names should start with ascending numbers, with the first image file
         having the smallest number, and the last image file having the largest
@@ -86,8 +86,8 @@ def order_Dmat(D):
 
     Leaf sorting is accomplished using optimal leaf ordering (Bar-Joseph 2001)
 
-    Parmaters
-    ---------
+    Parameters
+    ----------
     D: ndarray
         (N, N) Symmetric distance matrix for N samples
 
@@ -138,7 +138,7 @@ class ZImage(object):
         Name of the image. Usually `img_f` but with the extension removed.
 
     desc : ndarray
-        (N, M) array of N desciptors for each keypoint, each of which has
+        (N, M) array of N descriptors for each keypoint, each of which has
         M features
 
     kp_pos_xy : ndarray
@@ -153,7 +153,7 @@ class ZImage(object):
 
     unfiltered_match_dict : dict
         Dictionary of image matches. Key= img_obj this ZImage is being
-        compared to, value= MatchInfo containing inoformation about the
+        compared to, value= MatchInfo containing information about the
         comparison, such as the position of matches, features for each match,
         number of matches, etc... The MatchInfo objects in this dictionary
         contain info for all matches that were cross-checked.
@@ -253,7 +253,7 @@ class ZImage(object):
     def reduce(self, prev_img_obj, next_img_obj):
         """Reduce amount of info stored, which can take up a lot of space.
 
-        No longer need all descriptors. Only keep match info for neighgbors
+        No longer need all descriptors. Only keep match info for neighbors
 
         Parameters
         ----------
@@ -287,7 +287,7 @@ class SerialRigidRegistrar(object):
     Registration is conducted by first detecting features in all images.
     Features are then matched between images, which are then used to construct
     a distance matrix, D. D is then sorted such that the most similar images
-    are adjcent to one another. The rigid transformation matrics are then found to
+    are adjacent to one another. The rigid transformation metrics are then found to
     align each image with the previous image. Optionally, optimization can be
     performed to improve the alignments, although the "optimized" matrix will be
     discarded if it increases the distances between matched features.
@@ -306,7 +306,7 @@ class SerialRigidRegistrar(object):
         contains methods for this, but the user may want/need to use other
         methods.
 
-    aleady_sorted: bool, optional
+    already_sorted: bool, optional
         Whether or not the order of images already known. If True, the file
         names should start with ascending numbers, with the first image file
         having the smallest number, and the last image file having the largest
@@ -329,7 +329,7 @@ class SerialRigidRegistrar(object):
     distance_metric_type : str
         Name of the type of metric used to determine the dis/similarity
         between each pair of images. Despite the name, it could be "similarity"
-        if the Matcher object compares image feautres using a similarity
+        if the Matcher object compares image features using a similarity
         metric. In that case, similarities are converted to distances.
 
     img_obj_list : list
@@ -345,12 +345,12 @@ class SerialRigidRegistrar(object):
 
     unsorted_distance_mat : ndarray
         Distance matrix with shape (N, N), where each element is the
-        disimilariy betweewn each pair of the N images. The order of
+        dissimilarity between each pair of the N images. The order of
         rows and columns reflects the order in which the images were read.
         This matrix is used to order the images the Z-stack.
 
     distance_mat : ndarray
-        `unsorted_distance_mat` reorderd such that the most similar images
+        `unsorted_distance_mat` reordered such that the most similar images
         are adjacent to one another
 
     unsorted_similarity_mat : ndarray
@@ -374,7 +374,7 @@ class SerialRigidRegistrar(object):
         the `img_obj_list` has been sorted.
 
     align_to_reference : bool, optional
-        Whether or not images should be aligne to a reference image
+        Whether or not images should be aligned to a reference image
         specified by `reference_img_f`. Will be set to True if
         `reference_img_f` is provided.
 
@@ -385,7 +385,7 @@ class SerialRigidRegistrar(object):
         image.
 
     summary_df : Dataframe
-        Pandas dataframe containin the registration error of the
+        Pandas dataframe containing the registration error of the
         alignment between each image and the previous one in the stack.
 
     """
@@ -419,13 +419,13 @@ class SerialRigidRegistrar(object):
             Descriptive name of registrar, such as the sample's name
 
         align_to_reference : bool, optional
-            Whether or not images should be aligne to a reference image
+            Whether or not images should be aligned to a reference image
             specified by `reference_img_f`. Will be set to True if
             `reference_img_f` is provided.
 
         """
         self.img_dir = img_dir
-        self.aleady_sorted = imgs_ordered
+        self.already_sorted = imgs_ordered
         self.name = name
         self.img_file_list = get_image_files(img_dir, imgs_ordered=imgs_ordered)
         self.size = len(self.img_file_list)
@@ -586,8 +586,8 @@ class SerialRigidRegistrar(object):
 
         """
 
-        n_comparisions = int((self.size*(self.size-1))/2)
-        pbar = tqdm(total=n_comparisions)
+        n_comparisons = int((self.size*(self.size-1))/2)
+        pbar = tqdm(total=n_comparisons)
 
         def match_img_obj(i):
 
@@ -665,11 +665,12 @@ class SerialRigidRegistrar(object):
 
     def get_common_desc(self, current_img_obj, neighbor_obj, nf_kp_idx):
         """Get descriptors that correspond to filtered neighbor points
-            Parameters
-            ----------
-            nf_kp_idx : ndarray
-                Indicies of already matched keypoints that were found after
-                neighbonr filtering
+
+        Parameters
+        ----------
+        nf_kp_idx : ndarray
+            Indices of already matched keypoints that were found after
+            neighbor filtering
         """
 
         neighbor_match_info12 = current_img_obj.match_dict[neighbor_obj]
@@ -709,12 +710,12 @@ class SerialRigidRegistrar(object):
         updated_prev_match_info12 : MatchInfo
             If improved is True, then `updated_prev_match_info12` includes only
             features, descriptors that were found in both neighbors. Otherwise,
-            all of the original features will be maintained
+            all the original features will be maintained
 
         updated_next_match_info12 : MatchInfo
             If improved is True, then `updated_next_match_info12` includes only
             features, descriptors that were found in both neighbors. Otherwise,
-            all of the original features will be maintained
+            all the original features will be maintained
 
         """
 
@@ -838,10 +839,10 @@ class SerialRigidRegistrar(object):
         Parameters
         ----------
         metric: str
-            Name of metrric to use. If 'distance' that the distances and
-            similiarities calculated during feature matching will be used.
+            Name of metric to use. If 'distance' that the distances and
+            similarities calculated during feature matching will be used.
             If 'n_matches', then the number of matches will be used for
-            similariy, and 1/n_matches for distance.
+            similarity, and 1/n_matches for distance.
 
         """
 
@@ -870,7 +871,7 @@ class SerialRigidRegistrar(object):
         min_d = distance_mat.min()
         max_d = distance_mat.max()
 
-        # Make sure that image has highest similarity with itself
+        # Make sure that image has the highest similarity with itself
         similarity_mat[np.diag_indices_from(similarity_mat)] += max_s*0.01
 
         # Scale metrics between 0 and 1
@@ -961,7 +962,7 @@ class SerialRigidRegistrar(object):
             else:
                 filter_kwargs = None
 
-            # Estimate curent error without reflections. Don't need to re-detect and match features
+            # Estimate current error without reflections. Don't need to re-detect and match features
             to_prev_match_info = img_obj.match_dict[prev_img_obj]
             transformer.estimate(to_prev_match_info.matched_kp2_xy, to_prev_match_info.matched_kp1_xy)
             unreflected_warped_src_xy = warp_tools.warp_xy(to_prev_match_info.matched_kp1_xy, transformer.params)
@@ -1038,7 +1039,7 @@ class SerialRigidRegistrar(object):
 
             ref_x, ref_y = best_reflect_M[[0, 1], [0, 1]] < 0
             if ref_x or ref_y:
-                msg = f'detected relfections between {img_obj.name} and {prev_img_obj.name} along the'
+                msg = f'detected reflections between {img_obj.name} and {prev_img_obj.name} along the'
                 if ref_x and ref_y:
                     msg = f'{msg} x and y axes'
                 elif ref_x:
@@ -1106,7 +1107,7 @@ class SerialRigidRegistrar(object):
 
         Parameters
         -----------
-        affine_optimizer : AffineOptimzer
+        affine_optimizer : AffineOptimizer
             Object that will minimize a cost function to find the optimal
             affine transformations
 
@@ -1345,7 +1346,7 @@ class SerialRigidRegistrar(object):
         Returns
         -------
         summary_df: Dataframe
-            Pandas dataframe containin the registration error of the
+            Pandas dataframe containing the registration error of the
             alignment between each image and the previous one in the stack.
 
         """
@@ -1434,7 +1435,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         to be registered. These images need to be single channel, uint8 images
 
     dst_dir : str, optional
-        Top directory where aliged images should be save. SerialRigidRegistrar will
+        Top directory where aligned images should be save. SerialRigidRegistrar will
         be in this folder, and aligned images in the "registered_images"
         sub-directory. If None, the images will not be written to file
 
@@ -1451,25 +1452,25 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         Transformer used to find transformation matrix that will warp each
         image to the target image.
 
-    affine_optimizer : AffineOptimzer object
+    affine_optimizer : AffineOptimizer object
             Object that will minimize a cost function to find the
-            optimal affine transoformations
+            optimal affine transformations
 
     imgs_ordered : bool
         Boolean defining whether or not the order of images in img_dir
         are already in the correct order. If True, then each filename should
         begin with the number that indicates its position in the z-stack. If
         False, then the images will be sorted by ordering a feature distance
-        matix.
+        matrix.
 
     reference_img_f : str, optional
         Filename of image that will be treated as the center of the stack.
         If None, the index of the middle image will be the reference.
 
     check_for_reflections : bool, optional
-        Determine if alignments are improved by relfecting/mirroring/flipping
+        Determine if alignments are improved by reflecting/mirroring/flipping
         images. Optional because it requires re-detecting features in each version
-        of the images and then re-matching features, and so can be time consuming and
+        of the images and then re-matching features, and so can be time-consuming and
         not always necessary.
 
     similarity_metric : str
@@ -1490,10 +1491,10 @@ def register_images(img_dir, dst_dir=None, name="registrar",
     Returns
     -------
     registrar : SerialRigidRegistrar
-        SerialRigidRegistrar object contains general information about the alginments,
+        SerialRigidRegistrar object contains general information about the alignments,
         but also a list of Z-images. Each ZImage contains the warp information
         for an image in the stack, including the transformation matrices
-        calculated at each step, keypoint poisions, image descriptors, and
+        calculated at each step, keypoint positions, image descriptors, and
         matches with other images. See attributes from Zimage for more
         information.
 
@@ -1538,7 +1539,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
                     img_obj.desc = img_obj.desc[features_in_mask_idx, :]
 
     print("\n======== Matching images\n")
-    if registrar.aleady_sorted:
+    if registrar.already_sorted:
         registrar.match_sorted_imgs(matcher, keep_unfiltered=False,
                                     qt_emitter=qt_emitter)
 

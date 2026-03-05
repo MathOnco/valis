@@ -169,7 +169,7 @@ def get_imgs_from_dict(img_dict):
         "name_list" : list of image names. If not provided, will come from file names
         "mask_list" list of masks for each image
 
-    All of the above are optional, except `img_list`.
+    All the above are optional, except `img_list`.
 
     Returns
     -------
@@ -222,7 +222,7 @@ class NonRigidZImage(object):
     ----------
 
     image : ndarray
-        Original, unwarped image with shape (P, Q)
+        Original, un-warped image with shape (P, Q)
 
     name : str
         Name of image.
@@ -260,7 +260,7 @@ class NonRigidZImage(object):
         ----------
 
         image : ndarray
-            Original, unwarped image with shape (P, Q)
+            Original, un-warped image with shape (P, Q)
 
         name : str
             Name of image.
@@ -373,16 +373,16 @@ class NonRigidZImage(object):
             Used to warp the registered_img before finding deformation fields.
 
         params : dictionary, optional
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Passed to the non_rigid_reg_class' init() method.
 
             In the case where simple ITK will be used, params should be
-            a SimpleITK.ParameterMap. Note that numeric values needd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         mask : ndarray, optional
             2D array with shape (P,Q) where non-zero pixel values are foreground,
-            and 0 is background, which is ignnored during registration. If None,
+            and 0 is background, which is ignored during registration. If None,
             then all non-zero pixels in images will be used to create the mask.
 
         """
@@ -547,13 +547,13 @@ class SerialNonRigidRegistrar(object):
 
     non_rigid_obj_dict : dict
         Dictionary, where each key is the name of a NonRigidZImage, and
-        the value is the assocatiated NonRigidZImage
+        the value is the associated NonRigidZImage
 
     non_rigid_reg_params: dictionary
         Dictionary containing parameters {name: value} to be used to initialize
         the NonRigidRegistrar.
         In the case where simple ITK is used by the, params should be
-        a SimpleITK.ParameterMap. Note that numeric values nedd to be
+        a SimpleITK.ParameterMap. Note that numeric values need to be
         converted to strings.
 
     mask :  ndarray
@@ -578,7 +578,7 @@ class SerialNonRigidRegistrar(object):
             A SerialRigidRegistrar object that was used to optimally
             align a series of images.
 
-            If a string, it should indicating where the images
+            If a string, it should indicate where the images
             to be aligned are located. If src is a string, the images should be
             named such that they are read in the correct order, i.e. each
             starting with a number.
@@ -604,10 +604,10 @@ class SerialNonRigidRegistrar(object):
             #. Rigid registered xy in moving/current/from image
             #. Rigid registered xy in fixed/next/to image
 
-            To deterime which pairs of images will be aligned, use
+            To determine which pairs of images will be aligned, use
             `get_alignment_indices`. Can use `get_imgs_from_dir`
-            to see the order inwhich the images will be read, which will correspond
-            to the indices retuned by `get_alignment_indices`.
+            to see the order in which the images will be read, which will correspond
+            to the indices returned by `get_alignment_indices`.
 
             If `src` is a SerialRigidRegistrar and `moving_to_fixed_xy` is
             True, then the matching features in the SerialRigidRegistrar will
@@ -832,7 +832,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -882,7 +882,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -916,7 +916,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
 
         """
@@ -937,7 +937,7 @@ class SerialNonRigidRegistrar(object):
 
         Images will be registered serially if `non_rigid_reg_class` is a
         subclass of NonRigidRegistrarGroupwise, then groupwise registration
-        will be conductedd. If `non_rigid_reg_class` is a subclass of
+        will be conducted. If `non_rigid_reg_class` is a subclass of
         NonRigidRegistrar then images will be aligned serially.
 
         Parameters
@@ -950,7 +950,7 @@ class SerialNonRigidRegistrar(object):
             Dictionary containing parameters {name: value} to be used to initialize
             the NonRigidRegistrar.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings.
         img_params : dict, optional
             Dictionary of parameters to be used for each particular image.
@@ -981,7 +981,7 @@ class SerialNonRigidRegistrar(object):
         Returns
         -------
         summary_df: Dataframe
-            Pandas dataframe containin the registration error of the
+            Pandas dataframe containing the registration error of the
             alignment between each image and the previous one in the stack.
 
         """
@@ -1069,11 +1069,11 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         Dictionary containing parameters {name: value} to be used to initialize
         the NonRigidRegistrar.
         In the case where simple ITK is used by the, params should be
-        a SimpleITK.ParameterMap. Note that numeric values nedd to be
+        a SimpleITK.ParameterMap. Note that numeric values need to be
         converted to strings.
 
     dst_dir : str, optional
-        Top directory where aliged images should be save. SerialNonRigidRegistrar will
+        Top directory where aligned images should be save. SerialNonRigidRegistrar will
         be in this folder, and aligned images in the "registered_images"
         sub-directory. If None, the images will not be written to file
 
@@ -1090,10 +1090,10 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         #. Rigid registered xy in moving/current/from image
         #. Rigid registered xy in fixed/next/to image
 
-        To deterime which pairs of images will be aligned, use
+        To determine which pairs of images will be aligned, use
         `warp_tools.get_alignment_indices`. Can use `get_imgs_from_dir`
-        to see the order inwhich the images will be read, which will correspond
-        to the indices retuned by `warp_tools.get_alignment_indices`.
+        to see the order in which the images will be read, which will correspond
+        to the indices returned by `warp_tools.get_alignment_indices`.
 
         If `src` is a SerialRigidRegistrar and `moving_to_fixed_xy` is
         True, then the matching features in the SerialRigidRegistrar will
@@ -1113,7 +1113,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         Optional name for this SerialNonRigidRegistrar
 
     align_to_reference : bool, optional
-        Whether or not images should be aligne to a reference image
+        Whether or not images should be aligned to a reference image
         specified by `reference_img_f`. Will be set to True if
         `reference_img_f` is provided.
 
@@ -1129,7 +1129,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
     Returns
     -------
     nr_reg : SerialNonRigidRegistrar
-        SerialNonRigidRegistrar that has registeredt the images in `src`
+        SerialNonRigidRegistrar that has registered the images in `src`
     """
 
     tic = time()

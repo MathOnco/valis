@@ -49,8 +49,8 @@ MASK_DIR = "masks"
 # Default image processing #
 DEFAULT_BRIGHTFIELD_CLASS = preprocessing.ColorfulStandardizer
 DEFAULT_BRIGHTFIELD_PROCESSING_ARGS = {'c': preprocessing.DEFAULT_COLOR_STD_C, "h": 0}
-DEFAULT_FLOURESCENCE_CLASS = preprocessing.ChannelGetter
-DEFAULT_FLOURESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
+DEFAULT_FLUORESCENCE_CLASS = preprocessing.ChannelGetter
+DEFAULT_FLUORESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
 DEFAULT_NORM_METHOD = "img_stats"
 
 # Default rigid registration parameters #
@@ -75,9 +75,9 @@ SIM_METRIC_KEY = "similarity_metric"
 FD_KEY = "feature_detector"
 MATCHER_KEY = "matcher"
 NAME_KEY = "name"
-IMAGES_ORDERD_KEY = "imgs_ordered"
+IMAGES_ORDERED_KEY = "imgs_ordered"
 REF_IMG_KEY = "reference_img_f"
-QT_EMMITER_KEY = "qt_emitter"
+QT_EMITTER_KEY = "qt_emitter"
 TFORM_SRC_SHAPE_KEY = "transformation_src_shape_rc"
 TFORM_DST_SHAPE_KEY = "transformation_dst_shape_rc"
 TFORM_MAT_KEY = "M"
@@ -149,7 +149,7 @@ class Slide(object):
 
     `Slide` is a class that stores registration parameters
     and other metadata about a slide. Once registration has been
-    completed, `Slide` is also able warp the slide and/or points
+    completed, `Slide` is also able to warp the slide and/or points
     using the same registration parameters. Warped slides can be saved
     as ome.tiff images with valid ome-xml.
 
@@ -164,7 +164,7 @@ class Slide(object):
         argument specified when creating a `Valis` object.
 
     val_obj : Valis
-        The "parent" object that registers all of the slide.
+        The "parent" object that registers all the slides.
 
     reader : SlideReader
         Object that can read slides and collect metadata.
@@ -311,7 +311,7 @@ class Slide(object):
             argument specified when creating a `Valis` object.
 
         val_obj : Valis
-            The "parent" object that registers all of the slide.
+            The "parent" object that registers all the slides.
 
         reader : SlideReader
             Object that can read slides and collect metadata.
@@ -402,7 +402,7 @@ class Slide(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -430,7 +430,7 @@ class Slide(object):
 
         xywh : tuple of int, optional
             The region to be sliced from the slide. If None,
-            then the entire slide will be converted. Otherwise
+            then the entire slide will be converted. Otherwise,
             xywh is the (top left x, top left y, width, height) of
             the region to be sliced.
 
@@ -492,7 +492,7 @@ class Slide(object):
             shape of registered image
 
         warped_scaled_img_shape_rc : tuple of int, optional
-            shape of scaled registered image (i.e. registered slied)
+            shape of scaled registered image (i.e. registered slide)
 
         Returns
         -------
@@ -525,7 +525,7 @@ class Slide(object):
 
         out_shape_rc : tuple of int, optional
             If crop is "reference", this should be the shape of scaled reference image, such
-            as the unwarped slide that corresponds to the unwarped processed reference image.
+            as the un-warped slide that corresponds to the un-warped processed reference image.
 
             If crop is "overlap", this should be the shape of the registered slides.
 
@@ -663,7 +663,7 @@ class Slide(object):
             will be warped.
 
         non_rigid : bool
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         crop: bool, str
@@ -672,7 +672,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
@@ -756,7 +756,7 @@ class Slide(object):
     def warp_img_from_to(self, img, to_slide_obj,
                         dst_slide_level=0, non_rigid=True, interp_method="bicubic", bg_color=None):
 
-        """Warp an image from this slide onto another unwarped slide
+        """Warp an image from this slide onto another un-warped slide
 
         Note that if `img` is a labeled image then it is recommended to set `interp_method` to "nearest"
 
@@ -768,13 +768,13 @@ class Slide(object):
         to_slide_obj : Slide
             Slide to which the points will be warped. I.e. `xy`
             will be warped from this Slide to their position in
-            the unwarped slide associated with `to_slide_obj`.
+            the un-warped slide associated with `to_slide_obj`.
 
         dst_slide_level: int, tuple, optional
             Pyramid level of the slide/image that `img` will be warped on to
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         """
@@ -826,7 +826,7 @@ class Slide(object):
             Pyramid level to be warped
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -835,7 +835,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         src_f : str, optional
            Path of slide to be warped. If None (the default), Slide.src_f
@@ -920,7 +920,7 @@ class Slide(object):
             Pyramid level to be warped
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -954,7 +954,7 @@ class Slide(object):
 
         compression : str
             Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            be jpeg or jp2k. See pyvips for more details.
 
         """
 
@@ -1025,7 +1025,7 @@ class Slide(object):
             the points should be warped. Default is 0.
 
         pt_level: int, tuple, optional
-            Pyramid level from which the points origingated. For example, if
+            Pyramid level from which the points originated. For example, if
             `xy` are from the centroids of cell segmentation performed on the
             full resolution image, this should be 0. Alternatively, the value can
             be a tuple of the image's shape (row, col) from which the points came.
@@ -1034,7 +1034,7 @@ class Slide(object):
             image's shape (row, col). Default is 0.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True.
 
         crop: bool, str
@@ -1048,7 +1048,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         """
         if M is None:
@@ -1102,10 +1102,10 @@ class Slide(object):
     def warp_xy_from_to(self, xy, to_slide_obj, src_slide_level=0, src_pt_level=0,
                         dst_slide_level=0, non_rigid=True):
 
-        """Warp points from this slide to another unwarped slide
+        """Warp points from this slide to another un-warped slide
 
-        Takes a set of points found in this unwarped slide, and warps them to
-        their position in the unwarped "to" slide.
+        Takes a set of points found in this un-warped slide, and warps them to
+        their position in the un-warped "to" slide.
 
         Parameters
         ----------
@@ -1115,12 +1115,12 @@ class Slide(object):
         to_slide_obj : Slide
             Slide to which the points will be warped. I.e. `xy`
             will be warped from this Slide to their position in
-            the unwarped slide associated with `to_slide_obj`.
+            the un-warped slide associated with `to_slide_obj`.
 
         src_pt_level: int, tuple, optional
             Pyramid level of the slide/image in which `xy` originated.
             For example, if `xy` are from the centroids of cell segmentation
-            performed on the unwarped full resolution image, this should be 0.
+            performed on the un-warped full resolution image, this should be 0.
             Alternatively, the value can be a tuple of the image's shape (row, col)
             from which the points came. For example, if `xy` are  bounding
             box coordinates from an analysis on a lower resolution image,
@@ -1134,7 +1134,7 @@ class Slide(object):
             to their location in an image with that same shape.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         """
@@ -1201,7 +1201,7 @@ class Slide(object):
             the points should be warped. Default is 0.
 
         pt_level: int, tuple, optional
-            Pyramid level from which the points origingated. For example, if
+            Pyramid level from which the points originated. For example, if
             `xy` are from the centroids of cell segmentation performed on the
             full resolution image, this should be 0. Alternatively, the value can
             be a tuple of the image's shape (row, col) from which the points came.
@@ -1210,7 +1210,7 @@ class Slide(object):
             image's shape (row, col). Default is 0.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True.
 
         crop: bool, str
@@ -1224,7 +1224,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         """
         if M is None:
@@ -1291,10 +1291,10 @@ class Slide(object):
 
     def warp_geojson_from_to(self, geojson_f, to_slide_obj, src_slide_level=0, src_pt_level=0,
                             dst_slide_level=0, non_rigid=True):
-        """Warp geoms in geojson file from annotation slide to another unwarped slide
+        """Warp geoms in geojson file from annotation slide to another un-warped slide
 
         Takes a set of geometries found in this annotation slide, and warps them to
-        their position in the unwarped "to" slide.
+        their position in the un-warped "to" slide.
 
         Parameters
         ----------
@@ -1305,12 +1305,12 @@ class Slide(object):
         to_slide_obj : Slide
             Slide to which the points will be warped. I.e. `xy`
             will be warped from this Slide to their position in
-            the unwarped slide associated with `to_slide_obj`.
+            the un-warped slide associated with `to_slide_obj`.
 
         src_pt_level: int, tuple, optional
             Pyramid level of the slide/image in which `xy` originated.
             For example, if `xy` are from the centroids of cell segmentation
-            performed on the unwarped full resolution image, this should be 0.
+            performed on the un-warped full resolution image, this should be 0.
             Alternatively, the value can be a tuple of the image's shape (row, col)
             from which the points came. For example, if `xy` are  bounding
             box coordinates from an analysis on a lower resolution image,
@@ -1324,7 +1324,7 @@ class Slide(object):
             to their location in an image with that same shape.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         Returns
@@ -1479,10 +1479,10 @@ class Valis(object):
         Dictionary of Slide objects, each of which contains information
         about a slide, and methods to warp it.
 
-    brightfield_procsseing_fxn_str: str
+    brightfield_processing_fxn_str: str
         Name of function used to process brightfield images.
 
-    if_procsseing_fxn_str : str
+    if_processing_fxn_str : str
         Name of function used to process fluorescence images.
 
     max_image_dim_px : int
@@ -1503,7 +1503,7 @@ class Valis(object):
         the `img_obj_list` has been sorted during rigid registration.
 
     align_to_reference : bool
-        Whether or not images should be aligne to a reference image
+        Whether or not images should be aligned to a reference image
         specified by `reference_img_f`. Will be set to True if
         `reference_img_f` is provided.
 
@@ -1514,7 +1514,7 @@ class Valis(object):
         SerialRigidRegistrar object that performs the rigid registration.
 
     rigid_reg_kwargs : dict
-        Dictionary of keyward arguments passed to
+        Dictionary of keyword arguments passed to
         `serial_rigid.register_images`.
 
     feature_descriptor_str : str
@@ -1537,7 +1537,7 @@ class Valis(object):
         non-rigid registration.
 
     non_rigid_reg_kwargs : dict
-        Dictionary of keyward arguments passed to
+        Dictionary of keyword arguments passed to
         `serial_non_rigid.register_images`.
 
     non_rigid_registrar_cls : NonRigidRegistrar
@@ -1643,7 +1643,7 @@ class Valis(object):
     View ome.tiff, located at merged_slide_dst_f
 
     """
-    @valtils.deprecated_args(max_non_rigid_registartion_dim_px="max_non_rigid_registration_dim_px", img_type="image_type")
+    @valtils.deprecated_args(max_non_rigid_registration_dim_px="max_non_rigid_registration_dim_px", img_type="image_type")
     def __init__(self, src_dir, dst_dir, series=None, name=None, image_type=None,
                  feature_detector_cls=DEFAULT_FD,
                  transformer_cls=DEFAULT_TRANSFORM_CLASS,
@@ -1703,8 +1703,8 @@ class Valis(object):
             transformation matrix that will warp each image to the target
             image. Default is SimilarityTransform
 
-        affine_optimizer_cls : AffineOptimzer class, optional
-            Uninstantiated AffineOptimzer that will minimize a
+        affine_optimizer_cls : AffineOptimizer class, optional
+            Uninstantiated AffineOptimizer that will minimize a
             cost function to find the optimal affine transformations.
             If a desired affine optimization is not available,
             one can be created by subclassing `affine_optimizer.AffineOptimizer`.
@@ -1725,7 +1725,7 @@ class Valis(object):
             are already in the correct order. If True, then each filename should
             begin with the number that indicates its position in the z-stack. If
             False, then the images will be sorted by ordering a feature distance
-            matix. Default is False.
+            matrix. Default is False.
 
         reference_img_f : str, optional
             Filename of image that will be treated as the center of the stack.
@@ -1740,7 +1740,7 @@ class Valis(object):
         non_rigid_registrar_cls : NonRigidRegistrar, optional
             Uninstantiated NonRigidRegistrar class that will be used to
             calculate the deformation fields between images. See
-            the `non_rigid_registrars` module for a desciption of available
+            the `non_rigid_registrars` module for a description of available
             methods. If a desired non-rigid registration method is not available,
             one can be implemented by subclassing.NonRigidRegistrar.
             If None, then only rigid registration will be performed
@@ -1749,18 +1749,18 @@ class Valis(object):
             Dictionary containing key, value pairs to be used to initialize
             `non_rigid_registrar_cls`.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings. See the NonRigidRegistrar classes in
             `non_rigid_registrars` for the available non-rigid registration
             methods and arguments.
 
         compose_non_rigid : bool, optional
-            Whether or not to compose non-rigid transformations. If `True`,
+            Whether to compose non-rigid transformations. If `True`,
             then an image is non-rigidly warped before aligning to the
             adjacent non-rigidly aligned image. This allows the transformations
             to accumulate, which may bring distant features together but could
             also  result  in un-wanted deformations, particularly around the edges.
-            If `False`, the image not warped before being aaligned to the adjacent
+            If `False`, the image not warped before being aligned to the adjacent
             non-rigidly aligned image. This can reduce unwanted deformations, but
             may not bring distant features together.
 
@@ -1771,11 +1771,11 @@ class Valis(object):
             Valis.slide_dict.
 
         do_rigid: bool, dictionary, optional
-            Whether or not to perform rigid registration. If `False`, rigid
+            Whether to perform rigid registration. If `False`, rigid
             registration will be skipped.
 
             If `do_rigid` is a dictionary, it should contain inverse transformation
-            matrices to rigidly align images to the specificed by `reference_img_f`.
+            matrices to rigidly align images to the specified by `reference_img_f`.
             M will be estimated for images that are not in the dictionary.
             Each key is the filename of the image associated with the transformation matrix,
             and value is a dictionary containing the following values:
@@ -1801,20 +1801,20 @@ class Valis(object):
             is defined, then `crop` will be set to "reference".
 
         create_masks : bool, optional
-            Whether or not to create and apply masks for registration.
+            Whether to create and apply masks for registration.
             Can help focus alignment on the tissue, but can sometimes
             mask too much if there is a lot of variation in the image.
 
         check_for_reflections : bool, optional
-            Determine if alignments are improved by relfecting/mirroring/flipping
+            Determine if alignments are improved by reflecting/mirroring/flipping
             images. Optional because it requires re-detecting features in each version
-            of the images and then re-matching features, and so can be time consuming and
+            of the images and then re-matching features, and so can be time-consuming and
             not always necessary.
 
         resolution_xyu: tuple, optional
             Physical size per pixel and the unit. If None (the default), these
             values will be determined for each slide using the slides' metadata.
-            If provided, this physical pixel sizes will be used for all of the slides.
+            If provided, this physical pixel sizes will be used for all the slides.
             This option is available in case one cannot easily access to the original
             slides, but does have the information on pixel's physical units.
 
@@ -1837,7 +1837,7 @@ class Valis(object):
 
         max_non_rigid_registration_dim_px : int, optional
              Maximum width or height of images used for non-rigid registration.
-             Larger values may yeild more accurate results, at the expense of
+             Larger values may yield more accurate results, at the expense of
              speed and memory. There is also a practical limit, as the specified
              size may be too large to fit in memory.
 
@@ -1860,7 +1860,7 @@ class Valis(object):
             this step is skipped.
 
         micro_rigid_registrar_params : dictionary
-            Dictionary of keyword arguments used intialize the `MicroRigidRegistrar`
+            Dictionary of keyword arguments used initialize the `MicroRigidRegistrar`
 
         qt_emitter : PySide2.QtCore.Signal, optional
             Used to emit signals that update the GUI's progress bars
@@ -1905,8 +1905,8 @@ class Valis(object):
         self.slide_dict = {}
 
         # Fields related to image pre-processing #
-        self.brightfield_procsseing_fxn_str = None
-        self.if_procsseing_fxn_str = None
+        self.brightfield_processing_fxn_str = None
+        self.if_processing_fxn_str = None
 
         if max_image_dim_px < max_processed_image_dim_px:
             msg = f"max_image_dim_px is {max_image_dim_px} but needs to be less or equal to {max_processed_image_dim_px}. Setting max_image_dim_px to {max_processed_image_dim_px}"
@@ -1960,7 +1960,7 @@ class Valis(object):
                                            compose_non_rigid=compose_non_rigid,
                                            qt_emitter=qt_emitter)
 
-        # Info realted to saving images to view results #
+        # Info related to saving images to view results #
         self.mask_dict = None
         self.create_masks = create_masks
 
@@ -2005,9 +2005,9 @@ class Valis(object):
                                  MATCHER_KEY: matcher,
                                  AFFINE_OPTIMIZER_KEY: afo,
                                  REF_IMG_KEY: reference_img_f,
-                                 IMAGES_ORDERD_KEY: imgs_ordered,
+                                 IMAGES_ORDERED_KEY: imgs_ordered,
                                  CHECK_REFLECT_KEY: check_for_reflections,
-                                 QT_EMMITER_KEY: qt_emitter
+                                 QT_EMITTER_KEY: qt_emitter
                                  }
 
         # Save methods as strings since some objects cannot be pickled #
@@ -2029,7 +2029,7 @@ class Valis(object):
                                      NON_RIGID_REG_CLASS_KEY: non_rigid_reg_class,
                                      NON_RIGID_REG_PARAMS_KEY: non_rigid_reg_params,
                                      REF_IMG_KEY: reference_img_f,
-                                     QT_EMMITER_KEY: qt_emitter,
+                                     QT_EMITTER_KEY: qt_emitter,
                                      NON_RIGID_COMPOSE_KEY: compose_non_rigid
                                      }
 
@@ -2120,7 +2120,7 @@ class Valis(object):
         * Save the warped slide as an ome.tiff (Slide.warp_and_save_slide)
         * Warp an image of the slide (Slide.warp_img)
         * Warp points (Slide.warp_xy)
-        * Warp points in one slide to their position in another unwarped slide (Slide.warp_xy_from_to)
+        * Warp points in one slide to their position in another un-warped slide (Slide.warp_xy_from_to)
         * Access slide ome-xml (Slide.original_xml)
 
         See Slide for more details.
@@ -2220,7 +2220,7 @@ class Valis(object):
 
                 for j, p in enumerate(dup_paths):
                     new_name = f"{names_dict[p]}_{str(j).zfill(z)}"
-                    msg = f"Renmaing {p} to {new_name} in Valis.slide_dict)"
+                    msg = f"Renaming {p} to {new_name} in Valis.slide_dict)"
                     valtils.print_warning(msg)
                     names_dict[p] = new_name
 
@@ -2246,7 +2246,7 @@ class Valis(object):
         """Convert slides to images and create dictionary of Slides.
 
         series : int, optional
-            Slide series to be read. If None, the series with largest image will be read
+            Slide series to be read. If None, the series with the largest image will be read
 
         reader_cls : SlideReader, optional
             Uninstantiated SlideReader class that will convert
@@ -2394,7 +2394,7 @@ class Valis(object):
         return overlap_img
 
     def measure_original_mmi(self, img1, img2):
-        """Measure Mattes mutation inormation between 2 unregistered images.
+        """Measure Mattes mutation information between 2 unregistered images.
         """
 
         dst_rc = np.max([img1.shape, img2.shape], axis=1)
@@ -2410,8 +2410,8 @@ class Valis(object):
 
     def create_img_processor_dict(self, brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                                   brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
-                                  if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
-                                  if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
+                                  if_processing_cls=DEFAULT_FLUORESCENCE_CLASS,
+                                  if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS,
                                   processor_dict=None):
         """Create dictionary to get processors for each image
 
@@ -2420,19 +2420,19 @@ class Valis(object):
 
         Parameters
         ----------
-        brightfield_processing_cls : ImageProcesser
-            ImageProcesser to pre-process brightfield images to make them look as similar as possible.
+        brightfield_processing_cls : ImageProcessor
+            ImageProcessor to pre-process brightfield images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
-        if_processing_cls : ImageProcesser
-            ImageProcesser to pre-process immunofluorescent images to make them look as similar as possible.
+        if_processing_cls : ImageProcessor
+            ImageProcessor to pre-process immunofluorescence images to make them look as similar as possible.
             Should return a single channel uint8 image.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         processor_dict : dict
             Each key should be the filename of the image, and the value either a subclassed
@@ -2729,7 +2729,7 @@ class Valis(object):
 
 
     def get_null_overlap_mask(self, rigid_registrar):
-        """Create mask that covers all of the image.
+        """Create mask that covers all the images.
         Not really a mask
 
 
@@ -2787,7 +2787,7 @@ class Valis(object):
 
                 transformation_src_shape_rc: shape (row, col) of image used to find the rigid transformation. If
                     not provided, then it is assumed to be the shape of the level 0 slide
-                transformation_dst_shape_rc: shape of registered image. If not presesnt, but a reference was provided
+                transformation_dst_shape_rc: shape of registered image. If not present, but a reference was provided
                     and `transformation_src_shape_rc` was not provided, this is assumed to be the shape of the reference slide
 
             If None, then all rigid M will be the identity matrix
@@ -2822,7 +2822,7 @@ class Valis(object):
 
 
         print("\n======== Matching images\n")
-        if rigid_registrar.aleady_sorted:
+        if rigid_registrar.already_sorted:
             rigid_registrar.match_sorted_imgs(matcher, keep_unfiltered=False)
 
             for i, img_obj in enumerate(rigid_registrar.img_obj_list):
@@ -3075,8 +3075,8 @@ class Valis(object):
 
     def micro_rigid_register(self):
 
-        micro_rigid_registar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
-        micro_rigid_registar.register()
+        micro_rigid_registrar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
+        micro_rigid_registrar.register()
 
         rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in self.slide_dict.values()]
         self.micro_rigid_overlap_img = self.draw_overlap_img(rigid_img_list)
@@ -3349,7 +3349,7 @@ class Valis(object):
             else:
                 s = np.min(max_img_dim/np.array(ref_slide.processed_img_shape_rc))
         else:
-            # Determine how big image would have to be to get mask with maxmimum dimension = max_img_dim
+            # Determine how big image would have to be to get mask with maximum dimension = max_img_dim
             if isinstance(mask, pyvips.Image):
                 mask_shape_rc = np.array((mask.height, mask.width))
             else:
@@ -3702,13 +3702,13 @@ class Valis(object):
             if draw_img.ndim == 2:
                 draw_img = np.dstack([draw_img] * 3)
 
-            thumbanil_deform_grid = viz.color_displacement_tri_grid(bk_dx=thumbnail_bk_dxdy[..., 0],
+            thumbnail_deform_grid = viz.color_displacement_tri_grid(bk_dx=thumbnail_bk_dxdy[..., 0],
                                                                     bk_dy=thumbnail_bk_dxdy[..., 1],
                                                                     img=draw_img,
                                                                     n_grid_pts=25)
 
             deform_img_f = os.path.join(self.deformation_field_dir, img_save_id + "_" + slide_obj.name + ".png")
-            warp_tools.save_img(deform_img_f, thumbanil_deform_grid, thumbnail_size=self.thumbnail_size)
+            warp_tools.save_img(deform_img_f, thumbnail_deform_grid, thumbnail_size=self.thumbnail_size)
 
         return non_rigid_registrar
 
@@ -3724,10 +3724,10 @@ class Valis(object):
             `summary_df` contains various information about the registration.
 
             The "from" column is the name of the image, while the "to" column
-            name of the image it was aligned to. "from" is analagous to "moving"
-            or "current", while "to" is analgous to "fixed" or "previous".
+            name of the image it was aligned to. "from" is analogous to "moving"
+            or "current", while "to" is analogous to "fixed" or "previous".
 
-            Columns begining with "original" refer to error measurements of the
+            Columns beginning with "original" refer to error measurements of the
             unregistered images. Those beginning with "rigid" or "non_rigid" refer
             to measurements related to rigid or non-rigid registration, respectively.
 
@@ -3735,7 +3735,7 @@ class Valis(object):
             the case of errors based on feature distances (i.e. those ending in "D"),
             the mean is weighted by the number of feature matches between "from" and "to".
 
-            Columns endining in "D" indicate the median distance between matched
+            Columns ending in "D" indicate the median distance between matched
             features in "from" and "to".
 
             Columns ending in "rTRE" indicate the target registration error between
@@ -3751,7 +3751,7 @@ class Valis(object):
 
             "aligned_shape" is the shape of the registered full resolution slide
 
-            "physical_units" are the names of the pixels physcial unit, e.g. u'\u00B5m'
+            "physical_units" are the names of the pixels physical unit, e.g. u'\u00B5m'
 
             "resolution" is the physical unit per pixel
 
@@ -3921,8 +3921,8 @@ class Valis(object):
 
     def register(self, brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                  brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
-                 if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
-                 if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
+                 if_processing_cls=DEFAULT_FLUORESCENCE_CLASS,
+                 if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS,
                  processor_dict=None,
                  reader_cls=None):
 
@@ -3932,13 +3932,13 @@ class Valis(object):
         then conduct rigid registration. Non-rigid registration will then be performed if the
         `non_rigid_registrar_cls` argument used to initialize the Valis object was not None.
 
-        In addition to the objects returned, the desination directory (i.e. `dst_dir`)
+        In addition to the objects returned, the destination directory (i.e. `dst_dir`)
         will contain thumbnails so that one can visualize the results: converted image
         thumbnails will be in "images/"; processed images in "processed/";
         rigidly aligned images in "rigid_registration/"; non-rigidly aligned images in "non_rigid_registration/";
-        non-rigid deformation field images (i.e. warped grids colored by the direction and magntidue)
+        non-rigid deformation field images (i.e. warped grids colored by the direction and magnitude)
         of the deformation) will be in ""deformation_fields/". The size of these thumbnails
-        is determined by the `thumbnail_size` argument used to initialze this object.
+        is determined by the `thumbnail_size` argument used to initialize this object.
 
         One can get a sense of how well the registration worked by looking
         in the "overlaps/", which shows how the images overlap before
@@ -3947,26 +3947,26 @@ class Valis(object):
         blending those images.
 
         The "data/" directory will contain a pickled copy of this registrar, which can be
-        later be opened (unpickled) and used to warp slides and/or point data.
+        later be opened (un-pickled) and used to warp slides and/or point data.
 
         "data/" will also contain the `summary_df` saved as a csv file.
 
 
         Parameters
         ----------
-        brightfield_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process brightfield images to make
+        brightfield_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process brightfield images to make
             them look as similar as possible.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
-        if_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process immunofluorescent images
+        if_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process immunofluorescence images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         processor_dict : dict
             Each key should be the filename of the image, and the value either a subclassed
@@ -3997,10 +3997,10 @@ class Valis(object):
             `summary_df` contains various information about the registration.
 
             The "from" column is the name of the image, while the "to" column
-            name of the image it was aligned to. "from" is analagous to "moving"
-            or "current", while "to" is analgous to "fixed" or "previous".
+            name of the image it was aligned to. "from" is analogous to "moving"
+            or "current", while "to" is analogous to "fixed" or "previous".
 
-            Columns begining with "original" refer to error measurements of the
+            Columns beginning with "original" refer to error measurements of the
             unregistered images. Those beginning with "rigid" or "non_rigid" refer
             to measurements related to rigid or non-rigid registration, respectively.
 
@@ -4008,7 +4008,7 @@ class Valis(object):
             the case of errors based on feature distances (i.e. those ending in "D"),
             the mean is weighted by the number of feature matches between "from" and "to".
 
-            Columns endining in "D" indicate the median distance between matched
+            Columns ending in "D" indicate the median distance between matched
             features in "from" and "to".
 
             Columns ending in "TRE" indicate the target registration error between
@@ -4024,7 +4024,7 @@ class Valis(object):
 
             "aligned_shape" is the shape of the registered full resolution slide
 
-            "physical_units" are the names of the pixels physcial unit, e.g. u'\u00B5m'
+            "physical_units" are the names of the pixels physical unit, e.g. u'\u00B5m'
 
             "resolution" is the physical unit per pixel
 
@@ -4050,7 +4050,7 @@ class Valis(object):
                                             if_processing_kwargs=if_processing_kwargs,
                                             processor_dict=processor_dict)
 
-            self.brightfield_procsseing_fxn_str = brightfield_processing_cls.__name__
+            self.brightfield_processing_fxn_str = brightfield_processing_cls.__name__
             self.if_processing_fxn_str = if_processing_cls.__name__
             self.process_imgs(processor_dict=slide_processors)
 
@@ -4113,35 +4113,35 @@ class Valis(object):
         self.non_rigid_registrar = None
 
 
-    @valtils.deprecated_args(max_non_rigid_registartion_dim_px="max_non_rigid_registration_dim_px")
+    @valtils.deprecated_args(max_non_rigid_registration_dim_px="max_non_rigid_registration_dim_px")
     def register_micro(self,  brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                  brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
-                 if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
-                 if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
+                 if_processing_cls=DEFAULT_FLUORESCENCE_CLASS,
+                 if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS,
                  processor_dict=None,
                  max_non_rigid_registration_dim_px=DEFAULT_MAX_NON_RIGID_REG_SIZE,
                  non_rigid_registrar_cls=DEFAULT_NON_RIGID_CLASS,
                  non_rigid_reg_params=DEFAULT_NON_RIGID_KWARGS,
                  reference_img_f=None, align_to_reference=False, mask=None, tile_wh=DEFAULT_NR_TILE_WH):
-        """Improve alingment of microfeatures by performing second non-rigid registration on larger images
+        """Improve alignment of microfeatures by performing second non-rigid registration on larger images
 
-        Caclculates additional non-rigid deformations using a larger image
+        Calculates additional non-rigid deformations using a larger image
 
         Parameters
         ----------
-        brightfield_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process brightfield images to make
+        brightfield_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process brightfield images to make
             them look as similar as possible.
 
         brightfield_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `brightfield_processing_cls`
+            Dictionary of keyword arguments to be passed to `brightfield_processing_cls`
 
-        if_processing_cls : preprocessing.ImageProcesser
-            preprocessing.ImageProcesser used to pre-process immunofluorescent images
+        if_processing_cls : preprocessing.ImageProcessor
+            preprocessing.ImageProcessor used to pre-process immunofluorescence images
             to make them look as similar as possible.
 
         if_processing_kwargs : dict
-            Dictionary of keyward arguments to be passed to `if_processing_cls`
+            Dictionary of keyword arguments to be passed to `if_processing_cls`
 
         max_non_rigid_registration_dim_px : int, optional
              Maximum width or height of images used for non-rigid registration.
@@ -4163,7 +4163,7 @@ class Valis(object):
         non_rigid_registrar_cls : NonRigidRegistrar, optional
             Uninstantiated NonRigidRegistrar class that will be used to
             calculate the deformation fields between images. See
-            the `non_rigid_registrars` module for a desciption of available
+            the `non_rigid_registrars` module for a description of available
             methods. If a desired non-rigid registration method is not available,
             one can be implemented by subclassing.NonRigidRegistrar.
 
@@ -4171,7 +4171,7 @@ class Valis(object):
             Dictionary containing key, value pairs to be used to initialize
             `non_rigid_registrar_cls`.
             In the case where simple ITK is used by the, params should be
-            a SimpleITK.ParameterMap. Note that numeric values nedd to be
+            a SimpleITK.ParameterMap. Note that numeric values need to be
             converted to strings. See the NonRigidRegistrar classes in
             `non_rigid_registrars` for the available non-rigid registration
             methods and arguments.
@@ -4207,7 +4207,7 @@ class Valis(object):
         if using_tiler:
             # Have determined that these images will be too big
             msg = (f"Registration would more than {TILER_THRESH_GB} GB if all images opened in memory. "
-                    f"Will use NonRigidTileRegistrar to register cooresponding tiles to reduce memory consumption, "
+                    f"Will use NonRigidTileRegistrar to register corresponding tiles to reduce memory consumption, "
                     f"but this method is experimental")
 
             valtils.print_warning(msg)
@@ -4415,7 +4415,7 @@ class Valis(object):
             resolution image will be warped and saved.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -4424,7 +4424,7 @@ class Valis(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         colormap : list
             List of RGB colors (0-255) to use for channel colors
@@ -4437,7 +4437,7 @@ class Valis(object):
 
         compression : str, optional
             Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            be jpeg or jp2k. See pyvips for more details.
 
         """
         pathlib.Path(dst_dir).mkdir(exist_ok=True, parents=True)
@@ -4482,7 +4482,7 @@ class Valis(object):
             resolution image will be warped and saved.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -4491,13 +4491,13 @@ class Valis(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         channel_name_dict : dict of lists, optional.
             key =  slide file name, value = list of channel names for that slide. If None,
-            the the channel names found in each slide will be used.
+            the channel names found in each slide will be used.
 
-        src_f_list : list of str, optionaal
+        src_f_list : list of str, optional
             List of paths to slide to be warped. If None (the default), Valis.original_img_list
             will be used. Otherwise, the paths to which `src_f_list` points to should
             be an alternative copy of the slides, such as ones that have undergone
@@ -4507,7 +4507,7 @@ class Valis(object):
             List of RGB colors (0-255) to use for channel colors
 
         drop_duplicates : bool, optional
-            Whether or not to drop duplicate channels that might be found in multiple slides.
+            Whether to drop duplicate channels that might be found in multiple slides.
             For example, if DAPI is in multiple slides, then the only the DAPI channel in the
             first slide will be kept.
 
@@ -4519,7 +4519,7 @@ class Valis(object):
 
         compression : str
             Compression method used to save ome.tiff . Default is lzw, but can also
-            be jpeg or jp2k. See pyips for more details.
+            be jpeg or jp2k. See pyvips for more details.
 
         Returns
         -------

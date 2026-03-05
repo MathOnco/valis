@@ -31,19 +31,19 @@ from . import warp_tools
 DEFAULT_COLOR_STD_C = 0.2 # cam16-ucs
 
 
-class ImageProcesser(object):
+class ImageProcessor(object):
     """Process images for registration
 
-    `ImageProcesser` sub-classes processes images to single channel
+    `ImageProcessor` sub-classes processes images to single channel
     images which are then used in image registration.
 
-    Each `ImageProcesser` is initialized with an image, the path to the
+    Each `ImageProcessor` is initialized with an image, the path to the
     image, the pyramid level, and the series number. These values will
     be set during the registration process.
 
-    `ImageProcesser` must also have a `process_image` method, which is
-    called during registration. As `ImageProcesser` has the image and
-    and its relevant information (filename, level, series) as attributes,
+    `ImageProcessor` must also have a `process_image` method, which is
+    called during registration. As `ImageProcessor` has the image and
+    its relevant information (filename, level, series) as attributes,
     it should be able to access and modify the image as needed. However,
     one can also pass extra args and kwargs to `process_image`. As such,
     `process_image` will also need to accept args and kwargs.
@@ -117,7 +117,7 @@ class ImageProcesser(object):
         """
 
 
-class ChannelGetter(ImageProcesser):
+class ChannelGetter(ImageProcessor):
     """Select channel from image
 
     """
@@ -153,7 +153,7 @@ class ChannelGetter(ImageProcesser):
         return chnl
 
 
-class ColorfulStandardizer(ImageProcesser):
+class ColorfulStandardizer(ImageProcessor):
     """Standardize the colorfulness of the image
 
     """
@@ -182,7 +182,7 @@ class ColorfulStandardizer(ImageProcesser):
         return processed_img
 
 
-class JCDist(ImageProcesser):
+class JCDist(ImageProcessor):
     def __init__(self, image, src_f, level, series, *args, **kwargs):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
@@ -207,7 +207,7 @@ class JCDist(ImageProcesser):
         return processed
 
 
-class OD(ImageProcesser):
+class OD(ImageProcessor):
     """Convert the image from RGB to optical density (OD) and calculate pixel norms.
     """
 
@@ -244,7 +244,7 @@ class OD(ImageProcesser):
         return processed
 
 
-class ColorDeconvolver(ImageProcesser):
+class ColorDeconvolver(ImageProcessor):
     def __init__(self, image, src_f, level, series, *args, **kwargs):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
@@ -257,7 +257,7 @@ class ColorDeconvolver(ImageProcesser):
 
     def process_image(self, cspace="JzAzBz", method="similarity", adaptive_eq=False, return_unmixed=False, *args, **kwargs):
         """
-        Process image by enhance stained pixels and subtracting backroung pixels
+        Process image by enhance stained pixels and subtracting background pixels
 
         Parameters
         ----------
@@ -268,7 +268,7 @@ class ColorDeconvolver(ImageProcesser):
             How to calculate similarity of each pixel to colors detected in image
 
         adaptive_eq : bool
-            Whether or not to apply adaptive histogram equalization
+            Whether to apply adaptive histogram equalization
 
         Returns
         -------
@@ -312,7 +312,7 @@ class ColorDeconvolver(ImageProcesser):
             return processed
 
 
-class Luminosity(ImageProcesser):
+class Luminosity(ImageProcessor):
     """Get luminosity of an RGB image
 
     """
@@ -334,7 +334,7 @@ class Luminosity(ImageProcesser):
         return processed_img
 
 
-class BgColorDistance(ImageProcesser):
+class BgColorDistance(ImageProcessor):
     """Calculate distance between each pixel and the background color
 
     """
@@ -358,7 +358,7 @@ class BgColorDistance(ImageProcesser):
         return processed_img
 
 
-class StainFlattener(ImageProcesser):
+class StainFlattener(ImageProcessor):
     def __init__(self, image, src_f, level, series, *args, **kwargs):
         super().__init__(image=image, src_f=src_f, level=level,
                          series=series, *args, **kwargs)
@@ -483,7 +483,7 @@ class StainFlattener(ImageProcesser):
         return processed_img
 
 
-class Gray(ImageProcesser):
+class Gray(ImageProcessor):
     """Get luminosity of an RGB image
 
     """
@@ -505,8 +505,8 @@ class Gray(ImageProcesser):
         return processed_img
 
 
-class HEDeconvolution(ImageProcesser):
-    """Normalize staining appearence of hematoxylin and eosin (H&E) stained image
+class HEDeconvolution(ImageProcessor):
+    """Normalize staining appearance of hematoxylin and eosin (H&E) stained image
     and get the H or E deconvolution image.
 
     Reference
@@ -628,7 +628,7 @@ def standardize_colorfulness(img, c=DEFAULT_COLOR_STD_C, h=0):
     """Give image constant colorfulness and hue
 
     Image is converted to cylindrical CAM-16UCS assigned a constant
-    hue and colorfulness, and then coverted back to RGB.
+    hue and colorfulness, and then converted back to RGB.
 
     Parameters
     ----------
@@ -732,7 +732,7 @@ def calc_background_color_dist(img, brightness_q=0.99, mask=None, cspace="CAM16U
 
 
 def normalize_he(img: np.array, Io: int = 240, alpha: int = 1, beta: int = 0.15):
-    """ Normalize staining appearence of H&E stained images.
+    """ Normalize staining appearance of H&E stained images.
 
     Parameters
     ----------
@@ -1340,7 +1340,7 @@ def polygon_tortuosity(img, window_size=3):
 def remove_small_obj_and_lines_by_dist(mask):
     """
     Will remove smaller objects and thin lines that
-    do not interesct with larger objects
+    do not intersect with larger objects
     """
 
     dist_transform = cv2.distanceTransform(mask, cv2.DIST_L2, 5)
@@ -1416,7 +1416,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
     cam_d, cam = calc_background_color_dist(img, brightness_q=brightness_q, mask=color_mask)
 
-    # Reduce intensity of thick horizontal and vertial lines, usually artifacts like edges, streaks, folds, etc...
+    # Reduce intensity of thick horizontal and vertical lines, usually artifacts like edges, streaks, folds, etc...
     vert_knl = np.ones((1, 5))
     no_v_lines = morphology.opening(cam_d, vert_knl)
 
@@ -1424,7 +1424,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
     no_h_lines = morphology.opening(cam_d, horiz_knl)
     cam_d_no_lines = np.dstack([no_v_lines, no_h_lines]).min(axis=2)
 
-    # Foreground is where color is different than backaground color
+    # Foreground is where color is different than background color
     cam_d_t, _ = filters.threshold_multiotsu(cam_d_no_lines[grey_mask == 0])
     tissue_mask = np.zeros(cam_d_no_lines.shape, dtype=np.uint8)
     tissue_mask[cam_d_no_lines >= cam_d_t] = 255
@@ -1437,7 +1437,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
 def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
     """
-    Cacluate distance between backround and each pixel
+    Calculate distance between background and each pixel
     using a luminosity and colofulness/saturation in a polar colorspace
 
     Parameters
@@ -1450,7 +1450,7 @@ def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
 
     p: int
         Percentile used to determine background values, i.e.
-        background pixels have a luminosity greather 99% of other
+        background pixels have a luminosity greater 99% of other
         pixels. Needs to be between 0-100
 
     metric: str
@@ -1459,7 +1459,7 @@ def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
     Returns
     -------
     jc_dist : np.ndarray
-        Color distance between backround and each pixel
+        Color distance between background and each pixel
 
     """
 
@@ -1529,7 +1529,7 @@ def create_tissue_mask_with_jc_dist(img):
 
 def clean_mask(mask, img=None, rel_min_size=0.001):
     """
-    Remove small objects, regions that are not very colorful (relativey)
+    Remove small objects, regions that are not very colorful (relatively)
     """
 
     fg_labeled = measure.label(mask)
@@ -1559,11 +1559,11 @@ def clean_mask(mask, img=None, rel_min_size=0.001):
 
         if c0 == 0:
             tb = np.where(r.image_filled[:, 0])[0]
-            # Touchng left border
+            # Touching left border
             r_filled_img[min(tb):max(tb), 0] = 255
 
         if c1 == mask.shape[1]:
-            # Touchng right border
+            # Touching right border
             tb = np.where(r.image_filled[:, -1])[0]
             r_filled_img[min(tb):max(tb), -1] = 255
 
@@ -1666,7 +1666,7 @@ def remove_regular_shapes(mask, irreg_thresh=0.05):
 
 
 def entropy_mask(img, cspace="Hunter LAB", irreg_thresh=0.0, rel_min_size=0.2):
-    # Detect and mask out backround (brightest and least colorful)
+    # Detect and mask out background (brightest and least colorful)
     mean_rgb, color_mask, filtered_label_counts, color_clusterer = find_dominant_colors(img, cspace=cspace, return_xy_clusterer=True)
     to_cluster_jab = rgb2jab(img, cspace=cspace)
     xy = to_cluster_jab[..., 1:].reshape((-1, 2))
@@ -1712,7 +1712,7 @@ def separate_colors(img, cspace="JzAzBz", min_colorfulness=0.005, px_thresh=0.00
         Colorspace to use to detect and separate colors using `separate_colors`
 
     min_colorfulness : str
-        Pixels with colorfulness/saturation less that this will be exluded.
+        Pixels with colorfulness/saturation less that this will be excluded.
         Calculated after binning colors.
 
     px_thresh: float
@@ -1905,7 +1905,7 @@ def find_dominant_colors(img, cspace="JzAzBz", min_colorfulness=0, px_thresh=0.0
         Colorspace to use to detect and separate colors using `separate_colors`
 
     min_colorfulness : str
-        Pixels with colorfulness/saturation less that this will be exluded.
+        Pixels with colorfulness/saturation less that this will be excluded.
         Calculated after binning colors.
 
     px_thresh: float
@@ -2412,7 +2412,7 @@ def img_to_tensor(img, return_rgb=True):
         or (H, W) for single channel
 
     return_rgb: bool
-        Whether or not to convert greyscale image to RGB
+        Whether to convert greyscale image to RGB
 
     Returns
     --------

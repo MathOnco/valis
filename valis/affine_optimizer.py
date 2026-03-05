@@ -1,10 +1,10 @@
 """Optimize rigid alignment
 
 Contains functions related to optimization, as well as the AffineOptimizer
-class that performs the optimzation. This class can be subclassed to implement
+class that performs the optimization. This class can be subclassed to implement
 custom optimization methods.
 
-There are several subclasses, but AffineOptimizerMattesMI is the
+There are several subclasses, but AffineOptimizerMattesMI is
 the fastest and most accurate, and so is default affine optimizer in VALIS.
 It's not recommended that the other subclasses be used, but they are kept
 to provide examples on how to subclass AffineOptimizer.
@@ -336,7 +336,7 @@ def build_P(A, B, r, mask):
 
 def entropy(x):
     """
-    Caclulate Shannon's entropy for array x
+    Calculate Shannon's entropy for array x
 
     Parameters
     ----------
@@ -459,7 +459,7 @@ def MI(fixed, moving, nb, spacing):
 
 
 class AffineOptimizer(object):
-    """Class that optimizes ridid registration
+    """Class that optimizes rigid registration
 
     Attributes
     ----------
@@ -478,10 +478,10 @@ class AffineOptimizer(object):
         Type of transformation, "EuclideanTransform" or "SimilarityTransform"
 
     current_level : int
-        Current level of the Guassian pyramid that is being registered
+        Current level of the Gaussian pyramid that is being registered
 
     accepts_xy : bool
-        Bool declaring whether or not the optimizer will use corresponding points to optimize the registration
+        Boolean indicating whether the optimizer uses corresponding points to optimize registration.
 
     Methods
     -------
@@ -507,9 +507,9 @@ class AffineOptimizer(object):
     to have a new cost_fxn method. See AffineOptimizerDisplacement for an example implementing a new cost function
 
     Major overhauls are possible too. See AffineOptimizerMattesMI for an example on using SimpleITK's
-    optimization methods inside of an AffineOptimizer subclass
+    optimization methods inside an AffineOptimizer subclass
 
-    If the optimizer uses corressponding points, then the class attribute
+    If the optimizer uses corresponding points, then the class attribute
     accepts_xy needs to be set to True. The default is False.
 
     """
@@ -553,7 +553,7 @@ class AffineOptimizer(object):
             Image moving is warped to align to
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix
@@ -614,7 +614,7 @@ class AffineOptimizer(object):
             Image moving is warped to align with
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix
@@ -799,7 +799,7 @@ class AffineOptimizerMattesMI(AffineOptimizer):
             Image moving is warped to align to
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix
@@ -866,7 +866,7 @@ class AffineOptimizerMattesMI(AffineOptimizer):
             Image moving is warped to align with
 
         mask : ndarray
-            2D array having non-zero pixel values, where values of 0 are ignnored during registration
+            2D array having non-zero pixel values, where values of 0 are ignored during registration
 
         initial_M : (3x3) array
             Initial transformation matrix
@@ -981,7 +981,7 @@ class AffineOptimizerKNN(AffineOptimizer):
     def mutual_information(self, A, B):
 
         if self.HA_list[self.current_level] is None:
-            # Only need to caluclate once per level, becuase the fixed
+            # Only need to calculate once per level, because the fixed
             # image doesn't change
 
             self.HA_list[self.current_level] = self.shannon_entropy(A)
@@ -1084,7 +1084,7 @@ class AffineOptimizerOffGrid(AffineOptimizer):
         return self.cost_fxn(fixed_intensities, moving_intensities, self.pyramid_mask[self.current_level])
 
     def cost_fxn(self, fixed_intensities, transformed_intensities, mask):
-        """
+        """Cost function
         """
         results, _, _ = np.histogram2d(fixed_intensities, transformed_intensities, bins=self.nbins)
         n = np.sum(results)

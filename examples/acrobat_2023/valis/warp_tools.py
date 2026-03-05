@@ -28,8 +28,8 @@ pyvips.cache_set_max(0)
 
 
 def is_pyvips_22():
-    pvips_ver = pyvips.__version__.split(".")
-    pyvips_22 = eval(pvips_ver[0]) >= 2 and eval(pvips_ver[1]) >= 2
+    pyvips_ver = pyvips.__version__.split(".")
+    pyvips_22 = eval(pyvips_ver[0]) >= 2 and eval(pyvips_ver[1]) >= 2
     return pyvips_22
 
 
@@ -335,7 +335,7 @@ def save_img(dst_f, img, thumbnail_size=None):
         Filename for saved image
 
     img : ndarray, pyvips.Image
-        Image to be saved. Numpy arrays will be converted to pvips.Image
+        Image to be saved. Numpy arrays will be converted to pyvips.Image
 
     thumbnail_size : optional, int
         If not None, the image will be resized to fit within this size
@@ -669,14 +669,14 @@ def mattes_mi(img1, img2, nbins=50,  mask=None):
         Number of histogram bins
 
     mask : ndarray, None
-        Mask with shape (N, M) that indiates where the metric
-        should be calulated. If None, the metric will be calculated
+        Mask with shape (N, M) that indicates where the metric
+        should be calculated. If None, the metric will be calculated
         for all NxM pixels.
 
     Returns
     -------
     mmi : float
-        Mattes mutation inormation
+        Mattes mutation information
 
     """
 
@@ -1076,7 +1076,7 @@ def warp_img(img, M=None, bk_dxdy=None, out_shape_rc=None,
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            #Option to set backround color in mapim added in libvips 8.13
+            #Option to set background color in mapim added in libvips 8.13
             warped = affine_warped.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,
@@ -1206,7 +1206,7 @@ def warp_img_inv(img, M=None, fwd_dxdy=None, transformation_src_shape_rc=None, t
         warp_index = (index[0] + warp_dxdy[0]).bandjoin(index[1] + warp_dxdy[1])
 
         try:
-            #Option to set backround color in mapim added in libvips 8.13
+            #Option to set background color in mapim added in libvips 8.13
             nr_warped = img.mapim(warp_index,
                 premultiplied=True,
                 background=bg_color,
@@ -1288,7 +1288,7 @@ def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
         this shape should be the same for both images.
 
     from_src_shape_rc : optional, (int, int)
-        Shape of the unwarped image from which the points originated. For example,
+        Shape of the un-warped image from which the points originated. For example,
         this could be a larger/smaller version of the "from" image that was
         used for feature detection.
 
@@ -1310,7 +1310,7 @@ def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
         For example, this could be the original image in which features were detected
 
     to_src_shape_rc : optional, (int, int)
-        Shape of the unwarped "to" image to which the points will be warped. For example,
+        Shape of the un-warped "to" image to which the points will be warped. For example,
         this could be a larger/smaller version of the "to" image that was
         used for feature detection.
 
@@ -1328,7 +1328,7 @@ def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
 
     Returns
     -------
-    in_target_space : ndarray, pvips.Image
+    in_target_space : ndarray, pyvips.Image
         `img` warped onto the "to" image
 
     """
@@ -1407,7 +1407,7 @@ def get_warp_map(M=None, dxdy=None, transformation_dst_shape_rc=None,
 
     Returns
     -------
-    coord_map : ndarry
+    coord_map : np.ndarray
         A 2band numpy array that has location of each pixel in
         `src_shape_rc` the warped image (with shape `dst_shape_rc`)
 
@@ -1499,10 +1499,10 @@ def get_reflection_M(reflect_x, reflect_y, shape_rc):
     ----------
 
     reflect_x : bool
-        Whether or not to reflect the x-axis (columns)
+        Whether to reflect the x-axis (columns)
 
     reflecct y : bool
-        Whether or not to reflect the y-axis (rows)
+        Whether to reflect the y-axis (rows)
 
     shape_rc : tuple of int
         Shape of the image being reflected
@@ -1698,7 +1698,7 @@ def get_mesh(shape, grid_spacing, bbox_rc_wh=None, inclusive=False):
         (row, column, width, height) of bounding box
 
     inclusive : bool
-        Whether or not to include image edges
+        Whether to include image edges
 
     """
 
@@ -2313,8 +2313,8 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
                    to_dst_shape_rc=None, to_bk_dxdy=None, to_fwd_dxdy=None):
     """Warp points in one image to their position in another unregistered image
 
-    Takes a set of points found in the unwarped "from" image, and warps them to their
-    position in the unwarped "to" image.
+    Takes a set of points found in the un-warped "from" image, and warps them to their
+    position in the un-warped "to" image.
 
     Parameters
     ----------
@@ -2334,7 +2334,7 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
         this shape should be the same for both images.
 
     from_src_shape_rc : optional, (int, int)
-        Shape of the unwarped image from which the points originated. For example,
+        Shape of the un-warped image from which the points originated. For example,
         this could be a larger/smaller version of the "from" image that was
         used for feature detection.
 
@@ -2356,7 +2356,7 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
         For example, this could be the original image in which features were detected
 
     to_src_shape_rc : optional, (int, int)
-        Shape of the unwarped "to" image to which the points will be warped. For example,
+        Shape of the un-warped "to" image to which the points will be warped. For example,
         this could be a larger/smaller version of the "to" image that was
         used for feature detection.
 
@@ -2373,7 +2373,7 @@ def warp_xy_from_to(xy, from_M=None, from_transformation_src_shape_rc=None,
     Returns
     -------
     xy_in_to : ndarray
-        position of `xy` in the unwarped "to" image
+        position of `xy` in the un-warped "to" image
 
     """
 
@@ -2723,7 +2723,7 @@ def get_xy_inside_mask(xy, mask):
     Returns
     -------
     keep_idx : ndarray
-        Indices of `xy` that are inside of `mask`
+        Indices of `xy` that are inside `mask`
     """
 
     mask_cnt, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -2798,7 +2798,7 @@ def measure_error(src_xy, dst_xy, shape, feature_similarity=None):
         Median relative Target Registration Error (rTRE) between images
 
     med_d : float
-        Median Euclidean distance between src_xy and dst_xy, optinally weighted by feature similarity
+        Median Euclidean distance between src_xy and dst_xy, optionally weighted by feature similarity
 
     """
     d = np.sqrt((src_xy[:, 0]-dst_xy[:, 0])**2 + (src_xy[:, 1]-dst_xy[:, 1])**2)

@@ -14,7 +14,7 @@ from valis import registration, slide_io, viz, warp_tools
 
 
 
-# Perform registration. Can optinally set the reference image to be the same as the one the annotations are based on (i.e. `reference_img_f`)
+# Perform registration. Can optionally set the reference image to be the same as the one the annotations are based on (i.e. `reference_img_f`)
 registrar = registration.Valis(slide_src_dir, results_dst_dir, reference_img_f=reference_img_f)
 rigid_registrar, non_rigid_registrar, error_df = registrar.register()
 
