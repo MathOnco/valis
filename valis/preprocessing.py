@@ -1529,7 +1529,7 @@ def create_tissue_mask_with_jc_dist(img):
 
 def clean_mask(mask, img=None, rel_min_size=0.001):
     """
-    Remove small objects, regions that are not very colorful (relativey)
+    Remove small objects, regions that are not very colorful (relatively)
     """
 
     fg_labeled = measure.label(mask)
