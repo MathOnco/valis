@@ -273,7 +273,7 @@ class ZImage(object):
     def reduce(self, prev_img_obj, next_img_obj):
         """Reduce amount of info stored, which can take up a lot of space.
 
-        No longer need all descriptors. Only keep match info for neighgbors
+        No longer need all descriptors. Only keep match info for neighbors
 
         Parameters
         ----------
