@@ -3751,7 +3751,7 @@ class Valis(object):
 
             "aligned_shape" is the shape of the registered full resolution slide
 
-            "physical_units" are the names of the pixels physcial unit, e.g. u'\u00B5m'
+            "physical_units" are the names of the pixels physical unit, e.g. u'\u00B5m'
 
             "resolution" is the physical unit per pixel
 
@@ -4024,7 +4024,7 @@ class Valis(object):
 
             "aligned_shape" is the shape of the registered full resolution slide
 
-            "physical_units" are the names of the pixels physcial unit, e.g. u'\u00B5m'
+            "physical_units" are the names of the pixels physical unit, e.g. u'\u00B5m'
 
             "resolution" is the physical unit per pixel
 
