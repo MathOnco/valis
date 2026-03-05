@@ -578,7 +578,7 @@ class SerialNonRigidRegistrar(object):
             A SerialRigidRegistrar object that was used to optimally
             align a series of images.
 
-            If a string, it should indicating where the images
+            If a string, it should indicate where the images
             to be aligned are located. If src is a string, the images should be
             named such that they are read in the correct order, i.e. each
             starting with a number.
