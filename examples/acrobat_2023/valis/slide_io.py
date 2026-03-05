@@ -78,11 +78,11 @@ BF_MICROMETER = None
    Created after initializing JVM."""
 
 ome = None
-"""Bioformats ome from bioforamts_jar.
+"""Bioformats ome from bioformats_jar.
    Created after initializing JVM."""
 
 loci = None
-"""Bioformats loci from bioforamts_jar.
+"""Bioformats loci from bioformats_jar.
    Created after initializing JVM."""
 
 
