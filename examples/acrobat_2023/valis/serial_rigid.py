@@ -1490,7 +1490,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
     Returns
     -------
     registrar : SerialRigidRegistrar
-        SerialRigidRegistrar object contains general information about the alginments,
+        SerialRigidRegistrar object contains general information about the alignments,
         but also a list of Z-images. Each ZImage contains the warp information
         for an image in the stack, including the transformation matrices
         calculated at each step, keypoint poisions, image descriptors, and
