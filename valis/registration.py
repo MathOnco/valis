@@ -630,7 +630,7 @@ class Slide(object):
             mean_jab = preprocessing.rgb2jab(mean_rgb, cspace=cspace)
             mean_jch = colour.models.Jab_to_JCh(mean_jab)
 
-            # Find highest luminosity (L) and lowest colorfulness
+            # Find the highest luminosity (L) and lowest colorfulness
             bg_idx = np.lexsort([mean_jch[:, 1], -mean_jch[:, 0]])[0] # Last column sorted 1st. Returns ascending order
             self.bg_color = mean_rgb[bg_idx, :]
 

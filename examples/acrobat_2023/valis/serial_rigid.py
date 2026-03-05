@@ -870,7 +870,7 @@ class SerialRigidRegistrar(object):
         min_d = distance_mat.min()
         max_d = distance_mat.max()
 
-        # Make sure that image has highest similarity with itself
+        # Make sure that image has the highest similarity with itself
         similarity_mat[np.diag_indices_from(similarity_mat)] += max_s*0.01
 
         # Scale metrics between 0 and 1

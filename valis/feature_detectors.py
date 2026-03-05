@@ -33,7 +33,7 @@ highest response will be returned."""
 
 
 def filter_features(kp, desc, n_keep=MAX_FEATURES):
-    """Get keypoints with highest response
+    """Get keypoints with the highest response
 
     Parameters
     ----------
