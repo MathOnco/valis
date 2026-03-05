@@ -586,8 +586,8 @@ class SerialRigidRegistrar(object):
 
         """
 
-        n_comparisions = int((self.size*(self.size-1))/2)
-        pbar = tqdm(total=n_comparisions)
+        n_comparisons = int((self.size*(self.size-1))/2)
+        pbar = tqdm(total=n_comparisons)
 
         def match_img_obj(i):
 
