@@ -122,7 +122,7 @@ BF_UNIT = None
    Created after initializing JVM."""
 
 BF_MICROMETER = None
-"""Bioformats Unit mircometer object.
+"""Bioformats Unit micrometer object.
    Created after initializing JVM."""
 
 ome = None
