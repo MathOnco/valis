@@ -1848,7 +1848,7 @@ class Valis(object):
             are already in the correct order. If True, then each filename should
             begin with the number that indicates its position in the z-stack. If
             False, then the images will be sorted by ordering a feature distance
-            matix. Default is False.
+            matrix. Default is False.
 
         reference_img_f : str, optional
             Filename of image that will be treated as the center of the stack.

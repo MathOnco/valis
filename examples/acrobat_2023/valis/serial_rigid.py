@@ -1460,7 +1460,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
         are already in the correct order. If True, then each filename should
         begin with the number that indicates its position in the z-stack. If
         False, then the images will be sorted by ordering a feature distance
-        matix.
+        matrix.
 
     reference_img_f : str, optional
         Filename of image that will be treated as the center of the stack.
