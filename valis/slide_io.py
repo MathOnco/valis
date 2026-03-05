@@ -1537,7 +1537,7 @@ class BioFormatsSlideReader(SlideReader):
 
         Notes
         -----
-        Using javabridge and python-bioformmats, this can be accessed as follows
+        Using javabridge and python-bioformats, this can be accessed as follows
         `
         bf_slide = bioformats.ImageReader(slide_f)
         bf_img_reader = javabridge.JWrapper(bf_slide.rdr.o)
