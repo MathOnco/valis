@@ -3333,7 +3333,7 @@ def get_tile_wh(reader, level, out_shape_wh, default_wh=512):
 def update_xml_for_new_img(img, reader, level=0, channel_names=None, colormap=CMAP_AUTO, pixel_physical_size_xyu=None):
     """Update dimensions ome-xml metadata
 
-    Used to create a new ome-xmlthat reflects changes in an image, such as its shape
+    Used to create a new ome-xml that reflects changes in an image, such as its shape
 
     If `current_ome_xml_str` is invalid or None, a new ome-xml will be created
 

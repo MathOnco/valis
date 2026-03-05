@@ -2611,7 +2611,7 @@ def create_ome_xml(shape_xyzct, bf_dtype, is_rgb, pixel_physical_size_xyu=None, 
 def update_xml_for_new_img(current_ome_xml_str, new_xyzct, bf_dtype, is_rgb, series, pixel_physical_size_xyu=None, channel_names=None, colormap=None):
     """Update dimensions ome-xml metadata
 
-    Used to create a new ome-xmlthat reflects changes in an image, such as its shape
+    Used to create a new ome-xml that reflects changes in an image, such as its shape
 
     If `current_ome_xml_str` is invalid or None, a new ome-xml will be created
 
