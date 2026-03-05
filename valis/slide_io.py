@@ -2327,7 +2327,7 @@ class FlattenedPyramidReader(VipsSlideReader):
         For example, BF metadata may have image datatype as
         uint32, but in the image description, min/max/response,
         are floats. This will determine if the slide should be cast
-        to a different dataatype to match values in metadata.
+        to a different datatype to match values in metadata.
 
         """
         smallest_level = len(self.metadata.slide_dimensions) - 1
