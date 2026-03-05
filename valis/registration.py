@@ -1934,7 +1934,7 @@ class Valis(object):
 
         crop_for_rigid_reg : bool, optional
             Whether or not to crop the images used for rigid registration. If `True`,
-            then higher resolution images may be used for rigid registeration, as valis
+            then higher resolution images may be used for rigid registration, as valis
             will "zoom" in to the area around the mask created by `ImageProcesser.create_mask()`,
             and slice out that region and resize it to have a maximum dimension the same
             as `max_processed_image_dim_px`. If `False`, the full image will be used, although
