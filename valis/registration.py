@@ -91,7 +91,7 @@ FD_KEY = "feature_detector"
 MATCHER_KEY = "matcher"
 MATCHER_FOR_SORTING_KEY = "matcher_for_sorting"
 NAME_KEY = "name"
-IMAGES_ORDERD_KEY = "imgs_ordered"
+IMAGES_ORDERED_KEY = "imgs_ordered"
 REF_IMG_KEY = "reference_img_f"
 QT_EMITTER_KEY = "qt_emitter"
 TFORM_SRC_SHAPE_KEY = "transformation_src_shape_rc"
@@ -2209,7 +2209,7 @@ class Valis(object):
                                  MATCHER_FOR_SORTING_KEY: matcher_for_sorting,
                                  AFFINE_OPTIMIZER_KEY: afo,
                                  REF_IMG_KEY: reference_img_f,
-                                 IMAGES_ORDERD_KEY: imgs_ordered,
+                                 IMAGES_ORDERED_KEY: imgs_ordered,
                                  CHECK_REFLECT_KEY: check_for_reflections,
                                  QT_EMITTER_KEY: qt_emitter
                                  }
