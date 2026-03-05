@@ -130,7 +130,7 @@ class NonRigidRegistrar(object):
     def calc(self, moving_img, fixed_img, mask, *args, **kwargs):
         """Calculate displacement fields
 
-        Can record subclass specific atrributes here too
+        Can record subclass specific attributes here too
 
         Parameters
         ----------
