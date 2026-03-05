@@ -3075,8 +3075,8 @@ class Valis(object):
 
     def micro_rigid_register(self):
 
-        micro_rigid_registar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
-        micro_rigid_registar.register()
+        micro_rigid_registrar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
+        micro_rigid_registrar.register()
 
         rigid_img_list = [slide_obj.warp_img(slide_obj.processed_img, non_rigid=False) for slide_obj in self.slide_dict.values()]
         self.micro_rigid_overlap_img = self.draw_overlap_img(rigid_img_list)

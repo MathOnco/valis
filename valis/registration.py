@@ -3507,8 +3507,8 @@ class Valis(object):
         return rigid_registrar
 
     def micro_rigid_register(self):
-        micro_rigid_registar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
-        micro_rigid_registar.register()
+        micro_rigid_registrar = self.micro_rigid_registrar_cls(val_obj=self, **self.micro_rigid_registrar_params)
+        micro_rigid_registrar.register()
 
         # Not all pairs will have keept high resolution M, so re-estimate M based on final matches
         slide_idx, slide_names = list(zip(*[[slide_obj.stack_idx, slide_obj.name] for slide_obj in self.slide_dict.values()]))
