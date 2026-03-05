@@ -473,7 +473,7 @@ def MI(fixed, moving, nb, spacing):
 
 
 class AffineOptimizer(object):
-    """Class that optimizes ridid registration
+    """Class that optimizes rigid registration
 
     Attributes
     ----------
