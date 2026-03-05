@@ -4619,7 +4619,7 @@ class Valis(object):
         blending those images.
 
         The "data/" directory will contain a pickled copy of this registrar, which can be
-        later be opened (unpickled) and used to warp slides and/or point data.
+        later be opened (un-pickled) and used to warp slides and/or point data.
 
         "data/" will also contain the `summary_df` saved as a csv file.
 
