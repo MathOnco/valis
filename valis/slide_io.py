@@ -822,7 +822,7 @@ def metadata_from_xml(xml, name, server, series=0, metadata=None):
 
 
 def openslide_desc_2_omexml(vips_img):
-    """Get basic metatad using openslide and convert to ome-xml
+    """Get basic metadata using openslide and convert to ome-xml
 
     """
     assert "openslide.vendor" in vips_img.get_fields(), "image does not appear to be openslide metadata"
