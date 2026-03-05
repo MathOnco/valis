@@ -927,7 +927,7 @@ class BioFormatsSlideReader(SlideReader):
             the region to be sliced.
 
         tile_wh : int, optional
-            Size of tiles used to contstruct `vips_slide`
+            Size of tiles used to construct `vips_slide`
 
         Returns
         -------
