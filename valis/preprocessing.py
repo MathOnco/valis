@@ -268,7 +268,7 @@ class ColorDeconvolver(ImageProcessor):
             How to calculate similarity of each pixel to colors detected in image
 
         adaptive_eq : bool
-            Whether or not to apply adaptive histogram equalization
+            Whether to apply adaptive histogram equalization
 
         Returns
         -------
@@ -2412,7 +2412,7 @@ def img_to_tensor(img, return_rgb=True):
         or (H, W) for single channel
 
     return_rgb: bool
-        Whether or not to convert greyscale image to RGB
+        Whether to convert greyscale image to RGB
 
     Returns
     --------

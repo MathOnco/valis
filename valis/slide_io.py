@@ -3492,7 +3492,7 @@ def warp_and_save_slide(src_f, dst_f, transformation_src_shape_rc, transformatio
         Q factor for lossy compression
 
     pyramid : bool
-        Whether or not to save an image pyramid.
+        Whether to save an image pyramid.
 
     reader: SlideReader, optional
         Instantiated SlideReader to use to read image. If `None`,
@@ -3557,7 +3557,7 @@ def save_ome_tiff(img, dst_f, ome_xml=None, tile_wh=512, compression=DEFAULT_COM
         Q factor for lossy compression
 
     pyramid : bool
-        Whether or not to save an image pyramid.
+        Whether to save an image pyramid.
 
     """
     compression = compression.lower()
@@ -3744,7 +3744,7 @@ def convert_to_ome_tiff(src_f, dst_f, level, series=None, xywh=None,
         Q factor for lossy compression
 
     pyramid : bool
-        Whether or not to save an image pyramid.
+        Whether to save an image pyramid.
 
     """
 

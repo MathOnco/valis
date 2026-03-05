@@ -1499,10 +1499,10 @@ def get_reflection_M(reflect_x, reflect_y, shape_rc):
     ----------
 
     reflect_x : bool
-        Whether or not to reflect the x-axis (columns)
+        Whether to reflect the x-axis (columns)
 
     reflecct y : bool
-        Whether or not to reflect the y-axis (rows)
+        Whether to reflect the y-axis (rows)
 
     shape_rc : tuple of int
         Shape of the image being reflected
@@ -1698,7 +1698,7 @@ def get_mesh(shape, grid_spacing, bbox_rc_wh=None, inclusive=False):
         (row, column, width, height) of bounding box
 
     inclusive : bool
-        Whether or not to include image edges
+        Whether to include image edges
 
     """
 

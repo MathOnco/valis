@@ -663,7 +663,7 @@ class Slide(object):
             will be warped.
 
         non_rigid : bool
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         crop: bool, str
@@ -774,7 +774,7 @@ class Slide(object):
             Pyramid level of the slide/image that `img` will be warped on to
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         """
@@ -826,7 +826,7 @@ class Slide(object):
             Pyramid level to be warped
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -920,7 +920,7 @@ class Slide(object):
             Pyramid level to be warped
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -1034,7 +1034,7 @@ class Slide(object):
             image's shape (row, col). Default is 0.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True.
 
         crop: bool, str
@@ -1134,7 +1134,7 @@ class Slide(object):
             to their location in an image with that same shape.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         """
@@ -1210,7 +1210,7 @@ class Slide(object):
             image's shape (row, col). Default is 0.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True.
 
         crop: bool, str
@@ -1324,7 +1324,7 @@ class Slide(object):
             to their location in an image with that same shape.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied.
 
         Returns
@@ -1755,7 +1755,7 @@ class Valis(object):
             methods and arguments.
 
         compose_non_rigid : bool, optional
-            Whether or not to compose non-rigid transformations. If `True`,
+            Whether to compose non-rigid transformations. If `True`,
             then an image is non-rigidly warped before aligning to the
             adjacent non-rigidly aligned image. This allows the transformations
             to accumulate, which may bring distant features together but could
@@ -1771,7 +1771,7 @@ class Valis(object):
             Valis.slide_dict.
 
         do_rigid: bool, dictionary, optional
-            Whether or not to perform rigid registration. If `False`, rigid
+            Whether to perform rigid registration. If `False`, rigid
             registration will be skipped.
 
             If `do_rigid` is a dictionary, it should contain inverse transformation
@@ -1801,7 +1801,7 @@ class Valis(object):
             is defined, then `crop` will be set to "reference".
 
         create_masks : bool, optional
-            Whether or not to create and apply masks for registration.
+            Whether to create and apply masks for registration.
             Can help focus alignment on the tissue, but can sometimes
             mask too much if there is a lot of variation in the image.
 
@@ -4415,7 +4415,7 @@ class Valis(object):
             resolution image will be warped and saved.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -4482,7 +4482,7 @@ class Valis(object):
             resolution image will be warped and saved.
 
         non_rigid : bool, optional
-            Whether or not to conduct non-rigid warping. If False,
+            Whether to conduct non-rigid warping. If False,
             then only a rigid transformation will be applied. Default is True
 
         crop: bool, str
@@ -4507,7 +4507,7 @@ class Valis(object):
             List of RGB colors (0-255) to use for channel colors
 
         drop_duplicates : bool, optional
-            Whether or not to drop duplicate channels that might be found in multiple slides.
+            Whether to drop duplicate channels that might be found in multiple slides.
             For example, if DAPI is in multiple slides, then the only the DAPI channel in the
             first slide will be kept.
 
