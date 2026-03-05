@@ -1479,10 +1479,10 @@ class Valis(object):
         Dictionary of Slide objects, each of which contains information
         about a slide, and methods to warp it.
 
-    brightfield_procsseing_fxn_str: str
+    brightfield_processing_fxn_str: str
         Name of function used to process brightfield images.
 
-    if_procsseing_fxn_str : str
+    if_processing_fxn_str : str
         Name of function used to process fluorescence images.
 
     max_image_dim_px : int
@@ -1905,8 +1905,8 @@ class Valis(object):
         self.slide_dict = {}
 
         # Fields related to image pre-processing #
-        self.brightfield_procsseing_fxn_str = None
-        self.if_procsseing_fxn_str = None
+        self.brightfield_processing_fxn_str = None
+        self.if_processing_fxn_str = None
 
         if max_image_dim_px < max_processed_image_dim_px:
             msg = f"max_image_dim_px is {max_image_dim_px} but needs to be less or equal to {max_processed_image_dim_px}. Setting max_image_dim_px to {max_processed_image_dim_px}"
@@ -4050,7 +4050,7 @@ class Valis(object):
                                             if_processing_kwargs=if_processing_kwargs,
                                             processor_dict=processor_dict)
 
-            self.brightfield_procsseing_fxn_str = brightfield_processing_cls.__name__
+            self.brightfield_processing_fxn_str = brightfield_processing_cls.__name__
             self.if_processing_fxn_str = if_processing_cls.__name__
             self.process_imgs(processor_dict=slide_processors)
 
