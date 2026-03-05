@@ -128,7 +128,7 @@ class NonRigidRegistrar(object):
         return masked_moving, masked_fixed
 
     def calc(self, moving_img, fixed_img, mask, *args, **kwargs):
-        """Cacluate displacement fields
+        """Calculate displacement fields
 
         Can record subclass specific atrributes here too
 
@@ -1354,7 +1354,7 @@ class NonRigidTileRegistrar(object):
             self.pbar.update(1)
 
     def calc(self, *args, **kwargs):
-        """Cacluate displacement fields
+        """Calculate displacement fields
         Each tile is registered and then stitched together
         """
 

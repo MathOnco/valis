@@ -1437,7 +1437,7 @@ def create_tissue_mask_from_rgb(img, brightness_q=0.99, kernel_size=3, gray_thre
 
 def jc_dist(img, cspace="IHLS", p=99, metric="euclidean"):
     """
-    Cacluate distance between backround and each pixel
+    Calculate distance between backround and each pixel
     using a luminosity and colofulness/saturation in a polar colorspace
 
     Parameters
