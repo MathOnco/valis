@@ -2156,7 +2156,7 @@ class Valis(object):
                                            compose_non_rigid=compose_non_rigid,
                                            qt_emitter=qt_emitter)
 
-        # Info realted to saving images to view results #
+        # Info related to saving images to view results #
         self.mask_dict = None
         self.create_masks = create_masks
 
