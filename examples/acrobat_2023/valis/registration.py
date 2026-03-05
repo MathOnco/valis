@@ -164,7 +164,7 @@ class Slide(object):
         argument specified when creating a `Valis` object.
 
     val_obj : Valis
-        The "parent" object that registers all of the slide.
+        The "parent" object that registers all the slides.
 
     reader : SlideReader
         Object that can read slides and collect metadata.
@@ -311,7 +311,7 @@ class Slide(object):
             argument specified when creating a `Valis` object.
 
         val_obj : Valis
-            The "parent" object that registers all of the slide.
+            The "parent" object that registers all the slides.
 
         reader : SlideReader
             Object that can read slides and collect metadata.
