@@ -3177,15 +3177,15 @@ class Valis(object):
 
         w = int(np.ceil(max_x - min_x))
         h = int(np.ceil(max_y - min_y))
-        registerd_out_shape_rc = np.array([h, w])
+        registered_out_shape_rc = np.array([h, w])
 
         for slide_obj in self.slide_dict.values():
             M = slide_M_dict[slide_obj.name] @ pad_T
             slide_M_dict[slide_obj.name] = M
 
-        cropped_registerd_out_shape_rc = rigid_registrar.img_obj_list[0].registered_shape_rc
+        cropped_registered_out_shape_rc = rigid_registrar.img_obj_list[0].registered_shape_rc
 
-        return slide_M_dict, registerd_out_shape_rc, cropped_M_dict, cropped_registerd_out_shape_rc, matches_dict
+        return slide_M_dict, registered_out_shape_rc, cropped_M_dict, cropped_registered_out_shape_rc, matches_dict
 
 
     def get_cropped_img_for_rigid_warp(self, slide_obj):
@@ -3426,7 +3426,7 @@ class Valis(object):
         ref_slide = self.slide_dict[valtils.get_name(rigid_registrar.reference_img_f)]
         self.reference_img_f = ref_slide.src_f
 
-        rigid_transform_dict, rigid_reg_shape, cropped_M_dict, cropped_registerd_out_shape_rc, rigid_matches_dict = \
+        rigid_transform_dict, rigid_reg_shape, cropped_M_dict, cropped_registered_out_shape_rc, rigid_matches_dict = \
               self.extract_rigid_transforms_from_serial_rigid(rigid_registrar)
 
         self.aligned_img_shape_rc = rigid_reg_shape
@@ -3434,7 +3434,7 @@ class Valis(object):
         for slide_reg_obj in rigid_registrar.img_obj_list:
             slide_obj = self.slide_dict[slide_reg_obj.name]
             slide_obj.M_for_cropped = cropped_M_dict[slide_obj.name]
-            slide_obj.rigid_reg_cropped_shape_rc = cropped_registerd_out_shape_rc
+            slide_obj.rigid_reg_cropped_shape_rc = cropped_registered_out_shape_rc
             slide_obj.M = rigid_transform_dict[slide_obj.name]
             slide_obj.reg_img_shape_rc = rigid_reg_shape
             slide_obj.stack_idx = slide_reg_obj.stack_idx
