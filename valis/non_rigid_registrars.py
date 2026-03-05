@@ -106,7 +106,7 @@ class NonRigidRegistrar(object):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
@@ -403,7 +403,7 @@ class NonRigidRegistrarXY(NonRigidRegistrar):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
             In the case where simple ITK will be used, params should be
@@ -944,7 +944,7 @@ class OpticalFlowWarper(NonRigidRegistrar):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used in the calc() method.
 
         optical_flow_obj : object
@@ -1307,7 +1307,7 @@ class NonRigidTileRegistrar(object):
         Parameters
         ----------
         params : dictionary
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Will get used when initializing the `non_rigid_registrar_cls`
 
             In the case where simple ITK will be used, params should be

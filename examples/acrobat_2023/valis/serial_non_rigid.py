@@ -373,7 +373,7 @@ class NonRigidZImage(object):
             Used to warp the registered_img before finding deformation fields.
 
         params : dictionary, optional
-            Keyword: value dictionary of parameters to be used in reigstration.
+            Keyword: value dictionary of parameters to be used in registration.
             Passed to the non_rigid_reg_class' init() method.
 
             In the case where simple ITK will be used, params should be
