@@ -2237,7 +2237,7 @@ class FlattenedPyramidReader(VipsSlideReader):
         except pyvips.error.Error as e:
             # Big hack for when get the error "tiff2vips: out of order read" even with random access
             out_shape_wh = self.metadata.slide_dimensions[level]
-            msg1 = f"pyvips.error.Error: {e} when converting pvips.Image to numpy array"
+            msg1 = f"pyvips.error.Error: {e} when converting pyvips.Image to numpy array"
             msg2 = f"Will try to resize level 0 to have shape {out_shape_wh} and convert"
             valtils.print_warning(msg1)
             valtils.print_warning(msg2, None)

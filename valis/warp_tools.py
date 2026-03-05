@@ -29,8 +29,8 @@ pyvips.cache_set_max(0)
 
 
 def is_pyvips_22():
-    pvips_ver = pyvips.__version__.split(".")
-    pyvips_22 = eval(pvips_ver[0]) >= 2 and eval(pvips_ver[1]) >= 2
+    pyvips_ver = pyvips.__version__.split(".")
+    pyvips_22 = eval(pyvips_ver[0]) >= 2 and eval(pyvips_ver[1]) >= 2
     return pyvips_22
 
 def get_ref_img_idx(img_f_list, ref_img_name=None):
@@ -326,7 +326,7 @@ def save_img(dst_f, img, thumbnail_size=None):
         Filename for saved image
 
     img : ndarray, pyvips.Image
-        Image to be saved. Numpy arrays will be converted to pvips.Image
+        Image to be saved. Numpy arrays will be converted to pyvips.Image
 
     thumbnail_size : optional, int
         If not None, the image will be resized to fit within this size
@@ -1458,7 +1458,7 @@ def warp_img_from_to(img, from_M=None, from_transformation_src_shape_rc=None,
 
     Returns
     -------
-    in_target_space : ndarray, pvips.Image
+    in_target_space : ndarray, pyvips.Image
         `img` warped onto the "to" image
 
     """

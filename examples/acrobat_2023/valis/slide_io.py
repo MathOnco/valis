@@ -1768,7 +1768,7 @@ class FlattenedPyramidReader(VipsSlideReader):
         except pyvips.error.Error as e:
             # Big hack for when get the error "tiff2vips: out of order read" even with random access
             out_shape_wh = self.metadata.slide_dimensions[level]
-            msg1 = f"pyvips.error.Error: {e} when converting pvips.Image to numpy array"
+            msg1 = f"pyvips.error.Error: {e} when converting pyvips.Image to numpy array"
             msg2 = f"Will try to resize level 0 to have shape {out_shape_wh} and convert"
             valtils.print_warning(msg1)
             valtils.print_warning(msg2, None)
@@ -2402,7 +2402,7 @@ def get_slide_reader(src_f, series=None):
 
     elif is_ometiff:
         if series == 0 and n_series == 1 and is_rgb and is_rgb is not None:
-            # Seems pvips can only read ome.tiff if there is 1 series.
+            # Seems pyvips can only read ome.tiff if there is 1 series.
             # Converting a multichannel pyvips.Image is very slow, but is fast for RGB
             reader = VipsSlideReader
         else:
