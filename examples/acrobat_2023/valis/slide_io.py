@@ -835,7 +835,7 @@ class BioFormatsSlideReader(SlideReader):
             Path to slide
 
         series : int
-            The series to be read. If `series` is None, the the `series`
+            The series to be read. If `series` is None, the `series`
             will be set to the series associated with the largest image.
 
         """
@@ -1899,7 +1899,7 @@ class CziJpgxrReader(SlideReader):
             Path to slide
 
         series : int
-            The series to be read. If `series` is None, the the `series`
+            The series to be read. If `series` is None, the `series`
             will be set to the series associated with the largest image.
 
         """
@@ -2302,7 +2302,7 @@ def get_slide_reader(src_f, series=None):
         Path to slide
 
     series : int, optional
-        The series to be read. If `series` is None, the the `series`
+        The series to be read. If `series` is None, the `series`
         will be set to the series associated with the largest image.
         In cases where there is only 1 image in the file, `series`
         will be 0.

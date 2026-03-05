@@ -5234,7 +5234,7 @@ class Valis(object):
 
         channel_name_dict : dict of lists, optional.
             key =  slide file name, value = list of channel names for that slide. If None,
-            the the channel names found in each slide will be used.
+            the channel names found in each slide will be used.
 
         src_f_list : list of str, optional
             List of paths to slide to be warped. If None (the default), Valis.original_img_list
