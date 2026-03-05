@@ -566,7 +566,7 @@ def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, 
     cspace : str
         Colorspace in which `marker_colors` will be blended.
         JzAzBz, Hunter Lab, and sRGB all work well. But, see
-        colour.COLOURSPACE_MODELS for other possible colorspaces
+        colour.COLOURSPACE_MODELS for other possible colorspace
 
     Returns
     -------
