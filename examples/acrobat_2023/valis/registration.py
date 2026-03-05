@@ -492,7 +492,7 @@ class Slide(object):
             shape of registered image
 
         warped_scaled_img_shape_rc : tuple of int, optional
-            shape of scaled registered image (i.e. registered slied)
+            shape of scaled registered image (i.e. registered slide)
 
         Returns
         -------
