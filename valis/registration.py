@@ -1759,7 +1759,7 @@ class Valis(object):
     View ome.tiff, located at merged_slide_dst_f
 
     """
-    @valtils.deprecated_args(max_non_rigid_registartion_dim_px="max_non_rigid_registration_dim_px", img_type="image_type")
+    @valtils.deprecated_args(max_non_rigid_registration_dim_px="max_non_rigid_registration_dim_px", img_type="image_type")
     def __init__(self, src_dir, dst_dir, series=None, name=None, image_type=None,
                  feature_detector_cls=None,
                  transformer_cls=DEFAULT_TRANSFORM_CLASS,
@@ -4794,7 +4794,7 @@ class Valis(object):
         self.micro_rigid_registrar_cls = None
         self.non_rigid_registrar = None
 
-    @valtils.deprecated_args(max_non_rigid_registartion_dim_px="max_non_rigid_registration_dim_px")
+    @valtils.deprecated_args(max_non_rigid_registration_dim_px="max_non_rigid_registration_dim_px")
     def register_micro(self, brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                  brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
                  if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
