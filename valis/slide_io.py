@@ -597,7 +597,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
 
     Returns
     -------
-    is_flattended_pyramid : bool
+    is_flattened_pyramid : bool
         Whether  or not the slide is a flattened pyramid
 
     can_use_bf : bool
@@ -618,7 +618,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
     vips_img = pyvips.Image.new_from_file(src_f)
     vips_fields = vips_img.get_fields()
 
-    is_flattended_pyramid = False
+    is_flattened_pyramid = False
     can_use_bf = False
 
     if 'n-pages' in vips_fields:
@@ -661,9 +661,9 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
         unique_areas, _ = np.unique(all_areas, return_index=True)
         n_zero_diff = len(np.where(area_diff == 0)[0])
         if most_common_channel_count == 1 and n_zero_diff >= len(unique_areas):
-            is_flattended_pyramid = True
+            is_flattened_pyramid = True
 
-        if is_flattended_pyramid:
+        if is_flattened_pyramid:
             nchannels_per_each_level = np.diff(level_starts)
             last_level_channel_count = np.sum(all_n_channels[level_starts[-1]:])
             nchannels_per_each_level = np.hstack([nchannels_per_each_level,
@@ -682,7 +682,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
             n_channels = most_common_channel_count
 
     else:
-        return is_flattended_pyramid, can_use_bf, None, None, None
+        return is_flattened_pyramid, can_use_bf, None, None, None
     # Now check if Bioformats reads it similarly #
     if check_with_bf:
         with valtils.HiddenPrints():
@@ -691,7 +691,7 @@ def check_flattened_pyramid_tiff(src_f, check_with_bf=False):
         bf_channels = bf_reader.metadata.n_channels
         can_use_bf = bf_levels >= len(slide_dimensions) and bf_channels == n_channels
 
-    return is_flattended_pyramid, can_use_bf, slide_dimensions, levels_start_idx, n_channels
+    return is_flattened_pyramid, can_use_bf, slide_dimensions, levels_start_idx, n_channels
 
 
 def check_xml_img_match(xml, vips_img, metadata, series=0):
@@ -2123,11 +2123,11 @@ class FlattenedPyramidReader(VipsSlideReader):
 
 
     def create_metadata(self):
-        is_flattended_pyramid, bf_reads_flat, slide_dimensions,\
+        is_flattened_pyramid, bf_reads_flat, slide_dimensions,\
         levels_start_idx, n_channels = \
             check_flattened_pyramid_tiff(self.src_f)
 
-        assert is_flattended_pyramid and not bf_reads_flat, "Trying to use FlattenedPyramidReader but slide is not a flattened pyramid"
+        assert is_flattened_pyramid and not bf_reads_flat, "Trying to use FlattenedPyramidReader but slide is not a flattened pyramid"
 
         meta_name = f"{os.path.split(self.src_f)[1]}_Series(0)".strip("_")
         server = VIPS_RDR
