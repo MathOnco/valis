@@ -350,7 +350,7 @@ class SerialRigidRegistrar(object):
         This matrix is used to order the images the Z-stack.
 
     distance_mat : ndarray
-        `unsorted_distance_mat` reorderd such that the most similar images
+        `unsorted_distance_mat` reordered such that the most similar images
         are adjacent to one another
 
     unsorted_similarity_mat : ndarray
