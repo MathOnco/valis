@@ -27,8 +27,8 @@ DEFAULT_MATCHER = feature_matcher.LightGlueMatcher(DEFAULT_FD())
 DEFAULT_BF_PROCESSOR = preprocessing.OD
 DEFAULT_BF_PROCESSOR_KWARGS = {}
 
-DEFAULT_FLOURESCENCE_CLASS = preprocessing.ChannelGetter
-DEFAULT_FLOURESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
+DEFAULT_FLUORESCENCE_CLASS = preprocessing.ChannelGetter
+DEFAULT_FLUORESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
 
 class MicroRigidRegistrar(object):
     """Refine rigid registration using higher resolution images
@@ -164,7 +164,7 @@ class MicroRigidRegistrar(object):
 
     def register(self,
                  brightfield_processing_cls=DEFAULT_BF_PROCESSOR, brightfield_processing_kwargs=DEFAULT_BF_PROCESSOR_KWARGS,
-                 if_processing_cls=DEFAULT_FLOURESCENCE_CLASS, if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS):
+                 if_processing_cls=DEFAULT_FLUORESCENCE_CLASS, if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS):
         """
 
         Parameters

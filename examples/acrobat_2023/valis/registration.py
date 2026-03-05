@@ -49,8 +49,8 @@ MASK_DIR = "masks"
 # Default image processing #
 DEFAULT_BRIGHTFIELD_CLASS = preprocessing.ColorfulStandardizer
 DEFAULT_BRIGHTFIELD_PROCESSING_ARGS = {'c': preprocessing.DEFAULT_COLOR_STD_C, "h": 0}
-DEFAULT_FLOURESCENCE_CLASS = preprocessing.ChannelGetter
-DEFAULT_FLOURESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
+DEFAULT_FLUORESCENCE_CLASS = preprocessing.ChannelGetter
+DEFAULT_FLUORESCENCE_PROCESSING_ARGS = {"channel": "dapi", "adaptive_eq": True}
 DEFAULT_NORM_METHOD = "img_stats"
 
 # Default rigid registration parameters #
@@ -2410,8 +2410,8 @@ class Valis(object):
 
     def create_img_processor_dict(self, brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                                   brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
-                                  if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
-                                  if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
+                                  if_processing_cls=DEFAULT_FLUORESCENCE_CLASS,
+                                  if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS,
                                   processor_dict=None):
         """Create dictionary to get processors for each image
 
@@ -3921,8 +3921,8 @@ class Valis(object):
 
     def register(self, brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                  brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
-                 if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
-                 if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
+                 if_processing_cls=DEFAULT_FLUORESCENCE_CLASS,
+                 if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS,
                  processor_dict=None,
                  reader_cls=None):
 
@@ -4116,8 +4116,8 @@ class Valis(object):
     @valtils.deprecated_args(max_non_rigid_registration_dim_px="max_non_rigid_registration_dim_px")
     def register_micro(self,  brightfield_processing_cls=DEFAULT_BRIGHTFIELD_CLASS,
                  brightfield_processing_kwargs=DEFAULT_BRIGHTFIELD_PROCESSING_ARGS,
-                 if_processing_cls=DEFAULT_FLOURESCENCE_CLASS,
-                 if_processing_kwargs=DEFAULT_FLOURESCENCE_PROCESSING_ARGS,
+                 if_processing_cls=DEFAULT_FLUORESCENCE_CLASS,
+                 if_processing_kwargs=DEFAULT_FLUORESCENCE_PROCESSING_ARGS,
                  processor_dict=None,
                  max_non_rigid_registration_dim_px=DEFAULT_MAX_NON_RIGID_REG_SIZE,
                  non_rigid_registrar_cls=DEFAULT_NON_RIGID_CLASS,
