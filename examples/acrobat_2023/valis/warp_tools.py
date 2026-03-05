@@ -669,7 +669,7 @@ def mattes_mi(img1, img2, nbins=50,  mask=None):
         Number of histogram bins
 
     mask : ndarray, None
-        Mask with shape (N, M) that indiates where the metric
+        Mask with shape (N, M) that indicates where the metric
         should be calulated. If None, the metric will be calculated
         for all NxM pixels.
 
