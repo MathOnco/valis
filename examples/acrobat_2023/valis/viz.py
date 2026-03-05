@@ -552,7 +552,7 @@ def color_multichannel(multichannel_img, marker_colors, rescale_channels=False, 
         in areas where they are expressed in isolation, but can also make
         it appear more marker is expressed than there really is.
 
-    normalize_by : str, optionaal
+    normalize_by : str, optional
         "image" will produce an image where all values are scaled between
         0 and the highest intensity in the composite image. This will produce
         an image where one can see the expression of each marker relative to
