@@ -3349,7 +3349,7 @@ class Valis(object):
             else:
                 s = np.min(max_img_dim/np.array(ref_slide.processed_img_shape_rc))
         else:
-            # Determine how big image would have to be to get mask with maxmimum dimension = max_img_dim
+            # Determine how big image would have to be to get mask with maximum dimension = max_img_dim
             if isinstance(mask, pyvips.Image):
                 mask_shape_rc = np.array((mask.height, mask.width))
             else:
