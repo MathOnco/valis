@@ -2465,7 +2465,7 @@ class CziJpgxrReader(SlideReader):
                       doc="Slide scene")
 
     def _read_whole_img(self, level=0, xywh=None, *args, **kwargs):
-        """
+        """Read whole image
 
         Return
         ------
