@@ -672,7 +672,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         interp_method : str
             Interpolation method used when warping slide. Default is "bicubic"
@@ -835,7 +835,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         src_f : str, optional
            Path of slide to be warped. If None (the default), Slide.src_f
@@ -1048,7 +1048,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         """
         if M is None:
@@ -1224,7 +1224,7 @@ class Slide(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         """
         if M is None:
@@ -4424,7 +4424,7 @@ class Valis(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         colormap : list
             List of RGB colors (0-255) to use for channel colors
@@ -4491,7 +4491,7 @@ class Valis(object):
             image will not be cropped. If "overlap", the warped slide will be
             cropped to include only areas where all images overlapped.
             "reference" crops to the area that overlaps with the reference image,
-            defined by `reference_img_f` when initialzing the `Valis object`.
+            defined by `reference_img_f` when initializing the `Valis object`.
 
         channel_name_dict : dict of lists, optional.
             key =  slide file name, value = list of channel names for that slide. If None,
