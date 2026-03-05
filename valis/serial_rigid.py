@@ -1696,7 +1696,7 @@ def register_images(img_dir, dst_dir=None, name="registrar",
 
     affine_optimizer : AffineOptimizer object
             Object that will minimize a cost function to find the
-            optimal affine transoformations
+            optimal affine transformations
 
     imgs_ordered : bool
         Boolean defining whether or not the order of images in img_dir
