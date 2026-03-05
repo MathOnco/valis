@@ -1503,7 +1503,7 @@ class Valis(object):
         the `img_obj_list` has been sorted during rigid registration.
 
     align_to_reference : bool
-        Whether or not images should be aligne to a reference image
+        Whether or not images should be aligned to a reference image
         specified by `reference_img_f`. Will be set to True if
         `reference_img_f` is provided.
 

@@ -1113,7 +1113,7 @@ def register_images(src, non_rigid_reg_class=non_rigid_registrars.OpticalFlowWar
         Optional name for this SerialNonRigidRegistrar
 
     align_to_reference : bool, optional
-        Whether or not images should be aligne to a reference image
+        Whether or not images should be aligned to a reference image
         specified by `reference_img_f`. Will be set to True if
         `reference_img_f` is provided.
 

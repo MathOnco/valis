@@ -394,7 +394,7 @@ class SerialRigidRegistrar(object):
         the `img_obj_list` has been sorted.
 
     align_to_reference : bool, optional
-        Whether or not images should be aligne to a reference image
+        Whether or not images should be aligned to a reference image
         specified by `reference_img_f`. Will be set to True if
         `reference_img_f` is provided.
 
@@ -439,7 +439,7 @@ class SerialRigidRegistrar(object):
             Descriptive name of registrar, such as the sample's name
 
         align_to_reference : bool, optional
-            Whether or not images should be aligne to a reference image
+            Whether or not images should be aligned to a reference image
             specified by `reference_img_f`. Will be set to True if
             `reference_img_f` is provided.
 
