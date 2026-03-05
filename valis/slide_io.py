@@ -3312,7 +3312,7 @@ def get_tile_wh(reader, level, out_shape_wh, default_wh=512):
             tile_wh = 16
 
     if np.any(np.array(out_shape_wh[0:2]) < tile_wh):
-        # Tile is too big for the image. Get niggest tile size that fit in image
+        # Tile is too big for the image. Get the biggest tile size that fits in the image.
         if tile_wh < default_wh:
             min_wh = 16
         else:
