@@ -961,7 +961,7 @@ class SerialRigidRegistrar(object):
             else:
                 filter_kwargs = None
 
-            # Estimate curent error without reflections. Don't need to re-detect and match features
+            # Estimate current error without reflections. Don't need to re-detect and match features
             to_prev_match_info = img_obj.match_dict[prev_img_obj]
             transformer.estimate(to_prev_match_info.matched_kp2_xy, to_prev_match_info.matched_kp1_xy)
             unreflected_warped_src_xy = warp_tools.warp_xy(to_prev_match_info.matched_kp1_xy, transformer.params)
