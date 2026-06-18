@@ -1,29 +1,47 @@
-[[tool.pdm.source]]
-name = "PyPI"
-url = ""
-verify_ssl = false
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["setuptools>=69.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+valis = ["superglue_models/weights/*"]
 
 [project]
+name = "valis"
+version = "1.2.0"
+description = ""
+readme = "README.rst"
+requires-python = ">=3.11"
+license = {file = "LICENSE.txt"}
 authors = [
     {name = "Chandler Gatenbee", email = "chandlergatenbee@gmail.com"},
 ]
 
-license = {text = "MIT"}
-requires-python = ">=3.9"
+maintainers = [
+    {name = "Chandler Gatenbee", email = "chandlergatenbee@gmail.com"},
+    {name = "Jeff Quinn", email = "quinnj2@mskcc.org" },
+]
+
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
 dependencies = [
     "beautifulsoup4<5.0.0,>=4.11.1",
-    "scyjava<2.0.0,>=1.8.1",
     "colorama<1.0.0,>=0.4.6",
     "colour-science>0.4.2",
     "fastcluster<2.0.0,>=1.2.6",
-    "jpype1<2.0.0,>=1.4.1",
     "matplotlib<4.0.0,>=3.6.3",
-    "numpy>1.23,<2.0.0",
+    "numpy",
     "ome-types<1.0.0,>=0.3.2",
-    "opencv-contrib-python-headless==4.9.0.80",
+    "opencv-contrib-python-headless>=4.12",
     "pandas>=2.0.0",
     "pillow>=10.3.0",
     "scikit-learn<2.0.0,>=1.2.0",
@@ -36,18 +54,23 @@ dependencies = [
     "aicspylibczi<4.0.0,>=3.1.2",
     "setuptools>=69.0.3",
     "scikit-image<1.0.0,>=0.24.0",
-    "kornia<1.0.0,>=0.7.3",
-    "einops<1.0.0,>=0.8.0",
-    "torchvision<1.0.0,>=0.20.1",
     "openpyxl<4.0.0,>=3.1.5",
     "simpleitk<3.0.0,>=2.4.1",
     "lxml>=5.4.0",
     "pyvips>2.2.1",
-    "torch>=2.7.1",
 ]
-name = "valis-wsi"
-version = "1.2.0"
-description = ""
+
+[project.optional-dependencies]
+# Deep-learning feature detectors/matchers (SuperPoint, SuperGlue, DISK, DeDoDe,
+# LightGlue).  Install with: pip install 'valis-wsi[dl]'
+dl = [
+    "torch>=2.7.1",
+    "torchvision<1.0.0,>=0.20.1",
+    "kornia<1.0.0,>=0.7.3",
+    "einops<1.0.0,>=0.8.0",
+]
+# Convenience alias that includes dl deps (backward-compatible full install)
+full = ["valis[dl]"]
 
 [dependency-groups]
 dev = [
@@ -55,4 +78,17 @@ dev = [
     "sphinx>=7.4.7",
     "sphinx-rtd-theme>=3.0.2",
     "twine>=6.1.0",
+    "black>=24.0.0",
+    "ruff>=0.6.0",
 ]
+
+[tool.ruff]
+extend-exclude = ["docs", "src/valis/superglue_models"]
+
+[tool.ruff.lint]
+# Catch real bugs without enforcing stylistic cleanup.
+# F821: undefined name (missing imports — the bug we just fixed)
+# F811: redefinition of unused name (often a missed merge/copy-paste)
+# F823: local variable referenced before assignment
+# E9:   syntax errors
+select = ["F821", "F811", "F823", "E9"]

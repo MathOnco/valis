@@ -238,3 +238,6 @@ tests/test_tiler.py
 tests/test_warp_assoc_imgs.py
 
 tests/test_warp_fxns.py
+
+tests/test_output/
+tests/example_datasets/
