@@ -513,7 +513,7 @@ class SuperPointFD(FeatureDD):
             descriptors = [superpoint.sample_descriptors(k[None], d[None], 8)[0]
                     for k, d in zip([torch.from_numpy(kp_pos_xy.astype(np.float32))], descriptors)]
 
-            descriptors = descriptors[0].detach().numpy().T
+            descriptors = descriptors[0].detach().cpu().numpy().T
         else:
             kp = cv2.KeyPoint_convert(kp_pos_xy.tolist())
             kp, descriptors = self.kp_descriptor.compute(img, kp)
@@ -529,8 +529,8 @@ class SuperPointFD(FeatureDD):
         superpoint_obj = superpoint.SuperPoint(self.config.get('superpoint', {}))
         pred = superpoint_obj({'image': inp})
         pred = {**pred, **{k+'0': v for k, v in pred.items()}}
-        kp_pos_xy = pred['keypoints'][0].detach().numpy()
-        desc = pred['descriptors'][0].detach().numpy().T
+        kp_pos_xy = pred['keypoints'][0].detach().cpu().numpy()
+        desc = pred['descriptors'][0].detach().cpu().numpy().T
 
         return kp_pos_xy, desc
 
@@ -605,8 +605,8 @@ class DiskFD(KorniaFD):
         tensor_img = preprocessing.img_to_tensor(image)
         with torch.inference_mode():
             res = self.disk(tensor_img.to(self.device).float(), n=self.num_features, pad_if_not_divisible=True)[0]
-            kp_pos_xy = res.keypoints.detach().numpy()
-            desc = res.descriptors.detach().numpy()
+            kp_pos_xy = res.keypoints.detach().cpu().numpy()
+            desc = res.descriptors.detach().cpu().numpy()
 
         return kp_pos_xy, desc
 
@@ -660,8 +660,8 @@ class DeDoDeFD(KorniaFD):
         tensor_img = preprocessing.img_to_tensor(image)
         with torch.inference_mode():
             res = self.dedode(tensor_img.to(self.device).float(), n=self.num_features, pad_if_not_divisible=True)
-            kp_pos_xy = res[0].detach().squeeze(0).numpy()
-            scores = res[1].detach().numpy()
-            desc = res[2].detach().squeeze(0).numpy()
+            kp_pos_xy = res[0].detach().squeeze(0).cpu().numpy()
+            scores = res[1].detach().cpu().numpy()
+            desc = res[2].detach().squeeze(0).cpu().numpy()
 
         return kp_pos_xy, desc

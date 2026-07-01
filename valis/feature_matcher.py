@@ -1180,7 +1180,7 @@ class SuperGlueMatcher(Matcher):
 
         sg_pred = self.sg_matcher(data)
 
-        sg_pred = {k: v[0].detach().numpy() for k, v in sg_pred.items()}
+        sg_pred = {k: v[0].detach().cpu().numpy() for k, v in sg_pred.items()}
         sg_pred.update(data)
 
         # Keep the matching keypoints and descriptors
@@ -1455,8 +1455,8 @@ class LightGlueMatcher(Matcher):
             lafs2 = kornia.feature.laf_from_center_scale_ori(t_kp2[None], torch.ones(1, len(t_kp2), 1, 1, device=self.device))
 
             match_distances, idxs = self.lg_matcher(t_desc1, t_desc2, lafs1, lafs2, hw1=hw1, hw2=r_hw2)
-            match_distances = match_distances.detach().numpy()
-            idxs = idxs.detach().numpy()
+            match_distances = match_distances.detach().cpu().numpy()
+            idxs = idxs.detach().cpu().numpy()
 
         desc1_match_idx = idxs[:, 0]
         matched_desc1 = desc1[desc1_match_idx, :]

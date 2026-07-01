@@ -1112,7 +1112,7 @@ class RAFTWarper(NonRigidRegistrar):
         transformed_moving_img, transformed_fixed_img = self.weights.transforms()(transformed_moving_img, transformed_fixed_img)
 
         list_of_flows = self.model(transformed_fixed_img.to(self.device), transformed_moving_img.to(self.device))
-        dxdy = list_of_flows[-1].squeeze(0).detach().numpy()
+        dxdy = list_of_flows[-1].squeeze(0).detach().cpu().numpy()
 
         if self.transform_method == "pad" and len(moving_transform) == 4:
             # Remove padding

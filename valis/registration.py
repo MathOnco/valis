@@ -69,8 +69,8 @@ DEFAULT_NORM_METHOD = "img_stats"
 # Default rigid registration parameters #
 DEFAULT_FD = feature_detectors.VggFD
 DEFAULT_TRANSFORM_CLASS = transform.SimilarityTransform
-DEFAULT_MATCHER = feature_matcher.LightGlueMatcher(match_filter_method=feature_matcher.DEFAULT_RANSAC_NAME, feature_detector=feature_detectors.DiskFD())
-DEFAULT_MATCHER_FOR_SORTING = feature_matcher.Matcher(match_filter_method=feature_matcher.DEFAULT_RANSAC_NAME, feature_detector=feature_detectors.VggFD())
+DEFAULT_MATCHER = None          # ponytail: lazy; instantiated on first Valis() that needs feature matching
+DEFAULT_MATCHER_FOR_SORTING = None
 DEFAULT_SIMILARITY_METRIC = "n_matches"
 DEFAULT_AFFINE_OPTIMIZER_CLASS = None
 DEFAULT_MAX_PROCESSED_IMG_SIZE = 512
@@ -561,7 +561,7 @@ class Slide(object):
         else:
             sxy = np.ones(2)
 
-        to_slide_transformer = transform.SimilarityTransform(scale=sxy)
+        to_slide_transformer = transform.AffineTransform(scale=sxy)
         overlap_bbox = warp_tools.bbox2xy(mask_bbox_xywh)
         scaled_overlap_bbox = to_slide_transformer(overlap_bbox)
         scaled_overlap_xywh = warp_tools.xy2bbox(scaled_overlap_bbox)
@@ -1765,8 +1765,8 @@ class Valis(object):
                  transformer_cls=DEFAULT_TRANSFORM_CLASS,
                  affine_optimizer_cls=DEFAULT_AFFINE_OPTIMIZER_CLASS,
                  similarity_metric=DEFAULT_SIMILARITY_METRIC,
-                 matcher=DEFAULT_MATCHER,
-                 matcher_for_sorting=DEFAULT_MATCHER_FOR_SORTING,
+                 matcher=None,
+                 matcher_for_sorting=None,
                  imgs_ordered=False,
                  non_rigid_registrar_cls=DEFAULT_NON_RIGID_CLASS,
                  non_rigid_reg_params=DEFAULT_NON_RIGID_KWARGS,
@@ -2104,6 +2104,20 @@ class Valis(object):
         self.micro_rigid_registrar_cls = micro_rigid_registrar_cls
         self.micro_rigid_registrar_params = micro_rigid_registrar_params
         self.denoise_rigid = denoise_rigid
+
+        global DEFAULT_MATCHER, DEFAULT_MATCHER_FOR_SORTING
+        if matcher is None:
+            if DEFAULT_MATCHER is None:
+                DEFAULT_MATCHER = feature_matcher.LightGlueMatcher(
+                    match_filter_method=feature_matcher.DEFAULT_RANSAC_NAME,
+                    feature_detector=feature_detectors.DiskFD())
+            matcher = DEFAULT_MATCHER
+        if matcher_for_sorting is None:
+            if DEFAULT_MATCHER_FOR_SORTING is None:
+                DEFAULT_MATCHER_FOR_SORTING = feature_matcher.Matcher(
+                    match_filter_method=feature_matcher.DEFAULT_RANSAC_NAME,
+                    feature_detector=feature_detectors.VggFD())
+            matcher_for_sorting = DEFAULT_MATCHER_FOR_SORTING
 
         if feature_detector_cls is not None:
             if isinstance(feature_detector_cls, type):

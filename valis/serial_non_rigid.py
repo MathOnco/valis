@@ -916,14 +916,27 @@ class SerialNonRigidRegistrar(object):
             if moving_obj.stack_idx == self.ref_img_idx:
                 continue
 
-            overlap_mask = None
+            # Use the registration mask, mirroring `register_serial`. The original
+            # code hard-coded `mask=None` here, so `align_to_reference=True` ran the
+            # non-rigid flow unmasked -- streaking the texture-free margin inside the
+            # tissue bounding box. Confine the flow to the tissue (intersection of the
+            # registration mask and the moving image's coverage mask).
+            if moving_obj.mask is not None:
+                if self.mask is not None:
+                    reg_mask = preprocessing.combine_masks(self.mask, moving_obj.mask, op="and")
+                else:
+                    reg_mask = moving_obj.mask
+            elif self.mask is not None:
+                reg_mask = self.mask
+            else:
+                reg_mask = None
 
             nr_reg_params = self.update_img_params(non_rigid_reg_obj, non_rigid_reg_params, img_params, moving_name=moving_obj.name, fixed_name=ref_nr_obj.name, is_tiler=is_tiler)
 
             moving_obj.calc_deformation(ref_img,
                                         non_rigid_reg_obj,
                                         params=nr_reg_params,
-                                        mask=overlap_mask)
+                                        mask=reg_mask)
 
     def register_groupwise(self, non_rigid_reg_class, non_rigid_reg_params=None):
         """Non-rigidly align images as a group
